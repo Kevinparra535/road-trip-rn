@@ -3,45 +3,52 @@ import { Container } from 'inversify';
 
 import { TYPES } from '@/config/types';
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
+import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
+import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
+import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
 import { AuthServiceImpl } from '@/data/services/AuthService';
 import type { AuthService } from '@/data/services/AuthService';
+import { DirectionsServiceImpl } from '@/data/services/DirectionsService';
+import type { DirectionsService } from '@/data/services/DirectionsService';
+import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
+import type { FuelStationService } from '@/data/services/FuelStationService';
 import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
 import type { MotoStatsService } from '@/data/services/MotoStatsService';
 import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
 import type { MotorcycleService } from '@/data/services/MotorcycleService';
+import { RouteServiceImpl } from '@/data/services/RouteService';
+import type { RouteService } from '@/data/services/RouteService';
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
+import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
+import type { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
+import type { RouteRepository } from '@/domain/repositories/RouteRepository';
+import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
+import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
+import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
+import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
+import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
+import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
+import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
-import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
-import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
-import { DirectionsServiceImpl } from '@/data/services/DirectionsService';
-import type { DirectionsService } from '@/data/services/DirectionsService';
-import { RouteServiceImpl } from '@/data/services/RouteService';
-import type { RouteService } from '@/data/services/RouteService';
-import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
-import type { RouteRepository } from '@/domain/repositories/RouteRepository';
-import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
-import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
-import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
-import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
-import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
+import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
@@ -69,6 +76,10 @@ container
   .bind<DirectionsService>(TYPES.DirectionsService)
   .to(DirectionsServiceImpl)
   .inSingletonScope();
+container
+  .bind<FuelStationService>(TYPES.FuelStationService)
+  .to(FuelStationServiceImpl)
+  .inSingletonScope();
 
 // ── Repositories: singleton ─────────────────────────────────────────────────
 container
@@ -90,6 +101,10 @@ container
 container
   .bind<DirectionsRepository>(TYPES.DirectionsRepository)
   .to(DirectionsRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<FuelStationRepository>(TYPES.FuelStationRepository)
+  .to(FuelStationRepositoryImpl)
   .inSingletonScope();
 
 // ── UseCases: transient ─────────────────────────────────────────────────────
@@ -136,6 +151,12 @@ container
 container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
+container
+  .bind<EstimateAutonomyUseCase>(TYPES.EstimateAutonomyUseCase)
+  .to(EstimateAutonomyUseCase);
+container
+  .bind<FindFuelStationsUseCase>(TYPES.FindFuelStationsUseCase)
+  .to(FindFuelStationsUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container
@@ -151,3 +172,6 @@ container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
 container
   .bind<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel)
   .to(RoutePlannerViewModel);
+container
+  .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
+  .to(RouteDetailViewModel);

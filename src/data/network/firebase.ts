@@ -1,11 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApps, initializeApp } from 'firebase/app';
-import {
-  Auth,
-  getAuth,
-  getReactNativePersistence,
-  initializeAuth,
-} from 'firebase/auth';
+import { Auth, getAuth, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 import { ENV } from '@/config/env';
@@ -13,14 +7,13 @@ import { ENV } from '@/config/env';
 const app = getApps().length ? getApps()[0] : initializeApp(ENV.firebase);
 
 /**
- * `initializeAuth` debe llamarse una sola vez por app. En hot-reload puede
- * relanzarse, por eso caemos a `getAuth` si ya estaba inicializado.
+ * Firebase v12 persiste la sesion en React Native automaticamente cuando
+ * `@react-native-async-storage/async-storage` esta instalado. `initializeAuth`
+ * debe llamarse una sola vez; en hot-reload caemos a `getAuth`.
  */
 function resolveAuth(): Auth {
   try {
-    return initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
+    return initializeAuth(app);
   } catch {
     return getAuth(app);
   }

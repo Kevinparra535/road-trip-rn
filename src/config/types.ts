@@ -5,6 +5,7 @@ export const TYPES = {
   MotoStatsService: Symbol.for('MotoStatsService'),
   RouteService: Symbol.for('RouteService'),
   DirectionsService: Symbol.for('DirectionsService'),
+  FuelStationService: Symbol.for('FuelStationService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
   AuthRepository: Symbol.for('AuthRepository'),
@@ -12,6 +13,7 @@ export const TYPES = {
   MotoStatsRepository: Symbol.for('MotoStatsRepository'),
   RouteRepository: Symbol.for('RouteRepository'),
   DirectionsRepository: Symbol.for('DirectionsRepository'),
+  FuelStationRepository: Symbol.for('FuelStationRepository'),
 
   // ── UseCases (capa domain) ──
   SignUpUseCase: Symbol.for('SignUpUseCase'),
@@ -31,6 +33,8 @@ export const TYPES = {
   UpdateRouteUseCase: Symbol.for('UpdateRouteUseCase'),
   DeleteRouteUseCase: Symbol.for('DeleteRouteUseCase'),
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
+  EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
+  FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),
@@ -39,4 +43,5 @@ export const TYPES = {
   MotorcycleFormViewModel: Symbol.for('MotorcycleFormViewModel'),
   RoutesViewModel: Symbol.for('RoutesViewModel'),
   RoutePlannerViewModel: Symbol.for('RoutePlannerViewModel'),
+  RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
 } as const;

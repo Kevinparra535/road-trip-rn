@@ -24,13 +24,13 @@
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@rnmapbox/.*))"
     ],
     "collectCoverageFrom": [
-      "src/**/*.{ts,tsx}",
-      "!src/**/*.d.ts",
-      "!src/__test__/**",
-      "!src/ui/utils/Logger.ts",
-      "!src/domain/repositories/**",
-      "!src/domain/services/**",
-      "!src/config/**"
+      "src/domain/entities/**/*.ts",
+      "src/domain/useCases/**/*.ts",
+      "src/domain/geo/**/*.ts",
+      "src/data/models/**/*.ts",
+      "src/data/repositories/**/*.ts",
+      "src/ui/viewModels/**/*.ts",
+      "src/ui/screens/**/*ViewModel.ts"
     ],
     "coverageThreshold": {
       "global": {
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.16.1",
     "@react-navigation/native": "^7.2.4",
