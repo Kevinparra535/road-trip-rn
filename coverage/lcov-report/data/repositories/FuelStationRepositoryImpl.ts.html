@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/5</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -102,7 +102,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -112,17 +112,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { inject, injectable } from 'inversify';
@@ -133,27 +133,27 @@ import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 &nbsp;
-const STATIONS_PER_STOP = <span class="cstat-no" title="statement not covered" >4;</span>
+const STATIONS_PER_STOP = 4;
 &nbsp;
 @injectable()
 export class FuelStationRepositoryImpl implements FuelStationRepository {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(
+  constructor(
     @inject(TYPES.FuelStationService)
     private readonly service: FuelStationService,
   ) {}
 &nbsp;
-<span class="fstat-no" title="function not covered" >  as</span>ync findNearFuelStops(fuelStops: FuelStop[]): Promise&lt;FuelStation[]&gt; {
-    const groups = <span class="cstat-no" title="statement not covered" >await Promise.all(</span>
-      fuelStops.map(<span class="fstat-no" title="function not covered" >as</span>ync (stop) =&gt; {
-        const models = <span class="cstat-no" title="statement not covered" >await this.service.searchNear(</span>
+  async findNearFuelStops(fuelStops: FuelStop[]): Promise&lt;FuelStation[]&gt; {
+    const groups = await Promise.all(
+      fuelStops.map(async (stop) =&gt; {
+        const models = await this.service.searchNear(
           stop.location.longitude,
           stop.location.latitude,
           STATIONS_PER_STOP,
         );
-<span class="cstat-no" title="statement not covered" >        return models.map(<span class="fstat-no" title="function not covered" >(m</span>odel) =&gt; <span class="cstat-no" title="statement not covered" >model.toDomain(stop.id))</span>;</span>
+        return models.map((model) =&gt; model.toDomain(stop.id));
       }),
     );
-<span class="cstat-no" title="statement not covered" >    return groups.flat();</span>
+    return groups.flat();
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -163,7 +163,7 @@ export class FuelStationRepositoryImpl implements FuelStationRepository {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:07:52.289Z
+                at 2026-05-16T20:14:00.926Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

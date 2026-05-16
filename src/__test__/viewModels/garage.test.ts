@@ -9,7 +9,11 @@ describe('GarageViewModel', () => {
     deleteImpl?: any;
   } = {}) => {
     const getCurrentRider = {
-      run: jest.fn().mockResolvedValue(overrides.rider ?? makeRider()),
+      run: jest
+        .fn()
+        .mockResolvedValue(
+          'rider' in overrides ? overrides.rider : makeRider(),
+        ),
     };
     const getAll = {
       run: jest.fn().mockResolvedValue(overrides.motos ?? [makeMotorcycle()]),

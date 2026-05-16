@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>13/13</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">73.91% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/23</span>
+                <span class='fraction'>17/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>12/12</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -153,33 +153,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,10 +185,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -223,31 +223,31 @@ export class FuelStationModel {
   longitude: number;
   latitude: number;
 &nbsp;
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(params: FuelStationModelConstructorParams) {
-<span class="cstat-no" title="statement not covered" >    this.mapbox_id = params.mapbox_id;</span>
-<span class="cstat-no" title="statement not covered" >    this.name = params.name;</span>
-<span class="cstat-no" title="statement not covered" >    this.brand = params.brand;</span>
-<span class="cstat-no" title="statement not covered" >    this.longitude = params.longitude;</span>
-<span class="cstat-no" title="statement not covered" >    this.latitude = params.latitude;</span>
+  constructor(params: FuelStationModelConstructorParams) {
+    this.mapbox_id = params.mapbox_id;
+    this.name = params.name;
+    this.brand = params.brand;
+    this.longitude = params.longitude;
+    this.latitude = params.latitude;
   }
 &nbsp;
   /** Parsea una feature de la Mapbox Search Box category API. */
-<span class="fstat-no" title="function not covered" >  st</span>atic fromMapboxFeature(feature: any): FuelStationModel | null {
-    const props = <span class="cstat-no" title="statement not covered" >feature?.properties ?? {};</span>
+  static fromMapboxFeature(feature: any): FuelStationModel | null {
+    const props = feature?.properties ?? <span class="branch-1 cbranch-no" title="branch not covered" >{};</span>
     const coords =
-<span class="cstat-no" title="statement not covered" >      feature?.geometry?.coordinates ??</span>
+      feature?.geometry?.coordinates ??
       (props.coordinates
-        ? [props.coordinates.longitude, props.coordinates.latitude]
+        ? <span class="branch-0 cbranch-no" title="branch not covered" >[props.coordinates.longitude, props.coordinates.latitude]</span>
         : null);
-<span class="cstat-no" title="statement not covered" >    if (!Array.isArray(coords) || coords.length !== 2) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+    if (!Array.isArray(coords) || coords.length !== 2) return null;
 &nbsp;
-    const brand = <span class="cstat-no" title="statement not covered" >Array.isArray(props.brand)</span>
+    const brand = Array.isArray(props.brand)
       ? props.brand[0]
       : (props.brand ?? null);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return new FuelStationModel({</span>
-      mapbox_id: String(props.mapbox_id ?? feature.id ?? `${coords[0]},${coords[1]}`),
-      name: String(props.name ?? 'Estacion de servicio'),
+    return new FuelStationModel({
+      mapbox_id: String(props.mapbox_id ?? <span class="branch-1 cbranch-no" title="branch not covered" >feature.id </span>?? <span class="branch-2 cbranch-no" title="branch not covered" >`${coords[0]},${coords[1]}`)</span>,
+      name: String(props.name ?? <span class="branch-1 cbranch-no" title="branch not covered" >'Estacion de servicio')</span>,
       brand: brand ? String(brand) : null,
       longitude: Number(coords[0]),
       latitude: Number(coords[1]),
@@ -261,10 +261,10 @@ declare module './fuelStationModel' {
   }
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >FuelStationModel.prototype.toDomain = function <span class="fstat-no" title="function not covered" >toDomain(</span></span>
+FuelStationModel.prototype.toDomain = function toDomain(
   nearFuelStopId?: string | null,
 ): FuelStation {
-<span class="cstat-no" title="statement not covered" >  return new FuelStation({</span>
+  return new FuelStation({
     id: this.mapbox_id,
     name: this.name,
     brand: this.brand,
@@ -273,7 +273,7 @@ declare module './fuelStationModel' {
     fuelTypes: ['corriente', 'extra'],
     referencePriceCorriente: FUEL_REFERENCE_PRICES.corriente,
     referencePriceExtra: FUEL_REFERENCE_PRICES.extra,
-    nearFuelStopId: nearFuelStopId ?? null,
+    nearFuelStopId: nearFuelStopId ?? <span class="branch-1 cbranch-no" title="branch not covered" >null,</span>
   });
 };
 &nbsp;</pre></td></tr></table></pre>
@@ -283,7 +283,7 @@ declare module './fuelStationModel' {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:07:52.289Z
+                at 2026-05-16T20:14:00.926Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

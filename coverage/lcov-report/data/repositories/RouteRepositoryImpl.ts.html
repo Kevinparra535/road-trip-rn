@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">38.46% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/13</span>
+                <span class='fraction'>5/13</span>
             </div>
         
             
@@ -37,16 +37,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>5/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">41.66% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/12</span>
+                <span class='fraction'>5/12</span>
             </div>
         
             
@@ -148,8 +148,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -162,11 +162,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -174,7 +174,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -192,7 +192,7 @@ import { RouteRepository } from '@/domain/repositories/RouteRepository';
 &nbsp;
 @injectable()
 export class RouteRepositoryImpl implements RouteRepository {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(
+  constructor(
     @inject(TYPES.RouteService)
     private readonly service: RouteService,
   ) {}
@@ -207,9 +207,9 @@ export class RouteRepositoryImpl implements RouteRepository {
 <span class="cstat-no" title="statement not covered" >    return model ? model.toDomain() : null;</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  as</span>ync create(route: Route): Promise&lt;Route&gt; {
-    const model = <span class="cstat-no" title="statement not covered" >await this.service.create(this.toPayload(route));</span>
-<span class="cstat-no" title="statement not covered" >    return model.toDomain();</span>
+  async create(route: Route): Promise&lt;Route&gt; {
+    const model = await this.service.create(this.toPayload(route));
+    return model.toDomain();
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  as</span>ync update(route: Route): Promise&lt;Route&gt; {
@@ -221,12 +221,12 @@ export class RouteRepositoryImpl implements RouteRepository {
 <span class="cstat-no" title="statement not covered" >    await this.service.delete(id);</span>
   }
 &nbsp;
-<span class="fstat-no" title="function not covered" >  pr</span>ivate toPayload(route: Route): Record&lt;string, unknown&gt; {
-<span class="cstat-no" title="statement not covered" >    return {</span>
+  private toPayload(route: Route): Record&lt;string, unknown&gt; {
+    return {
       rider_id: route.riderId,
       name: route.name,
       ride_type: route.rideType,
-      waypoints: route.waypoints.map(<span class="fstat-no" title="function not covered" >(w</span>) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+      waypoints: route.waypoints.map((w) =&gt; ({
         id: w.id,
         name: w.name,
         latitude: w.latitude,
@@ -234,7 +234,7 @@ export class RouteRepositoryImpl implements RouteRepository {
         kind: w.kind,
         order: w.order,
       })),
-      geometry: route.geometry.map(<span class="fstat-no" title="function not covered" >(g</span>) =&gt; (<span class="cstat-no" title="statement not covered" >{</span>
+      geometry: route.geometry.map((g) =&gt; ({
         latitude: g.latitude,
         longitude: g.longitude,
       })),
@@ -250,7 +250,7 @@ export class RouteRepositoryImpl implements RouteRepository {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:07:52.289Z
+                at 2026-05-16T20:14:00.926Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

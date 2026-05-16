@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/10</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/6</span>
+                <span class='fraction'>3/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/9</span>
+                <span class='fraction'>9/9</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -135,9 +135,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -145,18 +145,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -165,13 +160,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -191,26 +191,26 @@ export class RouteDirectionsModel {
   duration_seconds: number;
   coordinates: [number, number][];
 &nbsp;
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(params: RouteDirectionsModelConstructorParams) {
-<span class="cstat-no" title="statement not covered" >    this.distance_meters = params.distance_meters;</span>
-<span class="cstat-no" title="statement not covered" >    this.duration_seconds = params.duration_seconds;</span>
-<span class="cstat-no" title="statement not covered" >    this.coordinates = params.coordinates;</span>
+  constructor(params: RouteDirectionsModelConstructorParams) {
+    this.distance_meters = params.distance_meters;
+    this.duration_seconds = params.duration_seconds;
+    this.coordinates = params.coordinates;
   }
 &nbsp;
   /**
    * Parsea una respuesta de la Mapbox Directions API
    * (`geometries=geojson`, `overview=full`).
    */
-<span class="fstat-no" title="function not covered" >  st</span>atic fromMapboxJson(json: any): RouteDirectionsModel {
-    const route = <span class="cstat-no" title="statement not covered" >json?.routes?.[0];</span>
-    const coords: [number, number][] = <span class="cstat-no" title="statement not covered" >Array.isArray(</span>
+  static fromMapboxJson(json: any): RouteDirectionsModel {
+    const route = json?.routes?.[0];
+    const coords: [number, number][] = Array.isArray(
       route?.geometry?.coordinates,
     )
       ? route.geometry.coordinates
-      : [];
-<span class="cstat-no" title="statement not covered" >    return new RouteDirectionsModel({</span>
-      distance_meters: Number(route?.distance ?? 0),
-      duration_seconds: Number(route?.duration ?? 0),
+      : <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
+    return new RouteDirectionsModel({
+      distance_meters: Number(route?.distance ?? <span class="branch-1 cbranch-no" title="branch not covered" >0)</span>,
+      duration_seconds: Number(route?.duration ?? <span class="branch-1 cbranch-no" title="branch not covered" >0)</span>,
       coordinates: coords,
     });
   }
@@ -222,13 +222,13 @@ declare module './routeDirectionsModel' {
   }
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >RouteDirectionsModel.prototype.toDomain = function <span class="fstat-no" title="function not covered" >toDomain(</span>): RouteDirections {</span>
+RouteDirectionsModel.prototype.toDomain = function toDomain(): RouteDirections {
   // Mapbox entrega coordenadas como [lng, lat].
-  const geometry: GeoPoint[] = <span class="cstat-no" title="statement not covered" >this.coordinates.map(<span class="fstat-no" title="function not covered" >([</span>lng, lat]) =&gt; (<span class="cstat-no" title="statement not covered" >{</span></span>
+  const geometry: GeoPoint[] = this.coordinates.map(([lng, lat]) =&gt; ({
     latitude: lat,
     longitude: lng,
   }));
-<span class="cstat-no" title="statement not covered" >  return new RouteDirections({</span>
+  return new RouteDirections({
     distanceKm: this.distance_meters / 1000,
     durationMin: this.duration_seconds / 60,
     geometry,
@@ -241,7 +241,7 @@ declare module './routeDirectionsModel' {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:07:52.289Z
+                at 2026-05-16T20:14:00.926Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

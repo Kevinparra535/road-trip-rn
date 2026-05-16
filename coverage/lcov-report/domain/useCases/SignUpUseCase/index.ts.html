@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/7</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -112,17 +112,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { inject, injectable } from 'inversify';
@@ -137,23 +137,23 @@ import { UseCase } from '@/domain/useCases/UseCase';
 &nbsp;
 @injectable()
 export class SignUpUseCase implements UseCase&lt;SignUpInput, Rider&gt; {
-<span class="fstat-no" title="function not covered" >  co</span>nstructor(
+  constructor(
     @inject(TYPES.AuthRepository)
     private readonly repository: AuthRepository,
   ) {}
 &nbsp;
-<span class="fstat-no" title="function not covered" >  as</span>ync run(data: SignUpInput): Promise&lt;Rider&gt; {
-    const email = <span class="cstat-no" title="statement not covered" >data.email.trim().toLowerCase();</span>
-    const displayName = <span class="cstat-no" title="statement not covered" >data.displayName.trim();</span>
+  async run(data: SignUpInput): Promise&lt;Rider&gt; {
+    const email = data.email.trim().toLowerCase();
+    const displayName = data.displayName.trim();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (!email || !data.password || !displayName) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('Email, contrasena y nombre son obligatorios.');</span>
+    if (!email || !data.password || !displayName) {
+      throw new Error('Email, contrasena y nombre son obligatorios.');
     }
-<span class="cstat-no" title="statement not covered" >    if (data.password.length &lt; 6) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('La contrasena debe tener al menos 6 caracteres.');</span>
+    if (data.password.length &lt; 6) {
+      throw new Error('La contrasena debe tener al menos 6 caracteres.');
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return this.repository.signUp({ ...data, email, displayName });</span>
+    return this.repository.signUp({ ...data, email, displayName });
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -163,7 +163,7 @@ export class SignUpUseCase implements UseCase&lt;SignUpInput, Rider&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:07:52.289Z
+                at 2026-05-16T20:14:00.926Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
