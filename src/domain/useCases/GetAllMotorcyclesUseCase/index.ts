@@ -6,9 +6,7 @@ import { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()
-export class GetAllMotorcyclesUseCase
-  implements UseCase<string, Motorcycle[]>
-{
+export class GetAllMotorcyclesUseCase implements UseCase<string, Motorcycle[]> {
   constructor(
     @inject(TYPES.MotorcycleRepository)
     private readonly repository: MotorcycleRepository,

@@ -3,11 +3,13 @@ import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewM
 import { makeMotorcycle, makeMotorcycleSpecs, makeRider } from '../factories';
 
 describe('GarageViewModel', () => {
-  const build = (overrides: {
-    rider?: any;
-    motos?: any;
-    deleteImpl?: any;
-  } = {}) => {
+  const build = (
+    overrides: {
+      rider?: any;
+      motos?: any;
+      deleteImpl?: any;
+    } = {},
+  ) => {
     const getCurrentRider = {
       run: jest
         .fn()

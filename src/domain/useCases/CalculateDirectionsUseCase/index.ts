@@ -13,9 +13,10 @@ export type CalculateDirectionsInput = {
 };
 
 @injectable()
-export class CalculateDirectionsUseCase
-  implements UseCase<CalculateDirectionsInput, RouteDirections>
-{
+export class CalculateDirectionsUseCase implements UseCase<
+  CalculateDirectionsInput,
+  RouteDirections
+> {
   constructor(
     @inject(TYPES.DirectionsRepository)
     private readonly repository: DirectionsRepository,

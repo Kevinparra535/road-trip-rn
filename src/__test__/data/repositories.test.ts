@@ -115,7 +115,9 @@ describe('DirectionsRepositoryImpl', () => {
     const service = {
       fetchDirections: jest.fn().mockResolvedValue(
         RouteDirectionsModel.fromMapboxJson({
-          routes: [{ distance: 5000, duration: 600, geometry: { coordinates: [] } }],
+          routes: [
+            { distance: 5000, duration: 600, geometry: { coordinates: [] } },
+          ],
         }),
       ),
     };
@@ -147,9 +149,9 @@ describe('FuelStationRepositoryImpl', () => {
         label: 'Tanqueo 1',
       }),
     ];
-    const result = await new FuelStationRepositoryImpl(service).findNearFuelStops(
-      stops,
-    );
+    const result = await new FuelStationRepositoryImpl(
+      service,
+    ).findNearFuelStops(stops);
     expect(result).toHaveLength(1);
     expect(result[0].nearFuelStopId).toBe('fs1');
   });

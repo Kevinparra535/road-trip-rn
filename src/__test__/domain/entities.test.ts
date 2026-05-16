@@ -2,7 +2,12 @@ import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
-import { makeMotorcycle, makeRider, makeRoute, makeWaypoint } from '../factories';
+import {
+  makeMotorcycle,
+  makeRider,
+  makeRoute,
+  makeWaypoint,
+} from '../factories';
 
 describe('Rider', () => {
   it('builds initials from display name', () => {
@@ -10,9 +15,9 @@ describe('Rider', () => {
   });
 
   it('falls back to email when name is empty', () => {
-    expect(makeRider({ displayName: '   ', email: 'ab@x.com' }).initials()).toBe(
-      'AB',
-    );
+    expect(
+      makeRider({ displayName: '   ', email: 'ab@x.com' }).initials(),
+    ).toBe('AB');
   });
 });
 

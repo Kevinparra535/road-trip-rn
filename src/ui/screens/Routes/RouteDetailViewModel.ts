@@ -67,8 +67,7 @@ export class RouteDetailViewModel {
 
   get selectedMotorcycle(): Motorcycle | null {
     return (
-      this.motorcycles.find((m) => m.id === this.selectedMotorcycleId) ??
-      null
+      this.motorcycles.find((m) => m.id === this.selectedMotorcycleId) ?? null
     );
   }
 

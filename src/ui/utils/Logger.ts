@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 /**
  * Wrapper de logging consistente. Cada clase crea su propia instancia con un
  * scope (`new Logger('AuthViewModel')`) para etiquetar el origen del mensaje.

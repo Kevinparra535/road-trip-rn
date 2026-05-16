@@ -43,9 +43,7 @@ export class MotorcycleServiceImpl implements MotorcycleService {
   }
 
   async fetchById(id: string): Promise<MotorcycleModel | null> {
-    const snapshot = await getDoc(
-      doc(firestore, MOTORCYCLES_COLLECTION, id),
-    );
+    const snapshot = await getDoc(doc(firestore, MOTORCYCLES_COLLECTION, id));
     if (!snapshot.exists()) return null;
     return MotorcycleModel.fromJson({ id: snapshot.id, ...snapshot.data() });
   }

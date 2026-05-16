@@ -36,11 +36,7 @@ const MotorcycleRow = ({
   motorcycle: Motorcycle;
   onPress: () => void;
 }) => (
-  <TouchableOpacity
-    activeOpacity={0.85}
-    onPress={onPress}
-    style={styles.card}
-  >
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
     <View style={styles.cardIcon}>
       <Ionicons name="bicycle" size={24} color={Colors.base.accent} />
     </View>
@@ -48,18 +44,13 @@ const MotorcycleRow = ({
       <Text style={styles.cardTitle}>{motorcycle.displayName()}</Text>
       <Text style={styles.cardMeta}>
         {motorcycle.tankCapacityLiters} L ·{' '}
-        {motorcycle.fuelConsumptionKmPerLiter} km/L ·{' '}
-        {motorcycle.fuelType}
+        {motorcycle.fuelConsumptionKmPerLiter} km/L · {motorcycle.fuelType}
       </Text>
       <Text style={styles.cardRange}>
         Autonomia ~{Math.round(motorcycle.fullTankRangeKm())} km
       </Text>
     </View>
-    <Ionicons
-      name="chevron-forward"
-      size={20}
-      color={Colors.base.iconMuted}
-    />
+    <Ionicons name="chevron-forward" size={20} color={Colors.base.iconMuted} />
   </TouchableOpacity>
 );
 

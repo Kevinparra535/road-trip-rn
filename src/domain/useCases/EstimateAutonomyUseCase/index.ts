@@ -22,9 +22,10 @@ const SAFETY_RESERVE_FRACTION = 0.12;
  * de tanqueo. Logica de negocio pura, sin dependencias de infraestructura.
  */
 @injectable()
-export class EstimateAutonomyUseCase
-  implements UseCase<EstimateAutonomyInput, AutonomyEstimate>
-{
+export class EstimateAutonomyUseCase implements UseCase<
+  EstimateAutonomyInput,
+  AutonomyEstimate
+> {
   async run(input: EstimateAutonomyInput): Promise<AutonomyEstimate> {
     const { motorcycle, route, conditions } = input;
 
@@ -40,12 +41,9 @@ export class EstimateAutonomyUseCase
     const safetyReserveKm = fullTankRangeKm * factor * SAFETY_RESERVE_FRACTION;
 
     const totalDistanceKm = route.distanceKm;
-    const effectiveConsumption =
-      motorcycle.fuelConsumptionKmPerLiter * factor;
+    const effectiveConsumption = motorcycle.fuelConsumptionKmPerLiter * factor;
     const totalFuelLiters =
-      effectiveConsumption > 0
-        ? totalDistanceKm / effectiveConsumption
-        : 0;
+      effectiveConsumption > 0 ? totalDistanceKm / effectiveConsumption : 0;
 
     const reachesWithoutRefuel = totalDistanceKm <= effectiveRangeKm;
     const fuelStops = this.buildFuelStops(
@@ -67,10 +65,7 @@ export class EstimateAutonomyUseCase
   }
 
   /** Factor combinado (0-1.1) que ajusta el rendimiento segun el viaje. */
-  private conditionFactor(
-    conditions: RidingConditions,
-    route: Route,
-  ): number {
+  private conditionFactor(conditions: RidingConditions, route: Route): number {
     let factor = 1;
     if (conditions.hasPassenger) factor *= 0.92;
     if (conditions.hasLuggage) factor *= 0.93;
@@ -105,9 +100,7 @@ export class EstimateAutonomyUseCase
     let distance = effectiveRangeKm;
     while (distance < totalDistanceKm) {
       const location =
-        pointAtDistanceAlong(geometry, distance) ??
-        geometry[0] ??
-        null;
+        pointAtDistanceAlong(geometry, distance) ?? geometry[0] ?? null;
       if (location) {
         stops.push(
           new FuelStop({

@@ -117,10 +117,7 @@ export class RoutePlannerViewModel {
         kind: 'stop',
         order: this.waypoints.length,
       });
-      this.waypoints = this.normalizeWaypoints([
-        ...this.waypoints,
-        waypoint,
-      ]);
+      this.waypoints = this.normalizeWaypoints([...this.waypoints, waypoint]);
       this.directions = null;
     });
   }

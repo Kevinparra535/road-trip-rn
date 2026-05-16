@@ -1,9 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
@@ -43,8 +39,7 @@ const MotorcycleFormScreen = observer(() => {
   const motorcycleId = route.params?.motorcycleId;
 
   const viewModel = useMemo(
-    () =>
-      container.get<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel),
+    () => container.get<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel),
     [],
   );
 
@@ -120,14 +115,8 @@ const MotorcycleFormScreen = observer(() => {
               <ActivityIndicator color={Colors.base.accent} />
             ) : (
               <>
-                <Ionicons
-                  name="search"
-                  size={18}
-                  color={Colors.base.accent}
-                />
-                <Text style={styles.searchBtnText}>
-                  Buscar ficha tecnica
-                </Text>
+                <Ionicons name="search" size={18} color={Colors.base.accent} />
+                <Text style={styles.searchBtnText}>Buscar ficha tecnica</Text>
               </>
             )}
           </TouchableOpacity>
@@ -140,9 +129,9 @@ const MotorcycleFormScreen = observer(() => {
                 color={Colors.alerts.check}
               />
               <Text style={styles.specsText}>
-                Stats encontradas ({viewModel.specsResult.source} ·
-                confianza {viewModel.specsResult.confidence}). Revisa y
-                ajusta si hace falta.
+                Stats encontradas ({viewModel.specsResult.source} · confianza{' '}
+                {viewModel.specsResult.confidence}). Revisa y ajusta si hace
+                falta.
               </Text>
             </View>
           ) : null}

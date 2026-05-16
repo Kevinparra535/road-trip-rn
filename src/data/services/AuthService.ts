@@ -23,9 +23,7 @@ export interface AuthService {
   signIn(email: string, password: string): Promise<RiderModel>;
   signOut(): Promise<void>;
   getCurrentRider(): Promise<RiderModel | null>;
-  onAuthStateChanged(
-    listener: (rider: RiderModel | null) => void,
-  ): () => void;
+  onAuthStateChanged(listener: (rider: RiderModel | null) => void): () => void;
 }
 
 @injectable()
@@ -76,9 +74,7 @@ export class AuthServiceImpl implements AuthService {
     return this.resolveRiderModel(user);
   }
 
-  onAuthStateChanged(
-    listener: (rider: RiderModel | null) => void,
-  ): () => void {
+  onAuthStateChanged(listener: (rider: RiderModel | null) => void): () => void {
     return onAuthStateChanged(firebaseAuth, async (user) => {
       if (!user) {
         listener(null);
@@ -89,9 +85,7 @@ export class AuthServiceImpl implements AuthService {
   }
 
   private async resolveRiderModel(user: User): Promise<RiderModel> {
-    const snapshot = await getDoc(
-      doc(firestore, RIDERS_COLLECTION, user.uid),
-    );
+    const snapshot = await getDoc(doc(firestore, RIDERS_COLLECTION, user.uid));
     if (snapshot.exists()) {
       return RiderModel.fromJson({ uid: user.uid, ...snapshot.data() });
     }

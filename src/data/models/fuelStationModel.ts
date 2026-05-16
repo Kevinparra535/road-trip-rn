@@ -39,7 +39,9 @@ export class FuelStationModel {
       : (props.brand ?? null);
 
     return new FuelStationModel({
-      mapbox_id: String(props.mapbox_id ?? feature.id ?? `${coords[0]},${coords[1]}`),
+      mapbox_id: String(
+        props.mapbox_id ?? feature.id ?? `${coords[0]},${coords[1]}`,
+      ),
       name: String(props.name ?? 'Estacion de servicio'),
       brand: brand ? String(brand) : null,
       longitude: Number(coords[0]),

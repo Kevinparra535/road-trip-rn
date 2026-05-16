@@ -9,9 +9,10 @@ import {
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()
-export class FetchMotorcycleSpecsUseCase
-  implements UseCase<MotoStatsQuery, MotorcycleSpecs | null>
-{
+export class FetchMotorcycleSpecsUseCase implements UseCase<
+  MotoStatsQuery,
+  MotorcycleSpecs | null
+> {
   constructor(
     @inject(TYPES.MotoStatsRepository)
     private readonly repository: MotoStatsRepository,

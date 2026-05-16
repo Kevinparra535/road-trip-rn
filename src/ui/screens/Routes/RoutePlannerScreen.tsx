@@ -1,9 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
@@ -63,10 +59,7 @@ const RoutePlannerScreen = observer(() => {
       properties: {},
       geometry: {
         type: 'LineString' as const,
-        coordinates: viewModel.geometry.map((p) => [
-          p.longitude,
-          p.latitude,
-        ]),
+        coordinates: viewModel.geometry.map((p) => [p.longitude, p.latitude]),
       },
     }),
     [viewModel.geometry],
@@ -151,8 +144,7 @@ const RoutePlannerScreen = observer(() => {
             color={Colors.base.textSecondary}
           />
           <Text style={styles.hintText}>
-            Toca el mapa para agregar puntos. Toca un marcador para
-            quitarlo.
+            Toca el mapa para agregar puntos. Toca un marcador para quitarlo.
           </Text>
         </View>
       </View>
@@ -205,9 +197,7 @@ const RoutePlannerScreen = observer(() => {
               <Text style={styles.summaryLabel}>puntos</Text>
             </View>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>
-                {viewModel.distanceKm} km
-              </Text>
+              <Text style={styles.summaryValue}>{viewModel.distanceKm} km</Text>
               <Text style={styles.summaryLabel}>distancia</Text>
             </View>
             <View style={styles.summaryItem}>
@@ -230,9 +220,7 @@ const RoutePlannerScreen = observer(() => {
               styles.calcBtn,
               !viewModel.canCalculate && styles.calcBtnDisabled,
             ]}
-            disabled={
-              !viewModel.canCalculate || viewModel.isDirectionsLoading
-            }
+            disabled={!viewModel.canCalculate || viewModel.isDirectionsLoading}
             onPress={() => viewModel.calculateDirections()}
           >
             <Ionicons

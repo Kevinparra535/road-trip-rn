@@ -4,8 +4,7 @@ import { ENV } from '@/config/env';
 import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
 import { RideType } from '@/domain/entities/Route';
 
-const MAPBOX_DIRECTIONS_URL =
-  'https://api.mapbox.com/directions/v5/mapbox';
+const MAPBOX_DIRECTIONS_URL = 'https://api.mapbox.com/directions/v5/mapbox';
 
 type LngLat = [number, number];
 
@@ -27,9 +26,7 @@ export class DirectionsServiceImpl implements DirectionsService {
     }
 
     const profile = this.resolveProfile(rideType);
-    const path = coordinates
-      .map(([lng, lat]) => `${lng},${lat}`)
-      .join(';');
+    const path = coordinates.map(([lng, lat]) => `${lng},${lat}`).join(';');
     const params = new URLSearchParams({
       geometries: 'geojson',
       overview: 'full',
@@ -40,9 +37,7 @@ export class DirectionsServiceImpl implements DirectionsService {
       `${MAPBOX_DIRECTIONS_URL}/${profile}/${path}?${params}`,
     );
     if (!response.ok) {
-      throw new Error(
-        `Mapbox Directions respondio ${response.status}.`,
-      );
+      throw new Error(`Mapbox Directions respondio ${response.status}.`);
     }
 
     const json = await response.json();

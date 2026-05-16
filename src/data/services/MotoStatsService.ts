@@ -20,9 +20,7 @@ export interface MotoStatsService {
 
 @injectable()
 export class MotoStatsServiceImpl implements MotoStatsService {
-  async findSpecs(
-    query: MotoStatsQuery,
-  ): Promise<MotorcycleSpecsModel | null> {
+  async findSpecs(query: MotoStatsQuery): Promise<MotorcycleSpecsModel | null> {
     const fromWeb = await this.fetchFromWeb(query);
     if (fromWeb) return fromWeb;
     return this.matchFromDataset(query);
@@ -56,9 +54,7 @@ export class MotoStatsServiceImpl implements MotoStatsService {
     }
   }
 
-  private matchFromDataset(
-    query: MotoStatsQuery,
-  ): MotorcycleSpecsModel | null {
+  private matchFromDataset(query: MotoStatsQuery): MotorcycleSpecsModel | null {
     const queryBrand = this.normalize(query.brand);
     const queryModelTokens = this.normalize(query.model)
       .split(/\s+/)
@@ -100,10 +96,6 @@ export class MotoStatsServiceImpl implements MotoStatsService {
   }
 
   private normalize(value: string): string {
-    return value
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .trim();
+    return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
   }
 }

@@ -32,11 +32,7 @@ const GradientView = ({
   direction = 'vertical',
   style,
 }: GradientViewProps) => {
-  const resolved = (colors ?? PRESETS[preset]) as [
-    string,
-    string,
-    ...string[],
-  ];
+  const resolved = (colors ?? PRESETS[preset]) as [string, string, ...string[]];
   const { start, end } = DIRECTIONS[direction];
 
   return (

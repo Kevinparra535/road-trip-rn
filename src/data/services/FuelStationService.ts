@@ -33,9 +33,7 @@ export class FuelStationServiceImpl implements FuelStationService {
     }
 
     const json = await response.json();
-    const features: any[] = Array.isArray(json?.features)
-      ? json.features
-      : [];
+    const features: any[] = Array.isArray(json?.features) ? json.features : [];
     return features
       .map((feature) => FuelStationModel.fromMapboxFeature(feature))
       .filter((model): model is FuelStationModel => model !== null);

@@ -7,9 +7,10 @@ import { FuelStationRepository } from '@/domain/repositories/FuelStationReposito
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()
-export class FindFuelStationsUseCase
-  implements UseCase<FuelStop[], FuelStation[]>
-{
+export class FindFuelStationsUseCase implements UseCase<
+  FuelStop[],
+  FuelStation[]
+> {
   constructor(
     @inject(TYPES.FuelStationRepository)
     private readonly repository: FuelStationRepository,

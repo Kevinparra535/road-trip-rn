@@ -1,9 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import {
-  RouteProp,
-  useNavigation,
-  useRoute,
-} from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
@@ -186,7 +182,10 @@ const RouteDetailScreen = observer(() => {
         </View>
 
         <View style={styles.summaryRow}>
-          <Stat label="Distancia" value={`${Math.round(route.distanceKm)} km`} />
+          <Stat
+            label="Distancia"
+            value={`${Math.round(route.distanceKm)} km`}
+          />
           <Stat label="Duracion" value={route.durationLabel()} />
           <Stat label="Tipo" value={meta.label} />
         </View>
@@ -286,9 +285,7 @@ const RouteDetailScreen = observer(() => {
             >
               <Ionicons
                 name={
-                  estimate.reachesWithoutRefuel
-                    ? 'checkmark-circle'
-                    : 'warning'
+                  estimate.reachesWithoutRefuel ? 'checkmark-circle' : 'warning'
                 }
                 size={20}
                 color={
@@ -324,11 +321,7 @@ const RouteDetailScreen = observer(() => {
 
             {estimate.fuelStops.map((stop) => (
               <View key={stop.id} style={styles.stopRow}>
-                <Ionicons
-                  name="water"
-                  size={16}
-                  color={Colors.base.accent}
-                />
+                <Ionicons name="water" size={16} color={Colors.base.accent} />
                 <Text style={styles.stopText}>{stop.label}</Text>
               </View>
             ))}
@@ -361,10 +354,8 @@ const RouteDetailScreen = observer(() => {
                   ) : null}
                   <Text style={styles.stationPrice}>
                     Corriente ~$
-                    {station.referencePriceCorriente?.toLocaleString(
-                      'es-CO',
-                    )}{' '}
-                    · Extra ~$
+                    {station.referencePriceCorriente?.toLocaleString('es-CO')} ·
+                    Extra ~$
                     {station.referencePriceExtra?.toLocaleString('es-CO')}
                   </Text>
                   <Text style={styles.stationNote}>

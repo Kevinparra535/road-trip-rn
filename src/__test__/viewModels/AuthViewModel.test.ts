@@ -3,9 +3,12 @@ import { makeRider } from '../factories';
 
 describe('AuthViewModel', () => {
   it('tracks form validity for sign-in and sign-up', () => {
-    const vm = new AuthViewModel({ run: jest.fn() } as any, {
-      run: jest.fn(),
-    } as any);
+    const vm = new AuthViewModel(
+      { run: jest.fn() } as any,
+      {
+        run: jest.fn(),
+      } as any,
+    );
     expect(vm.isSignInValid).toBe(false);
     vm.setEmail('a@b.com');
     vm.setPassword('secret1');
