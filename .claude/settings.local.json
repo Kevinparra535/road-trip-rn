@@ -15,7 +15,10 @@
       "Bash(npx jest *)",
       "Bash(npx eslint *)",
       "Bash(npx prettier *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cd \"C:\\\\Users\\\\Usuario\\\\Documents\\\\dev\\\\road-trip\" && mkdir -p skills/react-native && cp \"C:\\\\Users\\\\Usuario\\\\Documents\\\\dev\\\\clean-architecture-stack\\\\skills\\\\react-native\\\\\"*.md skills/react-native/ && ls skills/react-native/)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
