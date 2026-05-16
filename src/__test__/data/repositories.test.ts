@@ -35,22 +35,22 @@ describe('AuthRepositoryImpl', () => {
   });
 
   it('forwards mapped riders to the auth-state listener', () => {
-    let captured: ((m: RiderModel | null) => void) | null = null;
+    let captured: (m: RiderModel | null) => void = () => undefined;
     const service = {
       signUp: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
       getCurrentRider: jest.fn(),
-      onAuthStateChanged: jest.fn((cb) => {
+      onAuthStateChanged: jest.fn((cb: (m: RiderModel | null) => void) => {
         captured = cb;
         return () => undefined;
       }),
     };
     const listener = jest.fn();
     new AuthRepositoryImpl(service).observeAuthState(listener);
-    captured?.(riderModel());
+    captured(riderModel());
     expect(listener.mock.calls[0][0].id).toBe('u1');
-    captured?.(null);
+    captured(null);
     expect(listener).toHaveBeenLastCalledWith(null);
   });
 });
