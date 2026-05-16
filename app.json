@@ -1,30 +1,60 @@
 {
   "expo": {
-    "name": "road-trip",
+    "name": "Road Trip",
     "slug": "road-trip",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "roadtrip",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0A1628"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.roadtrip.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0A1628"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.roadtrip.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-dev-client",
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "SET_MAPBOX_DOWNLOAD_TOKEN_IN_APP_CONFIG"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Road Trip usa tu ubicacion para mostrar tu posicion en el mapa y planear tus rutas en moto."
+        }
+      ]
+    ],
+    "extra": {
+      "mapboxPublicToken": "SET_MAPBOX_PUBLIC_TOKEN",
+      "firebase": {
+        "apiKey": "SET_FIREBASE_API_KEY",
+        "authDomain": "SET_FIREBASE_AUTH_DOMAIN",
+        "projectId": "SET_FIREBASE_PROJECT_ID",
+        "storageBucket": "SET_FIREBASE_STORAGE_BUCKET",
+        "messagingSenderId": "SET_FIREBASE_MESSAGING_SENDER_ID",
+        "appId": "SET_FIREBASE_APP_ID"
+      }
     }
   }
 }

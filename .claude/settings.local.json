@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npx --version)",
+      "Bash(npx --yes create-expo-app@latest . --template blank-typescript)",
+      "Bash(cd \"C:\\\\Users\\\\Usuario\\\\Documents\\\\dev\\\\road-trip\" && mv .claude ../_roadtrip_claude_bak && npx --yes create-expo-app@latest . --template blank-typescript 2>&1 | tail -20; mv ../_roadtrip_claude_bak .claude && echo \"RESTORED .claude\")",
+      "Bash(npx --yes expo install react-native-screens react-native-safe-area-context react-native-gesture-handler expo-location expo-font expo-linear-gradient @react-native-async-storage/async-storage expo-constants expo-dev-client)",
+      "Bash(npm install *)"
+    ]
+  }
+}
