@@ -3,12 +3,17 @@ import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
+import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
 import { boundingBox, headingTriangle } from '@/domain/geo/geoMath';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
+import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
+import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
@@ -119,7 +124,7 @@ export type RouteLine = {
   gradientStops?: GradientStop[];
 };
 
-type ICalls = 'search' | 'route' | 'elevation';
+type ICalls = 'search' | 'route' | 'elevation' | 'fuel';
 
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
@@ -158,6 +163,12 @@ export class HomeViewModel {
   isElevationError: string | null = null;
   isElevationResponse: ElevationProfile | null = null;
 
+  // ── State: moto y estimacion de gasolina ──
+  motorcycle: Motorcycle | null = null;
+  isFuelEstimateLoading: boolean = false;
+  isFuelEstimateError: string | null = null;
+  isFuelEstimateResponse: RouteFuelEstimate | null = null;
+
   private searchDisposer: (() => void) | null = null;
   private logger = new Logger('HomeViewModel');
 
@@ -170,6 +181,12 @@ export class HomeViewModel {
     private readonly calculateDirectionsUseCase: CalculateDirectionsUseCase,
     @inject(TYPES.GetRouteElevationUseCase)
     private readonly getRouteElevationUseCase: GetRouteElevationUseCase,
+    @inject(TYPES.GetCurrentRiderUseCase)
+    private readonly getCurrentRiderUseCase: GetCurrentRiderUseCase,
+    @inject(TYPES.GetAllMotorcyclesUseCase)
+    private readonly getAllMotorcyclesUseCase: GetAllMotorcyclesUseCase,
+    @inject(TYPES.EstimateRouteFuelUseCase)
+    private readonly estimateRouteFuelUseCase: EstimateRouteFuelUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -388,10 +405,36 @@ export class HomeViewModel {
     };
   }
 
+  // ── Computed: gasolina ──────────────────────────────────────────────────────
+
+  get hasMotorcycle(): boolean {
+    return this.motorcycle !== null;
+  }
+
+  /** Resumen del consumo estimado para la ruta, ya formateado. */
+  get fuelSummary(): {
+    fuelNeeded: string;
+    consumption: string;
+    reaches: boolean;
+    rangeUsedPercent: number;
+  } | null {
+    const estimate = this.isFuelEstimateResponse;
+    if (!estimate) return null;
+    return {
+      fuelNeeded: `${estimate.fuelNeededLiters.toFixed(1)} L`,
+      consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
+      reaches: estimate.reachesWithoutRefuel,
+      rangeUsedPercent: Math.round(
+        Math.min(1.5, estimate.rangeUsedFraction) * 100,
+      ),
+    };
+  }
+
   // ── Actions: camara ─────────────────────────────────────────────────────────
 
-  /** Entrypoint: arranca el sistema de localizacion. */
+  /** Entrypoint: arranca la localizacion y carga la moto del rider. */
   async initialize(): Promise<void> {
+    void this.loadMotorcycle();
     await this.locationStore.initialize();
   }
 
@@ -462,6 +505,9 @@ export class HomeViewModel {
     this.isElevationResponse = null;
     this.isElevationError = null;
     this.isElevationLoading = false;
+    this.isFuelEstimateResponse = null;
+    this.isFuelEstimateError = null;
+    this.isFuelEstimateLoading = false;
     this.searchQuery = '';
     this.isSearchResponse = null;
   }
@@ -483,6 +529,10 @@ export class HomeViewModel {
       this.isElevationLoading = false;
       this.isElevationError = null;
       this.isElevationResponse = null;
+      this.motorcycle = null;
+      this.isFuelEstimateLoading = false;
+      this.isFuelEstimateError = null;
+      this.isFuelEstimateResponse = null;
     });
   }
 
@@ -579,7 +629,8 @@ export class HomeViewModel {
         this.isRouteResponse = directions;
       });
       this.updateLoadingState(false, null, 'route');
-      void this.computeElevation();
+      await this.computeElevation();
+      void this.computeFuelEstimate();
     } catch (error) {
       this.handleError(error, 'route');
     }
@@ -597,6 +648,46 @@ export class HomeViewModel {
       this.updateLoadingState(false, null, 'elevation');
     } catch (error) {
       this.handleError(error, 'elevation');
+    }
+  }
+
+  private async loadMotorcycle(): Promise<void> {
+    try {
+      const rider = await this.getCurrentRiderUseCase.run();
+      if (!rider) return;
+      const motorcycles = await this.getAllMotorcyclesUseCase.run(rider.id);
+      runInAction(() => {
+        this.motorcycle = motorcycles[0] ?? null;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error loading motorcycle: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /** Estima cuanto le dura la gasolina si hay una moto registrada. */
+  private async computeFuelEstimate(): Promise<void> {
+    const route = this.isRouteResponse;
+    const motorcycle = this.motorcycle;
+    if (!route || !motorcycle) return;
+
+    this.updateLoadingState(true, null, 'fuel');
+    try {
+      const estimate = await this.estimateRouteFuelUseCase.run({
+        motorcycle,
+        distanceKm: route.distanceKm,
+        durationMin: route.durationMin,
+        ascentM: this.isElevationResponse?.ascentM ?? 0,
+      });
+      runInAction(() => {
+        this.isFuelEstimateResponse = estimate;
+      });
+      this.updateLoadingState(false, null, 'fuel');
+    } catch (error) {
+      this.handleError(error, 'fuel');
     }
   }
 
@@ -625,6 +716,10 @@ export class HomeViewModel {
         case 'elevation':
           this.isElevationLoading = isLoading;
           this.isElevationError = error;
+          break;
+        case 'fuel':
+          this.isFuelEstimateLoading = isLoading;
+          this.isFuelEstimateError = error;
           break;
       }
     });

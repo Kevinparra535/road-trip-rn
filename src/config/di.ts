@@ -44,6 +44,7 @@ import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
+import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
@@ -221,6 +222,9 @@ container
 container
   .bind<GetRouteElevationUseCase>(TYPES.GetRouteElevationUseCase)
   .to(GetRouteElevationUseCase);
+container
+  .bind<EstimateRouteFuelUseCase>(TYPES.EstimateRouteFuelUseCase)
+  .to(EstimateRouteFuelUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container

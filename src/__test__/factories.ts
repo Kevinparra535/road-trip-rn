@@ -7,6 +7,7 @@ import { Place } from '@/domain/entities/Place';
 import { Rider } from '@/domain/entities/Rider';
 import { Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 export const makeRider = (overrides: Partial<Rider> = {}): Rider =>
@@ -130,6 +131,18 @@ export const makeElevationProfile = (
       { distanceKm: 10, elevationM: 2800, latitude: 4.9, longitude: -73.9 },
       { distanceKm: 20, elevationM: 2500, latitude: 5.2, longitude: -73.7 },
     ],
+    ...overrides,
+  });
+
+export const makeRouteFuelEstimate = (
+  overrides: Partial<RouteFuelEstimate> = {},
+): RouteFuelEstimate =>
+  new RouteFuelEstimate({
+    distanceKm: 42,
+    effectiveConsumptionKmPerLiter: 24,
+    fuelNeededLiters: 1.75,
+    effectiveRangeKm: 420,
+    fullTankRangeKm: 455,
     ...overrides,
   });
 

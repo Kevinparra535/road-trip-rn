@@ -49,6 +49,7 @@ export const TYPES = {
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
   SearchPlacesUseCase: Symbol.for('SearchPlacesUseCase'),
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
+  EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),

@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 
+import { DEV_FAKE_MOTORCYCLE, DEV_FLAGS } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
 import type { MotorcycleService } from '@/data/services/MotorcycleService';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
@@ -13,11 +14,15 @@ export class MotorcycleRepositoryImpl implements MotorcycleRepository {
   ) {}
 
   async getAllByRider(riderId: string): Promise<Motorcycle[]> {
+    if (DEV_FLAGS.mockGarage) return [DEV_FAKE_MOTORCYCLE];
     const models = await this.service.fetchAllByRider(riderId);
     return models.map((m) => m.toDomain());
   }
 
   async getById(id: string): Promise<Motorcycle | null> {
+    if (DEV_FLAGS.mockGarage && id === DEV_FAKE_MOTORCYCLE.id) {
+      return DEV_FAKE_MOTORCYCLE;
+    }
     const model = await this.service.fetchById(id);
     return model ? model.toDomain() : null;
   }

@@ -66,6 +66,15 @@ describe('AuthRepositoryImpl', () => {
 });
 
 describe('MotorcycleRepositoryImpl', () => {
+  // El mock de garaje no debe interferir con el comportamiento real.
+  const originalMockGarage = DEV_FLAGS.mockGarage;
+  beforeAll(() => {
+    DEV_FLAGS.mockGarage = false;
+  });
+  afterAll(() => {
+    DEV_FLAGS.mockGarage = originalMockGarage;
+  });
+
   it('maps service models to domain motorcycles', async () => {
     const model = MotorcycleModel.fromJson({
       id: 'm1',
@@ -91,6 +100,16 @@ describe('MotorcycleRepositoryImpl', () => {
     expect(service.create).toHaveBeenCalledWith(
       expect.objectContaining({ rider_id: 'rider-1', fuel_type: 'corriente' }),
     );
+  });
+
+  it('injects the dev mock motorcycle when mockGarage is on', async () => {
+    DEV_FLAGS.mockGarage = true;
+    const repo = new MotorcycleRepositoryImpl({} as any);
+    const motorcycles = await repo.getAllByRider('r1');
+    expect(motorcycles[0].brand).toBe('CFMOTO');
+    const byId = await repo.getById('dev-moto-cfmoto-450mt');
+    expect(byId?.model).toBe('450MT');
+    DEV_FLAGS.mockGarage = false;
   });
 });
 

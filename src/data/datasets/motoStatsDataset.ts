@@ -191,4 +191,12 @@ export const MOTO_STATS_DATASET: MotoStatsEntry[] = [
     fuelConsumptionKmPerLiter: 22,
     recommendedFuelType: 'extra',
   },
+  {
+    brand: 'CFMOTO',
+    model: '450MT',
+    engineCc: 449,
+    tankCapacityLiters: 17.5,
+    fuelConsumptionKmPerLiter: 26,
+    recommendedFuelType: 'extra',
+  },
 ];

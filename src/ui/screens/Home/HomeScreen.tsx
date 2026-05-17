@@ -367,6 +367,72 @@ const HomeScreen = observer(() => {
                 </View>
               </View>
             ) : null}
+
+            {viewModel.isFuelEstimateLoading ? (
+              <View style={styles.metaRow}>
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.base.textSecondary}
+                />
+                <Text style={styles.metaText}>Calculando consumo...</Text>
+              </View>
+            ) : viewModel.fuelSummary ? (
+              <View style={styles.fuelSection}>
+                <View style={styles.metaRow}>
+                  <Ionicons
+                    name={
+                      viewModel.fuelSummary.reaches
+                        ? 'checkmark-circle'
+                        : 'warning'
+                    }
+                    size={15}
+                    color={
+                      viewModel.fuelSummary.reaches
+                        ? Colors.alerts.check
+                        : Colors.alerts.warning
+                    }
+                  />
+                  <Text style={styles.fuelStatusText}>
+                    {viewModel.motorcycle?.displayName()} ·{' '}
+                    {viewModel.fuelSummary.fuelNeeded} ·{' '}
+                    {viewModel.fuelSummary.reaches
+                      ? 'alcanza con el tanque'
+                      : 'no alcanza, recarga en ruta'}
+                  </Text>
+                </View>
+                <View style={styles.fuelBarTrack}>
+                  <View
+                    style={[
+                      styles.fuelBarFill,
+                      {
+                        width: `${Math.min(
+                          100,
+                          viewModel.fuelSummary.rangeUsedPercent,
+                        )}%`,
+                        backgroundColor: viewModel.fuelSummary.reaches
+                          ? Colors.alerts.check
+                          : Colors.alerts.error,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.legendText}>
+                  {viewModel.fuelSummary.rangeUsedPercent}% del tanque ·{' '}
+                  {viewModel.fuelSummary.consumption}
+                </Text>
+              </View>
+            ) : !viewModel.hasMotorcycle ? (
+              <View style={styles.metaRow}>
+                <Ionicons
+                  name="information-circle"
+                  size={14}
+                  color={Colors.base.iconMuted}
+                />
+                <Text style={styles.metaText}>
+                  Registra tu moto en el Garaje para estimar el consumo.
+                </Text>
+              </View>
+            ) : null}
           </View>
         ) : (
           <View>
@@ -591,6 +657,28 @@ const styles = StyleSheet.create({
   legendText: {
     ...Fonts.links,
     color: Colors.base.textMuted,
+  },
+  fuelSection: {
+    marginTop: Spacings.md,
+    paddingTop: Spacings.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.base.separator,
+  },
+  fuelStatusText: {
+    flex: 1,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  fuelBarTrack: {
+    marginTop: Spacings.sm,
+    height: 6,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    overflow: 'hidden',
+  },
+  fuelBarFill: {
+    height: 6,
+    borderRadius: BorderRadius.pill,
   },
   locateButton: {
     position: 'absolute',

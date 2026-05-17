@@ -2,8 +2,11 @@ import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import {
   makeElevationProfile,
   makeGeoLocation,
+  makeMotorcycle,
   makePlace,
+  makeRider,
   makeRouteDirections,
+  makeRouteFuelEstimate,
 } from '../factories';
 
 const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
@@ -21,18 +24,29 @@ const makeDirectionsUseCase = () => ({ run: jest.fn() });
 const makeElevationUseCase = () => ({
   run: jest.fn().mockResolvedValue(makeElevationProfile()),
 });
+const makeRiderUseCase = () => ({ run: jest.fn().mockResolvedValue(null) });
+const makeMotosUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
+const makeFuelUseCase = () => ({
+  run: jest.fn().mockResolvedValue(makeRouteFuelEstimate()),
+});
 
 const makeVM = (
   store = makeLocationStore(),
   searchPlaces: { run: jest.Mock } = makeSearchUseCase(),
   directions: { run: jest.Mock } = makeDirectionsUseCase(),
   elevation: { run: jest.Mock } = makeElevationUseCase(),
+  rider: { run: jest.Mock } = makeRiderUseCase(),
+  motos: { run: jest.Mock } = makeMotosUseCase(),
+  fuel: { run: jest.Mock } = makeFuelUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
     searchPlaces as any,
     directions as any,
     elevation as any,
+    rider as any,
+    motos as any,
+    fuel as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -338,5 +352,88 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.destinationCoordinate).toBeNull();
     expect(vm.routeLines).toEqual([]);
     expect(vm.elevationSummary).toBeNull();
+  });
+});
+
+describe('HomeViewModel — consumo de gasolina', () => {
+  it('estimates fuel when the rider has a registered motorcycle', async () => {
+    const rider = { run: jest.fn().mockResolvedValue(makeRider()) };
+    const motos = { run: jest.fn().mockResolvedValue([makeMotorcycle()]) };
+    const fuel = { run: jest.fn().mockResolvedValue(makeRouteFuelEstimate()) };
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
+    const vm = makeVM(
+      store,
+      makeSearchUseCase(),
+      directions,
+      makeElevationUseCase(),
+      rider,
+      motos,
+      fuel,
+    );
+
+    await vm.initialize();
+    await flush();
+    expect(vm.hasMotorcycle).toBe(true);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(fuel.run).toHaveBeenCalled();
+    expect(vm.fuelSummary).not.toBeNull();
+    expect(vm.fuelSummary?.reaches).toBe(true);
+  });
+
+  it('skips the estimate when there is no registered motorcycle', async () => {
+    const fuel = { run: jest.fn() };
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
+    const vm = makeVM(
+      store,
+      makeSearchUseCase(),
+      directions,
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      fuel,
+    );
+
+    await vm.initialize();
+    await flush();
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(fuel.run).not.toHaveBeenCalled();
+    expect(vm.hasMotorcycle).toBe(false);
+    expect(vm.fuelSummary).toBeNull();
+  });
+
+  it('records a fuel estimate error', async () => {
+    const rider = { run: jest.fn().mockResolvedValue(makeRider()) };
+    const motos = { run: jest.fn().mockResolvedValue([makeMotorcycle()]) };
+    const fuel = {
+      run: jest.fn().mockRejectedValue(new Error('moto invalida')),
+    };
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
+    const vm = makeVM(
+      store,
+      makeSearchUseCase(),
+      directions,
+      makeElevationUseCase(),
+      rider,
+      motos,
+      fuel,
+    );
+
+    await vm.initialize();
+    await flush();
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(vm.isFuelEstimateError).toContain('moto invalida');
   });
 });
