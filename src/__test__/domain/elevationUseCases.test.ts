@@ -13,13 +13,13 @@ const geometry = [
 ];
 
 describe('ElevationProfile', () => {
-  it('computes min, max, ascent and descent', () => {
+  it('computes min, max, ascent, descent and the extreme samples', () => {
     const profile = new ElevationProfile({
       samples: [
-        { distanceKm: 0, elevationM: 100 },
-        { distanceKm: 1, elevationM: 150 },
-        { distanceKm: 2, elevationM: 120 },
-        { distanceKm: 3, elevationM: 200 },
+        { distanceKm: 0, elevationM: 100, latitude: 4, longitude: -74 },
+        { distanceKm: 1, elevationM: 150, latitude: 4.1, longitude: -74.1 },
+        { distanceKm: 2, elevationM: 120, latitude: 4.2, longitude: -74.2 },
+        { distanceKm: 3, elevationM: 200, latitude: 4.3, longitude: -74.3 },
       ],
     });
     expect(profile.isEmpty).toBe(false);
@@ -27,6 +27,8 @@ describe('ElevationProfile', () => {
     expect(profile.maxElevationM).toBe(200);
     expect(profile.ascentM).toBe(130);
     expect(profile.descentM).toBe(30);
+    expect(profile.highestSample?.elevationM).toBe(200);
+    expect(profile.lowestSample?.elevationM).toBe(100);
   });
 
   it('is empty and zeroed without samples', () => {
@@ -35,6 +37,8 @@ describe('ElevationProfile', () => {
     expect(profile.minElevationM).toBe(0);
     expect(profile.maxElevationM).toBe(0);
     expect(profile.ascentM).toBe(0);
+    expect(profile.highestSample).toBeNull();
+    expect(profile.lowestSample).toBeNull();
   });
 });
 

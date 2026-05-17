@@ -30,10 +30,12 @@ export class ElevationRepositoryImpl implements ElevationRepository {
       points.map((point) => [point.longitude, point.latitude]),
     );
     const totalKm = polylineLengthKm(geometry);
-    const samples: ElevationSample[] = points.map((_, index) => ({
+    const samples: ElevationSample[] = points.map((point, index) => ({
       distanceKm:
         points.length > 1 ? (totalKm * index) / (points.length - 1) : 0,
       elevationM: elevations[index] ?? 0,
+      latitude: point.latitude,
+      longitude: point.longitude,
     }));
     return new ElevationProfile({ samples });
   }

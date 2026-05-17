@@ -261,7 +261,7 @@ describe('HomeViewModel — ruta A->B', () => {
     );
   });
 
-  it('loads the elevation profile after computing a route', async () => {
+  it('loads the elevation profile and gradients the route after computing', async () => {
     const directions = makeDirectionsUseCase();
     directions.run.mockResolvedValue(makeRouteDirections());
     const elevation = makeElevationUseCase();
@@ -275,6 +275,14 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(elevation.run).toHaveBeenCalled();
     expect(vm.elevationSummary).not.toBeNull();
     expect(vm.elevationBars).toHaveLength(3);
+    // cada barra trae su color de la rampa de elevacion
+    expect(vm.elevationBars[0].color).toMatch(/^#[0-9a-f]{6}$/i);
+    // la principal lleva degradado por altura
+    const primary = vm.routeLines.find((line) => line.isPrimary);
+    expect(primary?.gradientStops).toHaveLength(3);
+    // puntos alto y bajo para marcar en el mapa
+    expect(vm.elevationHighlights?.highest.coordinate).toEqual([-73.9, 4.9]);
+    expect(vm.elevationHighlights?.lowest.coordinate).toEqual([-73.7, 5.2]);
   });
 
   it('records an elevation error', async () => {

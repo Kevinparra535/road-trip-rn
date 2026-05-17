@@ -126,9 +126,9 @@ export const makeElevationProfile = (
 ): ElevationProfile =>
   new ElevationProfile({
     samples: [
-      { distanceKm: 0, elevationM: 2600 },
-      { distanceKm: 10, elevationM: 2800 },
-      { distanceKm: 20, elevationM: 2500 },
+      { distanceKm: 0, elevationM: 2600, latitude: 4.61, longitude: -74.08 },
+      { distanceKm: 10, elevationM: 2800, latitude: 4.9, longitude: -73.9 },
+      { distanceKm: 20, elevationM: 2500, latitude: 5.2, longitude: -73.7 },
     ],
     ...overrides,
   });

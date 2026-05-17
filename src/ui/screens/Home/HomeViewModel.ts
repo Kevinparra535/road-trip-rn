@@ -47,6 +47,42 @@ const colorsForRideType = (
 ): { primary: string; alternative: string } =>
   rideType === 'offroad' ? OFFROAD_COLORS : HIGHWAY_COLORS;
 
+// Rampa universal de elevacion: verde (bajo) -> amarillo -> naranja -> rojo.
+const ELEVATION_RAMP = ['#27AE60', '#E6C229', '#E8A030', '#E74446'];
+
+const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
+  const value = hex.replace('#', '');
+  return {
+    r: parseInt(value.slice(0, 2), 16),
+    g: parseInt(value.slice(2, 4), 16),
+    b: parseInt(value.slice(4, 6), 16),
+  };
+};
+
+const channelToHex = (channel: number): string =>
+  Math.round(channel).toString(16).padStart(2, '0');
+
+const lerpHexColor = (from: string, to: string, t: number): string => {
+  const a = hexToRgb(from);
+  const b = hexToRgb(to);
+  return `#${channelToHex(a.r + (b.r - a.r) * t)}${channelToHex(
+    a.g + (b.g - a.g) * t,
+  )}${channelToHex(a.b + (b.b - a.b) * t)}`;
+};
+
+/** Color de la rampa de elevacion para un valor normalizado (0 bajo, 1 alto). */
+const elevationColor = (ratio: number): string => {
+  const clamped = Math.min(1, Math.max(0, ratio));
+  const segments = ELEVATION_RAMP.length - 1;
+  const scaled = clamped * segments;
+  const index = Math.min(segments - 1, Math.floor(scaled));
+  return lerpHexColor(
+    ELEVATION_RAMP[index],
+    ELEVATION_RAMP[index + 1],
+    scaled - index,
+  );
+};
+
 /** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
 export type CameraTarget = {
   centerCoordinate: [number, number];
@@ -60,12 +96,27 @@ export type MapBounds = {
   sw: [number, number];
 };
 
+/** Una parada del degradado de elevacion a lo largo de la linea. */
+export type GradientStop = {
+  /** Avance sobre la linea, de 0 (inicio) a 1 (fin). */
+  progress: number;
+  color: string;
+};
+
+/** Punto destacado del perfil (mas alto o mas bajo) para marcar en el mapa. */
+export type ElevationHighlight = {
+  coordinate: [number, number];
+  label: string;
+};
+
 /** Una linea de ruta lista para pintar: principal o alternativa. */
 export type RouteLine = {
   id: string;
   shape: GeoJSON.Feature<GeoJSON.LineString>;
   color: string;
   isPrimary: boolean;
+  /** Degradado por altura; presente solo en la principal con elevacion. */
+  gradientStops?: GradientStop[];
 };
 
 type ICalls = 'search' | 'route' | 'elevation';
@@ -241,6 +292,7 @@ export class HomeViewModel {
         shape: primaryShape,
         color: colors.primary,
         isPrimary: true,
+        gradientStops: this.elevationGradientStops,
       });
     }
     return lines;
@@ -270,25 +322,69 @@ export class HomeViewModel {
 
   // ── Computed: perfil de elevacion ───────────────────────────────────────────
 
-  /** Alturas normalizadas (0..1) para dibujar el perfil como barras. */
-  get elevationBars(): number[] {
+  /** Barras del perfil: altura normalizada (0..1) y color de la rampa. */
+  get elevationBars(): { ratio: number; color: string }[] {
     const profile = this.isElevationResponse;
     if (!profile || profile.isEmpty) return [];
     const min = profile.minElevationM;
     const range = profile.maxElevationM - min;
-    return profile.samples.map((sample) =>
-      range === 0 ? 0.5 : (sample.elevationM - min) / range,
-    );
+    return profile.samples.map((sample) => {
+      const ratio = range === 0 ? 0.5 : (sample.elevationM - min) / range;
+      return { ratio, color: elevationColor(range === 0 ? 0 : ratio) };
+    });
+  }
+
+  /** Paradas del degradado de elevacion para la linea principal. */
+  private get elevationGradientStops(): GradientStop[] | undefined {
+    const profile = this.isElevationResponse;
+    if (!profile || profile.samples.length < 2) return undefined;
+    const min = profile.minElevationM;
+    const range = profile.maxElevationM - min;
+    const count = profile.samples.length;
+    return profile.samples.map((sample, index) => ({
+      progress: index / (count - 1),
+      color: elevationColor(
+        range === 0 ? 0 : (sample.elevationM - min) / range,
+      ),
+    }));
   }
 
   /** Resumen del perfil de elevacion, ya formateado. */
-  get elevationSummary(): { min: string; max: string; ascent: string } | null {
+  get elevationSummary(): {
+    min: string;
+    max: string;
+    ascent: string;
+    descent: string;
+  } | null {
     const profile = this.isElevationResponse;
     if (!profile || profile.isEmpty) return null;
     return {
       min: `${Math.round(profile.minElevationM)} m`,
       max: `${Math.round(profile.maxElevationM)} m`,
       ascent: `${Math.round(profile.ascentM)} m`,
+      descent: `${Math.round(profile.descentM)} m`,
+    };
+  }
+
+  /** Puntos mas alto y mas bajo del trazado, para marcar en el mapa. */
+  get elevationHighlights(): {
+    highest: ElevationHighlight;
+    lowest: ElevationHighlight;
+  } | null {
+    const profile = this.isElevationResponse;
+    if (!profile || profile.isEmpty) return null;
+    const highest = profile.highestSample;
+    const lowest = profile.lowestSample;
+    if (!highest || !lowest) return null;
+    return {
+      highest: {
+        coordinate: [highest.longitude, highest.latitude],
+        label: `${Math.round(highest.elevationM)} m`,
+      },
+      lowest: {
+        coordinate: [lowest.longitude, lowest.latitude],
+        label: `${Math.round(lowest.elevationM)} m`,
+      },
     };
   }
 

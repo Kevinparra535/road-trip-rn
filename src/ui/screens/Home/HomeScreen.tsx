@@ -23,16 +23,28 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { HomeViewModel } from './HomeViewModel';
+import { GradientStop, HomeViewModel } from './HomeViewModel';
 
 // Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
-const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 80, 200, 80];
+const ROUTE_FIT_PADDING: [number, number, number, number] = [280, 80, 200, 80];
 
 // Tipos de rodada que ofrece el toggle del Home.
 const RIDE_OPTIONS: { type: RideType; label: string; color: string }[] = [
   { type: 'highway', label: 'Carretera', color: Colors.base.accent },
   { type: 'offroad', label: 'Offroad', color: Colors.base.iconOffroad },
 ];
+
+// Colores de la leyenda de elevacion (bajo -> alto).
+const ELEVATION_LEGEND = ['#27AE60', '#E6C229', '#E8A030', '#E74446'];
+
+/** Construye la expresion `lineGradient` de Mapbox a partir de las paradas. */
+const buildLineGradient = (stops: GradientStop[]): any => {
+  const expression: unknown[] = ['interpolate', ['linear'], ['line-progress']];
+  stops.forEach((stop) => {
+    expression.push(stop.progress, stop.color);
+  });
+  return expression;
+};
 
 /**
  * Pantalla principal: el mapa estilo navegacion Waze. Se mantiene delgada —
@@ -99,6 +111,8 @@ const HomeScreen = observer(() => {
     viewModel.selectDestination(place);
   };
 
+  const highlights = viewModel.elevationHighlights;
+
   return (
     <View style={styles.container}>
       <Mapbox.MapView
@@ -126,24 +140,70 @@ const HomeScreen = observer(() => {
           }}
         />
 
-        {viewModel.routeLines.map((line) => (
-          <Mapbox.ShapeSource
-            key={line.id}
-            id={`route-${line.id}`}
-            shape={line.shape}
+        {viewModel.routeLines.map((line) => {
+          const stops = line.gradientStops;
+          const gradient =
+            stops && stops.length > 1 ? buildLineGradient(stops) : null;
+          return (
+            <Mapbox.ShapeSource
+              key={line.id}
+              id={`route-${line.id}`}
+              shape={line.shape}
+              // Estable desde el montaje: `lineGradient` necesita line-progress.
+              lineMetrics={line.isPrimary}
+            >
+              <Mapbox.LineLayer
+                id={`route-${line.id}-line`}
+                style={
+                  gradient
+                    ? {
+                        lineGradient: gradient,
+                        // Respaldo por si el degradado no aplica.
+                        lineColor: line.color,
+                        lineWidth: 6,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                      }
+                    : {
+                        lineColor: line.color,
+                        lineWidth: line.isPrimary ? 6 : 4,
+                        lineCap: 'round',
+                        lineJoin: 'round',
+                        lineOpacity: line.isPrimary ? 1 : 0.9,
+                      }
+                }
+              />
+            </Mapbox.ShapeSource>
+          );
+        })}
+
+        {highlights ? (
+          <Mapbox.PointAnnotation
+            id="elevation-high"
+            coordinate={highlights.highest.coordinate}
           >
-            <Mapbox.LineLayer
-              id={`route-${line.id}-line`}
-              style={{
-                lineColor: line.color,
-                lineWidth: line.isPrimary ? 6 : 4,
-                lineCap: 'round',
-                lineJoin: 'round',
-                lineOpacity: line.isPrimary ? 1 : 0.9,
-              }}
-            />
-          </Mapbox.ShapeSource>
-        ))}
+            <View style={[styles.elevationBadge, styles.elevationBadgeHigh]}>
+              <Ionicons name="arrow-up" size={11} color="#E74446" />
+              <Text style={styles.elevationBadgeText}>
+                {highlights.highest.label}
+              </Text>
+            </View>
+          </Mapbox.PointAnnotation>
+        ) : null}
+
+        {highlights ? (
+          <Mapbox.PointAnnotation
+            id="elevation-low"
+            coordinate={highlights.lowest.coordinate}
+          >
+            <View style={[styles.elevationBadge, styles.elevationBadgeLow]}>
+              <Ionicons name="arrow-down" size={11} color="#27AE60" />
+              <Text style={styles.elevationBadgeText}>
+                {highlights.lowest.label}
+              </Text>
+            </View>
+          </Mapbox.PointAnnotation>
+        ) : null}
 
         {viewModel.destinationCoordinate ? (
           <Mapbox.PointAnnotation
@@ -268,22 +328,43 @@ const HomeScreen = observer(() => {
               <View style={styles.elevationSection}>
                 <View style={styles.elevationHeader}>
                   <Text style={styles.elevationTitle}>Elevacion</Text>
-                  <Text style={styles.elevationAscent}>
-                    ↑ {viewModel.elevationSummary.ascent}
+                  <Text style={styles.elevationStats}>
+                    ↑ {viewModel.elevationSummary.ascent}　↓{' '}
+                    {viewModel.elevationSummary.descent}
                   </Text>
                 </View>
+
                 <View style={styles.elevationChart}>
-                  {viewModel.elevationBars.map((ratio, index) => (
+                  {viewModel.elevationBars.map((bar, index) => (
                     <View
                       key={`bar-${index}`}
-                      style={[styles.elevationBar, { height: 6 + ratio * 38 }]}
+                      style={[
+                        styles.elevationBar,
+                        {
+                          height: 6 + bar.ratio * 40,
+                          backgroundColor: bar.color,
+                        },
+                      ]}
                     />
                   ))}
                 </View>
-                <Text style={styles.elevationRange}>
-                  {viewModel.elevationSummary.min} –{' '}
-                  {viewModel.elevationSummary.max} s. n. m.
-                </Text>
+
+                <View style={styles.legendBar}>
+                  {ELEVATION_LEGEND.map((color, index) => (
+                    <View
+                      key={`legend-${index}`}
+                      style={[styles.legendSegment, { backgroundColor: color }]}
+                    />
+                  ))}
+                </View>
+                <View style={styles.legendLabels}>
+                  <Text style={styles.legendText}>
+                    Bajo · {viewModel.elevationSummary.min}
+                  </Text>
+                  <Text style={styles.legendText}>
+                    {viewModel.elevationSummary.max} · Alto
+                  </Text>
+                </View>
               </View>
             ) : null}
           </View>
@@ -477,24 +558,37 @@ const styles = StyleSheet.create({
     ...Fonts.header5,
     color: Colors.base.textSecondary,
   },
-  elevationAscent: {
+  elevationStats: {
     ...Fonts.bodyTextBold,
-    color: Colors.base.accent,
+    color: Colors.base.textPrimary,
   },
   elevationChart: {
-    marginTop: Spacings.sm,
-    height: 44,
+    marginTop: Spacings.md,
+    height: 46,
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 3,
   },
   elevationBar: {
     flex: 1,
-    backgroundColor: Colors.base.accentDimBorder,
     borderRadius: BorderRadius.xs,
   },
-  elevationRange: {
+  legendBar: {
     marginTop: Spacings.sm,
+    height: 6,
+    flexDirection: 'row',
+    borderRadius: BorderRadius.pill,
+    overflow: 'hidden',
+  },
+  legendSegment: {
+    flex: 1,
+  },
+  legendLabels: {
+    marginTop: Spacings.xs,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  legendText: {
     ...Fonts.links,
     color: Colors.base.textMuted,
   },
@@ -511,6 +605,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
+  },
+  elevationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 3,
+    paddingHorizontal: Spacings.sm,
+    backgroundColor: Colors.base.bgPrimary,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+  },
+  elevationBadgeHigh: {
+    borderColor: '#E74446',
+  },
+  elevationBadgeLow: {
+    borderColor: '#27AE60',
+  },
+  elevationBadgeText: {
+    ...Fonts.links,
+    color: Colors.base.textPrimary,
   },
   destinationMarker: {
     width: 30,

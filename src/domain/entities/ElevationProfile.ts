@@ -3,6 +3,8 @@ export type ElevationSample = {
   distanceKm: number;
   /** Altura sobre el nivel del mar, en metros. */
   elevationM: number;
+  latitude: number;
+  longitude: number;
 };
 
 export type ElevationProfileConstructorParams = {
@@ -47,6 +49,22 @@ export class ElevationProfile {
   /** Descenso acumulado: suma de los desniveles negativos, en metros. */
   get descentM(): number {
     return this.accumulate((delta) => (delta < 0 ? -delta : 0));
+  }
+
+  /** Muestra mas alta del trazado. */
+  get highestSample(): ElevationSample | null {
+    if (this.isEmpty) return null;
+    return this.samples.reduce((highest, sample) =>
+      sample.elevationM > highest.elevationM ? sample : highest,
+    );
+  }
+
+  /** Muestra mas baja del trazado. */
+  get lowestSample(): ElevationSample | null {
+    if (this.isEmpty) return null;
+    return this.samples.reduce((lowest, sample) =>
+      sample.elevationM < lowest.elevationM ? sample : lowest,
+    );
   }
 
   private accumulate(pick: (delta: number) => number): number {
