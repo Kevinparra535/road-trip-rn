@@ -102,13 +102,21 @@ describe('MotorcycleRepositoryImpl', () => {
     );
   });
 
-  it('injects the dev mock motorcycle when mockGarage is on', async () => {
+  it('injects and edits the dev mock garage in memory', async () => {
     DEV_FLAGS.mockGarage = true;
     const repo = new MotorcycleRepositoryImpl({} as any);
+
     const motorcycles = await repo.getAllByRider('r1');
     expect(motorcycles[0].brand).toBe('CFMOTO');
-    const byId = await repo.getById('dev-moto-cfmoto-450mt');
-    expect(byId?.model).toBe('450MT');
+    expect((await repo.getById('dev-moto-cfmoto-450mt'))?.model).toBe('450MT');
+
+    // update opera en memoria, sin tocar Firestore (no hay servicio real).
+    await repo.update(
+      makeMotorcycle({ id: 'dev-moto-cfmoto-450mt', driverWeightKg: 95 }),
+    );
+    const edited = await repo.getById('dev-moto-cfmoto-450mt');
+    expect(edited?.driverWeightKg).toBe(95);
+
     DEV_FLAGS.mockGarage = false;
   });
 });
