@@ -17,6 +17,7 @@ export type GarageStackParamList = {
 };
 
 export type AppTabsParamList = {
+  HomeTab: undefined;
   RoutesTab: NavigatorScreenParams<RoutesStackParamList>;
   GarageTab: NavigatorScreenParams<GarageStackParamList>;
   ProfileTab: undefined;

@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
+import HomeScreen from '@/ui/screens/Home/HomeScreen';
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 
 import GarageNavigator from './GarageNavigator';
@@ -24,6 +25,16 @@ const AppTabs = () => (
       },
     }}
   >
+    <Tabs.Screen
+      name="HomeTab"
+      component={HomeScreen}
+      options={{
+        title: 'Inicio',
+        tabBarIcon: ({ color, size }) => (
+          <Ionicons name="home" size={size} color={color} />
+        ),
+      }}
+    />
     <Tabs.Screen
       name="RoutesTab"
       component={RoutesNavigator}

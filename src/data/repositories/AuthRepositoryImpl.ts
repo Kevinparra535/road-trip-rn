@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 
+import { DEV_FAKE_RIDER, DEV_FLAGS } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
 import type { AuthService } from '@/data/services/AuthService';
 import { Rider } from '@/domain/entities/Rider';
@@ -35,11 +36,16 @@ export class AuthRepositoryImpl implements AuthRepository {
   }
 
   async getCurrentRider(): Promise<Rider | null> {
+    if (DEV_FLAGS.bypassAuth) return DEV_FAKE_RIDER;
     const model = await this.service.getCurrentRider();
     return model ? model.toDomain() : null;
   }
 
   observeAuthState(listener: (rider: Rider | null) => void): () => void {
+    if (DEV_FLAGS.bypassAuth) {
+      listener(DEV_FAKE_RIDER);
+      return () => undefined;
+    }
     return this.service.onAuthStateChanged((model) => {
       listener(model ? model.toDomain() : null);
     });
