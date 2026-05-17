@@ -23,19 +23,27 @@ type Nav = BottomTabNavigationProp<AppTabsParamList, 'HomeTab'>;
 // Centro por defecto: Bogota, Colombia.
 const DEFAULT_CENTER: [number, number] = [-74.0817, 4.6097];
 const DEFAULT_ZOOM = 11;
-const FOLLOW_ZOOM = 15;
-// Vista en perspectiva (no aerea): inclinacion de la camara en grados.
-const MAP_PITCH = 55;
+// Zoom al seguir al rider y tope maximo de acercamiento.
+const FOLLOW_ZOOM = 16.5;
+const MAX_ZOOM = 18;
 // Umbral de prueba: por debajo de este zoom el rumbo se pinta como punto.
 const HEADING_MARKER_MIN_ZOOM = 12;
+// Estilo Waze: al acercarse la camara se inclina; al alejarse vuelve plana.
+const PERSPECTIVE_ZOOM_THRESHOLD = 16;
+const FLAT_PITCH = 0;
+const PERSPECTIVE_PITCH = 60;
 // Tamano real del triangulo de rumbo, en kilometros.
 const TRIANGLE_NOSE_KM = 0.05;
 const TRIANGLE_TAIL_KM = 0.03;
 
+/** Inclinacion objetivo de la camara segun el nivel de zoom. */
+const pitchForZoom = (zoom: number): number =>
+  zoom >= PERSPECTIVE_ZOOM_THRESHOLD ? PERSPECTIVE_PITCH : FLAT_PITCH;
+
 /**
- * Pantalla principal: el mapa en perspectiva 3D, estilo navegacion.
- * Es la vista inicial de la app. Pinta al rider con un triangulo cuyo vertice
- * apunta hacia su rumbo; si el zoom es bajo cae a un punto simple.
+ * Pantalla principal: el mapa estilo navegacion Waze. Es la vista inicial de
+ * la app. Al acercarse la camara pasa a perspectiva 3D y al alejarse vuelve
+ * plana. Pinta al rider con un triangulo cuyo vertice apunta a su rumbo.
  */
 const HomeScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -46,6 +54,7 @@ const HomeScreen = observer(() => {
 
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const didCenterRef = useRef(false);
+  const isPerspectiveRef = useRef(false);
   const [isAboveZoomThreshold, setIsAboveZoomThreshold] = useState(false);
 
   // Arranca el sistema de localizacion y lo libera al salir.
@@ -62,10 +71,11 @@ const HomeScreen = observer(() => {
   useEffect(() => {
     if (userCoordinates && !didCenterRef.current) {
       didCenterRef.current = true;
+      isPerspectiveRef.current = true;
       cameraRef.current?.setCamera({
         centerCoordinate: userCoordinates,
         zoomLevel: FOLLOW_ZOOM,
-        pitch: MAP_PITCH,
+        pitch: PERSPECTIVE_PITCH,
         animationDuration: 800,
       });
     }
@@ -92,15 +102,27 @@ const HomeScreen = observer(() => {
 
   const showHeadingTriangle = headingShape !== null && isAboveZoomThreshold;
 
+  // Inclina o aplana la camara al cruzar el umbral de zoom (estilo Waze).
+  const syncPitchToZoom = (zoom: number) => {
+    const wantsPerspective = zoom >= PERSPECTIVE_ZOOM_THRESHOLD;
+    if (wantsPerspective === isPerspectiveRef.current) return;
+    isPerspectiveRef.current = wantsPerspective;
+    cameraRef.current?.setCamera({
+      pitch: pitchForZoom(zoom),
+      animationDuration: 450,
+    });
+  };
+
   const goToPlanner = () =>
     navigation.navigate('RoutesTab', { screen: 'RoutePlanner' });
 
   const recenterOnUser = () => {
     if (!userCoordinates) return;
+    isPerspectiveRef.current = true;
     cameraRef.current?.setCamera({
       centerCoordinate: userCoordinates,
       zoomLevel: FOLLOW_ZOOM,
-      pitch: MAP_PITCH,
+      pitch: PERSPECTIVE_PITCH,
       animationDuration: 600,
     });
   };
@@ -110,19 +132,19 @@ const HomeScreen = observer(() => {
       <Mapbox.MapView
         style={styles.map}
         styleURL={MAP_STYLE_URL}
-        onCameraChanged={(state) =>
-          setIsAboveZoomThreshold(
-            (state?.properties?.zoom ?? DEFAULT_ZOOM) >=
-              HEADING_MARKER_MIN_ZOOM,
-          )
-        }
+        onCameraChanged={(state) => {
+          const zoom = state?.properties?.zoom ?? DEFAULT_ZOOM;
+          setIsAboveZoomThreshold(zoom >= HEADING_MARKER_MIN_ZOOM);
+          syncPitchToZoom(zoom);
+        }}
       >
         <Mapbox.Camera
           ref={cameraRef}
+          maxZoomLevel={MAX_ZOOM}
           defaultSettings={{
             centerCoordinate: DEFAULT_CENTER,
             zoomLevel: DEFAULT_ZOOM,
-            pitch: MAP_PITCH,
+            pitch: FLAT_PITCH,
           }}
         />
 
