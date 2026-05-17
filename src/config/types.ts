@@ -6,6 +6,7 @@ export const TYPES = {
   RouteService: Symbol.for('RouteService'),
   DirectionsService: Symbol.for('DirectionsService'),
   FuelStationService: Symbol.for('FuelStationService'),
+  LocationService: Symbol.for('LocationService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
   AuthRepository: Symbol.for('AuthRepository'),
@@ -14,6 +15,7 @@ export const TYPES = {
   RouteRepository: Symbol.for('RouteRepository'),
   DirectionsRepository: Symbol.for('DirectionsRepository'),
   FuelStationRepository: Symbol.for('FuelStationRepository'),
+  LocationRepository: Symbol.for('LocationRepository'),
 
   // ── UseCases (capa domain) ──
   SignUpUseCase: Symbol.for('SignUpUseCase'),
@@ -35,6 +37,11 @@ export const TYPES = {
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
   EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
   FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
+  RequestLocationPermissionUseCase: Symbol.for(
+    'RequestLocationPermissionUseCase',
+  ),
+  GetCurrentLocationUseCase: Symbol.for('GetCurrentLocationUseCase'),
+  WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),
@@ -44,4 +51,5 @@ export const TYPES = {
   RoutesViewModel: Symbol.for('RoutesViewModel'),
   RoutePlannerViewModel: Symbol.for('RoutePlannerViewModel'),
   RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
+  LocationStore: Symbol.for('LocationStore'),
 } as const;

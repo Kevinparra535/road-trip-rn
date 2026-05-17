@@ -1,3 +1,4 @@
+import { DEV_FLAGS } from '@/config/devFlags';
 import { FuelStationModel } from '@/data/models/fuelStationModel';
 import { MotorcycleModel } from '@/data/models/motorcycleModel';
 import { RiderModel } from '@/data/models/riderModel';
@@ -19,6 +20,15 @@ const riderModel = () =>
   });
 
 describe('AuthRepositoryImpl', () => {
+  // El bypass de desarrollo no debe interferir con el comportamiento real.
+  const originalBypass = DEV_FLAGS.bypassAuth;
+  beforeAll(() => {
+    DEV_FLAGS.bypassAuth = false;
+  });
+  afterAll(() => {
+    DEV_FLAGS.bypassAuth = originalBypass;
+  });
+
   it('maps the sign-in model to a domain Rider', async () => {
     const service = {
       signUp: jest.fn(),

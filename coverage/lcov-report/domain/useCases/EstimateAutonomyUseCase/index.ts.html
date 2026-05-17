@@ -195,14 +195,7 @@
 <a name='L130'></a><a href='#L130'>130</a>
 <a name='L131'></a><a href='#L131'>131</a>
 <a name='L132'></a><a href='#L132'>132</a>
-<a name='L133'></a><a href='#L133'>133</a>
-<a name='L134'></a><a href='#L134'>134</a>
-<a name='L135'></a><a href='#L135'>135</a>
-<a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a>
-<a name='L138'></a><a href='#L138'>138</a>
-<a name='L139'></a><a href='#L139'>139</a>
-<a name='L140'></a><a href='#L140'>140</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L133'></a><a href='#L133'>133</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -230,6 +223,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
@@ -244,12 +238,9 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -259,9 +250,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -310,8 +298,6 @@
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -365,9 +351,10 @@ const SAFETY_RESERVE_FRACTION = 0.12;
  * de tanqueo. Logica de negocio pura, sin dependencias de infraestructura.
  */
 @injectable()
-export class EstimateAutonomyUseCase
-  implements UseCase&lt;EstimateAutonomyInput, AutonomyEstimate&gt;
-{
+export class EstimateAutonomyUseCase implements UseCase&lt;
+  EstimateAutonomyInput,
+  AutonomyEstimate
+&gt; {
   async run(input: EstimateAutonomyInput): Promise&lt;AutonomyEstimate&gt; {
     const { motorcycle, route, conditions } = input;
 &nbsp;
@@ -383,12 +370,9 @@ export class EstimateAutonomyUseCase
     const safetyReserveKm = fullTankRangeKm * factor * SAFETY_RESERVE_FRACTION;
 &nbsp;
     const totalDistanceKm = route.distanceKm;
-    const effectiveConsumption =
-      motorcycle.fuelConsumptionKmPerLiter * factor;
+    const effectiveConsumption = motorcycle.fuelConsumptionKmPerLiter * factor;
     const totalFuelLiters =
-      effectiveConsumption &gt; 0
-        ? totalDistanceKm / effectiveConsumption
-        : <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
+      effectiveConsumption &gt; 0 ? totalDistanceKm / effectiveConsumption : <span class="branch-1 cbranch-no" title="branch not covered" >0;</span>
 &nbsp;
     const reachesWithoutRefuel = totalDistanceKm &lt;= effectiveRangeKm;
     const fuelStops = this.buildFuelStops(
@@ -410,10 +394,7 @@ export class EstimateAutonomyUseCase
   }
 &nbsp;
   /** Factor combinado (0-1.1) que ajusta el rendimiento segun el viaje. */
-  private conditionFactor(
-    conditions: RidingConditions,
-    route: Route,
-  ): number {
+  private conditionFactor(conditions: RidingConditions, route: Route): number {
     let factor = 1;
     if (conditions.hasPassenger) factor *= 0.92;
     if (conditions.hasLuggage) factor *= 0.93;
@@ -448,9 +429,7 @@ export class EstimateAutonomyUseCase
     let distance = effectiveRangeKm;
     while (distance &lt; totalDistanceKm) {
       const location =
-        pointAtDistanceAlong(geometry, distance) ??
-<span class="branch-1 cbranch-no" title="branch not covered" >        geometry[0] </span>??
-<span class="branch-2 cbranch-no" title="branch not covered" >        null;</span>
+        pointAtDistanceAlong(geometry, distance) ?? <span class="branch-1 cbranch-no" title="branch not covered" >geometry[0] </span>?? <span class="branch-2 cbranch-no" title="branch not covered" >null;</span>
       <span class="missing-if-branch" title="else path not taken" >E</span>if (location) {
         stops.push(
           new FuelStop({
@@ -487,7 +466,7 @@ export class EstimateAutonomyUseCase
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-05-16T20:14:00.926Z
+                at 2026-05-17T16:16:43.016Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

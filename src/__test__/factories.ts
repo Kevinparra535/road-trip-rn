@@ -1,3 +1,4 @@
+import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
 import { Rider } from '@/domain/entities/Rider';
@@ -66,6 +67,19 @@ export const makeRoute = (overrides: Partial<Route> = {}): Route =>
     distanceKm: 600,
     estimatedDurationMin: 480,
     createdAt: new Date('2026-02-01T00:00:00Z'),
+    ...overrides,
+  });
+
+export const makeGeoLocation = (
+  overrides: Partial<GeoLocation> = {},
+): GeoLocation =>
+  new GeoLocation({
+    latitude: 4.6097,
+    longitude: -74.0817,
+    accuracy: 8,
+    heading: 0,
+    speed: 0,
+    timestamp: new Date('2026-03-01T00:00:00Z'),
     ...overrides,
   });
 
