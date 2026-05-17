@@ -14,6 +14,10 @@ export interface LocationService {
   watchPosition(
     listener: (position: Location.LocationObject) => void,
   ): Promise<Location.LocationSubscription>;
+  /** Suscripcion a la orientacion (brujula); resuelve el handle de Expo. */
+  watchHeading(
+    listener: (heading: Location.LocationHeadingObject) => void,
+  ): Promise<Location.LocationSubscription>;
 }
 
 @injectable()
@@ -40,5 +44,11 @@ export class LocationServiceImpl implements LocationService {
       },
       listener,
     );
+  }
+
+  async watchHeading(
+    listener: (heading: Location.LocationHeadingObject) => void,
+  ): Promise<Location.LocationSubscription> {
+    return Location.watchHeadingAsync(listener);
   }
 }

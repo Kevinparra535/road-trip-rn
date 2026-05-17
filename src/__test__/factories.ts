@@ -1,3 +1,4 @@
+import { DeviceHeading } from '@/domain/entities/DeviceHeading';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
@@ -80,6 +81,16 @@ export const makeGeoLocation = (
     heading: 0,
     speed: 0,
     timestamp: new Date('2026-03-01T00:00:00Z'),
+    ...overrides,
+  });
+
+export const makeDeviceHeading = (
+  overrides: Partial<DeviceHeading> = {},
+): DeviceHeading =>
+  new DeviceHeading({
+    trueHeading: 90,
+    magHeading: 92,
+    accuracy: 1,
     ...overrides,
   });
 

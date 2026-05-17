@@ -1,10 +1,11 @@
 import { LocationStore } from '@/ui/viewModels/LocationStore';
-import { makeGeoLocation } from '../factories';
+import { makeDeviceHeading, makeGeoLocation } from '../factories';
 
 const makeUseCases = () => ({
   requestPermission: { run: jest.fn() },
   getCurrentLocation: { run: jest.fn() },
   watchLocation: { run: jest.fn() },
+  watchHeading: { run: jest.fn() },
 });
 
 const makeStore = (uc = makeUseCases()) =>
@@ -12,6 +13,7 @@ const makeStore = (uc = makeUseCases()) =>
     uc.requestPermission as any,
     uc.getCurrentLocation as any,
     uc.watchLocation as any,
+    uc.watchHeading as any,
   );
 
 describe('LocationStore', () => {
@@ -125,43 +127,89 @@ describe('LocationStore', () => {
     expect(store.isPermissionResponse).toBeNull();
   });
 
-  it('has no heading before any location', () => {
+  it('has no heading before the compass reports', () => {
     expect(makeStore().heading).toBeNull();
   });
 
-  it('exposes a valid heading from the current location', async () => {
+  it('exposes the device heading from the compass watch', async () => {
     const uc = makeUseCases();
     uc.requestPermission.run.mockResolvedValue('granted');
-    uc.getCurrentLocation.run.mockResolvedValue(
-      makeGeoLocation({ heading: 90 }),
-    );
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
     uc.watchLocation.run.mockResolvedValue(jest.fn());
+    let headingCb: (heading: any) => void = () => undefined;
+    uc.watchHeading.run.mockImplementation(async (cb: any) => {
+      headingCb = cb;
+      return jest.fn();
+    });
     const store = makeStore(uc);
     await store.initialize();
+
+    headingCb(makeDeviceHeading({ trueHeading: 90, magHeading: 92 }));
+    expect(store.heading).toBe(90);
+
+    store.dispose();
+  });
+
+  it('falls back to the magnetic heading when true heading is unavailable', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    let headingCb: (heading: any) => void = () => undefined;
+    uc.watchHeading.run.mockImplementation(async (cb: any) => {
+      headingCb = cb;
+      return jest.fn();
+    });
+    const store = makeStore(uc);
+    await store.initialize();
+
+    headingCb(makeDeviceHeading({ trueHeading: -1, magHeading: 200 }));
+    expect(store.heading).toBe(200);
+  });
+
+  it('ignores compass readings without a usable heading', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    let headingCb: (heading: any) => void = () => undefined;
+    uc.watchHeading.run.mockImplementation(async (cb: any) => {
+      headingCb = cb;
+      return jest.fn();
+    });
+    const store = makeStore(uc);
+    await store.initialize();
+
+    headingCb(makeDeviceHeading({ trueHeading: -1, magHeading: -1 }));
+    expect(store.heading).toBeNull();
+  });
+
+  it('ignores sub-degree compass jitter', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    let headingCb: (heading: any) => void = () => undefined;
+    uc.watchHeading.run.mockImplementation(async (cb: any) => {
+      headingCb = cb;
+      return jest.fn();
+    });
+    const store = makeStore(uc);
+    await store.initialize();
+
+    headingCb(makeDeviceHeading({ trueHeading: 90 }));
+    headingCb(makeDeviceHeading({ trueHeading: 90.3 }));
     expect(store.heading).toBe(90);
   });
 
-  it('treats a negative heading as no heading', async () => {
+  it('records a compass subscription error', async () => {
     const uc = makeUseCases();
     uc.requestPermission.run.mockResolvedValue('granted');
-    uc.getCurrentLocation.run.mockResolvedValue(
-      makeGeoLocation({ heading: -1 }),
-    );
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
     uc.watchLocation.run.mockResolvedValue(jest.fn());
+    uc.watchHeading.run.mockRejectedValue(new Error('compass fail'));
     const store = makeStore(uc);
     await store.initialize();
-    expect(store.heading).toBeNull();
-  });
-
-  it('treats a null heading as no heading', async () => {
-    const uc = makeUseCases();
-    uc.requestPermission.run.mockResolvedValue('granted');
-    uc.getCurrentLocation.run.mockResolvedValue(
-      makeGeoLocation({ heading: null }),
-    );
-    uc.watchLocation.run.mockResolvedValue(jest.fn());
-    const store = makeStore(uc);
-    await store.initialize();
-    expect(store.heading).toBeNull();
+    expect(store.isHeadingError).toContain('compass fail');
   });
 });

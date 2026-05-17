@@ -1,6 +1,7 @@
 import { LocationRepository } from '@/domain/repositories/LocationRepository';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 import { makeGeoLocation } from '../factories';
 
@@ -8,6 +9,7 @@ const makeRepo = (): jest.Mocked<LocationRepository> => ({
   requestPermission: jest.fn(),
   getCurrentLocation: jest.fn(),
   watchLocation: jest.fn(),
+  watchHeading: jest.fn(),
 });
 
 describe('RequestLocationPermissionUseCase', () => {
@@ -54,6 +56,18 @@ describe('WatchLocationUseCase', () => {
     const listener = jest.fn();
     const result = await new WatchLocationUseCase(repo).run(listener);
     expect(repo.watchLocation).toHaveBeenCalledWith(listener);
+    expect(result).toBe(unsubscribe);
+  });
+});
+
+describe('WatchHeadingUseCase', () => {
+  it('subscribes to the compass and returns the unsubscribe handle', async () => {
+    const repo = makeRepo();
+    const unsubscribe = jest.fn();
+    repo.watchHeading.mockResolvedValue(unsubscribe);
+    const listener = jest.fn();
+    const result = await new WatchHeadingUseCase(repo).run(listener);
+    expect(repo.watchHeading).toHaveBeenCalledWith(listener);
     expect(result).toBe(unsubscribe);
   });
 });

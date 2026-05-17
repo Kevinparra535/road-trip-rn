@@ -51,6 +51,7 @@ import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
+import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
@@ -184,6 +185,9 @@ container
 container
   .bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase)
   .to(WatchLocationUseCase);
+container
+  .bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase)
+  .to(WatchHeadingUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container

@@ -1,3 +1,4 @@
+import { DeviceHeadingModel } from '@/data/models/deviceHeadingModel';
 import { LocationModel } from '@/data/models/locationModel';
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 
@@ -5,6 +6,7 @@ const makeService = () => ({
   requestPermission: jest.fn(),
   getCurrentPosition: jest.fn(),
   watchPosition: jest.fn(),
+  watchHeading: jest.fn(),
 });
 
 const expoPosition = {
@@ -36,6 +38,26 @@ describe('LocationModel', () => {
     expect(model.heading).toBeNull();
     expect(typeof model.timestamp).toBe('number');
     expect(model.toJson()).toMatchObject({ latitude: 1, longitude: 2 });
+  });
+});
+
+describe('DeviceHeadingModel', () => {
+  it('maps an expo heading object through fromJson and toDomain', () => {
+    const domain = DeviceHeadingModel.fromJson({
+      trueHeading: 120,
+      magHeading: 122,
+      accuracy: 1,
+    }).toDomain();
+    expect(domain.trueHeading).toBe(120);
+    expect(domain.degrees).toBe(120);
+  });
+
+  it('falls back to -1 for missing fields', () => {
+    const model = DeviceHeadingModel.fromJson({});
+    expect(model.trueHeading).toBe(-1);
+    expect(model.magHeading).toBe(-1);
+    expect(model.accuracy).toBeNull();
+    expect(model.toJson()).toMatchObject({ trueHeading: -1 });
   });
 });
 
@@ -78,6 +100,25 @@ describe('LocationRepositoryImpl', () => {
 
     captured(expoPosition);
     expect(listener.mock.calls[0][0].latitude).toBe(4.6);
+
+    unsubscribe();
+    expect(remove).toHaveBeenCalled();
+  });
+
+  it('watches heading, maps updates and returns an unsubscribe', async () => {
+    const service = makeService();
+    const remove = jest.fn();
+    let captured: (heading: any) => void = () => undefined;
+    service.watchHeading.mockImplementation(async (cb: any) => {
+      captured = cb;
+      return { remove };
+    });
+    const repo = new LocationRepositoryImpl(service as any);
+    const listener = jest.fn();
+    const unsubscribe = await repo.watchHeading(listener);
+
+    captured({ trueHeading: 200, magHeading: 198, accuracy: 1 });
+    expect(listener.mock.calls[0][0].degrees).toBe(200);
 
     unsubscribe();
     expect(remove).toHaveBeenCalled();

@@ -42,6 +42,7 @@ export const TYPES = {
   ),
   GetCurrentLocationUseCase: Symbol.for('GetCurrentLocationUseCase'),
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
+  WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),

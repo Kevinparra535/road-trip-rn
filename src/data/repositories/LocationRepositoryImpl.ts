@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+import { DeviceHeadingModel } from '@/data/models/deviceHeadingModel';
 import { LocationModel } from '@/data/models/locationModel';
 import type { LocationService } from '@/data/services/LocationService';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 import {
+  HeadingListener,
   LocationListener,
   LocationPermissionStatus,
   LocationRepository,
@@ -30,6 +32,13 @@ export class LocationRepositoryImpl implements LocationRepository {
   async watchLocation(listener: LocationListener): Promise<() => void> {
     const subscription = await this.service.watchPosition((position) => {
       listener(LocationModel.fromJson(position).toDomain());
+    });
+    return () => subscription.remove();
+  }
+
+  async watchHeading(listener: HeadingListener): Promise<() => void> {
+    const subscription = await this.service.watchHeading((heading) => {
+      listener(DeviceHeadingModel.fromJson(heading).toDomain());
     });
     return () => subscription.remove();
   }
