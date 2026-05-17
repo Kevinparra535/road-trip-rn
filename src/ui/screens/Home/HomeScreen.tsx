@@ -103,6 +103,8 @@ const HomeScreen = observer(() => {
   const showHeadingTriangle = headingShape !== null && isAboveZoomThreshold;
 
   // Inclina o aplana la camara al cruzar el umbral de zoom (estilo Waze).
+  // Se llama solo cuando el mapa esta quieto (onMapIdle) para no interferir
+  // con animaciones de camara en curso.
   const syncPitchToZoom = (zoom: number) => {
     const wantsPerspective = zoom >= PERSPECTIVE_ZOOM_THRESHOLD;
     if (wantsPerspective === isPerspectiveRef.current) return;
@@ -132,11 +134,15 @@ const HomeScreen = observer(() => {
       <Mapbox.MapView
         style={styles.map}
         styleURL={MAP_STYLE_URL}
-        onCameraChanged={(state) => {
-          const zoom = state?.properties?.zoom ?? DEFAULT_ZOOM;
-          setIsAboveZoomThreshold(zoom >= HEADING_MARKER_MIN_ZOOM);
-          syncPitchToZoom(zoom);
-        }}
+        onCameraChanged={(state) =>
+          setIsAboveZoomThreshold(
+            (state?.properties?.zoom ?? DEFAULT_ZOOM) >=
+              HEADING_MARKER_MIN_ZOOM,
+          )
+        }
+        onMapIdle={(state) =>
+          syncPitchToZoom(state?.properties?.zoom ?? DEFAULT_ZOOM)
+        }
       >
         <Mapbox.Camera
           ref={cameraRef}
