@@ -1,4 +1,5 @@
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import Colors from '@/ui/styles/Colors';
 import {
   makeElevationProfile,
   makeGeoLocation,
@@ -247,8 +248,8 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.routeLines).toHaveLength(2);
     const primary = vm.routeLines.find((line) => line.isPrimary);
     const alternative = vm.routeLines.find((line) => !line.isPrimary);
-    expect(primary?.color).toBe('#2D7EF8');
-    expect(alternative?.color).toBe('#3F5170');
+    expect(primary?.color).toBe(Colors.route.highwayPrimary);
+    expect(alternative?.color).toBe(Colors.route.highwayAlternative);
     expect(primary?.shape.geometry.type).toBe('LineString');
   });
 
@@ -269,9 +270,11 @@ describe('HomeViewModel — ruta A->B', () => {
 
     expect(vm.rideType).toBe('offroad');
     expect(directions.run).toHaveBeenCalledTimes(2);
-    expect(vm.routeLines.find((line) => line.isPrimary)?.color).toBe('#E8A030');
+    expect(vm.routeLines.find((line) => line.isPrimary)?.color).toBe(
+      Colors.route.offroadPrimary,
+    );
     expect(vm.routeLines.find((line) => !line.isPrimary)?.color).toBe(
-      '#B98A4E',
+      Colors.route.offroadAlternative,
     );
   });
 

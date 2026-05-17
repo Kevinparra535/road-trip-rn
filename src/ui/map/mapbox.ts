@@ -12,7 +12,10 @@ export function initMapbox(): void {
   initialized = true;
 }
 
-/** Estilo oscuro coherente con el design system. */
-export const MAP_STYLE_URL = 'mapbox://styles/mapbox/dark-v11';
+/**
+ * Estilo de navegacion nocturna: mapa casi negro y enfocado en vias, acorde
+ * al diseno Home v2 y a la base oscura del design system.
+ */
+export const MAP_STYLE_URL = 'mapbox://styles/mapbox/navigation-night-v1';
 
 export default Mapbox;

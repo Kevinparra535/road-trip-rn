@@ -35,7 +35,12 @@ const RIDE_OPTIONS: { type: RideType; label: string; color: string }[] = [
 ];
 
 // Colores de la leyenda de elevacion (bajo -> alto).
-const ELEVATION_LEGEND = ['#27AE60', '#E6C229', '#E8A030', '#E74446'];
+const ELEVATION_LEGEND = [
+  Colors.elevation.low,
+  Colors.elevation.mid,
+  Colors.elevation.high,
+  Colors.elevation.peak,
+];
 
 /** Construye la expresion `lineGradient` de Mapbox a partir de las paradas. */
 const buildLineGradient = (stops: GradientStop[]): any => {
@@ -183,7 +188,11 @@ const HomeScreen = observer(() => {
             coordinate={highlights.highest.coordinate}
           >
             <View style={[styles.elevationBadge, styles.elevationBadgeHigh]}>
-              <Ionicons name="arrow-up" size={11} color="#E74446" />
+              <Ionicons
+                name="arrow-up"
+                size={11}
+                color={Colors.elevation.peak}
+              />
               <Text style={styles.elevationBadgeText}>
                 {highlights.highest.label}
               </Text>
@@ -197,7 +206,11 @@ const HomeScreen = observer(() => {
             coordinate={highlights.lowest.coordinate}
           >
             <View style={[styles.elevationBadge, styles.elevationBadgeLow]}>
-              <Ionicons name="arrow-down" size={11} color="#27AE60" />
+              <Ionicons
+                name="arrow-down"
+                size={11}
+                color={Colors.elevation.low}
+              />
               <Text style={styles.elevationBadgeText}>
                 {highlights.lowest.label}
               </Text>
@@ -706,10 +719,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   elevationBadgeHigh: {
-    borderColor: '#E74446',
+    borderColor: Colors.elevation.peak,
   },
   elevationBadgeLow: {
-    borderColor: '#27AE60',
+    borderColor: Colors.elevation.low,
   },
   elevationBadgeText: {
     ...Fonts.links,

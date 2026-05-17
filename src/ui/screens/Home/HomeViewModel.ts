@@ -19,6 +19,7 @@ import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
+import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 import { LocationStore } from '@/ui/viewModels/LocationStore';
 
@@ -44,8 +45,14 @@ const SEARCH_DEBOUNCE_MS = 400;
 const DEFAULT_RIDE_TYPE: RideType = 'highway';
 
 // Colores del trazado por tipo de rodada (principal / alternativas).
-const HIGHWAY_COLORS = { primary: '#2D7EF8', alternative: '#3F5170' };
-const OFFROAD_COLORS = { primary: '#E8A030', alternative: '#B98A4E' };
+const HIGHWAY_COLORS = {
+  primary: Colors.route.highwayPrimary,
+  alternative: Colors.route.highwayAlternative,
+};
+const OFFROAD_COLORS = {
+  primary: Colors.route.offroadPrimary,
+  alternative: Colors.route.offroadAlternative,
+};
 
 const colorsForRideType = (
   rideType: RideType,
@@ -53,7 +60,12 @@ const colorsForRideType = (
   rideType === 'offroad' ? OFFROAD_COLORS : HIGHWAY_COLORS;
 
 // Rampa universal de elevacion: verde (bajo) -> amarillo -> naranja -> rojo.
-const ELEVATION_RAMP = ['#27AE60', '#E6C229', '#E8A030', '#E74446'];
+const ELEVATION_RAMP = [
+  Colors.elevation.low,
+  Colors.elevation.mid,
+  Colors.elevation.high,
+  Colors.elevation.peak,
+];
 
 const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
   const value = hex.replace('#', '');
