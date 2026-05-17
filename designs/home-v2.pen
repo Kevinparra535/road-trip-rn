@@ -1,0 +1,1696 @@
+{
+  "version": "2.11",
+  "children": [
+    {
+      "type": "frame",
+      "id": "l6YMD4",
+      "x": 0,
+      "y": 0,
+      "name": "Home Screen",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$surface-inverse",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "SDxhp",
+          "x": 0,
+          "y": 0,
+          "name": "Map Background",
+          "width": 393,
+          "height": 852,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.4,
+              "height": 1.4
+            },
+            "colors": [
+              {
+                "color": "#1E2A1E",
+                "position": 0
+              },
+              {
+                "color": "#141414",
+                "position": 0.5
+              },
+              {
+                "color": "#0D1117",
+                "position": 1
+              }
+            ],
+            "center": {
+              "y": 0.4
+            }
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "UpbUg",
+              "x": 0,
+              "y": 0,
+              "name": "Map Roads",
+              "geometry": "M0 200l393 0m-393 200l393 0m-393 200l393 0m-293-600l0 852m100-852l0 852m100-852l0 852m-250-752l130 200 70-20 100 170m-330 50l130 100 150-50 80 150",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 1,
+                "fill": "#1A2A1A"
+              }
+            },
+            {
+              "type": "path",
+              "id": "qLjXY",
+              "x": 0,
+              "y": 0,
+              "name": "Active Route",
+              "geometry": "M80 680c40-80 70-180 100-260 30-80 60-120 90-160 30-40 50-60 70-100",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 4,
+                "cap": "round",
+                "fill": "$accent-primary"
+              }
+            },
+            {
+              "type": "path",
+              "id": "Q2O8oV",
+              "x": 0,
+              "y": 0,
+              "name": "Route Glow",
+              "opacity": 0.6,
+              "geometry": "M80 680c40-80 70-180 100-260 30-80 60-120 90-160 30-40 50-60 70-100",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 12,
+                "cap": "round",
+                "fill": "#FF980033"
+              }
+            },
+            {
+              "type": "ellipse",
+              "id": "u1Kam",
+              "x": 72,
+              "y": 672,
+              "name": "Pin A",
+              "fill": "$accent-primary",
+              "width": 16,
+              "height": 16,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FF980055",
+                "blur": 8,
+                "spread": 4
+              }
+            },
+            {
+              "type": "ellipse",
+              "id": "COV92",
+              "x": 332,
+              "y": 152,
+              "name": "Pin B",
+              "fill": "$accent-green",
+              "width": 16,
+              "height": 16,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#4CAF5055",
+                "blur": 8,
+                "spread": 4
+              }
+            },
+            {
+              "type": "frame",
+              "id": "h0ZFVL",
+              "x": 72,
+              "y": 668,
+              "name": "Current Location",
+              "width": 24,
+              "height": 24,
+              "fill": "$accent-primary",
+              "cornerRadius": 12,
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FF980044",
+                "blur": 12,
+                "spread": 6
+              },
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "ellipse",
+                  "id": "k9siG5",
+                  "name": "currentLocInner",
+                  "fill": "#000000",
+                  "width": 8,
+                  "height": 8
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "jOfDb",
+              "x": 120,
+              "y": 380,
+              "name": "Map Label",
+              "fill": "#FFFFFF33",
+              "content": "La Marquesa",
+              "fontFamily": "$font-body",
+              "fontSize": 10,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "Vwra0",
+              "x": 250,
+              "y": 280,
+              "name": "Map Label 2",
+              "fill": "#FFFFFF33",
+              "content": "Toluca",
+              "fontFamily": "$font-body",
+              "fontSize": 10,
+              "fontWeight": "500"
+            },
+            {
+              "type": "text",
+              "id": "p3yw8d",
+              "x": 280,
+              "y": 180,
+              "name": "Map Label 3",
+              "fill": "#FFFFFF55",
+              "content": "Valle de Bravo",
+              "fontFamily": "$font-body",
+              "fontSize": 11,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "x8sHl",
+              "x": 40,
+              "y": 620,
+              "name": "Map Label 4",
+              "fill": "#FFFFFF55",
+              "content": "CDMX",
+              "fontFamily": "$font-body",
+              "fontSize": 11,
+              "fontWeight": "600"
+            },
+            {
+              "type": "path",
+              "id": "FUXhQ",
+              "x": 0,
+              "y": 0,
+              "name": "Secondary Road 1",
+              "geometry": "M0 350c80 10 160-10 240 30 80 40 120 60 153 50",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 1,
+                "fill": "#2A3A2A"
+              }
+            },
+            {
+              "type": "path",
+              "id": "QQC8G",
+              "x": 0,
+              "y": 0,
+              "name": "Secondary Road 2",
+              "geometry": "M180 0c10 100-10 200 20 300 30 100 10 200 20 300 10 100-20 150-30 252",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 1,
+                "fill": "#2A3A2A"
+              }
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "Fnw5e",
+              "x": 20,
+              "y": 250,
+              "name": "Map Area Block",
+              "fill": "#1A2A1A44",
+              "width": 80,
+              "height": 60
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "o0ZOV1",
+              "x": 280,
+              "y": 400,
+              "name": "Map Area Block 2",
+              "fill": "#1A2A1A44",
+              "width": 90,
+              "height": 50
+            },
+            {
+              "type": "rectangle",
+              "cornerRadius": 2,
+              "id": "k5wcV",
+              "x": 160,
+              "y": 500,
+              "name": "Map Area Block 3",
+              "fill": "#1A2A1A44",
+              "width": 70,
+              "height": 40
+            },
+            {
+              "type": "path",
+              "id": "O9wuTX",
+              "x": 0,
+              "y": 0,
+              "name": "Highway",
+              "geometry": "M0 450c50-10 100-20 150-10 50 10 100 30 150 20 50-10 80-20 93-25",
+              "viewBox": [
+                0,
+                0,
+                393,
+                852
+              ],
+              "width": 393,
+              "height": 852,
+              "stroke": {
+                "align": "center",
+                "thickness": 2,
+                "fill": "#253525"
+              }
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "raGnW",
+          "x": 0,
+          "y": 0,
+          "name": "Status Bar",
+          "width": 393,
+          "height": 62,
+          "fill": "#0D0D0D99",
+          "padding": [
+            38,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "WEbeU",
+              "name": "timeLabel",
+              "fill": "$foreground-primary",
+              "content": "9:41",
+              "fontFamily": "Inter",
+              "fontSize": 15,
+              "fontWeight": "600"
+            },
+            {
+              "type": "frame",
+              "id": "IpK7t",
+              "name": "statusRight",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "qAekP",
+                  "name": "signalIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "signal",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "uk2rp",
+                  "name": "wifiIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "wifi",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                },
+                {
+                  "type": "icon_font",
+                  "id": "NMDzs",
+                  "name": "batteryIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "battery-full",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "FmCt6",
+          "x": 16,
+          "y": 74,
+          "name": "Search Bar",
+          "width": 361,
+          "height": 52,
+          "fill": "$surface-card",
+          "cornerRadius": "$radius-md",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000066",
+            "offset": {
+              "x": 0,
+              "y": 4
+            },
+            "blur": 16
+          },
+          "gap": 12,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "MHvgb",
+              "name": "searchIcon",
+              "width": 20,
+              "height": 20,
+              "iconFontName": "search",
+              "iconFontFamily": "lucide",
+              "fill": "$foreground-secondary"
+            },
+            {
+              "type": "text",
+              "id": "xb6FP",
+              "name": "searchText",
+              "fill": "$foreground-muted",
+              "content": "¿A dónde vamos hoy?",
+              "fontFamily": "$font-body",
+              "fontSize": 15
+            },
+            {
+              "type": "frame",
+              "id": "w9bFm9",
+              "name": "searchSpacer",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "WzaEl",
+              "name": "voiceBtn",
+              "width": 32,
+              "height": 32,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 180,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "$accent-primary",
+                    "position": 0
+                  },
+                  {
+                    "color": "$accent-secondary",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 16,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "spRLz",
+                  "name": "voiceIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "mic",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent-primary"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "INTuo",
+              "name": "Profile Button",
+              "width": 36,
+              "height": 36,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 180,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "#FF9800",
+                    "position": 0
+                  },
+                  {
+                    "color": "#FF6D00",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "QNEoA",
+                  "name": "profileInitial",
+                  "fill": "#000000",
+                  "content": "K",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "a6whI",
+          "x": 16,
+          "y": 138,
+          "name": "Ride Type Selector",
+          "width": 361,
+          "height": 36,
+          "gap": 8,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "NRpwh",
+              "name": "Chip Carretera",
+              "fill": "$accent-primary",
+              "cornerRadius": "$radius-pill",
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "jUNKV",
+                  "name": "chipCarreteraIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "route",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "f0KLC",
+                  "name": "chipCarreteraText",
+                  "fill": "#000000",
+                  "content": "CARRETERA",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "x1MQ7O",
+              "name": "Chip Offroad",
+              "fill": "$surface-card",
+              "cornerRadius": "$radius-pill",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$border-medium"
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "uzQV4",
+                  "name": "chipOffroadIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "landscape",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "FGPsu",
+                  "name": "chipOffroadText",
+                  "fill": "$foreground-secondary",
+                  "content": "OFFROAD",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "zFTpu",
+              "name": "Chip Grupal",
+              "fill": "$surface-card",
+              "cornerRadius": "$radius-pill",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$border-medium"
+              },
+              "gap": 6,
+              "padding": [
+                8,
+                14
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "piqY3",
+                  "name": "chipGrupalIcon",
+                  "width": 14,
+                  "height": 14,
+                  "iconFontName": "group",
+                  "iconFontFamily": "Material Symbols Rounded",
+                  "fill": "$foreground-secondary"
+                },
+                {
+                  "type": "text",
+                  "id": "yoBKA",
+                  "name": "chipGrupalText",
+                  "fill": "$foreground-secondary",
+                  "content": "GRUPAL",
+                  "fontFamily": "$font-body",
+                  "fontSize": 11,
+                  "fontWeight": "600",
+                  "letterSpacing": 0.5
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UzdAH",
+          "x": 0,
+          "y": 388,
+          "name": "Bottom Panel",
+          "width": 393,
+          "height": 464,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#0D0D0000",
+                "position": 0
+              },
+              {
+                "color": "#0D0D0DCC",
+                "position": 0.15
+              },
+              {
+                "color": "#0D0D0D",
+                "position": 0.35
+              }
+            ]
+          },
+          "layout": "vertical",
+          "gap": 8,
+          "padding": [
+            40,
+            16,
+            0,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "JqEUu",
+              "name": "Start Button",
+              "width": "fill_container",
+              "height": 48,
+              "fill": {
+                "type": "gradient",
+                "gradientType": "linear",
+                "enabled": true,
+                "rotation": 90,
+                "size": {
+                  "height": 1
+                },
+                "colors": [
+                  {
+                    "color": "$accent-primary",
+                    "position": 0
+                  },
+                  {
+                    "color": "$accent-secondary",
+                    "position": 1
+                  }
+                ]
+              },
+              "cornerRadius": "$radius-md",
+              "effect": {
+                "type": "shadow",
+                "shadowType": "outer",
+                "color": "#FF980044",
+                "offset": {
+                  "x": 0,
+                  "y": 4
+                },
+                "blur": 20
+              },
+              "gap": 8,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Bzygx",
+                  "name": "startBtnIcon",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "navigation",
+                  "iconFontFamily": "lucide",
+                  "fill": "#000000"
+                },
+                {
+                  "type": "text",
+                  "id": "doKy1",
+                  "name": "startBtnText",
+                  "fill": "#000000",
+                  "content": "Iniciar ruta",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 16,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F88JL",
+              "name": "Route Card",
+              "width": "fill_container",
+              "fill": "$surface-card",
+              "cornerRadius": "$radius-lg",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "layout": "vertical",
+              "gap": 10,
+              "padding": [
+                16,
+                16,
+                12,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Qm1mg",
+                  "name": "Route Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "sXREl",
+                      "name": "routeTitle",
+                      "fill": "$accent-primary",
+                      "content": "Ruta activa",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 13,
+                      "fontWeight": "600",
+                      "letterSpacing": 0.5
+                    },
+                    {
+                      "type": "text",
+                      "id": "ycxkf",
+                      "name": "routeDistance",
+                      "fill": "$foreground-secondary",
+                      "content": "245 km · 3h 20min",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UYEU4",
+                      "name": "Route Options",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$surface-card-elevated",
+                      "cornerRadius": 14,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "V26wet",
+                          "name": "routeOptionsIcon",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "ellipsis",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-secondary"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "jMOnA",
+                  "name": "Route Points",
+                  "width": "fill_container",
+                  "gap": 12,
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "u76Urk",
+                      "name": "Timeline",
+                      "width": 20,
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "b4dzZ",
+                          "name": "dotA",
+                          "fill": "$accent-primary",
+                          "width": 10,
+                          "height": 10
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "n3X0ih",
+                          "name": "lineConnector",
+                          "fill": "$border-medium",
+                          "width": 2,
+                          "height": 28
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "EdiQN",
+                          "name": "dotB",
+                          "fill": "$accent-green",
+                          "width": 10,
+                          "height": 10
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ui4NQ",
+                      "name": "Labels",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "DR19V",
+                          "name": "originLabel",
+                          "fill": "$foreground-primary",
+                          "content": "CDMX — Insurgentes Sur",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZDIgF",
+                          "name": "destLabel",
+                          "fill": "$foreground-primary",
+                          "content": "Valle de Bravo, Estado de México",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "rectangle",
+                  "id": "eSHLQ",
+                  "name": "Divider",
+                  "fill": "$border-subtle",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "h793T9",
+                  "name": "Stats Row",
+                  "width": "fill_container",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "eoeiN",
+                      "name": "Stat Fuel",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "IWcBD",
+                          "name": "statFuelIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "local_gas_station",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$accent-primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "j3gG2B",
+                          "name": "statFuelValue",
+                          "fill": "$foreground-primary",
+                          "content": "12.4 L",
+                          "fontFamily": "$font-heading",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "U1WB1j",
+                          "name": "statFuelLabel",
+                          "fill": "$foreground-muted",
+                          "content": "Combustible est.",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "PFGD4",
+                      "name": "Stat Elevation",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "left": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "DOX8z",
+                          "name": "statElevIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "mountain",
+                          "iconFontFamily": "lucide",
+                          "fill": "$accent-blue"
+                        },
+                        {
+                          "type": "text",
+                          "id": "cC4Hy",
+                          "name": "statElevValue",
+                          "fill": "$foreground-primary",
+                          "content": "1,840 m",
+                          "fontFamily": "$font-heading",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "O46ag",
+                          "name": "statElevLabel",
+                          "fill": "$foreground-muted",
+                          "content": "Elevación máx.",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WACg2",
+                      "name": "Stat Speed",
+                      "width": "fill_container",
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": {
+                          "left": 1
+                        },
+                        "fill": "$border-subtle"
+                      },
+                      "layout": "vertical",
+                      "gap": 4,
+                      "padding": [
+                        10,
+                        0
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "CpsJH",
+                          "name": "statSpeedIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "speed",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$accent-green"
+                        },
+                        {
+                          "type": "text",
+                          "id": "JtbDf",
+                          "name": "statSpeedValue",
+                          "fill": "$foreground-primary",
+                          "content": "74 km/h",
+                          "fontFamily": "$font-heading",
+                          "fontSize": 16,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ibPbX",
+                          "name": "statSpeedLabel",
+                          "fill": "$foreground-muted",
+                          "content": "Vel. promedio",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "i7cYvA",
+              "name": "Elevation Profile Section",
+              "width": "fill_container",
+              "fill": "$surface-card",
+              "cornerRadius": "$radius-lg",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$border-subtle"
+              },
+              "layout": "vertical",
+              "gap": 6,
+              "padding": [
+                10,
+                16
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "fhcYu",
+                  "name": "elevHeader",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "we4hq",
+                      "name": "elevTitle",
+                      "fill": "$foreground-secondary",
+                      "content": "Perfil de elevación",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "IlZpT",
+                      "name": "elevRange",
+                      "fill": "$foreground-muted",
+                      "content": "2,240 — 2,680 msnm",
+                      "fontFamily": "$font-body",
+                      "fontSize": 11,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Qti2V",
+                  "name": "Elevation Chart",
+                  "width": "fill_container",
+                  "height": 56,
+                  "cornerRadius": "$radius-sm",
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "RcNO9",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Elevation Area",
+                      "geometry": "M0 52c20-4 40-12 60-17 20-5 40-7 60-13 20-6 40-12 60-14 20 2 40 6 60 12 20 6 40 12 60 8 10-2 20 2 29 6l0 30-329 0z",
+                      "viewBox": [
+                        0,
+                        0,
+                        329,
+                        64
+                      ],
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 0,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#FF980033",
+                            "position": 0
+                          },
+                          {
+                            "color": "#FF980008",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 329,
+                      "height": 64,
+                      "stroke": {
+                        "align": "center",
+                        "thickness": 2,
+                        "cap": "round",
+                        "fill": "$accent-primary"
+                      }
+                    },
+                    {
+                      "type": "frame",
+                      "id": "kxB2t",
+                      "x": 178,
+                      "y": 2,
+                      "name": "Elevation Marker",
+                      "opacity": 0.3,
+                      "width": 2,
+                      "height": 62,
+                      "fill": "$foreground-primary"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "jyxT3",
+                      "x": 173,
+                      "y": 4,
+                      "name": "elevMarkerDot",
+                      "fill": "$accent-primary",
+                      "width": 12,
+                      "height": 12,
+                      "stroke": {
+                        "align": "outside",
+                        "thickness": 2,
+                        "fill": "$surface-card"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "CutJ6",
+              "name": "Tab Bar Container",
+              "width": "fill_container",
+              "padding": [
+                12,
+                21,
+                21,
+                21
+              ],
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "M8Zzj",
+                  "name": "Tab Bar Pill",
+                  "width": "fill_container",
+                  "height": 62,
+                  "fill": "$surface-card",
+                  "cornerRadius": "$radius-pill",
+                  "stroke": {
+                    "align": "inside",
+                    "thickness": 1,
+                    "fill": "$border-subtle"
+                  },
+                  "padding": 4,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "T81yk",
+                      "name": "Tab Explorar",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "fill": "$accent-primary",
+                      "cornerRadius": 26,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "b1o4ER",
+                          "name": "tabExplorarIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "compass",
+                          "iconFontFamily": "lucide",
+                          "fill": "#000000"
+                        },
+                        {
+                          "type": "text",
+                          "id": "KcDpb",
+                          "name": "tabExplorarLabel",
+                          "fill": "#000000",
+                          "content": "EXPLORAR",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "E8Z5k",
+                      "name": "Tab Rutas",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "cornerRadius": 26,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "knHTd",
+                          "name": "tabRutasIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "map",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "NeNMM",
+                          "name": "tabRutasLabel",
+                          "fill": "$foreground-muted",
+                          "content": "RUTAS",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "UIlPs",
+                      "name": "Tab Rodadas",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "cornerRadius": 26,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "ZDHfJ",
+                          "name": "tabRodadasIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "users",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "b8YHJO",
+                          "name": "tabRodadasLabel",
+                          "fill": "$foreground-muted",
+                          "content": "RODADAS",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "IQtk9",
+                      "name": "Tab Garage",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "cornerRadius": 26,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "qjSV1",
+                          "name": "tabGarageIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "two_wheeler",
+                          "iconFontFamily": "Material Symbols Rounded",
+                          "fill": "$foreground-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bweOn",
+                          "name": "tabGarageLabel",
+                          "fill": "$foreground-muted",
+                          "content": "GARAGE",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.5
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MnhTq",
+                      "name": "Tab Perfil",
+                      "width": "fill_container",
+                      "height": "fill_container",
+                      "cornerRadius": 26,
+                      "layout": "vertical",
+                      "gap": 4,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "f4DpqT",
+                          "name": "tabPerfilIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "user",
+                          "iconFontFamily": "lucide",
+                          "fill": "$foreground-muted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FuqbT",
+                          "name": "tabPerfilLabel",
+                          "fill": "$foreground-muted",
+                          "content": "PERFIL",
+                          "fontFamily": "$font-body",
+                          "fontSize": 10,
+                          "fontWeight": "600",
+                          "letterSpacing": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "d0AAz",
+          "x": 345,
+          "y": 78,
+          "name": "User Avatar",
+          "width": 36,
+          "height": 36,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "linear",
+            "enabled": true,
+            "rotation": 180,
+            "size": {
+              "height": 1
+            },
+            "colors": [
+              {
+                "color": "#FF9800",
+                "position": 0
+              },
+              {
+                "color": "#FF6D00",
+                "position": 1
+              }
+            ]
+          },
+          "cornerRadius": 18,
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "b9HoJU",
+              "name": "userInitial",
+              "fill": "#000000",
+              "content": "K",
+              "fontFamily": "$font-heading",
+              "fontSize": 14,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "VxSYh",
+          "x": 341,
+          "y": 340,
+          "name": "Location Button",
+          "width": 40,
+          "height": 40,
+          "fill": "$surface-card",
+          "cornerRadius": 20,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$border-subtle"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000044",
+            "offset": {
+              "x": 0,
+              "y": 2
+            },
+            "blur": 8
+          },
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "WSLhi",
+              "name": "locIcon",
+              "width": 18,
+              "height": 18,
+              "iconFontName": "locate",
+              "iconFontFamily": "lucide",
+              "fill": "$foreground-primary"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "HTs46",
+          "x": 341,
+          "y": 270,
+          "name": "Zoom Controls",
+          "clip": true,
+          "width": 40,
+          "height": 60,
+          "fill": "$surface-card",
+          "cornerRadius": "$radius-sm",
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$border-subtle"
+          },
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#00000044",
+            "offset": {
+              "x": 0,
+              "y": 2
+            },
+            "blur": 8
+          },
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "TRE07",
+              "name": "zoomIn",
+              "width": "fill_container",
+              "height": "fill_container",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Uy4x6",
+                  "name": "zoomInIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "plus",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                }
+              ]
+            },
+            {
+              "type": "rectangle",
+              "id": "EtpOZ",
+              "name": "zoomDivider",
+              "fill": "$border-subtle",
+              "width": "fill_container",
+              "height": 1
+            },
+            {
+              "type": "frame",
+              "id": "J8MwU",
+              "name": "zoomOut",
+              "width": "fill_container",
+              "height": "fill_container",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "z5ont",
+                  "name": "zoomOutIcon",
+                  "width": 16,
+                  "height": 16,
+                  "iconFontName": "minus",
+                  "iconFontFamily": "lucide",
+                  "fill": "$foreground-primary"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "accent-blue": {
+      "type": "color",
+      "value": "#2196F3"
+    },
+    "accent-green": {
+      "type": "color",
+      "value": "#4CAF50"
+    },
+    "accent-primary": {
+      "type": "color",
+      "value": "#FF9800"
+    },
+    "accent-red": {
+      "type": "color",
+      "value": "#F44336"
+    },
+    "accent-secondary": {
+      "type": "color",
+      "value": "#FF6D00"
+    },
+    "border-medium": {
+      "type": "color",
+      "value": "#3A3A3A"
+    },
+    "border-subtle": {
+      "type": "color",
+      "value": "#2A2A2A"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "font-heading": {
+      "type": "string",
+      "value": "Geist"
+    },
+    "foreground-muted": {
+      "type": "color",
+      "value": "#6B7280"
+    },
+    "foreground-primary": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "foreground-secondary": {
+      "type": "color",
+      "value": "#9CA3AF"
+    },
+    "radius-lg": {
+      "type": "number",
+      "value": 16
+    },
+    "radius-md": {
+      "type": "number",
+      "value": 12
+    },
+    "radius-pill": {
+      "type": "number",
+      "value": 36
+    },
+    "radius-sm": {
+      "type": "number",
+      "value": 8
+    },
+    "radius-xl": {
+      "type": "number",
+      "value": 24
+    },
+    "spacing-lg": {
+      "type": "number",
+      "value": 16
+    },
+    "spacing-md": {
+      "type": "number",
+      "value": 12
+    },
+    "spacing-sm": {
+      "type": "number",
+      "value": 8
+    },
+    "spacing-xl": {
+      "type": "number",
+      "value": 24
+    },
+    "spacing-xs": {
+      "type": "number",
+      "value": 4
+    },
+    "surface-card": {
+      "type": "color",
+      "value": "#1A1A1A"
+    },
+    "surface-card-elevated": {
+      "type": "color",
+      "value": "#242424"
+    },
+    "surface-inverse": {
+      "type": "color",
+      "value": "#0D0D0D"
+    },
+    "surface-map": {
+      "type": "color",
+      "value": "#141414"
+    }
+  }
+}
