@@ -1,15 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
 import { ElementRef, useEffect, useMemo, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Keyboard,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+import { Place } from '@/domain/entities/Place';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
-import { AppTabsParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
@@ -18,7 +24,8 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { HomeViewModel } from './HomeViewModel';
 
-type Nav = BottomTabNavigationProp<AppTabsParamList, 'HomeTab'>;
+// Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
+const ROUTE_FIT_PADDING: [number, number, number, number] = [160, 80, 200, 80];
 
 /**
  * Pantalla principal: el mapa estilo navegacion Waze. Se mantiene delgada —
@@ -26,12 +33,12 @@ type Nav = BottomTabNavigationProp<AppTabsParamList, 'HomeTab'>;
  * de camara; toda la logica de presentacion vive en el ViewModel.
  */
 const HomeScreen = observer(() => {
-  const navigation = useNavigation<Nav>();
   const viewModel = useMemo(
     () => container.get<HomeViewModel>(TYPES.HomeViewModel),
     [],
   );
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
+  const fittedDestinationRef = useRef<string | null>(null);
 
   useEffect(() => {
     viewModel.initialize();
@@ -51,14 +58,38 @@ const HomeScreen = observer(() => {
     }
   }, [viewModel, followTarget, hasAutoCentered]);
 
-  const goToPlanner = () =>
-    navigation.navigate('RoutesTab', { screen: 'RoutePlanner' });
+  // Encuadra la camara sobre la ruta una vez por destino calculado.
+  const routeBounds = viewModel.routeBounds;
+  const destinationId = viewModel.destination?.id ?? null;
+  useEffect(() => {
+    if (
+      routeBounds &&
+      destinationId &&
+      fittedDestinationRef.current !== destinationId
+    ) {
+      fittedDestinationRef.current = destinationId;
+      cameraRef.current?.fitBounds(
+        routeBounds.ne,
+        routeBounds.sw,
+        ROUTE_FIT_PADDING,
+        700,
+      );
+    }
+    if (!destinationId) {
+      fittedDestinationRef.current = null;
+    }
+  }, [routeBounds, destinationId]);
 
   const recenterOnUser = () => {
     const target = viewModel.followTarget;
     if (!target) return;
     viewModel.markRecentered();
     cameraRef.current?.setCamera({ ...target, animationDuration: 600 });
+  };
+
+  const handleSelectPlace = (place: Place) => {
+    Keyboard.dismiss();
+    viewModel.selectDestination(place);
   };
 
   return (
@@ -88,6 +119,31 @@ const HomeScreen = observer(() => {
           }}
         />
 
+        {viewModel.routeShape ? (
+          <Mapbox.ShapeSource id="active-route" shape={viewModel.routeShape}>
+            <Mapbox.LineLayer
+              id="active-route-line"
+              style={{
+                lineColor: Colors.base.accent,
+                lineWidth: 5,
+                lineCap: 'round',
+                lineJoin: 'round',
+              }}
+            />
+          </Mapbox.ShapeSource>
+        ) : null}
+
+        {viewModel.destinationCoordinate ? (
+          <Mapbox.PointAnnotation
+            id="route-destination"
+            coordinate={viewModel.destinationCoordinate}
+          >
+            <View style={styles.destinationMarker}>
+              <Ionicons name="flag" size={15} color={Colors.base.textPrimary} />
+            </View>
+          </Mapbox.PointAnnotation>
+        ) : null}
+
         {viewModel.isUserDotVisible && viewModel.userCoordinates ? (
           <Mapbox.PointAnnotation
             id="user-location"
@@ -103,10 +159,7 @@ const HomeScreen = observer(() => {
           <Mapbox.ShapeSource id="user-heading" shape={viewModel.headingShape}>
             <Mapbox.FillLayer
               id="user-heading-fill"
-              style={{
-                fillColor: Colors.base.accent,
-                fillOpacity: 0.9,
-              }}
+              style={{ fillColor: Colors.base.accent, fillOpacity: 0.9 }}
             />
             <Mapbox.LineLayer
               id="user-heading-outline"
@@ -125,14 +178,99 @@ const HomeScreen = observer(() => {
         edges={['top', 'left', 'right']}
         pointerEvents="box-none"
       >
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={styles.searchBar}
-          onPress={goToPlanner}
-        >
-          <Ionicons name="search" size={18} color={Colors.base.iconMuted} />
-          <Text style={styles.searchText}>A donde quieres rodar?</Text>
-        </TouchableOpacity>
+        {viewModel.hasDestination ? (
+          <View style={styles.card}>
+            <View style={styles.routeHeader}>
+              <Ionicons name="flag" size={18} color={Colors.base.accent} />
+              <Text style={styles.routeName} numberOfLines={1}>
+                {viewModel.destination?.name}
+              </Text>
+              <TouchableOpacity
+                hitSlop={10}
+                onPress={() => viewModel.clearRoute()}
+              >
+                <Ionicons
+                  name="close"
+                  size={20}
+                  color={Colors.base.iconMuted}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {viewModel.isRouteLoading ? (
+              <View style={styles.routeMeta}>
+                <ActivityIndicator size="small" color={Colors.base.accent} />
+                <Text style={styles.routeMetaText}>Trazando ruta...</Text>
+              </View>
+            ) : viewModel.isRouteError ? (
+              <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
+            ) : viewModel.routeSummary ? (
+              <View style={styles.routeMeta}>
+                <Ionicons
+                  name="navigate"
+                  size={14}
+                  color={Colors.base.textSecondary}
+                />
+                <Text style={styles.routeMetaText}>
+                  {viewModel.routeSummary.distance} ·{' '}
+                  {viewModel.routeSummary.duration}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+        ) : (
+          <View>
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={18} color={Colors.base.iconMuted} />
+              <TextInput
+                style={styles.searchInput}
+                value={viewModel.searchQuery}
+                onChangeText={(text) => viewModel.setSearchQuery(text)}
+                placeholder="Busca un destino"
+                placeholderTextColor={Colors.base.textMuted}
+                returnKeyType="search"
+                autoCorrect={false}
+              />
+              {viewModel.isSearchLoading ? (
+                <ActivityIndicator size="small" color={Colors.base.accent} />
+              ) : null}
+            </View>
+
+            {viewModel.hasSearchResults ? (
+              <View style={styles.card}>
+                {viewModel.searchResults.map((place, index) => (
+                  <TouchableOpacity
+                    key={place.id}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.resultRow,
+                      index > 0 && styles.resultRowBorder,
+                    ]}
+                    onPress={() => handleSelectPlace(place)}
+                  >
+                    <Ionicons
+                      name="location-outline"
+                      size={18}
+                      color={Colors.base.iconMuted}
+                    />
+                    <View style={styles.resultBody}>
+                      <Text style={styles.resultName} numberOfLines={1}>
+                        {place.name}
+                      </Text>
+                      <Text style={styles.resultAddress} numberOfLines={1}>
+                        {place.fullName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : viewModel.isSearchError ? (
+              <View style={styles.card}>
+                <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
+              </View>
+            ) : null}
+          </View>
+        )}
       </SafeAreaView>
 
       {viewModel.hasLocation ? (
@@ -165,7 +303,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     marginTop: Spacings.md,
-    paddingVertical: Spacings.md,
+    paddingVertical: Spacings.sm,
     paddingHorizontal: Spacings.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -176,9 +314,66 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
-  searchText: {
+  searchInput: {
+    flex: 1,
+    paddingVertical: Spacings.xs,
     ...Fonts.bodyText,
+    color: Colors.base.textPrimary,
+  },
+  card: {
+    marginTop: Spacings.sm,
+    padding: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  resultRow: {
+    paddingVertical: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.md,
+  },
+  resultRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.base.separator,
+  },
+  resultBody: {
+    flex: 1,
+  },
+  resultName: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  resultAddress: {
+    marginTop: Spacings.xs,
+    ...Fonts.links,
     color: Colors.base.textSecondary,
+  },
+  routeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  routeName: {
+    flex: 1,
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  routeMeta: {
+    marginTop: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+  },
+  routeMetaText: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  errorText: {
+    ...Fonts.labelInputError,
+    color: Colors.alerts.error,
   },
   locateButton: {
     position: 'absolute',
@@ -193,6 +388,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
+  },
+  destinationMarker: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.accent,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.textPrimary,
   },
   userHalo: {
     width: 26,

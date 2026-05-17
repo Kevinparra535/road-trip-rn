@@ -7,6 +7,7 @@ import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsReposito
 import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
+import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
 import { AuthServiceImpl } from '@/data/services/AuthService';
@@ -17,6 +18,8 @@ import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
 import type { FuelStationService } from '@/data/services/FuelStationService';
 import { LocationServiceImpl } from '@/data/services/LocationService';
 import type { LocationService } from '@/data/services/LocationService';
+import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
+import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
 import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
 import type { MotoStatsService } from '@/data/services/MotoStatsService';
 import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
@@ -27,6 +30,7 @@ import type { AuthRepository } from '@/domain/repositories/AuthRepository';
 import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
 import type { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
+import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
@@ -46,6 +50,7 @@ import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
@@ -94,6 +99,10 @@ container
   .bind<LocationService>(TYPES.LocationService)
   .to(LocationServiceImpl)
   .inSingletonScope();
+container
+  .bind<PlaceSearchService>(TYPES.PlaceSearchService)
+  .to(PlaceSearchServiceImpl)
+  .inSingletonScope();
 
 // ── Repositories: singleton ─────────────────────────────────────────────────
 container
@@ -123,6 +132,10 @@ container
 container
   .bind<LocationRepository>(TYPES.LocationRepository)
   .to(LocationRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<PlaceSearchRepository>(TYPES.PlaceSearchRepository)
+  .to(PlaceSearchRepositoryImpl)
   .inSingletonScope();
 
 // ── UseCases: transient ─────────────────────────────────────────────────────
@@ -189,6 +202,9 @@ container
 container
   .bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase)
   .to(WatchHeadingUseCase);
+container
+  .bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase)
+  .to(SearchPlacesUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container

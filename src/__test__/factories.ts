@@ -2,8 +2,10 @@ import { DeviceHeading } from '@/domain/entities/DeviceHeading';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
+import { Place } from '@/domain/entities/Place';
 import { Rider } from '@/domain/entities/Rider';
 import { Route } from '@/domain/entities/Route';
+import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 export const makeRider = (overrides: Partial<Rider> = {}): Rider =>
@@ -91,6 +93,30 @@ export const makeDeviceHeading = (
     trueHeading: 90,
     magHeading: 92,
     accuracy: 1,
+    ...overrides,
+  });
+
+export const makePlace = (overrides: Partial<Place> = {}): Place =>
+  new Place({
+    id: 'place-1',
+    name: 'Villa de Leyva',
+    fullName: 'Villa de Leyva, Boyaca, Colombia',
+    latitude: 5.6339,
+    longitude: -73.5269,
+    ...overrides,
+  });
+
+export const makeRouteDirections = (
+  overrides: Partial<RouteDirections> = {},
+): RouteDirections =>
+  new RouteDirections({
+    distanceKm: 42,
+    durationMin: 75,
+    geometry: [
+      { latitude: 4.6097, longitude: -74.0817 },
+      { latitude: 5.0, longitude: -73.8 },
+      { latitude: 5.6339, longitude: -73.5269 },
+    ],
     ...overrides,
   });
 

@@ -1,5 +1,5 @@
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
-import { makeGeoLocation } from '../factories';
+import { makeGeoLocation, makePlace, makeRouteDirections } from '../factories';
 
 const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
   hasLocation: false,
@@ -11,9 +11,18 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 });
 
-const makeVM = (store = makeLocationStore()) => new HomeViewModel(store as any);
+const makeSearchUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
+const makeDirectionsUseCase = () => ({ run: jest.fn() });
 
-describe('HomeViewModel', () => {
+const makeVM = (
+  store = makeLocationStore(),
+  searchPlaces: { run: jest.Mock } = makeSearchUseCase(),
+  directions: { run: jest.Mock } = makeDirectionsUseCase(),
+) => new HomeViewModel(store as any, searchPlaces as any, directions as any);
+
+const flush = () => new Promise((resolve) => setImmediate(resolve));
+
+describe('HomeViewModel — camara y marcador', () => {
   it('starts flat, not centered, at the default zoom', () => {
     const vm = makeVM();
     expect(vm.currentZoom).toBe(vm.defaultZoom);
@@ -61,7 +70,6 @@ describe('HomeViewModel', () => {
     );
     const shape = vm.headingShape;
     expect(shape?.geometry.type).toBe('Polygon');
-    // 3 vertices + cierre del anillo
     expect(shape?.geometry.coordinates[0]).toHaveLength(4);
   });
 
@@ -88,7 +96,6 @@ describe('HomeViewModel', () => {
     const vm = makeVM();
     expect(vm.resolvePitch(17)).toBe(60);
     expect(vm.isPerspective).toBe(true);
-    // sin cambio de modo -> no recoloca la camara
     expect(vm.resolvePitch(17.5)).toBeNull();
   });
 
@@ -110,7 +117,7 @@ describe('HomeViewModel', () => {
     expect(vm.isPerspective).toBe(true);
   });
 
-  it('reset returns presentation state to defaults', () => {
+  it('reset returns presentation and route state to defaults', () => {
     const vm = makeVM();
     vm.setZoom(18);
     vm.markAutoCentered();
@@ -118,5 +125,134 @@ describe('HomeViewModel', () => {
     expect(vm.currentZoom).toBe(vm.defaultZoom);
     expect(vm.isPerspective).toBe(false);
     expect(vm.hasAutoCentered).toBe(false);
+    expect(vm.hasDestination).toBe(false);
+    expect(vm.hasRoute).toBe(false);
+  });
+});
+
+describe('HomeViewModel — buscador de lugares', () => {
+  it('debounces the query and searches once with the latest text', async () => {
+    jest.useFakeTimers();
+    const search = makeSearchUseCase();
+    search.run.mockResolvedValue([makePlace()]);
+    const vm = makeVM(makeLocationStore(), search);
+
+    vm.setSearchQuery('vi');
+    vm.setSearchQuery('villa');
+    expect(search.run).not.toHaveBeenCalled();
+
+    jest.advanceTimersByTime(400);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(search.run).toHaveBeenCalledTimes(1);
+    expect(search.run).toHaveBeenCalledWith(
+      expect.objectContaining({ query: 'villa' }),
+    );
+    expect(vm.searchResults).toHaveLength(1);
+    expect(vm.hasSearchResults).toBe(true);
+
+    vm.dispose();
+    jest.useRealTimers();
+  });
+
+  it('does not search for queries below the minimum length', async () => {
+    jest.useFakeTimers();
+    const search = makeSearchUseCase();
+    const vm = makeVM(makeLocationStore(), search);
+
+    vm.setSearchQuery('vi');
+    jest.advanceTimersByTime(400);
+    await Promise.resolve();
+
+    expect(search.run).not.toHaveBeenCalled();
+
+    vm.dispose();
+    jest.useRealTimers();
+  });
+
+  it('records a search error', async () => {
+    jest.useFakeTimers();
+    const search = makeSearchUseCase();
+    search.run.mockRejectedValue(new Error('geocoder down'));
+    const vm = makeVM(makeLocationStore(), search);
+
+    vm.setSearchQuery('bogota');
+    jest.advanceTimersByTime(400);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(vm.isSearchError).toContain('geocoder down');
+
+    vm.dispose();
+    jest.useRealTimers();
+  });
+});
+
+describe('HomeViewModel — ruta A->B', () => {
+  it('computes the route from the current location to the destination', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const store = makeLocationStore({
+      hasLocation: true,
+      coordinates: [-74.08, 4.6],
+      isLocationResponse: makeGeoLocation({ latitude: 4.6, longitude: -74.08 }),
+    });
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(directions.run).toHaveBeenCalled();
+    expect(vm.hasRoute).toBe(true);
+    expect(vm.routeShape?.geometry.type).toBe('LineString');
+    expect(vm.routeBounds).not.toBeNull();
+    expect(vm.routeSummary).toEqual({
+      distance: '42 km',
+      duration: '1 h 15 min',
+    });
+  });
+
+  it('does not compute a route without a known location', async () => {
+    const directions = makeDirectionsUseCase();
+    const vm = makeVM(makeLocationStore(), makeSearchUseCase(), directions);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(directions.run).not.toHaveBeenCalled();
+    expect(vm.isRouteError).toContain('ubicacion');
+  });
+
+  it('records a route error when directions fail', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockRejectedValue(new Error('sin ruta'));
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation(),
+    });
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(vm.isRouteError).toContain('sin ruta');
+  });
+
+  it('clearRoute resets destination, route and search', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation(),
+    });
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    vm.selectDestination(makePlace());
+    await flush();
+    expect(vm.hasRoute).toBe(true);
+
+    vm.clearRoute();
+    expect(vm.hasDestination).toBe(false);
+    expect(vm.hasRoute).toBe(false);
+    expect(vm.destinationCoordinate).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import {
+  boundingBox,
   destinationPoint,
   haversineKm,
   headingTriangle,
@@ -91,5 +92,21 @@ describe('headingTriangle', () => {
     const triangle = headingTriangle(BOGOTA, 0, 0.05, 0.03);
     expect(triangle[1].longitude).toBeGreaterThan(BOGOTA.longitude);
     expect(triangle[2].longitude).toBeLessThan(BOGOTA.longitude);
+  });
+});
+
+describe('boundingBox', () => {
+  it('returns null for an empty list', () => {
+    expect(boundingBox([])).toBeNull();
+  });
+
+  it('computes the north-east and south-west corners', () => {
+    const box = boundingBox([
+      { latitude: 4, longitude: -75 },
+      { latitude: 6, longitude: -73 },
+      { latitude: 5, longitude: -74 },
+    ]);
+    expect(box?.northEast).toEqual({ latitude: 6, longitude: -73 });
+    expect(box?.southWest).toEqual({ latitude: 4, longitude: -75 });
   });
 });

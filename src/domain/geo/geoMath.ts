@@ -103,3 +103,30 @@ export function headingTriangle(
     destinationPoint(center, bearingDeg - 145, tailKm),
   ];
 }
+
+/**
+ * Caja envolvente de una lista de puntos: esquinas noreste y suroeste.
+ * Devuelve `null` para una lista vacia.
+ */
+export function boundingBox(
+  points: GeoPoint[],
+): { northEast: GeoPoint; southWest: GeoPoint } | null {
+  if (points.length === 0) return null;
+
+  let minLat = points[0].latitude;
+  let maxLat = points[0].latitude;
+  let minLng = points[0].longitude;
+  let maxLng = points[0].longitude;
+
+  for (const point of points) {
+    minLat = Math.min(minLat, point.latitude);
+    maxLat = Math.max(maxLat, point.latitude);
+    minLng = Math.min(minLng, point.longitude);
+    maxLng = Math.max(maxLng, point.longitude);
+  }
+
+  return {
+    northEast: { latitude: maxLat, longitude: maxLng },
+    southWest: { latitude: minLat, longitude: minLng },
+  };
+}
