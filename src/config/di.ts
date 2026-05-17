@@ -56,6 +56,7 @@ import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
+import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
@@ -210,3 +211,4 @@ container
 container
   .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
   .to(RouteDetailViewModel);
+container.bind<HomeViewModel>(TYPES.HomeViewModel).to(HomeViewModel);
