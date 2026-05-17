@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
+import { RideType } from '@/domain/entities/Route';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -25,7 +26,13 @@ import Spacings from '@/ui/styles/Spacings';
 import { HomeViewModel } from './HomeViewModel';
 
 // Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
-const ROUTE_FIT_PADDING: [number, number, number, number] = [160, 80, 200, 80];
+const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 80, 200, 80];
+
+// Tipos de rodada que ofrece el toggle del Home.
+const RIDE_OPTIONS: { type: RideType; label: string; color: string }[] = [
+  { type: 'highway', label: 'Carretera', color: Colors.base.accent },
+  { type: 'offroad', label: 'Offroad', color: Colors.base.iconOffroad },
+];
 
 /**
  * Pantalla principal: el mapa estilo navegacion Waze. Se mantiene delgada —
@@ -119,19 +126,24 @@ const HomeScreen = observer(() => {
           }}
         />
 
-        {viewModel.routeShape ? (
-          <Mapbox.ShapeSource id="active-route" shape={viewModel.routeShape}>
+        {viewModel.routeLines.map((line) => (
+          <Mapbox.ShapeSource
+            key={line.id}
+            id={`route-${line.id}`}
+            shape={line.shape}
+          >
             <Mapbox.LineLayer
-              id="active-route-line"
+              id={`route-${line.id}-line`}
               style={{
-                lineColor: Colors.base.accent,
-                lineWidth: 5,
+                lineColor: line.color,
+                lineWidth: line.isPrimary ? 6 : 4,
                 lineCap: 'round',
                 lineJoin: 'round',
+                lineOpacity: line.isPrimary ? 1 : 0.9,
               }}
             />
           </Mapbox.ShapeSource>
-        ) : null}
+        ))}
 
         {viewModel.destinationCoordinate ? (
           <Mapbox.PointAnnotation
@@ -197,23 +209,80 @@ const HomeScreen = observer(() => {
               </TouchableOpacity>
             </View>
 
+            <View style={styles.rideChips}>
+              {RIDE_OPTIONS.map((option) => {
+                const active = viewModel.rideType === option.type;
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    activeOpacity={0.8}
+                    style={[
+                      styles.rideChip,
+                      active && { borderColor: option.color },
+                    ]}
+                    onPress={() => viewModel.setRideType(option.type)}
+                  >
+                    <Text
+                      style={[
+                        styles.rideChipText,
+                        active && { color: option.color },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
             {viewModel.isRouteLoading ? (
-              <View style={styles.routeMeta}>
+              <View style={styles.metaRow}>
                 <ActivityIndicator size="small" color={Colors.base.accent} />
-                <Text style={styles.routeMetaText}>Trazando ruta...</Text>
+                <Text style={styles.metaText}>Trazando ruta...</Text>
               </View>
             ) : viewModel.isRouteError ? (
               <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
             ) : viewModel.routeSummary ? (
-              <View style={styles.routeMeta}>
+              <View style={styles.metaRow}>
                 <Ionicons
                   name="navigate"
                   size={14}
                   color={Colors.base.textSecondary}
                 />
-                <Text style={styles.routeMetaText}>
+                <Text style={styles.metaText}>
                   {viewModel.routeSummary.distance} ·{' '}
                   {viewModel.routeSummary.duration}
+                </Text>
+              </View>
+            ) : null}
+
+            {viewModel.isElevationLoading ? (
+              <View style={styles.metaRow}>
+                <ActivityIndicator
+                  size="small"
+                  color={Colors.base.textSecondary}
+                />
+                <Text style={styles.metaText}>Midiendo elevacion...</Text>
+              </View>
+            ) : viewModel.elevationSummary ? (
+              <View style={styles.elevationSection}>
+                <View style={styles.elevationHeader}>
+                  <Text style={styles.elevationTitle}>Elevacion</Text>
+                  <Text style={styles.elevationAscent}>
+                    ↑ {viewModel.elevationSummary.ascent}
+                  </Text>
+                </View>
+                <View style={styles.elevationChart}>
+                  {viewModel.elevationBars.map((ratio, index) => (
+                    <View
+                      key={`bar-${index}`}
+                      style={[styles.elevationBar, { height: 6 + ratio * 38 }]}
+                    />
+                  ))}
+                </View>
+                <Text style={styles.elevationRange}>
+                  {viewModel.elevationSummary.min} –{' '}
+                  {viewModel.elevationSummary.max} s. n. m.
                 </Text>
               </View>
             ) : null}
@@ -361,19 +430,73 @@ const styles = StyleSheet.create({
     ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
-  routeMeta: {
-    marginTop: Spacings.sm,
+  rideChips: {
+    marginTop: Spacings.md,
+    flexDirection: 'row',
+    gap: Spacings.sm,
+  },
+  rideChip: {
+    paddingVertical: Spacings.xs,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  rideChipText: {
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
+  },
+  metaRow: {
+    marginTop: Spacings.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.xs,
   },
-  routeMetaText: {
+  metaText: {
     ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
   errorText: {
+    marginTop: Spacings.md,
     ...Fonts.labelInputError,
     color: Colors.alerts.error,
+  },
+  elevationSection: {
+    marginTop: Spacings.md,
+    paddingTop: Spacings.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.base.separator,
+  },
+  elevationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  elevationTitle: {
+    ...Fonts.header5,
+    color: Colors.base.textSecondary,
+  },
+  elevationAscent: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
+  },
+  elevationChart: {
+    marginTop: Spacings.sm,
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 3,
+  },
+  elevationBar: {
+    flex: 1,
+    backgroundColor: Colors.base.accentDimBorder,
+    borderRadius: BorderRadius.xs,
+  },
+  elevationRange: {
+    marginTop: Spacings.sm,
+    ...Fonts.links,
+    color: Colors.base.textMuted,
   },
   locateButton: {
     position: 'absolute',

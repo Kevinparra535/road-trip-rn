@@ -130,3 +130,26 @@ export function boundingBox(
     southWest: { latitude: minLat, longitude: minLng },
   };
 }
+
+/**
+ * Toma `sampleCount` puntos equiespaciados (por distancia) a lo largo de la
+ * polilinea. Util para muestrear elevacion sin consultar cada vertice.
+ */
+export function samplePolyline(
+  geometry: GeoPoint[],
+  sampleCount: number,
+): GeoPoint[] {
+  if (geometry.length === 0 || sampleCount <= 0) return [];
+  if (sampleCount === 1) return [geometry[0]];
+
+  const total = polylineLengthKm(geometry);
+  const samples: GeoPoint[] = [];
+  for (let i = 0; i < sampleCount; i += 1) {
+    const point = pointAtDistanceAlong(
+      geometry,
+      (total * i) / (sampleCount - 1),
+    );
+    if (point) samples.push(point);
+  }
+  return samples;
+}

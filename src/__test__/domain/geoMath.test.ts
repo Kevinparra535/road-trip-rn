@@ -5,6 +5,7 @@ import {
   headingTriangle,
   pointAtDistanceAlong,
   polylineLengthKm,
+  samplePolyline,
 } from '@/domain/geo/geoMath';
 
 const BOGOTA = { latitude: 4.711, longitude: -74.0721 };
@@ -108,5 +109,28 @@ describe('boundingBox', () => {
     ]);
     expect(box?.northEast).toEqual({ latitude: 6, longitude: -73 });
     expect(box?.southWest).toEqual({ latitude: 4, longitude: -75 });
+  });
+});
+
+describe('samplePolyline', () => {
+  it('returns the requested number of evenly spaced points', () => {
+    const line = [
+      { latitude: 0, longitude: 0 },
+      { latitude: 0, longitude: 2 },
+    ];
+    const samples = samplePolyline(line, 5);
+    expect(samples).toHaveLength(5);
+    expect(samples[0]).toEqual({ latitude: 0, longitude: 0 });
+    expect(samples[4].longitude).toBeCloseTo(2, 4);
+  });
+
+  it('returns an empty array for empty geometry', () => {
+    expect(samplePolyline([], 10)).toEqual([]);
+  });
+
+  it('returns the single point when one sample is requested', () => {
+    expect(samplePolyline([{ latitude: 1, longitude: 1 }], 1)).toEqual([
+      { latitude: 1, longitude: 1 },
+    ]);
   });
 });

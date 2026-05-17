@@ -1,5 +1,10 @@
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
-import { makeGeoLocation, makePlace, makeRouteDirections } from '../factories';
+import {
+  makeElevationProfile,
+  makeGeoLocation,
+  makePlace,
+  makeRouteDirections,
+} from '../factories';
 
 const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
   hasLocation: false,
@@ -13,12 +18,22 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
 
 const makeSearchUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
 const makeDirectionsUseCase = () => ({ run: jest.fn() });
+const makeElevationUseCase = () => ({
+  run: jest.fn().mockResolvedValue(makeElevationProfile()),
+});
 
 const makeVM = (
   store = makeLocationStore(),
   searchPlaces: { run: jest.Mock } = makeSearchUseCase(),
   directions: { run: jest.Mock } = makeDirectionsUseCase(),
-) => new HomeViewModel(store as any, searchPlaces as any, directions as any);
+  elevation: { run: jest.Mock } = makeElevationUseCase(),
+) =>
+  new HomeViewModel(
+    store as any,
+    searchPlaces as any,
+    directions as any,
+    elevation as any,
+  );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
@@ -127,6 +142,7 @@ describe('HomeViewModel — camara y marcador', () => {
     expect(vm.hasAutoCentered).toBe(false);
     expect(vm.hasDestination).toBe(false);
     expect(vm.hasRoute).toBe(false);
+    expect(vm.rideType).toBe('highway');
   });
 });
 
@@ -190,9 +206,11 @@ describe('HomeViewModel — buscador de lugares', () => {
 });
 
 describe('HomeViewModel — ruta A->B', () => {
-  it('computes the route from the current location to the destination', async () => {
+  it('computes the route and exposes colored route lines', async () => {
     const directions = makeDirectionsUseCase();
-    directions.run.mockResolvedValue(makeRouteDirections());
+    directions.run.mockResolvedValue(
+      makeRouteDirections({ alternatives: [makeRouteDirections()] }),
+    );
     const store = makeLocationStore({
       hasLocation: true,
       coordinates: [-74.08, 4.6],
@@ -205,12 +223,72 @@ describe('HomeViewModel — ruta A->B', () => {
 
     expect(directions.run).toHaveBeenCalled();
     expect(vm.hasRoute).toBe(true);
-    expect(vm.routeShape?.geometry.type).toBe('LineString');
     expect(vm.routeBounds).not.toBeNull();
     expect(vm.routeSummary).toEqual({
       distance: '42 km',
       duration: '1 h 15 min',
     });
+
+    // alternativa primero (debajo), principal al final (encima)
+    expect(vm.routeLines).toHaveLength(2);
+    const primary = vm.routeLines.find((line) => line.isPrimary);
+    const alternative = vm.routeLines.find((line) => !line.isPrimary);
+    expect(primary?.color).toBe('#2D7EF8');
+    expect(alternative?.color).toBe('#3F5170');
+    expect(primary?.shape.geometry.type).toBe('LineString');
+  });
+
+  it('recolors the route lines when the ride type changes to offroad', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(
+      makeRouteDirections({ alternatives: [makeRouteDirections()] }),
+    );
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation(),
+    });
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    vm.selectDestination(makePlace());
+    await flush();
+    vm.setRideType('offroad');
+    await flush();
+
+    expect(vm.rideType).toBe('offroad');
+    expect(directions.run).toHaveBeenCalledTimes(2);
+    expect(vm.routeLines.find((line) => line.isPrimary)?.color).toBe('#E8A030');
+    expect(vm.routeLines.find((line) => !line.isPrimary)?.color).toBe(
+      '#B98A4E',
+    );
+  });
+
+  it('loads the elevation profile after computing a route', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const elevation = makeElevationUseCase();
+    elevation.run.mockResolvedValue(makeElevationProfile());
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
+    const vm = makeVM(store, makeSearchUseCase(), directions, elevation);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(elevation.run).toHaveBeenCalled();
+    expect(vm.elevationSummary).not.toBeNull();
+    expect(vm.elevationBars).toHaveLength(3);
+  });
+
+  it('records an elevation error', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(makeRouteDirections());
+    const elevation = makeElevationUseCase();
+    elevation.run.mockRejectedValue(new Error('tilequery down'));
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
+    const vm = makeVM(store, makeSearchUseCase(), directions, elevation);
+
+    vm.selectDestination(makePlace());
+    await flush();
+
+    expect(vm.isElevationError).toContain('tilequery down');
   });
 
   it('does not compute a route without a known location', async () => {
@@ -227,9 +305,7 @@ describe('HomeViewModel — ruta A->B', () => {
   it('records a route error when directions fail', async () => {
     const directions = makeDirectionsUseCase();
     directions.run.mockRejectedValue(new Error('sin ruta'));
-    const store = makeLocationStore({
-      isLocationResponse: makeGeoLocation(),
-    });
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
     const vm = makeVM(store, makeSearchUseCase(), directions);
 
     vm.selectDestination(makePlace());
@@ -238,12 +314,10 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.isRouteError).toContain('sin ruta');
   });
 
-  it('clearRoute resets destination, route and search', async () => {
+  it('clearRoute resets destination, route, elevation and search', async () => {
     const directions = makeDirectionsUseCase();
     directions.run.mockResolvedValue(makeRouteDirections());
-    const store = makeLocationStore({
-      isLocationResponse: makeGeoLocation(),
-    });
+    const store = makeLocationStore({ isLocationResponse: makeGeoLocation() });
     const vm = makeVM(store, makeSearchUseCase(), directions);
 
     vm.selectDestination(makePlace());
@@ -254,5 +328,7 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.hasDestination).toBe(false);
     expect(vm.hasRoute).toBe(false);
     expect(vm.destinationCoordinate).toBeNull();
+    expect(vm.routeLines).toEqual([]);
+    expect(vm.elevationSummary).toBeNull();
   });
 });

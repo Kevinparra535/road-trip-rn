@@ -5,6 +5,7 @@ import { TYPES } from '@/config/types';
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
 import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
 import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
+import { ElevationRepositoryImpl } from '@/data/repositories/ElevationRepositoryImpl';
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
@@ -16,6 +17,8 @@ import { DirectionsServiceImpl } from '@/data/services/DirectionsService';
 import type { DirectionsService } from '@/data/services/DirectionsService';
 import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
 import type { FuelStationService } from '@/data/services/FuelStationService';
+import { ElevationServiceImpl } from '@/data/services/ElevationService';
+import type { ElevationService } from '@/data/services/ElevationService';
 import { LocationServiceImpl } from '@/data/services/LocationService';
 import type { LocationService } from '@/data/services/LocationService';
 import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
@@ -28,6 +31,7 @@ import { RouteServiceImpl } from '@/data/services/RouteService';
 import type { RouteService } from '@/data/services/RouteService';
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
 import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
+import type { ElevationRepository } from '@/domain/repositories/ElevationRepository';
 import type { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
@@ -45,6 +49,7 @@ import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCa
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
+import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
@@ -103,6 +108,10 @@ container
   .bind<PlaceSearchService>(TYPES.PlaceSearchService)
   .to(PlaceSearchServiceImpl)
   .inSingletonScope();
+container
+  .bind<ElevationService>(TYPES.ElevationService)
+  .to(ElevationServiceImpl)
+  .inSingletonScope();
 
 // ── Repositories: singleton ─────────────────────────────────────────────────
 container
@@ -136,6 +145,10 @@ container
 container
   .bind<PlaceSearchRepository>(TYPES.PlaceSearchRepository)
   .to(PlaceSearchRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<ElevationRepository>(TYPES.ElevationRepository)
+  .to(ElevationRepositoryImpl)
   .inSingletonScope();
 
 // ── UseCases: transient ─────────────────────────────────────────────────────
@@ -205,6 +218,9 @@ container
 container
   .bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase)
   .to(SearchPlacesUseCase);
+container
+  .bind<GetRouteElevationUseCase>(TYPES.GetRouteElevationUseCase)
+  .to(GetRouteElevationUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container

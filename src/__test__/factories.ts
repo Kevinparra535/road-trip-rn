@@ -1,4 +1,5 @@
 import { DeviceHeading } from '@/domain/entities/DeviceHeading';
+import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
@@ -116,6 +117,18 @@ export const makeRouteDirections = (
       { latitude: 4.6097, longitude: -74.0817 },
       { latitude: 5.0, longitude: -73.8 },
       { latitude: 5.6339, longitude: -73.5269 },
+    ],
+    ...overrides,
+  });
+
+export const makeElevationProfile = (
+  overrides: Partial<ElevationProfile> = {},
+): ElevationProfile =>
+  new ElevationProfile({
+    samples: [
+      { distanceKm: 0, elevationM: 2600 },
+      { distanceKm: 10, elevationM: 2800 },
+      { distanceKm: 20, elevationM: 2500 },
     ],
     ...overrides,
   });

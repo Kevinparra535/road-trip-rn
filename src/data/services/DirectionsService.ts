@@ -30,6 +30,7 @@ export class DirectionsServiceImpl implements DirectionsService {
     const params = new URLSearchParams({
       geometries: 'geojson',
       overview: 'full',
+      alternatives: 'true',
       access_token: ENV.mapboxPublicToken,
     });
 

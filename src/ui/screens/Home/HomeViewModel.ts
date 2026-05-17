@@ -2,12 +2,14 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
 import { boundingBox, headingTriangle } from '@/domain/geo/geoMath';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
@@ -33,8 +35,17 @@ const TRIANGLE_NOSE_KM = 0.05;
 const TRIANGLE_TAIL_KM = 0.03;
 // Buscador: espera tras la ultima tecla antes de consultar el geocoder.
 const SEARCH_DEBOUNCE_MS = 400;
-// Mapbox no tiene perfil moto; la ruta rapida del Home usa carretera.
-const ROUTE_RIDE_TYPE: RideType = 'highway';
+// Tipo de rodada por defecto del trazado del Home.
+const DEFAULT_RIDE_TYPE: RideType = 'highway';
+
+// Colores del trazado por tipo de rodada (principal / alternativas).
+const HIGHWAY_COLORS = { primary: '#2D7EF8', alternative: '#3F5170' };
+const OFFROAD_COLORS = { primary: '#E8A030', alternative: '#B98A4E' };
+
+const colorsForRideType = (
+  rideType: RideType,
+): { primary: string; alternative: string } =>
+  rideType === 'offroad' ? OFFROAD_COLORS : HIGHWAY_COLORS;
 
 /** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
 export type CameraTarget = {
@@ -49,14 +60,21 @@ export type MapBounds = {
   sw: [number, number];
 };
 
-type ICalls = 'search' | 'route';
+/** Una linea de ruta lista para pintar: principal o alternativa. */
+export type RouteLine = {
+  id: string;
+  shape: GeoJSON.Feature<GeoJSON.LineString>;
+  color: string;
+  isPrimary: boolean;
+};
+
+type ICalls = 'search' | 'route' | 'elevation';
 
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
  * presentacion del mapa (zoom, perspectiva, marcador de rumbo), el buscador
- * de lugares con debounce y el trazado de ruta A->B. Delega la ubicacion en
- * el `LocationStore` global; la pantalla solo renderiza y ejecuta los
- * comandos imperativos de camara.
+ * de lugares con debounce, el trazado de ruta A->B con alternativas y el
+ * perfil de elevacion. Delega la ubicacion en el `LocationStore` global.
  */
 @injectable()
 export class HomeViewModel {
@@ -78,10 +96,16 @@ export class HomeViewModel {
   isSearchResponse: Place[] | null = null;
 
   // ── State: ruta A->B ──
+  rideType: RideType = DEFAULT_RIDE_TYPE;
   destination: Place | null = null;
   isRouteLoading: boolean = false;
   isRouteError: string | null = null;
   isRouteResponse: RouteDirections | null = null;
+
+  // ── State: perfil de elevacion ──
+  isElevationLoading: boolean = false;
+  isElevationError: string | null = null;
+  isElevationResponse: ElevationProfile | null = null;
 
   private searchDisposer: (() => void) | null = null;
   private logger = new Logger('HomeViewModel');
@@ -93,6 +117,8 @@ export class HomeViewModel {
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
     @inject(TYPES.CalculateDirectionsUseCase)
     private readonly calculateDirectionsUseCase: CalculateDirectionsUseCase,
+    @inject(TYPES.GetRouteElevationUseCase)
+    private readonly getRouteElevationUseCase: GetRouteElevationUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -187,24 +213,40 @@ export class HomeViewModel {
     return this.destination ? this.destination.toLngLat() : null;
   }
 
-  /** Trazado de la ruta como `Feature` GeoJSON, listo para un LineLayer. */
-  get routeShape(): GeoJSON.Feature<GeoJSON.LineString> | null {
+  /**
+   * Lineas de ruta listas para pintar: las alternativas primero (debajo) y la
+   * principal al final (encima), cada una coloreada segun el tipo de rodada.
+   */
+  get routeLines(): RouteLine[] {
     const route = this.isRouteResponse;
-    if (!route || route.geometry.length < 2) return null;
-    return {
-      type: 'Feature',
-      properties: {},
-      geometry: {
-        type: 'LineString',
-        coordinates: route.geometry.map((point) => [
-          point.longitude,
-          point.latitude,
-        ]),
-      },
-    };
+    if (!route) return [];
+
+    const colors = colorsForRideType(this.rideType);
+    const lines: RouteLine[] = [];
+    route.alternatives.forEach((alternative, index) => {
+      const shape = this.toLineFeature(alternative.geometry);
+      if (shape) {
+        lines.push({
+          id: `alternative-${index}`,
+          shape,
+          color: colors.alternative,
+          isPrimary: false,
+        });
+      }
+    });
+    const primaryShape = this.toLineFeature(route.geometry);
+    if (primaryShape) {
+      lines.push({
+        id: 'primary',
+        shape: primaryShape,
+        color: colors.primary,
+        isPrimary: true,
+      });
+    }
+    return lines;
   }
 
-  /** Caja envolvente de la ruta, para encuadrar la camara. */
+  /** Caja envolvente de la ruta principal, para encuadrar la camara. */
   get routeBounds(): MapBounds | null {
     const route = this.isRouteResponse;
     if (!route) return null;
@@ -223,6 +265,30 @@ export class HomeViewModel {
     return {
       distance: `${Math.round(route.distanceKm)} km`,
       duration: this.formatDuration(route.durationMin),
+    };
+  }
+
+  // ── Computed: perfil de elevacion ───────────────────────────────────────────
+
+  /** Alturas normalizadas (0..1) para dibujar el perfil como barras. */
+  get elevationBars(): number[] {
+    const profile = this.isElevationResponse;
+    if (!profile || profile.isEmpty) return [];
+    const min = profile.minElevationM;
+    const range = profile.maxElevationM - min;
+    return profile.samples.map((sample) =>
+      range === 0 ? 0.5 : (sample.elevationM - min) / range,
+    );
+  }
+
+  /** Resumen del perfil de elevacion, ya formateado. */
+  get elevationSummary(): { min: string; max: string; ascent: string } | null {
+    const profile = this.isElevationResponse;
+    if (!profile || profile.isEmpty) return null;
+    return {
+      min: `${Math.round(profile.minElevationM)} m`,
+      max: `${Math.round(profile.maxElevationM)} m`,
+      ascent: `${Math.round(profile.ascentM)} m`,
     };
   }
 
@@ -276,6 +342,13 @@ export class HomeViewModel {
     this.searchQuery = query;
   }
 
+  /** Cambia el tipo de rodada; recalcula la ruta si ya hay destino. */
+  setRideType(rideType: RideType): void {
+    if (this.rideType === rideType) return;
+    this.rideType = rideType;
+    if (this.destination) void this.computeRoute();
+  }
+
   /** Fija el destino elegido y calcula el trazado desde la ubicacion actual. */
   selectDestination(place: Place): void {
     this.destination = place;
@@ -284,12 +357,15 @@ export class HomeViewModel {
     void this.computeRoute();
   }
 
-  /** Limpia el destino, la ruta y el buscador. */
+  /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
     this.destination = null;
     this.isRouteResponse = null;
     this.isRouteError = null;
     this.isRouteLoading = false;
+    this.isElevationResponse = null;
+    this.isElevationError = null;
+    this.isElevationLoading = false;
     this.searchQuery = '';
     this.isSearchResponse = null;
   }
@@ -303,10 +379,14 @@ export class HomeViewModel {
       this.isSearchLoading = false;
       this.isSearchError = null;
       this.isSearchResponse = null;
+      this.rideType = DEFAULT_RIDE_TYPE;
       this.destination = null;
       this.isRouteLoading = false;
       this.isRouteError = null;
       this.isRouteResponse = null;
+      this.isElevationLoading = false;
+      this.isElevationError = null;
+      this.isElevationResponse = null;
     });
   }
 
@@ -317,6 +397,20 @@ export class HomeViewModel {
     return location
       ? { latitude: location.latitude, longitude: location.longitude }
       : undefined;
+  }
+
+  private toLineFeature(
+    geometry: GeoPoint[],
+  ): GeoJSON.Feature<GeoJSON.LineString> | null {
+    if (geometry.length < 2) return null;
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: geometry.map((point) => [point.longitude, point.latitude]),
+      },
+    };
   }
 
   private async runSearch(query: string): Promise<void> {
@@ -358,6 +452,9 @@ export class HomeViewModel {
       return;
     }
 
+    runInAction(() => {
+      this.isElevationResponse = null;
+    });
     this.updateLoadingState(true, null, 'route');
     try {
       const waypoints = [
@@ -380,14 +477,30 @@ export class HomeViewModel {
       ];
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints,
-        rideType: ROUTE_RIDE_TYPE,
+        rideType: this.rideType,
       });
       runInAction(() => {
         this.isRouteResponse = directions;
       });
       this.updateLoadingState(false, null, 'route');
+      void this.computeElevation();
     } catch (error) {
       this.handleError(error, 'route');
+    }
+  }
+
+  private async computeElevation(): Promise<void> {
+    const route = this.isRouteResponse;
+    if (!route) return;
+    this.updateLoadingState(true, null, 'elevation');
+    try {
+      const profile = await this.getRouteElevationUseCase.run(route.geometry);
+      runInAction(() => {
+        this.isElevationResponse = profile;
+      });
+      this.updateLoadingState(false, null, 'elevation');
+    } catch (error) {
+      this.handleError(error, 'elevation');
     }
   }
 
@@ -412,6 +525,10 @@ export class HomeViewModel {
         case 'route':
           this.isRouteLoading = isLoading;
           this.isRouteError = error;
+          break;
+        case 'elevation':
+          this.isElevationLoading = isLoading;
+          this.isElevationError = error;
           break;
       }
     });
