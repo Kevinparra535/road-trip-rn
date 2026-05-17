@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
-import { ElementRef, useEffect, useMemo, useRef } from 'react';
+import { ElementRef, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+import { headingTriangle } from '@/domain/geo/geoMath';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { AppTabsParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -22,12 +23,19 @@ type Nav = BottomTabNavigationProp<AppTabsParamList, 'HomeTab'>;
 // Centro por defecto: Bogota, Colombia.
 const DEFAULT_CENTER: [number, number] = [-74.0817, 4.6097];
 const DEFAULT_ZOOM = 11;
-const FOLLOW_ZOOM = 14;
+const FOLLOW_ZOOM = 15;
+// Vista en perspectiva (no aerea): inclinacion de la camara en grados.
+const MAP_PITCH = 55;
+// Umbral de prueba: por debajo de este zoom el rumbo se pinta como punto.
+const HEADING_MARKER_MIN_ZOOM = 12;
+// Tamano real del triangulo de rumbo, en kilometros.
+const TRIANGLE_NOSE_KM = 0.05;
+const TRIANGLE_TAIL_KM = 0.03;
 
 /**
- * Pantalla principal: el mapa a pantalla completa, estilo Google Maps / Waze.
- * Es la vista inicial de la app y pinta la ubicacion del rider observando el
- * `LocationStore`.
+ * Pantalla principal: el mapa en perspectiva 3D, estilo navegacion.
+ * Es la vista inicial de la app. Pinta al rider con un triangulo cuyo vertice
+ * apunta hacia su rumbo; si el zoom es bajo cae a un punto simple.
  */
 const HomeScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -38,6 +46,7 @@ const HomeScreen = observer(() => {
 
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const didCenterRef = useRef(false);
+  const [isAboveZoomThreshold, setIsAboveZoomThreshold] = useState(false);
 
   // Arranca el sistema de localizacion y lo libera al salir.
   useEffect(() => {
@@ -45,7 +54,9 @@ const HomeScreen = observer(() => {
     return () => locationStore.dispose();
   }, [locationStore]);
 
+  const location = locationStore.isLocationResponse;
   const userCoordinates = locationStore.coordinates;
+  const heading = locationStore.heading;
 
   // Centra la camara sobre el rider la primera vez que hay ubicacion.
   useEffect(() => {
@@ -54,10 +65,32 @@ const HomeScreen = observer(() => {
       cameraRef.current?.setCamera({
         centerCoordinate: userCoordinates,
         zoomLevel: FOLLOW_ZOOM,
+        pitch: MAP_PITCH,
         animationDuration: 800,
       });
     }
   }, [userCoordinates]);
+
+  // Triangulo de rumbo como poligono GeoJSON real sobre el mapa.
+  const headingShape = useMemo(() => {
+    if (!location || heading === null) return null;
+    const vertices = headingTriangle(
+      { latitude: location.latitude, longitude: location.longitude },
+      heading,
+      TRIANGLE_NOSE_KM,
+      TRIANGLE_TAIL_KM,
+    );
+    const ring = [...vertices, vertices[0]].map(
+      (point) => [point.longitude, point.latitude] as [number, number],
+    );
+    return {
+      type: 'Feature' as const,
+      properties: {},
+      geometry: { type: 'Polygon' as const, coordinates: [ring] },
+    };
+  }, [location, heading]);
+
+  const showHeadingTriangle = headingShape !== null && isAboveZoomThreshold;
 
   const goToPlanner = () =>
     navigation.navigate('RoutesTab', { screen: 'RoutePlanner' });
@@ -67,22 +100,33 @@ const HomeScreen = observer(() => {
     cameraRef.current?.setCamera({
       centerCoordinate: userCoordinates,
       zoomLevel: FOLLOW_ZOOM,
+      pitch: MAP_PITCH,
       animationDuration: 600,
     });
   };
 
   return (
     <View style={styles.container}>
-      <Mapbox.MapView style={styles.map} styleURL={MAP_STYLE_URL}>
+      <Mapbox.MapView
+        style={styles.map}
+        styleURL={MAP_STYLE_URL}
+        onCameraChanged={(state) =>
+          setIsAboveZoomThreshold(
+            (state?.properties?.zoom ?? DEFAULT_ZOOM) >=
+              HEADING_MARKER_MIN_ZOOM,
+          )
+        }
+      >
         <Mapbox.Camera
           ref={cameraRef}
           defaultSettings={{
             centerCoordinate: DEFAULT_CENTER,
             zoomLevel: DEFAULT_ZOOM,
+            pitch: MAP_PITCH,
           }}
         />
 
-        {userCoordinates ? (
+        {userCoordinates && !showHeadingTriangle ? (
           <Mapbox.PointAnnotation
             id="user-location"
             coordinate={userCoordinates}
@@ -91,6 +135,26 @@ const HomeScreen = observer(() => {
               <View style={styles.userDot} />
             </View>
           </Mapbox.PointAnnotation>
+        ) : null}
+
+        {showHeadingTriangle && headingShape ? (
+          <Mapbox.ShapeSource id="user-heading" shape={headingShape}>
+            <Mapbox.FillLayer
+              id="user-heading-fill"
+              style={{
+                fillColor: Colors.base.accent,
+                fillOpacity: 0.9,
+              }}
+            />
+            <Mapbox.LineLayer
+              id="user-heading-outline"
+              style={{
+                lineColor: Colors.base.textPrimary,
+                lineWidth: 2,
+                lineJoin: 'round',
+              }}
+            />
+          </Mapbox.ShapeSource>
         ) : null}
       </Mapbox.MapView>
 

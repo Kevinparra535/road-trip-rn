@@ -1,5 +1,7 @@
 import {
+  destinationPoint,
   haversineKm,
+  headingTriangle,
   pointAtDistanceAlong,
   polylineLengthKm,
 } from '@/domain/geo/geoMath';
@@ -53,5 +55,41 @@ describe('pointAtDistanceAlong', () => {
 
   it('returns the last point when distance exceeds the line', () => {
     expect(pointAtDistanceAlong(line, 999999)).toEqual(line[line.length - 1]);
+  });
+});
+
+describe('destinationPoint', () => {
+  it('moves north by roughly one degree of latitude', () => {
+    const point = destinationPoint({ latitude: 0, longitude: 0 }, 0, 111.195);
+    expect(point.latitude).toBeCloseTo(1, 2);
+    expect(point.longitude).toBeCloseTo(0, 5);
+  });
+
+  it('moves east along the equator', () => {
+    const point = destinationPoint({ latitude: 0, longitude: 0 }, 90, 111.195);
+    expect(point.longitude).toBeCloseTo(1, 2);
+    expect(point.latitude).toBeCloseTo(0, 5);
+  });
+
+  it('returns the origin for zero distance', () => {
+    const point = destinationPoint(BOGOTA, 123, 0);
+    expect(point.latitude).toBeCloseTo(BOGOTA.latitude, 6);
+    expect(point.longitude).toBeCloseTo(BOGOTA.longitude, 6);
+  });
+});
+
+describe('headingTriangle', () => {
+  it('builds three vertices with the apex ahead of the center', () => {
+    const triangle = headingTriangle(BOGOTA, 0, 0.05, 0.03);
+    expect(triangle).toHaveLength(3);
+    expect(triangle[0].latitude).toBeGreaterThan(BOGOTA.latitude);
+    expect(triangle[1].latitude).toBeLessThan(BOGOTA.latitude);
+    expect(triangle[2].latitude).toBeLessThan(BOGOTA.latitude);
+  });
+
+  it('mirrors the base vertices around the heading axis', () => {
+    const triangle = headingTriangle(BOGOTA, 0, 0.05, 0.03);
+    expect(triangle[1].longitude).toBeGreaterThan(BOGOTA.longitude);
+    expect(triangle[2].longitude).toBeLessThan(BOGOTA.longitude);
   });
 });

@@ -124,4 +124,44 @@ describe('LocationStore', () => {
     expect(store.hasLocation).toBe(false);
     expect(store.isPermissionResponse).toBeNull();
   });
+
+  it('has no heading before any location', () => {
+    expect(makeStore().heading).toBeNull();
+  });
+
+  it('exposes a valid heading from the current location', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(
+      makeGeoLocation({ heading: 90 }),
+    );
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.heading).toBe(90);
+  });
+
+  it('treats a negative heading as no heading', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(
+      makeGeoLocation({ heading: -1 }),
+    );
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.heading).toBeNull();
+  });
+
+  it('treats a null heading as no heading', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(
+      makeGeoLocation({ heading: null }),
+    );
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.heading).toBeNull();
+  });
 });

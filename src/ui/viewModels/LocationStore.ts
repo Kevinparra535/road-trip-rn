@@ -57,6 +57,16 @@ export class LocationStore {
     return this.isLocationResponse ? this.isLocationResponse.toLngLat() : null;
   }
 
+  /**
+   * Rumbo del dispositivo en grados (0 = norte, sentido horario). Es `null`
+   * cuando el GPS aun no lo reporta (p. ej. detenido).
+   */
+  get heading(): number | null {
+    const value = this.isLocationResponse?.heading;
+    if (value === null || value === undefined || value < 0) return null;
+    return value;
+  }
+
   // ── Actions ─────────────────────────────────────────────────────────────────
 
   /** Entrypoint: pide permiso y, si se concede, carga y observa la ubicacion. */
