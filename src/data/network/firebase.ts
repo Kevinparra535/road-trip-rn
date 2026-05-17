@@ -2,9 +2,9 @@ import { getApps, initializeApp } from 'firebase/app';
 import { Auth, getAuth, initializeAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-import { ENV } from '@/config/env';
+import { firebaseConfig } from '@/config/firebase.config';
 
-const app = getApps().length ? getApps()[0] : initializeApp(ENV.firebase);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 /**
  * Firebase v12 persiste la sesion en React Native automaticamente cuando

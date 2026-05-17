@@ -7,6 +7,7 @@ type FirebaseEnv = {
   storageBucket: string;
   messagingSenderId: string;
   appId: string;
+  measurementId?: string;
 };
 
 type AppEnv = {
@@ -31,5 +32,6 @@ export const ENV: AppEnv = {
     messagingSenderId:
       extra.firebase?.messagingSenderId ?? 'SET_FIREBASE_MESSAGING_SENDER_ID',
     appId: extra.firebase?.appId ?? 'SET_FIREBASE_APP_ID',
+    measurementId: extra.firebase?.measurementId,
   },
 };

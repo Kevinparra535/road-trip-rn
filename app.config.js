@@ -20,6 +20,7 @@ module.exports = ({ config }) => ({
         process.env.FIREBASE_MESSAGING_SENDER_ID ||
         'SET_FIREBASE_MESSAGING_SENDER_ID',
       appId: process.env.FIREBASE_APP_ID || 'SET_FIREBASE_APP_ID',
+      measurementId: process.env.FIREBASE_MEASUREMENT_ID,
     },
   },
 });
