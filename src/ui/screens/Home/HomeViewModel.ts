@@ -415,6 +415,7 @@ export class HomeViewModel {
   get fuelSummary(): {
     fuelNeeded: string;
     consumption: string;
+    load: string;
     reaches: boolean;
     rangeUsedPercent: number;
   } | null {
@@ -423,6 +424,7 @@ export class HomeViewModel {
     return {
       fuelNeeded: `${estimate.fuelNeededLiters.toFixed(1)} L`,
       consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
+      load: `${Math.round(estimate.loadKg)} kg`,
       reaches: estimate.reachesWithoutRefuel,
       rangeUsedPercent: Math.round(
         Math.min(1.5, estimate.rangeUsedFraction) * 100,
@@ -681,6 +683,7 @@ export class HomeViewModel {
         distanceKm: route.distanceKm,
         durationMin: route.durationMin,
         ascentM: this.isElevationResponse?.ascentM ?? 0,
+        loadKg: motorcycle.totalLoadKg(),
       });
       runInAction(() => {
         this.isFuelEstimateResponse = estimate;

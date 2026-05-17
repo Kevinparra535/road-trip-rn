@@ -10,28 +10,28 @@ export type EstimateRouteFuelInput = {
   durationMin: number;
   /** Desnivel acumulado de subida de la ruta, en metros. */
   ascentM: number;
-  /** Carga extra sobre el peso base; 0 por ahora (parametros del garaje). */
-  extraLoadKg?: number;
+  /** Peso total a bordo (piloto + copiloto + maleteros), en kilogramos. */
+  loadKg?: number;
 };
 
 // ── Heuristicas del modelo de consumo (ajustables) ──────────────────────────
-// Peso base del rider; mas parametros de carga llegaran del garaje.
-const BASE_RIDER_WEIGHT_KG = 75;
+// Carga a bordo que asume el rendimiento de catalogo (un piloto promedio).
+const BASE_LOAD_KG = 80;
 // Velocidad de mejor rendimiento; alejarse penaliza el consumo.
 const OPTIMAL_SPEED_KMH = 70;
 const SPEED_PENALTY_PER_KMH = 0.004;
 // Penalizacion por desnivel de subida acumulado por kilometro.
 const CLIMB_PENALTY_PER_M_PER_KM = 0.006;
-// Sensibilidad al peso extra respecto al peso base.
-const WEIGHT_PENALTY = 0.12;
+// Sensibilidad al exceso de peso respecto a la carga base.
+const WEIGHT_PENALTY = 0.18;
 // Limites del factor combinado.
 const MIN_FACTOR = 0.55;
 const MAX_FACTOR = 1.1;
 
 /**
  * Estima cuanto le dura la gasolina a una moto en una ruta, ajustando el
- * rendimiento de catalogo por velocidad media, desnivel y peso. Logica de
- * negocio pura, sin dependencias de infraestructura.
+ * rendimiento de catalogo por velocidad media, desnivel y peso a bordo.
+ * Logica de negocio pura, sin dependencias de infraestructura.
  */
 @injectable()
 export class EstimateRouteFuelUseCase implements UseCase<
@@ -40,6 +40,7 @@ export class EstimateRouteFuelUseCase implements UseCase<
 > {
   async run(input: EstimateRouteFuelInput): Promise<RouteFuelEstimate> {
     const { motorcycle, distanceKm, durationMin, ascentM } = input;
+    const loadKg = input.loadKg ?? BASE_LOAD_KG;
 
     const baseConsumption = motorcycle.fuelConsumptionKmPerLiter;
     if (baseConsumption <= 0 || motorcycle.tankCapacityLiters <= 0) {
@@ -49,7 +50,7 @@ export class EstimateRouteFuelUseCase implements UseCase<
     const factor = this.clampFactor(
       this.speedFactor(distanceKm, durationMin) *
         this.altitudeFactor(distanceKm, ascentM) *
-        this.weightFactor(input.extraLoadKg ?? 0),
+        this.weightFactor(loadKg),
     );
     const effectiveConsumption = baseConsumption * factor;
 
@@ -59,6 +60,7 @@ export class EstimateRouteFuelUseCase implements UseCase<
       fuelNeededLiters: distanceKm / effectiveConsumption,
       effectiveRangeKm: motorcycle.tankCapacityLiters * effectiveConsumption,
       fullTankRangeKm: motorcycle.fullTankRangeKm(),
+      loadKg,
     });
   }
 
@@ -78,9 +80,10 @@ export class EstimateRouteFuelUseCase implements UseCase<
     return 1 - ascentPerKm * CLIMB_PENALTY_PER_M_PER_KM;
   }
 
-  /** Peso base del rider; los parametros de carga llegaran del garaje. */
-  private weightFactor(extraLoadKg: number): number {
-    return 1 - (extraLoadKg / BASE_RIDER_WEIGHT_KG) * WEIGHT_PENALTY;
+  /** Penaliza el peso a bordo que excede la carga base. */
+  private weightFactor(loadKg: number): number {
+    const excessKg = Math.max(0, loadKg - BASE_LOAD_KG);
+    return 1 - (excessKg / BASE_LOAD_KG) * WEIGHT_PENALTY;
   }
 
   private clampFactor(factor: number): number {

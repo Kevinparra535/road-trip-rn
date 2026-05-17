@@ -418,7 +418,8 @@ const HomeScreen = observer(() => {
                 </View>
                 <Text style={styles.legendText}>
                   {viewModel.fuelSummary.rangeUsedPercent}% del tanque ·{' '}
-                  {viewModel.fuelSummary.consumption}
+                  {viewModel.fuelSummary.consumption} ·{' '}
+                  {viewModel.fuelSummary.load} a bordo
                 </Text>
               </View>
             ) : !viewModel.hasMotorcycle ? (

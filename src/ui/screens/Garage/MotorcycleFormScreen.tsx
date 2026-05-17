@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -17,21 +18,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
-import { FuelType } from '@/domain/entities/Motorcycle';
+import { FuelType, LuggagePosition } from '@/domain/entities/Motorcycle';
 import AppTextInput from '@/ui/components/AppTextInput';
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import WeightSlider from '@/ui/components/WeightSlider';
 import { GarageStackParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { MotorcycleFormViewModel } from './MotorcycleFormViewModel';
+import {
+  MAX_LUGGAGE_KG,
+  MAX_PERSON_KG,
+  MIN_PERSON_KG,
+  MotorcycleFormViewModel,
+} from './MotorcycleFormViewModel';
 
 type Nav = NativeStackNavigationProp<GarageStackParamList, 'MotorcycleForm'>;
 type Route = RouteProp<GarageStackParamList, 'MotorcycleForm'>;
 
 const FUEL_OPTIONS: FuelType[] = ['corriente', 'extra'];
+
+const LUGGAGE_POSITIONS: LuggagePosition[] = ['left', 'right', 'top'];
+
+const LUGGAGE_LABEL: Record<LuggagePosition, string> = {
+  left: 'izquierdo',
+  right: 'derecho',
+  top: 'superior',
+};
 
 const MotorcycleFormScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -204,6 +219,90 @@ const MotorcycleFormScreen = observer(() => {
             onChangeText={viewModel.setEngineCcText}
           />
 
+          <Text style={styles.sectionLabel}>Carga</Text>
+
+          <WeightSlider
+            label="Peso del piloto"
+            value={viewModel.driverWeightKg}
+            min={MIN_PERSON_KG}
+            max={MAX_PERSON_KG}
+            onChange={(weight) => viewModel.setDriverWeight(weight)}
+          />
+
+          <View style={styles.switchRow}>
+            <View style={styles.switchInfo}>
+              <Text style={styles.switchTitle}>Copiloto</Text>
+              <Text style={styles.switchHint}>
+                Suma el peso de un acompanante al consumo.
+              </Text>
+            </View>
+            <Switch
+              value={viewModel.hasPassenger}
+              onValueChange={(value) => viewModel.setHasPassenger(value)}
+              trackColor={{
+                true: Colors.base.accentDimBorder,
+                false: Colors.base.bgCard,
+              }}
+              thumbColor={
+                viewModel.hasPassenger
+                  ? Colors.base.accent
+                  : Colors.base.iconMuted
+              }
+            />
+          </View>
+
+          {viewModel.hasPassenger ? (
+            <WeightSlider
+              label="Peso del copiloto"
+              value={viewModel.passengerWeightKg}
+              min={MIN_PERSON_KG}
+              max={MAX_PERSON_KG}
+              onChange={(weight) => viewModel.setPassengerWeight(weight)}
+            />
+          ) : null}
+
+          <View style={styles.switchRow}>
+            <View style={styles.switchInfo}>
+              <Text style={styles.switchTitle}>Maleteros</Text>
+              <Text style={styles.switchHint}>
+                Configura el peso de cada maletero.
+              </Text>
+            </View>
+            <Switch
+              value={viewModel.luggageEnabled}
+              onValueChange={(value) => viewModel.setLuggageEnabled(value)}
+              trackColor={{
+                true: Colors.base.accentDimBorder,
+                false: Colors.base.bgCard,
+              }}
+              thumbColor={
+                viewModel.luggageEnabled
+                  ? Colors.base.accent
+                  : Colors.base.iconMuted
+              }
+            />
+          </View>
+
+          {viewModel.luggageEnabled ? (
+            <View style={styles.luggagePanel}>
+              <Text style={styles.luggageHint}>
+                Ajusta el peso aproximado de cada maletero.
+              </Text>
+              {LUGGAGE_POSITIONS.map((position) => (
+                <WeightSlider
+                  key={position}
+                  label={`Maletero ${LUGGAGE_LABEL[position]}`}
+                  value={viewModel.luggageWeights[position]}
+                  min={0}
+                  max={MAX_LUGGAGE_KG}
+                  onChange={(weight) =>
+                    viewModel.setLuggageWeight(position, weight)
+                  }
+                />
+              ))}
+            </View>
+          ) : null}
+
           {viewModel.isValid ? (
             <View style={styles.rangeCard}>
               <Text style={styles.rangeLabel}>Autonomia teorica</Text>
@@ -267,6 +366,39 @@ const styles = StyleSheet.create({
     marginBottom: Spacings.sm,
     ...Fonts.header5,
     color: Colors.base.textSecondary,
+  },
+  switchRow: {
+    marginTop: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacings.md,
+  },
+  switchInfo: {
+    flex: 1,
+  },
+  switchTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  switchHint: {
+    marginTop: Spacings.xs,
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
+  },
+  luggagePanel: {
+    marginTop: Spacings.lg,
+    padding: Spacings.md,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  luggageHint: {
+    marginTop: Spacings.md,
+    textAlign: 'center',
+    ...Fonts.smallBodyText,
+    color: Colors.base.textMuted,
   },
   gap: {
     height: Spacings.lg,

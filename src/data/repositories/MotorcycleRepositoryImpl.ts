@@ -55,6 +55,13 @@ export class MotorcycleRepositoryImpl implements MotorcycleRepository {
       tank_capacity_liters: motorcycle.tankCapacityLiters,
       fuel_consumption_km_per_liter: motorcycle.fuelConsumptionKmPerLiter,
       engine_cc: motorcycle.engineCc,
+      driver_weight_kg: motorcycle.driverWeightKg,
+      has_passenger: motorcycle.hasPassenger,
+      passenger_weight_kg: motorcycle.passengerWeightKg,
+      luggage: motorcycle.luggage.map((item) => ({
+        position: item.position,
+        weight_kg: item.weightKg,
+      })),
     };
   }
 }

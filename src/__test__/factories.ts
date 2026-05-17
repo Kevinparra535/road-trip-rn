@@ -143,6 +143,7 @@ export const makeRouteFuelEstimate = (
     fuelNeededLiters: 1.75,
     effectiveRangeKm: 420,
     fullTankRangeKm: 455,
+    loadKg: 95,
     ...overrides,
   });
 

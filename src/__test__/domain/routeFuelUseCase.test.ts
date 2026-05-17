@@ -66,6 +66,25 @@ describe('EstimateRouteFuelUseCase', () => {
     expect(estimate.rangeUsedFraction).toBeGreaterThan(1);
   });
 
+  it('reduces the range with a heavier load on board', async () => {
+    const light = await useCase.run({
+      motorcycle: makeMotorcycle(),
+      distanceKm: 100,
+      durationMin: optimalDuration,
+      ascentM: 0,
+      loadKg: 80,
+    });
+    const loaded = await useCase.run({
+      motorcycle: makeMotorcycle(),
+      distanceKm: 100,
+      durationMin: optimalDuration,
+      ascentM: 0,
+      loadKg: 200,
+    });
+    expect(loaded.effectiveRangeKm).toBeLessThan(light.effectiveRangeKm);
+    expect(loaded.loadKg).toBe(200);
+  });
+
   it('throws when the motorcycle has no usable range', async () => {
     await expect(
       useCase.run({

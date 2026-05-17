@@ -4,6 +4,8 @@ export type RouteFuelEstimateConstructorParams = {
   fuelNeededLiters: number;
   effectiveRangeKm: number;
   fullTankRangeKm: number;
+  /** Peso total a bordo considerado en el calculo, en kilogramos. */
+  loadKg: number;
   [key: string]: any;
 };
 
@@ -19,6 +21,7 @@ export class RouteFuelEstimate {
   fuelNeededLiters: number;
   effectiveRangeKm: number;
   fullTankRangeKm: number;
+  loadKg: number;
 
   constructor(params: RouteFuelEstimateConstructorParams) {
     this.distanceKm = params.distanceKm;
@@ -26,6 +29,7 @@ export class RouteFuelEstimate {
     this.fuelNeededLiters = params.fuelNeededLiters;
     this.effectiveRangeKm = params.effectiveRangeKm;
     this.fullTankRangeKm = params.fullTankRangeKm;
+    this.loadKg = params.loadKg;
 
     Object.assign(this, params);
   }

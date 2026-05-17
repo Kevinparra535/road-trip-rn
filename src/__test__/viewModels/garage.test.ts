@@ -137,4 +137,48 @@ describe('MotorcycleFormViewModel', () => {
     await vm.submit();
     expect(update.run).toHaveBeenCalled();
   });
+
+  it('captures passenger and luggage load on submit', async () => {
+    const { vm, create } = build();
+    await vm.initialize();
+    vm.setBrand('CFMOTO');
+    vm.setModel('450MT');
+    vm.setYearText('2026');
+    vm.setTankCapacityText('17.5');
+    vm.setConsumptionText('26');
+    vm.setDriverWeight(80);
+    vm.setHasPassenger(true);
+    vm.setPassengerWeight(60);
+    vm.setLuggageEnabled(true);
+    vm.setLuggageWeight('left', 10);
+    vm.setLuggageWeight('top', 6);
+
+    const ok = await vm.submit();
+    expect(ok).toBe(true);
+    const motorcycle = create.run.mock.calls[0][0];
+    expect(motorcycle.hasPassenger).toBe(true);
+    expect(motorcycle.driverWeightKg).toBe(80);
+    expect(motorcycle.passengerWeightKg).toBe(60);
+    // left + top con peso; right en 0 queda fuera.
+    expect(motorcycle.luggage).toHaveLength(2);
+    // 80 piloto + 60 copiloto + 16 maleteros.
+    expect(motorcycle.totalLoadKg()).toBe(156);
+  });
+
+  it('drops luggage when the maleteros switch is off', async () => {
+    const { vm, create } = build();
+    await vm.initialize();
+    vm.setBrand('Yamaha');
+    vm.setModel('XTZ 250');
+    vm.setYearText('2022');
+    vm.setTankCapacityText('12');
+    vm.setConsumptionText('30');
+    vm.setLuggageEnabled(true);
+    vm.setLuggageWeight('left', 10);
+    vm.setLuggageEnabled(false);
+
+    await vm.submit();
+    const motorcycle = create.run.mock.calls[0][0];
+    expect(motorcycle.luggage).toEqual([]);
+  });
 });

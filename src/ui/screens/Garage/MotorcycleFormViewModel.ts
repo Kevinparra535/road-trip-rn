@@ -2,7 +2,14 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
-import { FuelType, Motorcycle } from '@/domain/entities/Motorcycle';
+import {
+  DEFAULT_DRIVER_WEIGHT_KG,
+  DEFAULT_PASSENGER_WEIGHT_KG,
+  FuelType,
+  LuggageItem,
+  LuggagePosition,
+  Motorcycle,
+} from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
@@ -13,6 +20,19 @@ import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'load' | 'specs' | 'submit';
 type Mode = 'create' | 'edit';
+
+/** Peso maximo configurable por maletero, en kilogramos. */
+export const MAX_LUGGAGE_KG = 30;
+
+/** Rango configurable para el peso de una persona, en kilogramos. */
+export const MIN_PERSON_KG = 40;
+export const MAX_PERSON_KG = 150;
+
+const EMPTY_LUGGAGE: Record<LuggagePosition, number> = {
+  left: 0,
+  right: 0,
+  top: 0,
+};
 
 @injectable()
 export class MotorcycleFormViewModel {
@@ -25,6 +45,13 @@ export class MotorcycleFormViewModel {
   tankCapacityText: string = '';
   consumptionText: string = '';
   engineCcText: string = '';
+
+  // ── Carga: piloto, copiloto y maleteros ───────────────────────────────────
+  driverWeightKg: number = DEFAULT_DRIVER_WEIGHT_KG;
+  hasPassenger: boolean = false;
+  passengerWeightKg: number = DEFAULT_PASSENGER_WEIGHT_KG;
+  luggageEnabled: boolean = false;
+  luggageWeights: Record<LuggagePosition, number> = { ...EMPTY_LUGGAGE };
 
   // ── Async state ─────────────────────────────────────────────────────────
   isLoadLoading: boolean = false;
@@ -158,6 +185,36 @@ export class MotorcycleFormViewModel {
     });
   }
 
+  setDriverWeight(weightKg: number): void {
+    runInAction(() => {
+      this.driverWeightKg = weightKg;
+    });
+  }
+
+  setHasPassenger(value: boolean): void {
+    runInAction(() => {
+      this.hasPassenger = value;
+    });
+  }
+
+  setPassengerWeight(weightKg: number): void {
+    runInAction(() => {
+      this.passengerWeightKg = weightKg;
+    });
+  }
+
+  setLuggageEnabled(value: boolean): void {
+    runInAction(() => {
+      this.luggageEnabled = value;
+    });
+  }
+
+  setLuggageWeight(position: LuggagePosition, weightKg: number): void {
+    runInAction(() => {
+      this.luggageWeights = { ...this.luggageWeights, [position]: weightKg };
+    });
+  }
+
   // ── Entrypoints ─────────────────────────────────────────────────────────
 
   async initialize(motorcycleId?: string): Promise<void> {
@@ -226,6 +283,10 @@ export class MotorcycleFormViewModel {
         tankCapacityLiters: this.parsedTank,
         fuelConsumptionKmPerLiter: this.parsedConsumption,
         engineCc: this.parsedEngineCc,
+        driverWeightKg: this.driverWeightKg,
+        hasPassenger: this.hasPassenger,
+        passengerWeightKg: this.passengerWeightKg,
+        luggage: this.buildLuggage(),
       });
 
       if (this.isEditMode) {
@@ -262,6 +323,11 @@ export class MotorcycleFormViewModel {
       this.tankCapacityText = '';
       this.consumptionText = '';
       this.engineCcText = '';
+      this.driverWeightKg = DEFAULT_DRIVER_WEIGHT_KG;
+      this.hasPassenger = false;
+      this.passengerWeightKg = DEFAULT_PASSENGER_WEIGHT_KG;
+      this.luggageEnabled = false;
+      this.luggageWeights = { ...EMPTY_LUGGAGE };
       this.mode = 'create';
       this.editingId = null;
       this.specsResult = null;
@@ -288,7 +354,27 @@ export class MotorcycleFormViewModel {
       this.engineCcText = motorcycle.engineCc
         ? String(motorcycle.engineCc)
         : '';
+      this.driverWeightKg = motorcycle.driverWeightKg;
+      this.hasPassenger = motorcycle.hasPassenger;
+      this.passengerWeightKg = motorcycle.passengerWeightKg;
+      this.luggageEnabled = motorcycle.luggage.length > 0;
+      const weights: Record<LuggagePosition, number> = { ...EMPTY_LUGGAGE };
+      motorcycle.luggage.forEach((item) => {
+        weights[item.position] = item.weightKg;
+      });
+      this.luggageWeights = weights;
     });
+  }
+
+  /** Maleteros con peso, listos para persistir. Vacio si el switch esta off. */
+  private buildLuggage(): LuggageItem[] {
+    if (!this.luggageEnabled) return [];
+    return (['left', 'right', 'top'] as LuggagePosition[])
+      .filter((position) => this.luggageWeights[position] > 0)
+      .map((position) => ({
+        position,
+        weightKg: this.luggageWeights[position],
+      }));
   }
 
   private applySpecs(specs: MotorcycleSpecs): void {
