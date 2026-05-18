@@ -3,6 +3,8 @@ import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
+import { FuelStation } from '@/domain/entities/FuelStation';
+import { FuelStop } from '@/domain/entities/FuelStop';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
 import { Rider } from '@/domain/entities/Rider';
@@ -10,9 +12,15 @@ import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
-import { boundingBox, headingTriangle } from '@/domain/geo/geoMath';
+import {
+  boundingBox,
+  distanceAlongNearest,
+  headingTriangle,
+  pointAtDistanceAlong,
+} from '@/domain/geo/geoMath';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
+import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
@@ -137,7 +145,7 @@ export type RouteLine = {
   gradientStops?: GradientStop[];
 };
 
-type ICalls = 'search' | 'route' | 'elevation' | 'fuel';
+type ICalls = 'search' | 'route' | 'elevation' | 'fuel' | 'fuelStop';
 
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
@@ -185,6 +193,12 @@ export class HomeViewModel {
   isFuelEstimateError: string | null = null;
   isFuelEstimateResponse: RouteFuelEstimate | null = null;
 
+  // ── State: paradas de tanqueo sugeridas y sus estaciones ──
+  fuelStops: FuelStop[] = [];
+  isFuelStopLoading: boolean = false;
+  isFuelStopError: string | null = null;
+  isFuelStopResponse: FuelStation[] | null = null;
+
   private searchDisposer: (() => void) | null = null;
   private logger = new Logger('HomeViewModel');
 
@@ -203,6 +217,8 @@ export class HomeViewModel {
     private readonly getAllMotorcyclesUseCase: GetAllMotorcyclesUseCase,
     @inject(TYPES.EstimateRouteFuelUseCase)
     private readonly estimateRouteFuelUseCase: EstimateRouteFuelUseCase,
+    @inject(TYPES.FindFuelStationsUseCase)
+    private readonly findFuelStationsUseCase: FindFuelStationsUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -300,6 +316,25 @@ export class HomeViewModel {
 
   get destinationCoordinate(): [number, number] | null {
     return this.destination ? this.destination.toLngLat() : null;
+  }
+
+  /**
+   * Estaciones de servicio listas para pintar en el mapa. Se ordenan con la
+   * sugerida al final para que quede dibujada encima de las alternativas.
+   */
+  get fuelStationMarkers(): {
+    id: string;
+    coordinate: [number, number];
+    suggested: boolean;
+  }[] {
+    const stations = this.isFuelStopResponse ?? [];
+    return stations
+      .map((station, index) => ({
+        id: station.id,
+        coordinate: [station.longitude, station.latitude] as [number, number],
+        suggested: index === 0,
+      }))
+      .sort((a, b) => Number(a.suggested) - Number(b.suggested));
   }
 
   /**
@@ -460,14 +495,13 @@ export class HomeViewModel {
     };
   }
 
-  /** Resumen de autonomia para la tarjeta dedicada del sheet. */
+  /** Datos de cabecera y cifras de la tarjeta de autonomia. */
   get autonomySummary(): {
     motorcycleName: string;
     reaches: boolean;
     effectiveRange: string;
     consumption: string;
     load: string;
-    tankUsedPercent: number;
   } | null {
     const estimate = this.isFuelEstimateResponse;
     const motorcycle = this.motorcycle;
@@ -478,9 +512,57 @@ export class HomeViewModel {
       effectiveRange: `${Math.round(estimate.effectiveRangeKm)} km`,
       consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
       load: `${Math.round(estimate.loadKg)} kg`,
-      tankUsedPercent: Math.round(
-        Math.min(1.5, estimate.rangeUsedFraction) * 100,
-      ),
+    };
+  }
+
+  /** Avance del conductor sobre la ruta, en km desde el inicio. */
+  get routeProgressKm(): number {
+    const route = this.isRouteResponse;
+    const location = this.locationStore.isLocationResponse;
+    if (!route || !location) return 0;
+    return distanceAlongNearest(route.geometry, {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    });
+  }
+
+  /**
+   * Linea del viaje para la tarjeta de autonomia: distancia total, avance del
+   * conductor y las paradas de tanqueo sugeridas con su estacion y kilometro.
+   */
+  get journey(): {
+    totalKm: number;
+    progressKm: number;
+    destinationName: string;
+    searching: boolean;
+    error: string | null;
+    stops: {
+      id: string;
+      km: number;
+      /** Nombre de la estacion; `null` si aun no se resuelve / no hay. */
+      name: string | null;
+      suggested: boolean;
+    }[];
+  } | null {
+    const route = this.isRouteResponse;
+    if (!route) return null;
+    const stations = this.isFuelStopResponse ?? [];
+    const stops = this.fuelStops.map((stop, index) => {
+      const station = stations.find((s) => s.nearFuelStopId === stop.id);
+      return {
+        id: stop.id,
+        km: Math.round(stop.distanceFromStartKm),
+        name: station ? station.brand || station.name : null,
+        suggested: index === 0,
+      };
+    });
+    return {
+      totalKm: Math.round(route.distanceKm),
+      progressKm: Math.round(this.routeProgressKm),
+      destinationName: this.destination?.name ?? 'Destino',
+      searching: this.isFuelStopLoading,
+      error: this.isFuelStopError,
+      stops,
     };
   }
 
@@ -595,6 +677,10 @@ export class HomeViewModel {
     this.isFuelEstimateResponse = null;
     this.isFuelEstimateError = null;
     this.isFuelEstimateLoading = false;
+    this.fuelStops = [];
+    this.isFuelStopResponse = null;
+    this.isFuelStopError = null;
+    this.isFuelStopLoading = false;
     this.searchQuery = '';
     this.isSearchResponse = null;
   }
@@ -621,6 +707,10 @@ export class HomeViewModel {
       this.isFuelEstimateLoading = false;
       this.isFuelEstimateError = null;
       this.isFuelEstimateResponse = null;
+      this.fuelStops = [];
+      this.isFuelStopLoading = false;
+      this.isFuelStopError = null;
+      this.isFuelStopResponse = null;
     });
   }
 
@@ -778,8 +868,56 @@ export class HomeViewModel {
         this.isFuelEstimateResponse = estimate;
       });
       this.updateLoadingState(false, null, 'fuel');
+      void this.computeFuelStop();
     } catch (error) {
       this.handleError(error, 'fuel');
+    }
+  }
+
+  /**
+   * Ubica una estacion de servicio cerca del punto donde conviene tanquear
+   * (medio tanque) para mostrarsela al conductor en lugar de un kilometraje.
+   * Si la ruta termina antes de ese punto, no hay parada que buscar.
+   */
+  private async computeFuelStop(): Promise<void> {
+    const route = this.isRouteResponse;
+    const estimate = this.isFuelEstimateResponse;
+    runInAction(() => {
+      this.isFuelStopResponse = null;
+      this.fuelStops = [];
+    });
+    if (!route || !estimate) return;
+
+    // Una parada por cada punto donde se consumiria medio tanque.
+    const stops: FuelStop[] = [];
+    estimate.refuelPointsKm().forEach((km, index) => {
+      const location = pointAtDistanceAlong(route.geometry, km);
+      if (location) {
+        stops.push(
+          new FuelStop({
+            id: `refuel-${index + 1}`,
+            order: index + 1,
+            distanceFromStartKm: km,
+            location,
+            label: 'Parada sugerida',
+          }),
+        );
+      }
+    });
+    if (stops.length === 0) return;
+    runInAction(() => {
+      this.fuelStops = stops;
+    });
+
+    this.updateLoadingState(true, null, 'fuelStop');
+    try {
+      const stations = await this.findFuelStationsUseCase.run(stops);
+      runInAction(() => {
+        this.isFuelStopResponse = stations;
+      });
+      this.updateLoadingState(false, null, 'fuelStop');
+    } catch (error) {
+      this.handleError(error, 'fuelStop');
     }
   }
 
@@ -812,6 +950,10 @@ export class HomeViewModel {
         case 'fuel':
           this.isFuelEstimateLoading = isLoading;
           this.isFuelEstimateError = error;
+          break;
+        case 'fuelStop':
+          this.isFuelStopLoading = isLoading;
+          this.isFuelStopError = error;
           break;
       }
     });

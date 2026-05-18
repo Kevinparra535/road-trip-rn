@@ -1,6 +1,7 @@
 import {
   boundingBox,
   destinationPoint,
+  distanceAlongNearest,
   haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
@@ -132,5 +133,28 @@ describe('samplePolyline', () => {
     expect(samplePolyline([{ latitude: 1, longitude: 1 }], 1)).toEqual([
       { latitude: 1, longitude: 1 },
     ]);
+  });
+});
+
+describe('distanceAlongNearest', () => {
+  // Polilinea sobre el meridiano: ~111 km entre cada vertice consecutivo.
+  const line = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 1, longitude: 0 },
+    { latitude: 2, longitude: 0 },
+  ];
+
+  it('returns 0 near the start of the route', () => {
+    expect(distanceAlongNearest(line, { latitude: 0.1, longitude: 0 })).toBe(0);
+  });
+
+  it('accumulates distance up to the nearest vertex', () => {
+    const along = distanceAlongNearest(line, { latitude: 1.1, longitude: 0 });
+    expect(along).toBeGreaterThan(100);
+    expect(along).toBeLessThan(125);
+  });
+
+  it('returns 0 for an empty polyline', () => {
+    expect(distanceAlongNearest([], { latitude: 1, longitude: 1 })).toBe(0);
   });
 });

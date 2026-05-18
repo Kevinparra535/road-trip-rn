@@ -28,6 +28,7 @@ import { RideType } from '@/domain/entities/Route';
 import BottomSheet from '@/ui/components/BottomSheet';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
+import JourneyBar from '@/ui/components/JourneyBar';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
@@ -138,6 +139,7 @@ const HomeScreen = observer(() => {
   const fuel = viewModel.fuelSummary;
   const fuelReachFails = fuel !== null && !fuel.reaches;
   const autonomy = viewModel.autonomySummary;
+  const journey = viewModel.journey;
   const elevation = viewModel.elevationSummary;
 
   return (
@@ -249,6 +251,31 @@ const HomeScreen = observer(() => {
             </View>
           </Mapbox.PointAnnotation>
         ) : null}
+
+        {viewModel.fuelStationMarkers.map((station, index) => (
+          <Mapbox.PointAnnotation
+            key={station.id}
+            id={`fuel-stop-${index}`}
+            coordinate={station.coordinate}
+          >
+            <View
+              style={[
+                styles.fuelMarker,
+                !station.suggested && styles.fuelMarkerAlternate,
+              ]}
+            >
+              <MaterialCommunityIcons
+                name="gas-station"
+                size={station.suggested ? 16 : 12}
+                color={
+                  station.suggested
+                    ? Colors.base.accent
+                    : Colors.base.textSecondary
+                }
+              />
+            </View>
+          </Mapbox.PointAnnotation>
+        ))}
 
         {viewModel.isUserDotVisible && viewModel.userCoordinates ? (
           <Mapbox.PointAnnotation
@@ -479,7 +506,7 @@ const HomeScreen = observer(() => {
         </SheetCard>
 
         {/* ── Tarjeta de Autonomía ────────────────────────────────────────── */}
-        {autonomy ? (
+        {autonomy && journey ? (
           <SheetCard style={styles.autonomyCard}>
             <View style={styles.autonomyHeader}>
               <View style={styles.autonomyHeaderLeft}>
@@ -494,7 +521,7 @@ const HomeScreen = observer(() => {
                   <Text style={styles.motoName} numberOfLines={1}>
                     {autonomy.motorcycleName}
                   </Text>
-                  <Text style={styles.autonomySub}>Autonomía estimada</Text>
+                  <Text style={styles.autonomySub}>Autonomía y tanqueo</Text>
                 </View>
               </View>
               <View style={styles.statusChip}>
@@ -520,29 +547,89 @@ const HomeScreen = observer(() => {
               </View>
             </View>
 
-            <View style={styles.tankGauge}>
-              <View style={styles.tankLabels}>
-                <Text style={styles.tankLabel}>
-                  {autonomy.tankUsedPercent}% del tanque
-                </Text>
-                <Text style={styles.tankLabel}>
-                  {autonomy.effectiveRange} de alcance
+            {/* Línea del viaje: inicio → destino, con avance y paradas. */}
+            <View style={styles.journeySection}>
+              <JourneyBar
+                totalKm={journey.totalKm}
+                progressKm={journey.progressKm}
+                stops={journey.stops}
+              />
+              <View style={styles.journeyEnds}>
+                <Text style={styles.journeyEnd}>Inicio</Text>
+                <Text
+                  style={[styles.journeyEnd, styles.journeyEndRight]}
+                  numberOfLines={1}
+                >
+                  {journey.destinationName}
                 </Text>
               </View>
-              <View style={styles.tankTrack}>
-                <View
-                  style={[
-                    styles.tankFill,
-                    {
-                      width: `${Math.min(100, autonomy.tankUsedPercent)}%`,
-                      backgroundColor: autonomy.reaches
-                        ? Colors.base.accent
-                        : Colors.alerts.error,
-                    },
-                  ]}
-                />
-              </View>
+              <Text style={styles.journeyProgress}>
+                Vas en el km {journey.progressKm} de {journey.totalKm}
+              </Text>
             </View>
+
+            {/* Paradas de tanqueo sugeridas. */}
+            {journey.stops.length > 0 ? (
+              <View style={styles.stopsList}>
+                {journey.stops.map((stop, index) => (
+                  <View
+                    key={stop.id}
+                    style={[styles.stopRow, index > 0 && styles.stopRowBorder]}
+                  >
+                    <View
+                      style={[
+                        styles.stopIconBox,
+                        !stop.suggested && styles.stopIconBoxAlt,
+                      ]}
+                    >
+                      <MaterialCommunityIcons
+                        name="gas-station"
+                        size={18}
+                        color={
+                          stop.suggested
+                            ? Colors.base.accent
+                            : Colors.base.textSecondary
+                        }
+                      />
+                    </View>
+                    <View style={styles.stopInfo}>
+                      <Text
+                        style={[
+                          styles.stopName,
+                          !stop.name && styles.stopNameMuted,
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {stop.name ??
+                          (journey.searching
+                            ? 'Buscando estación…'
+                            : 'Sin estación cercana en el mapa')}
+                      </Text>
+                      <Text style={styles.stopSub}>
+                        Punto de tanqueo sugerido
+                      </Text>
+                    </View>
+                    <Text style={styles.stopKm}>km {stop.km}</Text>
+                  </View>
+                ))}
+                {journey.error ? (
+                  <Text style={styles.stopError}>
+                    No se pudieron cargar estaciones cercanas.
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <View style={styles.stopEmpty}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={16}
+                  color={Colors.alerts.check}
+                />
+                <Text style={styles.stopEmptyText}>
+                  Llegas sin necesidad de tanquear.
+                </Text>
+              </View>
+            )}
 
             <View style={styles.statsRow}>
               <StatCell
@@ -932,27 +1019,94 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.semiBold,
     fontSize: 11,
   },
-  tankGauge: {
+  journeySection: {
     gap: 6,
   },
-  tankLabels: {
+  journeyEnds: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: Spacings.md,
   },
-  tankLabel: {
+  journeyEnd: {
+    flex: 1,
     fontFamily: FontFamily.medium,
     fontSize: 10,
+    color: Colors.base.textMuted,
+  },
+  journeyEndRight: {
+    textAlign: 'right',
+  },
+  journeyProgress: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 12,
     color: Colors.base.textSecondary,
   },
-  tankTrack: {
-    height: 8,
+  stopsList: {
     backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.xs,
-    overflow: 'hidden',
+    borderRadius: BorderRadius.md,
   },
-  tankFill: {
-    height: 8,
-    borderRadius: BorderRadius.xs,
+  stopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.md,
+    padding: Spacings.md,
+  },
+  stopRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.base.separator,
+  },
+  stopIconBox: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.base.accent,
+  },
+  stopIconBoxAlt: {
+    borderColor: Colors.base.cardBorder,
+  },
+  stopInfo: {
+    flex: 1,
+  },
+  stopName: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 15,
+    color: Colors.base.textPrimary,
+  },
+  stopNameMuted: {
+    fontFamily: FontFamily.medium,
+    color: Colors.base.textMuted,
+  },
+  stopError: {
+    padding: Spacings.md,
+    paddingTop: 0,
+    fontFamily: FontFamily.medium,
+    fontSize: 11,
+    color: Colors.alerts.error,
+  },
+  stopSub: {
+    marginTop: 1,
+    fontFamily: FontFamily.medium,
+    fontSize: 11,
+    color: Colors.base.textMuted,
+  },
+  stopKm: {
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
+    color: Colors.base.accent,
+  },
+  stopEmpty: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  stopEmptyText: {
+    fontFamily: FontFamily.medium,
+    fontSize: 13,
+    color: Colors.base.textSecondary,
   },
 
   // ── Tarjeta de elevacion ──────────────────────────────────────────────────
@@ -1068,6 +1222,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.base.accentDim,
     borderRadius: BorderRadius.pill,
+  },
+  fuelMarker: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.accent,
+    ...Shadows.bankCard,
+  },
+  // Estaciones alternativas: marcador mas pequeno y discreto.
+  fuelMarkerAlternate: {
+    width: 22,
+    height: 22,
+    borderWidth: 1,
+    borderColor: Colors.base.textSecondary,
   },
   destinationDot: {
     width: 16,

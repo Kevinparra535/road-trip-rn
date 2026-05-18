@@ -1,5 +1,47 @@
+import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { makeMotorcycle } from '../factories';
+
+const makeEstimate = (distanceKm: number, effectiveRangeKm: number) =>
+  new RouteFuelEstimate({
+    distanceKm,
+    effectiveConsumptionKmPerLiter: 30,
+    fuelNeededLiters: distanceKm / 30,
+    effectiveRangeKm,
+    fullTankRangeKm: effectiveRangeKm,
+    loadKg: 80,
+  });
+
+describe('RouteFuelEstimate.refuelPointKm', () => {
+  it('returns null when the route ends above half tank', () => {
+    expect(makeEstimate(80, 200).refuelPointKm()).toBeNull();
+  });
+
+  it('recommends refueling at half the effective range', () => {
+    expect(makeEstimate(150, 200).refuelPointKm()).toBe(100);
+  });
+
+  it('honors a custom minimum tank fraction', () => {
+    // Con 1/4 de tanque minimo se puede consumir 3/4 -> 150 km.
+    expect(makeEstimate(160, 200).refuelPointKm(0.25)).toBe(150);
+  });
+
+  it('returns null without a usable range', () => {
+    expect(makeEstimate(100, 0).refuelPointKm()).toBeNull();
+  });
+});
+
+describe('RouteFuelEstimate.refuelPointsKm', () => {
+  it('is empty when the route ends above half tank', () => {
+    expect(makeEstimate(80, 200).refuelPointsKm()).toEqual([]);
+  });
+
+  it('spaces a stop every half tank along a long route', () => {
+    expect(makeEstimate(450, 200).refuelPointsKm()).toEqual([
+      100, 200, 300, 400,
+    ]);
+  });
+});
 
 describe('EstimateRouteFuelUseCase', () => {
   const useCase = new EstimateRouteFuelUseCase();

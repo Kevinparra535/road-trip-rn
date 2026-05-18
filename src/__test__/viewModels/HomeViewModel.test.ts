@@ -30,6 +30,9 @@ const makeMotosUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
 const makeFuelUseCase = () => ({
   run: jest.fn().mockResolvedValue(makeRouteFuelEstimate()),
 });
+const makeFuelStationsUseCase = () => ({
+  run: jest.fn().mockResolvedValue([]),
+});
 
 const makeVM = (
   store = makeLocationStore(),
@@ -39,6 +42,7 @@ const makeVM = (
   rider: { run: jest.Mock } = makeRiderUseCase(),
   motos: { run: jest.Mock } = makeMotosUseCase(),
   fuel: { run: jest.Mock } = makeFuelUseCase(),
+  fuelStations: { run: jest.Mock } = makeFuelStationsUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -48,6 +52,7 @@ const makeVM = (
     rider as any,
     motos as any,
     fuel as any,
+    fuelStations as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));

@@ -28,6 +28,31 @@ export function polylineLengthKm(geometry: GeoPoint[]): number {
 }
 
 /**
+ * Distancia acumulada (km) a lo largo de la polilinea hasta el vertice mas
+ * cercano a `point`. Aproxima cuanto ha avanzado un punto sobre la ruta.
+ */
+export function distanceAlongNearest(
+  geometry: GeoPoint[],
+  point: GeoPoint,
+): number {
+  if (geometry.length === 0) return 0;
+  let accumulated = 0;
+  let bestDistance = Infinity;
+  let bestAlong = 0;
+  for (let i = 0; i < geometry.length; i += 1) {
+    const distance = haversineKm(geometry[i], point);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      bestAlong = accumulated;
+    }
+    if (i < geometry.length - 1) {
+      accumulated += haversineKm(geometry[i], geometry[i + 1]);
+    }
+  }
+  return bestAlong;
+}
+
+/**
  * Devuelve el punto de la polilinea ubicado a `targetKm` del inicio,
  * interpolando linealmente dentro del segmento correspondiente.
  */
