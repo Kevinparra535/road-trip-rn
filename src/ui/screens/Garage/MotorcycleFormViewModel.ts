@@ -6,6 +6,7 @@ import {
   DEFAULT_DRIVER_WEIGHT_KG,
   DEFAULT_PASSENGER_WEIGHT_KG,
   FuelType,
+  loadConsumptionFactor,
   LuggageItem,
   LuggagePosition,
   Motorcycle,
@@ -114,8 +115,28 @@ export class MotorcycleFormViewModel {
     );
   }
 
+  /** Autonomia teorica de catalogo (tanque x rendimiento), sin carga. */
   get estimatedRangeKm(): number {
     return Math.round(this.parsedTank * this.parsedConsumption);
+  }
+
+  /** Peso total a bordo segun la carga configurada en el formulario, en kg. */
+  get totalLoadKg(): number {
+    const passenger = this.hasPassenger ? this.passengerWeightKg : 0;
+    const luggage = this.luggageEnabled
+      ? Object.values(this.luggageWeights).reduce((sum, kg) => sum + kg, 0)
+      : 0;
+    return this.driverWeightKg + passenger + luggage;
+  }
+
+  /**
+   * Autonomia ajustada por la carga configurada (piloto + copiloto +
+   * maleteros). Usa el mismo modelo de peso que el estimador de ruta.
+   */
+  get loadAdjustedRangeKm(): number {
+    return Math.round(
+      this.estimatedRangeKm * loadConsumptionFactor(this.totalLoadKg),
+    );
   }
 
   private get parsedYear(): number {

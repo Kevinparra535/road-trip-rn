@@ -504,6 +504,18 @@ export class HomeViewModel {
     await this.locationStore.initialize();
   }
 
+  /**
+   * Recarga la moto activa (p. ej. tras editarla o registrarla en el Garaje)
+   * y recalcula el consumo si ya hay una ruta trazada, para que la tarjeta de
+   * autonomia del Home refleje los cambios.
+   */
+  async refreshMotorcycle(): Promise<void> {
+    await this.loadMotorcycle();
+    if (this.isRouteResponse) {
+      await this.computeFuelEstimate();
+    }
+  }
+
   /** Libera la suscripcion del buscador y las de ubicacion. */
   dispose(): void {
     this.searchDisposer?.();

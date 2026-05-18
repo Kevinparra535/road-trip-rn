@@ -1,6 +1,10 @@
 import { injectable } from 'inversify';
 
-import { Motorcycle } from '@/domain/entities/Motorcycle';
+import {
+  BASE_LOAD_KG,
+  loadConsumptionFactor,
+  Motorcycle,
+} from '@/domain/entities/Motorcycle';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { UseCase } from '@/domain/useCases/UseCase';
 
@@ -15,15 +19,13 @@ export type EstimateRouteFuelInput = {
 };
 
 // ── Heuristicas del modelo de consumo (ajustables) ──────────────────────────
-// Carga a bordo que asume el rendimiento de catalogo (un piloto promedio).
-const BASE_LOAD_KG = 80;
+// El modelo de peso (BASE_LOAD_KG + loadConsumptionFactor) vive en la entidad
+// Motorcycle: unica fuente, compartida con el formulario del garaje.
 // Velocidad de mejor rendimiento; alejarse penaliza el consumo.
 const OPTIMAL_SPEED_KMH = 70;
 const SPEED_PENALTY_PER_KMH = 0.004;
 // Penalizacion por desnivel de subida acumulado por kilometro.
 const CLIMB_PENALTY_PER_M_PER_KM = 0.006;
-// Sensibilidad al exceso de peso respecto a la carga base.
-const WEIGHT_PENALTY = 0.18;
 // Limites del factor combinado.
 const MIN_FACTOR = 0.55;
 const MAX_FACTOR = 1.1;
@@ -50,7 +52,7 @@ export class EstimateRouteFuelUseCase implements UseCase<
     const factor = this.clampFactor(
       this.speedFactor(distanceKm, durationMin) *
         this.altitudeFactor(distanceKm, ascentM) *
-        this.weightFactor(loadKg),
+        loadConsumptionFactor(loadKg),
     );
     const effectiveConsumption = baseConsumption * factor;
 
@@ -78,12 +80,6 @@ export class EstimateRouteFuelUseCase implements UseCase<
     if (distanceKm <= 0) return 1;
     const ascentPerKm = ascentM / distanceKm;
     return 1 - ascentPerKm * CLIMB_PENALTY_PER_M_PER_KM;
-  }
-
-  /** Penaliza el peso a bordo que excede la carga base. */
-  private weightFactor(loadKg: number): number {
-    const excessKg = Math.max(0, loadKg - BASE_LOAD_KG);
-    return 1 - (excessKg / BASE_LOAD_KG) * WEIGHT_PENALTY;
   }
 
   private clampFactor(factor: number): number {

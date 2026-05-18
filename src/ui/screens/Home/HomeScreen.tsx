@@ -1,8 +1,15 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
-import { ComponentProps, ElementRef, useEffect, useMemo, useRef } from 'react';
+import {
+  ComponentProps,
+  ElementRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -71,6 +78,14 @@ const HomeScreen = observer(() => {
     viewModel.initialize();
     return () => viewModel.dispose();
   }, [viewModel]);
+
+  // Al volver al tab (p. ej. tras editar la moto en el Garaje) recarga la
+  // moto y recalcula el consumo para que la tarjeta de autonomia se actualice.
+  useFocusEffect(
+    useCallback(() => {
+      viewModel.refreshMotorcycle();
+    }, [viewModel]),
+  );
 
   // Centra la camara sobre el rider la primera vez que hay ubicacion.
   const followTarget = viewModel.followTarget;

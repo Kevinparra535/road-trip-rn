@@ -305,9 +305,13 @@ const MotorcycleFormScreen = observer(() => {
 
           {viewModel.isValid ? (
             <View style={styles.rangeCard}>
-              <Text style={styles.rangeLabel}>Autonomia teorica</Text>
+              <Text style={styles.rangeLabel}>Autonomia con tu carga</Text>
               <Text style={styles.rangeValue}>
-                {viewModel.estimatedRangeKm} km
+                {viewModel.loadAdjustedRangeKm} km
+              </Text>
+              <Text style={styles.rangeHint}>
+                {viewModel.totalLoadKg} kg a bordo ·{' '}
+                {viewModel.estimatedRangeKm} km sin carga
               </Text>
             </View>
           ) : null}
@@ -479,6 +483,11 @@ const styles = StyleSheet.create({
     marginTop: Spacings.xs,
     ...Fonts.bigHeader,
     color: Colors.base.textPrimary,
+  },
+  rangeHint: {
+    marginTop: Spacings.xs,
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
   },
   error: {
     marginTop: Spacings.md,

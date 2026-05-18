@@ -1,6 +1,12 @@
-import { useState } from 'react';
-import { LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useRef, useState } from 'react';
+import {
+  GestureResponderEvent,
+  LayoutChangeEvent,
+  PanResponder,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -20,8 +26,10 @@ const THUMB_SIZE = 26;
 const LINE_HEIGHT = 6;
 
 /**
- * Slider de peso en JS puro (sin modulos nativos): un track con gesto de
- * arrastre via react-native-gesture-handler.
+ * Slider de peso en JS puro. Usa `PanResponder` del core de RN (no
+ * `react-native-gesture-handler`): con `react-native-reanimated` instalado los
+ * callbacks de gesture-handler corren como worklets en el hilo de UI y
+ * crashean al tocar estado de React; `PanResponder` corre en el hilo JS.
  */
 const WeightSlider = ({
   label,
@@ -33,16 +41,34 @@ const WeightSlider = ({
 }: Props) => {
   const [trackWidth, setTrackWidth] = useState(0);
 
-  const resolveValue = (x: number): number => {
-    if (trackWidth <= 0) return value;
-    const ratio = Math.min(1, Math.max(0, x / trackWidth));
-    const raw = min + ratio * (max - min);
-    return Math.min(max, Math.max(min, Math.round(raw / step) * step));
-  };
+  // El PanResponder se crea una sola vez; sus handlers leen siempre el estado
+  // fresco a traves de esta ref para evitar closures obsoletos.
+  const stateRef = useRef({ trackWidth, value, min, max, step, onChange });
+  stateRef.current = { trackWidth, value, min, max, step, onChange };
 
-  const pan = Gesture.Pan()
-    .onBegin((event) => onChange(resolveValue(event.x)))
-    .onUpdate((event) => onChange(resolveValue(event.x)));
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (event: GestureResponderEvent) =>
+        emitValue(event.nativeEvent.locationX),
+      onPanResponderMove: (event: GestureResponderEvent) =>
+        emitValue(event.nativeEvent.locationX),
+    }),
+  ).current;
+
+  /** Traduce la posicion X del toque a un valor y lo notifica. */
+  function emitValue(x: number): void {
+    const s = stateRef.current;
+    if (s.trackWidth <= 0) return;
+    const ratio = Math.min(1, Math.max(0, x / s.trackWidth));
+    const raw = s.min + ratio * (s.max - s.min);
+    const next = Math.min(
+      s.max,
+      Math.max(s.min, Math.round(raw / s.step) * s.step),
+    );
+    s.onChange(next);
+  }
 
   const ratio = max > min ? (value - min) / (max - min) : 0;
   const fillWidth = trackWidth * ratio;
@@ -53,28 +79,27 @@ const WeightSlider = ({
         <Text style={styles.label}>{label}</Text>
         <Text style={styles.value}>{value} kg</Text>
       </View>
-      <GestureDetector gesture={pan}>
+      <View
+        style={styles.track}
+        onLayout={(event: LayoutChangeEvent) =>
+          setTrackWidth(event.nativeEvent.layout.width)
+        }
+        {...panResponder.panHandlers}
+      >
+        <View style={styles.trackLine} />
+        <View style={[styles.trackFill, { width: fillWidth }]} />
         <View
-          style={styles.track}
-          onLayout={(event: LayoutChangeEvent) =>
-            setTrackWidth(event.nativeEvent.layout.width)
-          }
-        >
-          <View style={styles.trackLine} />
-          <View style={[styles.trackFill, { width: fillWidth }]} />
-          <View
-            style={[
-              styles.thumb,
-              {
-                left: Math.max(
-                  0,
-                  Math.min(trackWidth - THUMB_SIZE, fillWidth - THUMB_SIZE / 2),
-                ),
-              },
-            ]}
-          />
-        </View>
-      </GestureDetector>
+          style={[
+            styles.thumb,
+            {
+              left: Math.max(
+                0,
+                Math.min(trackWidth - THUMB_SIZE, fillWidth - THUMB_SIZE / 2),
+              ),
+            },
+          ]}
+        />
+      </View>
     </View>
   );
 };

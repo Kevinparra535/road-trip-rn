@@ -16,6 +16,25 @@ export type LuggageItem = {
 export const DEFAULT_DRIVER_WEIGHT_KG = 78;
 export const DEFAULT_PASSENGER_WEIGHT_KG = 65;
 
+/**
+ * Carga de referencia (kg) que asume el rendimiento de catalogo: un piloto
+ * promedio. El peso que excede este valor penaliza el consumo.
+ */
+export const BASE_LOAD_KG = 80;
+
+/** Sensibilidad del consumo al exceso de peso sobre la carga base. */
+const WEIGHT_PENALTY = 0.18;
+
+/**
+ * Factor de consumo segun el peso total a bordo: 1 = sin penalizacion,
+ * < 1 = la carga reduce el rendimiento. Modelo unico de peso, compartido
+ * por el estimador de combustible de ruta y el formulario del garaje.
+ */
+export function loadConsumptionFactor(loadKg: number): number {
+  const excessKg = Math.max(0, loadKg - BASE_LOAD_KG);
+  return 1 - (excessKg / BASE_LOAD_KG) * WEIGHT_PENALTY;
+}
+
 export type MotorcycleConstructorParams = {
   id: string;
   riderId: string;
@@ -93,6 +112,16 @@ export class Motorcycle {
     const passenger = this.hasPassenger ? this.passengerWeightKg : 0;
     const cases = this.luggage.reduce((sum, item) => sum + item.weightKg, 0);
     return this.driverWeightKg + passenger + cases;
+  }
+
+  /** Factor de consumo por la carga configurada (1 = sin penalizacion). */
+  loadFactor(): number {
+    return loadConsumptionFactor(this.totalLoadKg());
+  }
+
+  /** Autonomia con el tanque lleno ajustada por la carga, en kilometros. */
+  loadAdjustedRangeKm(): number {
+    return this.fullTankRangeKm() * this.loadFactor();
   }
 
   displayName(): string {
