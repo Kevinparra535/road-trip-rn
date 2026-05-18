@@ -1,6 +1,8 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
-import { ElementRef, useEffect, useMemo, useRef } from 'react';
+import { ComponentProps, ElementRef, useEffect, useMemo, useRef } from 'react';
 import {
   ActivityIndicator,
   Keyboard,
@@ -16,30 +18,30 @@ import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
+import BottomSheet from '@/ui/components/BottomSheet';
+import EmptyState from '@/ui/components/EmptyState';
+import GradientView from '@/ui/components/GradientView';
+import SheetCard from '@/ui/components/SheetCard';
+import StatCell from '@/ui/components/StatCell';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
+import { AppTabsParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import Fonts from '@/ui/styles/Fonts';
+import Fonts, { FontFamily } from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
 import { GradientStop, HomeViewModel } from './HomeViewModel';
 
+type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+
 // Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
-const ROUTE_FIT_PADDING: [number, number, number, number] = [280, 80, 200, 80];
+const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 64, 320, 64];
 
-// Tipos de rodada que ofrece el toggle del Home.
-const RIDE_OPTIONS: { type: RideType; label: string; color: string }[] = [
-  { type: 'highway', label: 'Carretera', color: Colors.base.accent },
-  { type: 'offroad', label: 'Offroad', color: Colors.base.iconOffroad },
-];
-
-// Colores de la leyenda de elevacion (bajo -> alto).
-const ELEVATION_LEGEND = [
-  Colors.elevation.low,
-  Colors.elevation.mid,
-  Colors.elevation.high,
-  Colors.elevation.peak,
+// Tipos de rodada que ofrece el selector superior (Home v2).
+const RIDE_OPTIONS: { type: RideType; label: string; icon: MciName }[] = [
+  { type: 'highway', label: 'CARRETERA', icon: 'road-variant' },
+  { type: 'offroad', label: 'OFFROAD', icon: 'terrain' },
 ];
 
 /** Construye la expresion `lineGradient` de Mapbox a partir de las paradas. */
@@ -52,15 +54,16 @@ const buildLineGradient = (stops: GradientStop[]): any => {
 };
 
 /**
- * Pantalla principal: el mapa estilo navegacion Waze. Se mantiene delgada —
- * renderiza el estado del `HomeViewModel` y ejecuta los comandos imperativos
- * de camara; toda la logica de presentacion vive en el ViewModel.
+ * Pantalla principal (Home v2): mapa estilo navegacion, buscador y selector
+ * de rodada flotando arriba, y el detalle de la ruta en un panel inferior
+ * deslizable con tarjetas de ruta, autonomia y elevacion.
  */
 const HomeScreen = observer(() => {
   const viewModel = useMemo(
     () => container.get<HomeViewModel>(TYPES.HomeViewModel),
     [],
   );
+  const navigation = useNavigation<BottomTabNavigationProp<AppTabsParamList>>();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const fittedDestinationRef = useRef<string | null>(null);
 
@@ -117,6 +120,10 @@ const HomeScreen = observer(() => {
   };
 
   const highlights = viewModel.elevationHighlights;
+  const fuel = viewModel.fuelSummary;
+  const fuelReachFails = fuel !== null && !fuel.reaches;
+  const autonomy = viewModel.autonomySummary;
+  const elevation = viewModel.elevationSummary;
 
   return (
     <View style={styles.container}>
@@ -163,7 +170,6 @@ const HomeScreen = observer(() => {
                   gradient
                     ? {
                         lineGradient: gradient,
-                        // Respaldo por si el degradado no aplica.
                         lineColor: line.color,
                         lineWidth: 6,
                         lineCap: 'round',
@@ -223,8 +229,8 @@ const HomeScreen = observer(() => {
             id="route-destination"
             coordinate={viewModel.destinationCoordinate}
           >
-            <View style={styles.destinationMarker}>
-              <Ionicons name="flag" size={15} color={Colors.base.textPrimary} />
+            <View style={styles.destinationHalo}>
+              <View style={styles.destinationDot} />
             </View>
           </Mapbox.PointAnnotation>
         ) : null}
@@ -263,90 +269,322 @@ const HomeScreen = observer(() => {
         edges={['top', 'left', 'right']}
         pointerEvents="box-none"
       >
-        {viewModel.hasDestination ? (
-          <View style={styles.card}>
-            <View style={styles.routeHeader}>
-              <Ionicons name="flag" size={18} color={Colors.base.accent} />
-              <Text style={styles.routeName} numberOfLines={1}>
-                {viewModel.destination?.name}
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color={Colors.base.iconMuted} />
+          <TextInput
+            style={styles.searchInput}
+            value={viewModel.searchQuery}
+            onChangeText={(text) => viewModel.setSearchQuery(text)}
+            placeholder="¿A dónde vamos hoy?"
+            placeholderTextColor={Colors.base.textMuted}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
+          {viewModel.isSearchLoading ? (
+            <ActivityIndicator size="small" color={Colors.base.accent} />
+          ) : null}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir perfil"
+            onPress={() => navigation.navigate('ProfileTab')}
+          >
+            <GradientView
+              preset="accent"
+              direction="vertical"
+              style={styles.profileAvatar}
+            >
+              <Text style={styles.profileInitials}>
+                {viewModel.riderInitials}
               </Text>
+            </GradientView>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.rideChips}>
+          {RIDE_OPTIONS.map((option) => {
+            const active = viewModel.rideType === option.type;
+            const tone = active
+              ? Colors.semantic.text.primaryDark
+              : Colors.base.textSecondary;
+            return (
               <TouchableOpacity
-                hitSlop={10}
-                onPress={() => viewModel.clearRoute()}
+                key={option.type}
+                activeOpacity={0.8}
+                style={[styles.rideChip, active && styles.rideChipActive]}
+                onPress={() => viewModel.setRideType(option.type)}
+              >
+                <MaterialCommunityIcons
+                  name={option.icon}
+                  size={14}
+                  color={tone}
+                />
+                <Text style={[styles.rideChipText, { color: tone }]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {viewModel.hasSearchResults ? (
+          <SheetCard style={styles.resultsCard}>
+            {viewModel.searchResults.map((place, index) => (
+              <TouchableOpacity
+                key={place.id}
+                activeOpacity={0.7}
+                style={[styles.resultRow, index > 0 && styles.resultRowBorder]}
+                onPress={() => handleSelectPlace(place)}
               >
                 <Ionicons
-                  name="close"
-                  size={20}
+                  name="location-outline"
+                  size={18}
                   color={Colors.base.iconMuted}
                 />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.rideChips}>
-              {RIDE_OPTIONS.map((option) => {
-                const active = viewModel.rideType === option.type;
-                return (
-                  <TouchableOpacity
-                    key={option.type}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.rideChip,
-                      active && { borderColor: option.color },
-                    ]}
-                    onPress={() => viewModel.setRideType(option.type)}
-                  >
-                    <Text
-                      style={[
-                        styles.rideChipText,
-                        active && { color: option.color },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {viewModel.isRouteLoading ? (
-              <View style={styles.metaRow}>
-                <ActivityIndicator size="small" color={Colors.base.accent} />
-                <Text style={styles.metaText}>Trazando ruta...</Text>
-              </View>
-            ) : viewModel.isRouteError ? (
-              <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
-            ) : viewModel.routeSummary ? (
-              <View style={styles.metaRow}>
-                <Ionicons
-                  name="navigate"
-                  size={14}
-                  color={Colors.base.textSecondary}
-                />
-                <Text style={styles.metaText}>
-                  {viewModel.routeSummary.distance} ·{' '}
-                  {viewModel.routeSummary.duration}
-                </Text>
-              </View>
-            ) : null}
-
-            {viewModel.isElevationLoading ? (
-              <View style={styles.metaRow}>
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.base.textSecondary}
-                />
-                <Text style={styles.metaText}>Midiendo elevacion...</Text>
-              </View>
-            ) : viewModel.elevationSummary ? (
-              <View style={styles.elevationSection}>
-                <View style={styles.elevationHeader}>
-                  <Text style={styles.elevationTitle}>Elevacion</Text>
-                  <Text style={styles.elevationStats}>
-                    ↑ {viewModel.elevationSummary.ascent}　↓{' '}
-                    {viewModel.elevationSummary.descent}
+                <View style={styles.resultBody}>
+                  <Text style={styles.resultName} numberOfLines={1}>
+                    {place.name}
+                  </Text>
+                  <Text style={styles.resultAddress} numberOfLines={1}>
+                    {place.fullName}
                   </Text>
                 </View>
+              </TouchableOpacity>
+            ))}
+          </SheetCard>
+        ) : viewModel.isSearchError ? (
+          <SheetCard style={styles.resultsCard}>
+            <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
+          </SheetCard>
+        ) : null}
+      </SafeAreaView>
 
+      {!viewModel.hasDestination && viewModel.hasLocation ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.locateButton}
+          accessibilityRole="button"
+          accessibilityLabel="Centrar en mi ubicación"
+          onPress={recenterOnUser}
+        >
+          <Ionicons name="locate" size={18} color={Colors.base.textPrimary} />
+        </TouchableOpacity>
+      ) : null}
+
+      <BottomSheet visible={viewModel.hasDestination}>
+        {/* CTA principal: degradado naranja, visible aun con el panel asomado. */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          accessibilityRole="button"
+          accessibilityLabel="Iniciar ruta"
+          onPress={() => viewModel.startNavigation()}
+        >
+          <GradientView
+            preset="accent"
+            direction="vertical"
+            style={styles.startButton}
+          >
+            <Ionicons
+              name="navigate"
+              size={18}
+              color={Colors.semantic.text.primaryDark}
+            />
+            <Text style={styles.startButtonText}>Iniciar ruta</Text>
+          </GradientView>
+        </TouchableOpacity>
+
+        {/* ── Tarjeta de Ruta ─────────────────────────────────────────────── */}
+        <SheetCard style={styles.routeCard}>
+          <View style={styles.routeHeader}>
+            <Text style={styles.routeTitle}>Ruta activa</Text>
+            <Text style={styles.routeDistance} numberOfLines={1}>
+              {viewModel.routeSummary
+                ? `${viewModel.routeSummary.distance} · ${viewModel.routeSummary.duration}`
+                : viewModel.isRouteError
+                  ? 'Sin ruta'
+                  : 'Calculando…'}
+            </Text>
+            <TouchableOpacity
+              style={styles.routeOptions}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar ruta"
+              onPress={() => viewModel.clearRoute()}
+            >
+              <Ionicons name="close" size={15} color={Colors.base.iconMuted} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.routePoints}>
+            <View style={styles.timeline}>
+              <View style={[styles.timelineDot, styles.timelineDotOrigin]} />
+              <View style={styles.timelineLine} />
+              <View style={[styles.timelineDot, styles.timelineDotDest]} />
+            </View>
+            <View style={styles.routeLabels}>
+              <Text style={styles.routeLabel} numberOfLines={1}>
+                Mi ubicación
+              </Text>
+              <Text style={styles.routeLabel} numberOfLines={1}>
+                {viewModel.destination?.name}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.divider} />
+
+          {viewModel.isRouteError ? (
+            <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
+          ) : (
+            <View style={styles.statsRow}>
+              <StatCell
+                icon="gas-station"
+                iconColor={Colors.base.accent}
+                value={fuel?.fuelNeeded ?? '—'}
+                valueColor={fuelReachFails ? Colors.alerts.error : undefined}
+                label="Combustible est."
+              />
+              <StatCell
+                bordered
+                icon="image-filter-hdr"
+                iconColor={Colors.base.iconGroupRide}
+                value={elevation?.max ?? '—'}
+                label="Elevación máx."
+              />
+              <StatCell
+                bordered
+                icon="speedometer"
+                iconColor={Colors.base.iconHighway}
+                value={viewModel.routeSummary?.avgSpeed ?? '—'}
+                label="Vel. promedio"
+              />
+            </View>
+          )}
+        </SheetCard>
+
+        {/* ── Tarjeta de Autonomía ────────────────────────────────────────── */}
+        {autonomy ? (
+          <SheetCard style={styles.autonomyCard}>
+            <View style={styles.autonomyHeader}>
+              <View style={styles.autonomyHeaderLeft}>
+                <View style={styles.motoIconBox}>
+                  <MaterialCommunityIcons
+                    name="motorbike"
+                    size={18}
+                    color={Colors.base.accent}
+                  />
+                </View>
+                <View style={styles.autonomyTexts}>
+                  <Text style={styles.motoName} numberOfLines={1}>
+                    {autonomy.motorcycleName}
+                  </Text>
+                  <Text style={styles.autonomySub}>Autonomía estimada</Text>
+                </View>
+              </View>
+              <View style={styles.statusChip}>
+                <Ionicons
+                  name={autonomy.reaches ? 'checkmark-circle' : 'alert-circle'}
+                  size={12}
+                  color={
+                    autonomy.reaches ? Colors.alerts.check : Colors.alerts.error
+                  }
+                />
+                <Text
+                  style={[
+                    styles.statusText,
+                    {
+                      color: autonomy.reaches
+                        ? Colors.alerts.check
+                        : Colors.alerts.error,
+                    },
+                  ]}
+                >
+                  {autonomy.reaches ? 'Alcanzas' : 'Recarga en ruta'}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.tankGauge}>
+              <View style={styles.tankLabels}>
+                <Text style={styles.tankLabel}>
+                  {autonomy.tankUsedPercent}% del tanque
+                </Text>
+                <Text style={styles.tankLabel}>
+                  {autonomy.effectiveRange} de alcance
+                </Text>
+              </View>
+              <View style={styles.tankTrack}>
+                <View
+                  style={[
+                    styles.tankFill,
+                    {
+                      width: `${Math.min(100, autonomy.tankUsedPercent)}%`,
+                      backgroundColor: autonomy.reaches
+                        ? Colors.base.accent
+                        : Colors.alerts.error,
+                    },
+                  ]}
+                />
+              </View>
+            </View>
+
+            <View style={styles.statsRow}>
+              <StatCell
+                icon="map-marker-distance"
+                iconColor={Colors.base.accent}
+                value={autonomy.effectiveRange}
+                label="Alcance"
+              />
+              <StatCell
+                bordered
+                icon="gas-station-outline"
+                iconColor={Colors.base.iconGroupRide}
+                value={autonomy.consumption}
+                label="Consumo"
+              />
+              <StatCell
+                bordered
+                icon="weight-kilogram"
+                iconColor={Colors.base.iconHighway}
+                value={autonomy.load}
+                label="A bordo"
+              />
+            </View>
+          </SheetCard>
+        ) : !viewModel.hasMotorcycle ? (
+          <SheetCard style={styles.stateCard}>
+            <EmptyState
+              icon="motorbike"
+              title="Registra tu moto"
+              message="La usamos para calcular tu autonomía y las paradas de tanqueo."
+              actionIcon="plus"
+              actionLabel="Ir al Garaje"
+              onAction={() =>
+                navigation.navigate('GarageTab', { screen: 'GarageList' })
+              }
+            />
+          </SheetCard>
+        ) : viewModel.isFuelEstimateLoading ? (
+          <SheetCard style={styles.loadingCard}>
+            <ActivityIndicator size="small" color={Colors.base.accent} />
+            <Text style={styles.loadingText}>Calculando autonomía…</Text>
+          </SheetCard>
+        ) : null}
+
+        {/* ── Tarjeta de Elevación ────────────────────────────────────────── */}
+        {elevation || viewModel.isElevationLoading ? (
+          <SheetCard style={styles.elevationCard}>
+            <View style={styles.elevationHeader}>
+              <Text style={styles.elevationTitle}>Perfil de elevación</Text>
+              <Text style={styles.elevationRange}>
+                {elevation
+                  ? `${elevation.min} — ${elevation.max}`
+                  : 'Calculando…'}
+              </Text>
+            </View>
+            {viewModel.elevationBars.length > 0 ? (
+              <>
                 <View style={styles.elevationChart}>
                   {viewModel.elevationBars.map((bar, index) => (
                     <View
@@ -354,163 +592,61 @@ const HomeScreen = observer(() => {
                       style={[
                         styles.elevationBar,
                         {
-                          height: 6 + bar.ratio * 40,
+                          height: 6 + bar.ratio * 46,
                           backgroundColor: bar.color,
                         },
                       ]}
                     />
                   ))}
                 </View>
-
-                <View style={styles.legendBar}>
-                  {ELEVATION_LEGEND.map((color, index) => (
-                    <View
-                      key={`legend-${index}`}
-                      style={[styles.legendSegment, { backgroundColor: color }]}
-                    />
-                  ))}
-                </View>
-                <View style={styles.legendLabels}>
-                  <Text style={styles.legendText}>
-                    Bajo · {viewModel.elevationSummary.min}
-                  </Text>
-                  <Text style={styles.legendText}>
-                    {viewModel.elevationSummary.max} · Alto
-                  </Text>
-                </View>
-              </View>
-            ) : null}
-
-            {viewModel.isFuelEstimateLoading ? (
-              <View style={styles.metaRow}>
-                <ActivityIndicator
-                  size="small"
-                  color={Colors.base.textSecondary}
-                />
-                <Text style={styles.metaText}>Calculando consumo...</Text>
-              </View>
-            ) : viewModel.fuelSummary ? (
-              <View style={styles.fuelSection}>
-                <View style={styles.metaRow}>
-                  <Ionicons
-                    name={
-                      viewModel.fuelSummary.reaches
-                        ? 'checkmark-circle'
-                        : 'warning'
-                    }
-                    size={15}
-                    color={
-                      viewModel.fuelSummary.reaches
-                        ? Colors.alerts.check
-                        : Colors.alerts.warning
-                    }
-                  />
-                  <Text style={styles.fuelStatusText}>
-                    {viewModel.motorcycle?.displayName()} ·{' '}
-                    {viewModel.fuelSummary.fuelNeeded} ·{' '}
-                    {viewModel.fuelSummary.reaches
-                      ? 'alcanza con el tanque'
-                      : 'no alcanza, recarga en ruta'}
-                  </Text>
-                </View>
-                <View style={styles.fuelBarTrack}>
-                  <View
-                    style={[
-                      styles.fuelBarFill,
-                      {
-                        width: `${Math.min(
-                          100,
-                          viewModel.fuelSummary.rangeUsedPercent,
-                        )}%`,
-                        backgroundColor: viewModel.fuelSummary.reaches
-                          ? Colors.alerts.check
-                          : Colors.alerts.error,
-                      },
-                    ]}
-                  />
-                </View>
-                <Text style={styles.legendText}>
-                  {viewModel.fuelSummary.rangeUsedPercent}% del tanque ·{' '}
-                  {viewModel.fuelSummary.consumption} ·{' '}
-                  {viewModel.fuelSummary.load} a bordo
-                </Text>
-              </View>
-            ) : !viewModel.hasMotorcycle ? (
-              <View style={styles.metaRow}>
-                <Ionicons
-                  name="information-circle"
-                  size={14}
-                  color={Colors.base.iconMuted}
-                />
-                <Text style={styles.metaText}>
-                  Registra tu moto en el Garaje para estimar el consumo.
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        ) : (
-          <View>
-            <View style={styles.searchBar}>
-              <Ionicons name="search" size={18} color={Colors.base.iconMuted} />
-              <TextInput
-                style={styles.searchInput}
-                value={viewModel.searchQuery}
-                onChangeText={(text) => viewModel.setSearchQuery(text)}
-                placeholder="Busca un destino"
-                placeholderTextColor={Colors.base.textMuted}
-                returnKeyType="search"
-                autoCorrect={false}
-              />
-              {viewModel.isSearchLoading ? (
-                <ActivityIndicator size="small" color={Colors.base.accent} />
-              ) : null}
-            </View>
-
-            {viewModel.hasSearchResults ? (
-              <View style={styles.card}>
-                {viewModel.searchResults.map((place, index) => (
-                  <TouchableOpacity
-                    key={place.id}
-                    activeOpacity={0.7}
-                    style={[
-                      styles.resultRow,
-                      index > 0 && styles.resultRowBorder,
-                    ]}
-                    onPress={() => handleSelectPlace(place)}
-                  >
-                    <Ionicons
-                      name="location-outline"
-                      size={18}
-                      color={Colors.base.iconMuted}
-                    />
-                    <View style={styles.resultBody}>
-                      <Text style={styles.resultName} numberOfLines={1}>
-                        {place.name}
-                      </Text>
-                      <Text style={styles.resultAddress} numberOfLines={1}>
-                        {place.fullName}
+                {elevation ? (
+                  <View style={styles.elevationFooter}>
+                    <View style={styles.elevationFooterItem}>
+                      <Ionicons
+                        name="trending-up"
+                        size={13}
+                        color={Colors.base.accent}
+                      />
+                      <Text style={styles.elevationFooterText}>
+                        {elevation.ascent} de ascenso
                       </Text>
                     </View>
-                  </TouchableOpacity>
-                ))}
+                    <View style={styles.elevationFooterItem}>
+                      <Ionicons
+                        name="trending-down"
+                        size={13}
+                        color={Colors.elevation.low}
+                      />
+                      <Text style={styles.elevationFooterText}>
+                        {elevation.descent} de descenso
+                      </Text>
+                    </View>
+                  </View>
+                ) : null}
+              </>
+            ) : (
+              <View style={styles.elevationPlaceholder}>
+                <ActivityIndicator size="small" color={Colors.base.textMuted} />
               </View>
-            ) : viewModel.isSearchError ? (
-              <View style={styles.card}>
-                <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
-              </View>
-            ) : null}
-          </View>
-        )}
-      </SafeAreaView>
+            )}
+          </SheetCard>
+        ) : null}
+      </BottomSheet>
 
-      {viewModel.hasLocation ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={styles.locateButton}
-          onPress={recenterOnUser}
-        >
-          <Ionicons name="locate" size={22} color={Colors.base.accent} />
-        </TouchableOpacity>
+      {/* ── Estado: sin permiso de ubicación ──────────────────────────────── */}
+      {viewModel.needsLocationPermission ? (
+        <View style={styles.locationGate}>
+          <SheetCard style={styles.gateCard}>
+            <EmptyState
+              icon="map-marker-off"
+              title="Activa tu ubicación"
+              message="La necesitamos para trazar rutas desde donde estás."
+              actionIcon="navigation-variant"
+              actionLabel="Permitir ubicación"
+              onAction={() => viewModel.requestLocation()}
+            />
+          </SheetCard>
+        </View>
       ) : null}
     </View>
   );
@@ -524,24 +660,24 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
+
+  // ── Overlay superior ──────────────────────────────────────────────────────
   topOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: Spacings.spacex2,
+    paddingHorizontal: Spacings.lg,
   },
   searchBar: {
     marginTop: Spacings.md,
-    paddingVertical: Spacings.sm,
+    height: 52,
     paddingHorizontal: Spacings.lg,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacings.sm,
+    gap: Spacings.md,
     backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
+    borderRadius: BorderRadius.md,
     ...Shadows.bankCard,
   },
   searchInput: {
@@ -550,13 +686,46 @@ const styles = StyleSheet.create({
     ...Fonts.bodyText,
     color: Colors.base.textPrimary,
   },
-  card: {
+  profileAvatar: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+  },
+  profileInitials: {
+    fontFamily: FontFamily.bold,
+    fontSize: 14,
+    color: Colors.semantic.text.primaryDark,
+  },
+  rideChips: {
+    marginTop: Spacings.md,
+    flexDirection: 'row',
+    gap: Spacings.sm,
+  },
+  rideChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: 14,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.hairline,
+  },
+  rideChipActive: {
+    backgroundColor: Colors.base.accent,
+    borderColor: Colors.base.accent,
+  },
+  rideChipText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  resultsCard: {
     marginTop: Spacings.sm,
     padding: Spacings.md,
-    backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
   resultRow: {
@@ -581,133 +750,282 @@ const styles = StyleSheet.create({
     ...Fonts.links,
     color: Colors.base.textSecondary,
   },
-  routeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.sm,
-  },
-  routeName: {
-    flex: 1,
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  rideChips: {
-    marginTop: Spacings.md,
-    flexDirection: 'row',
-    gap: Spacings.sm,
-  },
-  rideChip: {
-    paddingVertical: Spacings.xs,
-    paddingHorizontal: Spacings.md,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  rideChipText: {
-    ...Fonts.links,
-    color: Colors.base.textSecondary,
-  },
-  metaRow: {
-    marginTop: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.xs,
-  },
-  metaText: {
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
   errorText: {
-    marginTop: Spacings.md,
     ...Fonts.labelInputError,
     color: Colors.alerts.error,
   },
-  elevationSection: {
-    marginTop: Spacings.md,
-    paddingTop: Spacings.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.base.separator,
-  },
-  elevationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  elevationTitle: {
-    ...Fonts.header5,
-    color: Colors.base.textSecondary,
-  },
-  elevationStats: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  elevationChart: {
-    marginTop: Spacings.md,
-    height: 46,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 3,
-  },
-  elevationBar: {
-    flex: 1,
-    borderRadius: BorderRadius.xs,
-  },
-  legendBar: {
-    marginTop: Spacings.sm,
-    height: 6,
-    flexDirection: 'row',
-    borderRadius: BorderRadius.pill,
-    overflow: 'hidden',
-  },
-  legendSegment: {
-    flex: 1,
-  },
-  legendLabels: {
-    marginTop: Spacings.xs,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  legendText: {
-    ...Fonts.links,
-    color: Colors.base.textMuted,
-  },
-  fuelSection: {
-    marginTop: Spacings.md,
-    paddingTop: Spacings.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.base.separator,
-  },
-  fuelStatusText: {
-    flex: 1,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  fuelBarTrack: {
-    marginTop: Spacings.sm,
-    height: 6,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.pill,
-    overflow: 'hidden',
-  },
-  fuelBarFill: {
-    height: 6,
-    borderRadius: BorderRadius.pill,
-  },
+
+  // ── Boton flotante de ubicacion ───────────────────────────────────────────
   locateButton: {
     position: 'absolute',
-    right: Spacings.spacex2,
-    bottom: Spacings.xl,
-    width: 48,
-    height: 48,
+    right: Spacings.lg,
+    bottom: Spacings.xxl,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.pill,
+    borderRadius: BorderRadius.xl,
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
+
+  // ── Panel inferior: boton iniciar ─────────────────────────────────────────
+  startButton: {
+    height: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    borderRadius: BorderRadius.md,
+    ...Shadows.bankButton,
+  },
+  startButtonText: {
+    fontFamily: FontFamily.bold,
+    fontSize: 16,
+    color: Colors.semantic.text.primaryDark,
+  },
+
+  // ── Tarjeta de ruta ───────────────────────────────────────────────────────
+  routeCard: {
+    paddingTop: Spacings.lg,
+    paddingHorizontal: Spacings.lg,
+    paddingBottom: Spacings.md,
+    gap: 10,
+  },
+  routeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacings.sm,
+  },
+  routeTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    letterSpacing: 0.5,
+    color: Colors.base.accent,
+  },
+  routeDistance: {
+    flex: 1,
+    textAlign: 'right',
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: Colors.base.textSecondary,
+  },
+  routeOptions: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+  },
+  routePoints: {
+    flexDirection: 'row',
+    gap: Spacings.md,
+  },
+  timeline: {
+    width: 20,
+    alignItems: 'center',
+    gap: 2,
+    paddingTop: 3,
+  },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: BorderRadius.pill,
+  },
+  timelineDotOrigin: {
+    backgroundColor: Colors.base.accent,
+  },
+  timelineDotDest: {
+    backgroundColor: Colors.elevation.low,
+  },
+  timelineLine: {
+    width: 2,
+    height: 28,
+    backgroundColor: Colors.base.hairline,
+  },
+  routeLabels: {
+    flex: 1,
+    gap: Spacings.lg,
+  },
+  routeLabel: {
+    fontFamily: FontFamily.medium,
+    fontSize: 14,
+    color: Colors.base.textPrimary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.base.separator,
+  },
+  statsRow: {
+    flexDirection: 'row',
+  },
+
+  // ── Tarjeta de autonomia ──────────────────────────────────────────────────
+  autonomyCard: {
+    paddingVertical: 14,
+    paddingHorizontal: Spacings.lg,
+    gap: 12,
+  },
+  autonomyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacings.sm,
+  },
+  autonomyHeaderLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  motoIconBox: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.sm,
+  },
+  autonomyTexts: {
+    flex: 1,
+    gap: 2,
+  },
+  motoName: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: Colors.base.textPrimary,
+  },
+  autonomySub: {
+    fontFamily: FontFamily.medium,
+    fontSize: 10,
+    color: Colors.base.textMuted,
+  },
+  statusChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+  },
+  statusText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 11,
+  },
+  tankGauge: {
+    gap: 6,
+  },
+  tankLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tankLabel: {
+    fontFamily: FontFamily.medium,
+    fontSize: 10,
+    color: Colors.base.textSecondary,
+  },
+  tankTrack: {
+    height: 8,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.xs,
+    overflow: 'hidden',
+  },
+  tankFill: {
+    height: 8,
+    borderRadius: BorderRadius.xs,
+  },
+
+  // ── Tarjeta de elevacion ──────────────────────────────────────────────────
+  elevationCard: {
+    paddingVertical: 10,
+    paddingHorizontal: Spacings.lg,
+    gap: 6,
+  },
+  elevationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  elevationTitle: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 12,
+    color: Colors.base.textSecondary,
+  },
+  elevationRange: {
+    fontFamily: FontFamily.medium,
+    fontSize: 11,
+    color: Colors.base.textMuted,
+  },
+  elevationChart: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  elevationBar: {
+    flex: 1,
+    borderRadius: 2,
+  },
+  elevationPlaceholder: {
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  elevationFooter: {
+    marginTop: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  elevationFooterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  elevationFooterText: {
+    fontFamily: FontFamily.medium,
+    fontSize: 11,
+    color: Colors.base.textSecondary,
+  },
+
+  // ── Tarjetas de estado (cargando / vacio) ─────────────────────────────────
+  stateCard: {
+    paddingVertical: Spacings.lg,
+    paddingHorizontal: Spacings.lg,
+  },
+  loadingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    paddingVertical: Spacings.lg,
+    paddingHorizontal: Spacings.lg,
+  },
+  loadingText: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+
+  // ── Overlay: sin permiso de ubicacion ─────────────────────────────────────
+  locationGate: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacings.xl,
+    backgroundColor: Colors.semantic.text.primaryDark + 'B3',
+  },
+  gateCard: {
+    width: '100%',
+    maxWidth: 320,
+    paddingVertical: Spacings.xl,
+    paddingHorizontal: Spacings.xl,
+    ...Shadows.bankCard,
+  },
+
+  // ── Marcadores del mapa ───────────────────────────────────────────────────
   elevationBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -728,31 +1046,35 @@ const styles = StyleSheet.create({
     ...Fonts.links,
     color: Colors.base.textPrimary,
   },
-  destinationMarker: {
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accent,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
-  userHalo: {
-    width: 26,
-    height: 26,
+  destinationHalo: {
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.accentDim,
     borderRadius: BorderRadius.pill,
   },
-  userDot: {
-    width: 14,
-    height: 14,
-    backgroundColor: Colors.base.accent,
+  destinationDot: {
+    width: 16,
+    height: 16,
+    backgroundColor: Colors.elevation.low,
     borderRadius: BorderRadius.pill,
     borderWidth: 2,
     borderColor: Colors.base.textPrimary,
+  },
+  userHalo: {
+    width: 24,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.accent,
+    borderRadius: BorderRadius.pill,
+  },
+  userDot: {
+    width: 8,
+    height: 8,
+    backgroundColor: Colors.base.bgPrimary,
+    borderRadius: BorderRadius.pill,
   },
 });
 

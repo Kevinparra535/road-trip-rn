@@ -59,6 +59,14 @@ export class LocationStore {
     return this.isPermissionResponse === 'granted';
   }
 
+  /** El permiso ya se consulto y NO quedo concedido. */
+  get permissionDenied(): boolean {
+    return (
+      this.isPermissionResponse !== null &&
+      this.isPermissionResponse !== 'granted'
+    );
+  }
+
   get hasLocation(): boolean {
     return this.isLocationResponse !== null;
   }

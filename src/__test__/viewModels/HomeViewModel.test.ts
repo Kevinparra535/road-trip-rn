@@ -242,6 +242,7 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.routeSummary).toEqual({
       distance: '42 km',
       duration: '1 h 15 min',
+      avgSpeed: '34 km/h',
     });
 
     // alternativa primero (debajo), principal al final (encima)
@@ -438,5 +439,36 @@ describe('HomeViewModel — consumo de gasolina', () => {
     await flush();
 
     expect(vm.isFuelEstimateError).toContain('moto invalida');
+  });
+});
+
+describe('HomeViewModel — perfil del rider', () => {
+  it('exposes the rider initials for the searcher avatar once loaded', async () => {
+    const rider = { run: jest.fn().mockResolvedValue(makeRider()) };
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      rider,
+    );
+
+    expect(vm.riderInitials).toBe('--');
+
+    await vm.initialize();
+    await flush();
+
+    expect(vm.rider).not.toBeNull();
+    expect(vm.riderInitials).toBe('KE');
+  });
+
+  it('falls back to a placeholder when there is no rider', async () => {
+    const vm = makeVM();
+
+    await vm.initialize();
+    await flush();
+
+    expect(vm.rider).toBeNull();
+    expect(vm.riderInitials).toBe('--');
   });
 });

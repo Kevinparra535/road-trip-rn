@@ -1,40 +1,46 @@
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
 /**
- * Paleta tomada del diseno Home v2 (Pencil): base oscura casi negra y acento
- * naranja, estilo apps de navegacion. Los tonos basados en opacidad de blanco
- * funcionan sobre cualquier fondo oscuro.
+ * Paleta exacta del diseno Home v2 (Pencil). Base casi negra (#0D0D0D),
+ * superficies #1A1A1A, inset #242424, bordes #2A2A2A y acento naranja
+ * #FF9800 -> #FF6D00. Estilo apps de navegacion (Waze / Google Maps).
  *
  * Unica fuente de color de la app: ningun otro archivo debe declarar hex.
  */
 const base = {
-  bgPrimary: '#0E0E12',
-  bgGradientEnd: '#1B1C22',
-  bgCard: hexToRgba('#FFFFFF', 0.03),
-  bgSearchBar: hexToRgba('#FFFFFF', 0.07),
-  bgSearchBarBorder: hexToRgba('#FFFFFF', 0.09),
-  bgInfoCard: hexToRgba('#FFFFFF', 0.04),
+  // Fondos
+  bgPrimary: '#0D0D0D',
+  bgGradientEnd: '#1A1A1A',
+  bgCard: '#242424',
+  bgSearchBar: '#1A1A1A',
+  bgSearchBarBorder: '#2A2A2A',
+  bgInfoCard: '#1A1A1A',
 
-  accent: '#F5791E',
-  accentGradientStart: '#FB8C36',
-  accentGradientEnd: '#E6650A',
-  accentDim: hexToRgba('#F5791E', 0.12),
-  accentDimBorder: hexToRgba('#F5791E', 0.31),
+  // Acento naranja
+  accent: '#FF9800',
+  accentGradientStart: '#FF9800',
+  accentGradientEnd: '#FF6D00',
+  accentDim: hexToRgba('#FF9800', 0.12),
+  accentDimBorder: hexToRgba('#FF9800', 0.31),
+  accentGlow: hexToRgba('#FF9800', 0.27),
 
-  cardBorder: hexToRgba('#FFFFFF', 0.1),
-  separator: hexToRgba('#FFFFFF', 0.05),
+  // Bordes y sombra
+  cardBorder: '#2A2A2A',
+  separator: '#2A2A2A',
+  hairline: '#3A3A3A',
   shadow: '#000000',
 
+  // Texto e iconos
   textPrimary: '#FFFFFF',
-  textSecondary: hexToRgba('#FFFFFF', 0.6),
-  textMuted: hexToRgba('#FFFFFF', 0.31),
-  iconMuted: hexToRgba('#FFFFFF', 0.38),
-  badgeEmpty: hexToRgba('#FFFFFF', 0.08),
+  textSecondary: '#9CA3AF',
+  textMuted: '#6B7280',
+  iconMuted: '#9CA3AF',
+  badgeEmpty: '#242424',
 
   // Iconos por tipo de viaje en moto
-  iconGroupRide: '#2D7EF8',
+  iconGroupRide: '#2196F3',
   iconOffroad: '#E8A030',
-  iconHighway: '#27AE60',
+  iconHighway: '#4CAF50',
   iconLongTrip: '#9B59B6',
 };
 
@@ -44,26 +50,26 @@ const Colors = {
   bank: base,
   alerts: {
     error: '#E74446',
-    warning: '#FF8740',
-    check: '#4eaf0d',
+    warning: '#FF9800',
+    check: '#4CAF50',
   },
   // Trazado de ruta por tipo de rodada (principal / alternativas).
   route: {
-    highwayPrimary: '#2D7EF8',
-    highwayAlternative: '#3F5170',
+    highwayPrimary: '#FF9800',
+    highwayAlternative: '#5C5C5C',
     offroadPrimary: '#E8A030',
-    offroadAlternative: '#B98A4E',
+    offroadAlternative: '#6B5234',
   },
   // Rampa de elevacion: bajo (verde) -> alto (rojo).
   elevation: {
-    low: '#27AE60',
+    low: '#4CAF50',
     mid: '#E6C229',
-    high: '#E8A030',
+    high: '#FF9800',
     peak: '#E74446',
   },
   semantic: {
     text: {
-      primaryDark: '#1C1C1E',
+      primaryDark: '#000000',
       primaryLight: '#FFFFFF',
     },
   },

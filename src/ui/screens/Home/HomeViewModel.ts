@@ -5,6 +5,7 @@ import { TYPES } from '@/config/types';
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
+import { Rider } from '@/domain/entities/Rider';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -175,6 +176,9 @@ export class HomeViewModel {
   isElevationError: string | null = null;
   isElevationResponse: ElevationProfile | null = null;
 
+  // ── State: rider (perfil) ──
+  rider: Rider | null = null;
+
   // ── State: moto y estimacion de gasolina ──
   motorcycle: Motorcycle | null = null;
   isFuelEstimateLoading: boolean = false;
@@ -215,6 +219,11 @@ export class HomeViewModel {
 
   get hasLocation(): boolean {
     return this.locationStore.hasLocation;
+  }
+
+  /** El permiso de ubicacion se consulto y no quedo concedido. */
+  get needsLocationPermission(): boolean {
+    return this.locationStore.permissionDenied;
   }
 
   get userCoordinates(): [number, number] | null {
@@ -339,13 +348,20 @@ export class HomeViewModel {
     };
   }
 
-  /** Resumen de distancia y duracion de la ruta, ya formateado. */
-  get routeSummary(): { distance: string; duration: string } | null {
+  /** Resumen de distancia, duracion y velocidad media de la ruta. */
+  get routeSummary(): {
+    distance: string;
+    duration: string;
+    avgSpeed: string;
+  } | null {
     const route = this.isRouteResponse;
     if (!route) return null;
+    const hours = route.durationMin / 60;
+    const avgSpeed = hours > 0 ? Math.round(route.distanceKm / hours) : 0;
     return {
       distance: `${Math.round(route.distanceKm)} km`,
       duration: this.formatDuration(route.durationMin),
+      avgSpeed: `${avgSpeed} km/h`,
     };
   }
 
@@ -444,11 +460,47 @@ export class HomeViewModel {
     };
   }
 
+  /** Resumen de autonomia para la tarjeta dedicada del sheet. */
+  get autonomySummary(): {
+    motorcycleName: string;
+    reaches: boolean;
+    effectiveRange: string;
+    consumption: string;
+    load: string;
+    tankUsedPercent: number;
+  } | null {
+    const estimate = this.isFuelEstimateResponse;
+    const motorcycle = this.motorcycle;
+    if (!estimate || !motorcycle) return null;
+    return {
+      motorcycleName: motorcycle.displayName(),
+      reaches: estimate.reachesWithoutRefuel,
+      effectiveRange: `${Math.round(estimate.effectiveRangeKm)} km`,
+      consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
+      load: `${Math.round(estimate.loadKg)} kg`,
+      tankUsedPercent: Math.round(
+        Math.min(1.5, estimate.rangeUsedFraction) * 100,
+      ),
+    };
+  }
+
+  // ── Computed: rider ─────────────────────────────────────────────────────────
+
+  /** Iniciales del rider para el avatar del buscador; `--` si aun no carga. */
+  get riderInitials(): string {
+    return this.rider ? this.rider.initials() : '--';
+  }
+
   // ── Actions: camara ─────────────────────────────────────────────────────────
 
   /** Entrypoint: arranca la localizacion y carga la moto del rider. */
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
+    await this.locationStore.initialize();
+  }
+
+  /** Reintenta el permiso de ubicacion y arranca el seguimiento si se concede. */
+  async requestLocation(): Promise<void> {
     await this.locationStore.initialize();
   }
 
@@ -510,6 +562,15 @@ export class HomeViewModel {
     void this.computeRoute();
   }
 
+  /**
+   * Inicia la navegacion guiada de la ruta activa. Aun no implementada:
+   * registra la intencion hasta que exista la pantalla de navegacion.
+   */
+  startNavigation(): void {
+    if (!this.hasRoute) return;
+    this.logger.info('Iniciar ruta solicitado (navegacion aun no disponible)');
+  }
+
   /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
     this.destination = null;
@@ -543,6 +604,7 @@ export class HomeViewModel {
       this.isElevationLoading = false;
       this.isElevationError = null;
       this.isElevationResponse = null;
+      this.rider = null;
       this.motorcycle = null;
       this.isFuelEstimateLoading = false;
       this.isFuelEstimateError = null;
@@ -668,6 +730,9 @@ export class HomeViewModel {
   private async loadMotorcycle(): Promise<void> {
     try {
       const rider = await this.getCurrentRiderUseCase.run();
+      runInAction(() => {
+        this.rider = rider;
+      });
       if (!rider) return;
       const motorcycles = await this.getAllMotorcyclesUseCase.run(rider.id);
       runInAction(() => {
