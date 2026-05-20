@@ -66,8 +66,9 @@ const NAV_AVG_SPEED_KMH = 100;
 // Periodo del tick de simulacion.
 const NAV_TICK_MS = 500;
 // Aceleracion del tiempo: 1 s real avanza SIM_TIME_MULTIPLIER s simulados,
-// para poder ver el recorrido sin esperar el viaje completo.
-const SIM_TIME_MULTIPLIER = 150;
+// para poder ver el recorrido sin esperar el viaje completo. 60 = una ruta
+// de ~50 km se recorre en ~30 s; suficiente para seguirla visualmente.
+const SIM_TIME_MULTIPLIER = 60;
 // Distancia que avanza el conductor simulado en cada tick.
 const SIM_KM_PER_TICK =
   (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
@@ -725,6 +726,17 @@ export class HomeViewModel {
       ascentSoFarM: profile.ascentUpToKm(km),
       ratio: Math.max(0, Math.min(1, ratio)),
     };
+  }
+
+  /**
+   * Velocidad instantanea del conductor en km/h para el velocimetro de la
+   * barra de navegacion. En la ruta de prueba devuelve la velocidad promedio
+   * modelada; en una ruta real vendra del GPS cuando se exponga en el store.
+   */
+  get navSpeedKmh(): number | null {
+    if (!this.isNavigating) return null;
+    if (this.isSimulatedNavigation) return NAV_AVG_SPEED_KMH;
+    return null;
   }
 
   /**

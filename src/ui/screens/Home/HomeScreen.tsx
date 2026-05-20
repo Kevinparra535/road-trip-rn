@@ -296,9 +296,9 @@ const HomeScreen = observer(() => {
           >
             <View collapsable={false} style={styles.navRiderHalo}>
               <View style={styles.navRiderDot}>
-                <Ionicons
-                  name="navigate"
-                  size={13}
+                <MaterialCommunityIcons
+                  name="navigation"
+                  size={15}
                   color={Colors.semantic.text.primaryDark}
                 />
               </View>
@@ -596,10 +596,38 @@ const HomeScreen = observer(() => {
             </TouchableOpacity>
           ) : null}
 
+          {/* Boton flotante de recentrar: vuelve a seguir al rider (heading-up)
+              tras pan-mover el mapa. Siempre visible durante la navegacion. */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.navRecenter}
+            accessibilityRole="button"
+            accessibilityLabel="Recentrar en mi posición"
+            onPress={() => {
+              const target = viewModel.navCameraTarget;
+              if (target) {
+                cameraRef.current?.setCamera({
+                  ...target,
+                  animationDuration: 480,
+                });
+              }
+            }}
+          >
+            <Ionicons name="locate" size={22} color={Colors.base.textPrimary} />
+          </TouchableOpacity>
+
           {/* Panel inferior grande (compartido por 6a y 6b). */}
           {viewModel.navRemaining ? (
             <SafeAreaView edges={['bottom']} style={styles.navBarSafe}>
               <View style={styles.navBar}>
+                {viewModel.navSpeedKmh !== null ? (
+                  <View style={styles.navSpeedBox}>
+                    <Text style={styles.navSpeedValue}>
+                      {Math.round(viewModel.navSpeedKmh)}
+                    </Text>
+                    <Text style={styles.navSpeedUnit}>km/h</Text>
+                  </View>
+                ) : null}
                 <View style={styles.navInfo}>
                   <View style={styles.navDistanceRow}>
                     <Text style={styles.navDistance}>
@@ -1256,6 +1284,46 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: Colors.alerts.error,
     borderRadius: BorderRadius.pill,
+    ...Shadows.bankCard,
+  },
+  // Velocimetro a la izquierda del panel de navegacion (frame 6a del Pencil).
+  navSpeedBox: {
+    width: 72,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: Spacings.sm,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  navSpeedValue: {
+    fontFamily: FontFamily.bold,
+    fontSize: 24,
+    color: Colors.base.textPrimary,
+    includeFontPadding: false,
+  },
+  navSpeedUnit: {
+    fontFamily: FontFamily.medium,
+    fontSize: 10,
+    color: Colors.base.textMuted,
+    letterSpacing: 0.5,
+  },
+  // Boton flotante de recentrar durante la navegacion: vuelve a seguir al
+  // rider en heading-up tras pan-mover el mapa.
+  navRecenter: {
+    position: 'absolute',
+    right: Spacings.lg,
+    bottom: 200,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
   // Step indicator (TurnBanner): se ancla arriba, sobre el mapa, respetando
