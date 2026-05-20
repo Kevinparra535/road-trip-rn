@@ -53,6 +53,23 @@ export function distanceAlongNearest(
 }
 
 /**
+ * Distancia minima (km) de `point` a la polilinea (al vertice mas cercano).
+ * Sirve para detectar de forma local —sin llamar a la API— si el conductor
+ * se salio de la ruta trazada.
+ */
+export function distanceToPolylineKm(
+  geometry: GeoPoint[],
+  point: GeoPoint,
+): number {
+  let min = Infinity;
+  for (let i = 0; i < geometry.length; i += 1) {
+    const distance = haversineKm(geometry[i], point);
+    if (distance < min) min = distance;
+  }
+  return min === Infinity ? 0 : min;
+}
+
+/**
  * Devuelve el punto de la polilinea ubicado a `targetKm` del inicio,
  * interpolando linealmente dentro del segmento correspondiente.
  */

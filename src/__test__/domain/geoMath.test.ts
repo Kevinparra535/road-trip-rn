@@ -2,6 +2,7 @@ import {
   boundingBox,
   destinationPoint,
   distanceAlongNearest,
+  distanceToPolylineKm,
   haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
@@ -156,5 +157,24 @@ describe('distanceAlongNearest', () => {
 
   it('returns 0 for an empty polyline', () => {
     expect(distanceAlongNearest([], { latitude: 1, longitude: 1 })).toBe(0);
+  });
+});
+
+describe('distanceToPolylineKm', () => {
+  const line = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 1, longitude: 0 },
+    { latitude: 2, longitude: 0 },
+  ];
+
+  it('is ~0 for a point on the polyline', () => {
+    expect(distanceToPolylineKm(line, { latitude: 1, longitude: 0 })).toBe(0);
+  });
+
+  it('grows with the deviation from the polyline', () => {
+    const near = distanceToPolylineKm(line, { latitude: 1, longitude: 0.01 });
+    const far = distanceToPolylineKm(line, { latitude: 1, longitude: 0.5 });
+    expect(near).toBeGreaterThan(0);
+    expect(far).toBeGreaterThan(near);
   });
 });

@@ -15,8 +15,11 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 import {
   boundingBox,
   distanceAlongNearest,
+  distanceToPolylineKm,
+  haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
+  samplePolyline,
 } from '@/domain/geo/geoMath';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
@@ -50,6 +53,24 @@ const TRIANGLE_NOSE_KM = 0.05;
 const TRIANGLE_TAIL_KM = 0.03;
 // Buscador: espera tras la ultima tecla antes de consultar el geocoder.
 const SEARCH_DEBOUNCE_MS = 400;
+
+// ── Navegacion (simulacion) ─────────────────────────────────────────────────
+// Velocidad promedio modelada para el viaje.
+const NAV_AVG_SPEED_KMH = 100;
+// Periodo del tick de simulacion.
+const NAV_TICK_MS = 500;
+// Aceleracion del tiempo: 1 s real avanza SIM_TIME_MULTIPLIER s simulados,
+// para poder ver el recorrido sin esperar el viaje completo.
+const SIM_TIME_MULTIPLIER = 150;
+// Distancia que avanza el conductor simulado en cada tick.
+const SIM_KM_PER_TICK =
+  (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
+// Desviacion (km) a partir de la cual se considera que se salio de la ruta.
+const OFF_ROUTE_THRESHOLD_KM = 0.06;
+// Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
+const OFF_ROUTE_CONFIRM_TICKS = 4;
+// Puntos de muestreo de la ruta para buscar gasolineras a lo largo de ella.
+const ROUTE_STATION_SAMPLES = 6;
 // Tipo de rodada por defecto del trazado del Home.
 const DEFAULT_RIDE_TYPE: RideType = 'highway';
 
@@ -193,6 +214,10 @@ export class HomeViewModel {
   isFuelEstimateError: string | null = null;
   isFuelEstimateResponse: RouteFuelEstimate | null = null;
 
+  // ── State: navegacion (simulacion del recorrido) ──
+  isNavigating: boolean = false;
+  simulatedDistanceKm: number = 0;
+
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
   isFuelStopLoading: boolean = false;
@@ -200,6 +225,8 @@ export class HomeViewModel {
   isFuelStopResponse: FuelStation[] | null = null;
 
   private searchDisposer: (() => void) | null = null;
+  private navTimer: ReturnType<typeof setInterval> | null = null;
+  private offRouteTicks: number = 0;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -318,23 +345,12 @@ export class HomeViewModel {
     return this.destination ? this.destination.toLngLat() : null;
   }
 
-  /**
-   * Estaciones de servicio listas para pintar en el mapa. Se ordenan con la
-   * sugerida al final para que quede dibujada encima de las alternativas.
-   */
-  get fuelStationMarkers(): {
-    id: string;
-    coordinate: [number, number];
-    suggested: boolean;
-  }[] {
-    const stations = this.isFuelStopResponse ?? [];
-    return stations
-      .map((station, index) => ({
-        id: station.id,
-        coordinate: [station.longitude, station.latitude] as [number, number],
-        suggested: index === 0,
-      }))
-      .sort((a, b) => Number(a.suggested) - Number(b.suggested));
+  /** Gasolineras halladas a lo largo de la ruta, listas para el mapa. */
+  get fuelStationMarkers(): { id: string; coordinate: [number, number] }[] {
+    return (this.isFuelStopResponse ?? []).map((station) => ({
+      id: station.id,
+      coordinate: [station.longitude, station.latitude] as [number, number],
+    }));
   }
 
   /**
@@ -547,8 +563,24 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     if (!route) return null;
     const stations = this.isFuelStopResponse ?? [];
+    // Estacion conocida mas cercana a un punto de la ruta.
+    const nearestStation = (point: GeoPoint): FuelStation | null => {
+      let best: FuelStation | null = null;
+      let bestKm = Infinity;
+      for (const station of stations) {
+        const km = haversineKm(point, {
+          latitude: station.latitude,
+          longitude: station.longitude,
+        });
+        if (km < bestKm) {
+          bestKm = km;
+          best = station;
+        }
+      }
+      return best;
+    };
     const stops = this.fuelStops.map((stop, index) => {
-      const station = stations.find((s) => s.nearFuelStopId === stop.id);
+      const station = nearestStation(stop.location);
       return {
         id: stop.id,
         km: Math.round(stop.distanceFromStartKm),
@@ -563,6 +595,46 @@ export class HomeViewModel {
       searching: this.isFuelStopLoading,
       error: this.isFuelStopError,
       stops,
+    };
+  }
+
+  // ── Computed: navegacion ────────────────────────────────────────────────────
+
+  /** Posicion del conductor simulado sobre la ruta, como GeoPoint. */
+  get navRiderPoint(): GeoPoint | null {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return null;
+    return pointAtDistanceAlong(route.geometry, this.simulatedDistanceKm);
+  }
+
+  /** Posicion del conductor simulado en formato [lng, lat] para Mapbox. */
+  get navRiderCoordinate(): [number, number] | null {
+    const point = this.navRiderPoint;
+    return point ? [point.longitude, point.latitude] : null;
+  }
+
+  /** Objetivo de camara que sigue al conductor durante la navegacion. */
+  get navCameraTarget(): CameraTarget | null {
+    const coordinate = this.navRiderCoordinate;
+    if (!coordinate) return null;
+    return {
+      centerCoordinate: coordinate,
+      zoomLevel: FOLLOW_ZOOM,
+      pitch: PERSPECTIVE_PITCH,
+    };
+  }
+
+  /** Distancia y tiempo restantes de la navegacion, ya formateados. */
+  get navRemaining(): { distance: string; eta: string } | null {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return null;
+    const remainingKm = Math.max(
+      0,
+      route.distanceKm - this.simulatedDistanceKm,
+    );
+    return {
+      distance: `${Math.round(remainingKm)} km`,
+      eta: this.formatDuration((remainingKm / NAV_AVG_SPEED_KMH) * 60),
     };
   }
 
@@ -598,10 +670,11 @@ export class HomeViewModel {
     }
   }
 
-  /** Libera la suscripcion del buscador y las de ubicacion. */
+  /** Libera la suscripcion del buscador, el timer de navegacion y la ubicacion. */
   dispose(): void {
     this.searchDisposer?.();
     this.searchDisposer = null;
+    this.clearNavTimer();
     this.locationStore.dispose();
   }
 
@@ -657,16 +730,123 @@ export class HomeViewModel {
   }
 
   /**
-   * Inicia la navegacion guiada de la ruta activa. Aun no implementada:
-   * registra la intencion hasta que exista la pantalla de navegacion.
+   * Inicia la navegacion: la pantalla se despeja (solo el mapa) y arranca la
+   * simulacion del recorrido a velocidad promedio.
    */
   startNavigation(): void {
     if (!this.hasRoute) return;
-    this.logger.info('Iniciar ruta solicitado (navegacion aun no disponible)');
+    runInAction(() => {
+      this.isNavigating = true;
+      this.simulatedDistanceKm = 0;
+      this.offRouteTicks = 0;
+    });
+    this.clearNavTimer();
+    this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
+  }
+
+  /** Termina la navegacion y restaura la pantalla del Home. */
+  stopNavigation(): void {
+    this.clearNavTimer();
+    runInAction(() => {
+      this.isNavigating = false;
+      this.simulatedDistanceKm = 0;
+      this.offRouteTicks = 0;
+    });
+  }
+
+  /** Avanza al conductor simulado un tick sobre la ruta. */
+  private advanceSimulation(): void {
+    const route = this.isRouteResponse;
+    if (!route) {
+      this.stopNavigation();
+      return;
+    }
+    runInAction(() => {
+      this.simulatedDistanceKm = Math.min(
+        route.distanceKm,
+        this.simulatedDistanceKm + SIM_KM_PER_TICK,
+      );
+    });
+    this.monitorOffRoute();
+    if (this.simulatedDistanceKm >= route.distanceKm) {
+      this.stopNavigation();
+    }
+  }
+
+  /**
+   * Detecta de forma local (geometria, sin costo de API) si el conductor se
+   * salio de la ruta. Solo cuando la desviacion se sostiene varios ticks se
+   * gasta UNA llamada de recalculo. En la simulacion el conductor sigue la
+   * ruta, asi que esta vigilancia queda latente hasta usar GPS real.
+   */
+  private monitorOffRoute(): void {
+    const route = this.isRouteResponse;
+    const rider = this.navRiderPoint;
+    if (!route || !rider) return;
+    const deviationKm = distanceToPolylineKm(route.geometry, rider);
+    if (deviationKm <= OFF_ROUTE_THRESHOLD_KM) {
+      this.offRouteTicks = 0;
+      return;
+    }
+    this.offRouteTicks += 1;
+    if (this.offRouteTicks >= OFF_ROUTE_CONFIRM_TICKS) {
+      this.offRouteTicks = 0;
+      void this.recalculateFrom(rider);
+    }
+  }
+
+  /** Recalcula la ruta desde la posicion actual hacia el mismo destino. */
+  private async recalculateFrom(origin: GeoPoint): Promise<void> {
+    const place = this.destination;
+    if (!place) return;
+    try {
+      const directions = await this.calculateDirectionsUseCase.run({
+        waypoints: [
+          new Waypoint({
+            id: 'origin',
+            name: 'Posicion actual',
+            latitude: origin.latitude,
+            longitude: origin.longitude,
+            kind: 'start',
+            order: 0,
+          }),
+          new Waypoint({
+            id: place.id,
+            name: place.name,
+            latitude: place.latitude,
+            longitude: place.longitude,
+            kind: 'destination',
+            order: 1,
+          }),
+        ],
+        rideType: this.rideType,
+      });
+      runInAction(() => {
+        this.isRouteResponse = directions;
+        this.simulatedDistanceKm = 0;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error recalculando ruta: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  private clearNavTimer(): void {
+    if (this.navTimer) {
+      clearInterval(this.navTimer);
+      this.navTimer = null;
+    }
   }
 
   /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
+    this.clearNavTimer();
+    this.isNavigating = false;
+    this.simulatedDistanceKm = 0;
+    this.offRouteTicks = 0;
     this.destination = null;
     this.isRouteResponse = null;
     this.isRouteError = null;
@@ -686,10 +866,14 @@ export class HomeViewModel {
   }
 
   reset(): void {
+    this.clearNavTimer();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
       this.isPerspective = false;
       this.hasAutoCentered = false;
+      this.isNavigating = false;
+      this.simulatedDistanceKm = 0;
+      this.offRouteTicks = 0;
       this.searchQuery = '';
       this.isSearchLoading = false;
       this.isSearchError = null;
@@ -805,6 +989,9 @@ export class HomeViewModel {
       });
       runInAction(() => {
         this.isRouteResponse = directions;
+        // Ruta nueva: las gasolineras se vuelven a buscar una sola vez.
+        this.isFuelStopResponse = null;
+        this.fuelStops = [];
       });
       this.updateLoadingState(false, null, 'route');
       await this.computeElevation();
@@ -882,18 +1069,15 @@ export class HomeViewModel {
   private async computeFuelStop(): Promise<void> {
     const route = this.isRouteResponse;
     const estimate = this.isFuelEstimateResponse;
-    runInAction(() => {
-      this.isFuelStopResponse = null;
-      this.fuelStops = [];
-    });
     if (!route || !estimate) return;
 
-    // Una parada por cada punto donde se consumiria medio tanque.
-    const stops: FuelStop[] = [];
+    // (a) Paradas sugeridas (cada medio tanque). Calculo barato, sin API:
+    //     dependen de la moto, asi que se rehacen en cada estimacion.
+    const refuelStops: FuelStop[] = [];
     estimate.refuelPointsKm().forEach((km, index) => {
       const location = pointAtDistanceAlong(route.geometry, km);
       if (location) {
-        stops.push(
+        refuelStops.push(
           new FuelStop({
             id: `refuel-${index + 1}`,
             order: index + 1,
@@ -904,16 +1088,37 @@ export class HomeViewModel {
         );
       }
     });
-    if (stops.length === 0) return;
     runInAction(() => {
-      this.fuelStops = stops;
+      this.fuelStops = refuelStops;
     });
+
+    // (b) Gasolineras a lo largo de TODA la ruta, para pintarlas en el mapa.
+    //     Se buscan una sola vez por ruta (no en cada recarga de la moto).
+    if (this.isFuelStopResponse !== null || route.geometry.length < 2) return;
+    const searchStops = samplePolyline(
+      route.geometry,
+      ROUTE_STATION_SAMPLES,
+    ).map(
+      (location, index) =>
+        new FuelStop({
+          id: `sample-${index}`,
+          order: index,
+          distanceFromStartKm: 0,
+          location,
+          label: 'Muestra de ruta',
+        }),
+    );
+    if (searchStops.length === 0) return;
 
     this.updateLoadingState(true, null, 'fuelStop');
     try {
-      const stations = await this.findFuelStationsUseCase.run(stops);
+      const stations = await this.findFuelStationsUseCase.run(searchStops);
+      // Quita estaciones repetidas halladas cerca de varias muestras.
+      const unique = Array.from(
+        new Map(stations.map((s) => [s.id, s])).values(),
+      );
       runInAction(() => {
-        this.isFuelStopResponse = stations;
+        this.isFuelStopResponse = unique;
       });
       this.updateLoadingState(false, null, 'fuelStop');
     } catch (error) {

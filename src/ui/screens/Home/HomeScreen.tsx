@@ -21,6 +21,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
@@ -50,6 +51,7 @@ const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 64, 320, 64];
 const RIDE_OPTIONS: { type: RideType; label: string; icon: MciName }[] = [
   { type: 'highway', label: 'CARRETERA', icon: 'road-variant' },
   { type: 'offroad', label: 'OFFROAD', icon: 'terrain' },
+  { type: 'group', label: 'GRUPAL', icon: 'account-group' },
 ];
 
 /** Construye la expresion `lineGradient` de Mapbox a partir de las paradas. */
@@ -122,6 +124,17 @@ const HomeScreen = observer(() => {
       fittedDestinationRef.current = null;
     }
   }, [routeBounds, destinationId]);
+
+  // Durante la navegacion la camara sigue al conductor simulado en cada tick.
+  const isNavigating = viewModel.isNavigating;
+  const simDistance = viewModel.simulatedDistanceKm;
+  useEffect(() => {
+    if (!isNavigating) return;
+    const target = viewModel.navCameraTarget;
+    if (target) {
+      cameraRef.current?.setCamera({ ...target, animationDuration: 480 });
+    }
+  }, [viewModel, isNavigating, simDistance]);
 
   const recenterOnUser = () => {
     const target = viewModel.followTarget;
@@ -252,26 +265,34 @@ const HomeScreen = observer(() => {
           </Mapbox.PointAnnotation>
         ) : null}
 
+        {viewModel.navRiderCoordinate ? (
+          <Mapbox.PointAnnotation
+            id="nav-rider"
+            coordinate={viewModel.navRiderCoordinate}
+          >
+            <View style={styles.navRiderHalo}>
+              <View style={styles.navRiderDot}>
+                <Ionicons
+                  name="navigate"
+                  size={13}
+                  color={Colors.semantic.text.primaryDark}
+                />
+              </View>
+            </View>
+          </Mapbox.PointAnnotation>
+        ) : null}
+
         {viewModel.fuelStationMarkers.map((station, index) => (
           <Mapbox.PointAnnotation
             key={station.id}
             id={`fuel-stop-${index}`}
             coordinate={station.coordinate}
           >
-            <View
-              style={[
-                styles.fuelMarker,
-                !station.suggested && styles.fuelMarkerAlternate,
-              ]}
-            >
+            <View style={styles.fuelMarker}>
               <MaterialCommunityIcons
                 name="gas-station"
-                size={station.suggested ? 16 : 12}
-                color={
-                  station.suggested
-                    ? Colors.base.accent
-                    : Colors.base.textSecondary
-                }
+                size={13}
+                color={Colors.base.accent}
               />
             </View>
           </Mapbox.PointAnnotation>
@@ -306,101 +327,134 @@ const HomeScreen = observer(() => {
         ) : null}
       </Mapbox.MapView>
 
-      <SafeAreaView
-        style={styles.topOverlay}
-        edges={['top', 'left', 'right']}
-        pointerEvents="box-none"
-      >
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color={Colors.base.iconMuted} />
-          <TextInput
-            style={styles.searchInput}
-            value={viewModel.searchQuery}
-            onChangeText={(text) => viewModel.setSearchQuery(text)}
-            placeholder="¿A dónde vamos hoy?"
-            placeholderTextColor={Colors.base.textMuted}
-            returnKeyType="search"
-            autoCorrect={false}
-          />
-          {viewModel.isSearchLoading ? (
-            <ActivityIndicator size="small" color={Colors.base.accent} />
-          ) : null}
-          <TouchableOpacity
-            activeOpacity={0.85}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir perfil"
-            onPress={() => navigation.navigate('ProfileTab')}
-          >
-            <GradientView
-              preset="accent"
-              direction="vertical"
-              style={styles.profileAvatar}
+      {!isNavigating ? (
+        <SafeAreaView
+          style={styles.topOverlay}
+          edges={['top', 'left', 'right']}
+          pointerEvents="box-none"
+        >
+          <View style={styles.searchBar}>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              hitSlop={8}
+              style={styles.menuButton}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir perfil"
+              onPress={() => navigation.navigate('ProfileTab')}
             >
-              <Text style={styles.profileInitials}>
-                {viewModel.riderInitials}
-              </Text>
-            </GradientView>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.rideChips}>
-          {RIDE_OPTIONS.map((option) => {
-            const active = viewModel.rideType === option.type;
-            const tone = active
-              ? Colors.semantic.text.primaryDark
-              : Colors.base.textSecondary;
-            return (
-              <TouchableOpacity
-                key={option.type}
-                activeOpacity={0.8}
-                style={[styles.rideChip, active && styles.rideChipActive]}
-                onPress={() => viewModel.setRideType(option.type)}
+              <Ionicons
+                name="menu"
+                size={20}
+                color={Colors.base.textSecondary}
+              />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.searchInput}
+              value={viewModel.searchQuery}
+              onChangeText={(text) => viewModel.setSearchQuery(text)}
+              placeholder="¿A dónde vamos hoy?"
+              placeholderTextColor={Colors.base.textMuted}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+            {viewModel.isSearchLoading ? (
+              <ActivityIndicator size="small" color={Colors.base.accent} />
+            ) : null}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir perfil"
+              onPress={() => navigation.navigate('ProfileTab')}
+            >
+              <GradientView
+                preset="accent"
+                direction="vertical"
+                style={styles.profileAvatar}
               >
-                <MaterialCommunityIcons
-                  name={option.icon}
-                  size={14}
-                  color={tone}
-                />
-                <Text style={[styles.rideChipText, { color: tone }]}>
-                  {option.label}
+                <Text style={styles.profileInitials}>
+                  {viewModel.riderInitials}
                 </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+              </GradientView>
+            </TouchableOpacity>
+          </View>
 
-        {viewModel.hasSearchResults ? (
-          <SheetCard style={styles.resultsCard}>
-            {viewModel.searchResults.map((place, index) => (
-              <TouchableOpacity
-                key={place.id}
-                activeOpacity={0.7}
-                style={[styles.resultRow, index > 0 && styles.resultRowBorder]}
-                onPress={() => handleSelectPlace(place)}
-              >
-                <Ionicons
-                  name="location-outline"
-                  size={18}
-                  color={Colors.base.iconMuted}
-                />
-                <View style={styles.resultBody}>
-                  <Text style={styles.resultName} numberOfLines={1}>
-                    {place.name}
+          <View style={styles.rideChips}>
+            {RIDE_OPTIONS.map((option) => {
+              const active = viewModel.rideType === option.type;
+              const tone = active
+                ? Colors.semantic.text.primaryDark
+                : Colors.base.textSecondary;
+              return (
+                <TouchableOpacity
+                  key={option.type}
+                  activeOpacity={0.8}
+                  style={[styles.rideChip, active && styles.rideChipActive]}
+                  onPress={() => viewModel.setRideType(option.type)}
+                >
+                  <MaterialCommunityIcons
+                    name={option.icon}
+                    size={14}
+                    color={tone}
+                  />
+                  <Text style={[styles.rideChipText, { color: tone }]}>
+                    {option.label}
                   </Text>
-                  <Text style={styles.resultAddress} numberOfLines={1}>
-                    {place.fullName}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </SheetCard>
-        ) : viewModel.isSearchError ? (
-          <SheetCard style={styles.resultsCard}>
-            <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
-          </SheetCard>
-        ) : null}
-      </SafeAreaView>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {viewModel.hasSearchResults ? (
+            <SheetCard style={styles.resultsCard}>
+              {viewModel.searchResults.map((place, index) => (
+                <TouchableOpacity
+                  key={place.id}
+                  activeOpacity={0.7}
+                  style={[
+                    styles.resultRow,
+                    index > 0 && styles.resultRowBorder,
+                  ]}
+                  onPress={() => handleSelectPlace(place)}
+                >
+                  <Ionicons
+                    name="location-outline"
+                    size={18}
+                    color={Colors.base.iconMuted}
+                  />
+                  <View style={styles.resultBody}>
+                    <Text style={styles.resultName} numberOfLines={1}>
+                      {place.name}
+                    </Text>
+                    <Text style={styles.resultAddress} numberOfLines={1}>
+                      {place.fullName}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </SheetCard>
+          ) : viewModel.isSearchError ? (
+            <SheetCard style={styles.resultsCard}>
+              <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
+            </SheetCard>
+          ) : null}
+        </SafeAreaView>
+      ) : null}
+
+      {DEV_FLAGS.mockDestination &&
+      !viewModel.hasDestination &&
+      viewModel.hasLocation ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={styles.testRouteButton}
+          accessibilityRole="button"
+          accessibilityLabel="Trazar ruta de prueba"
+          onPress={() => viewModel.selectDestination(DEV_FAKE_DESTINATION)}
+        >
+          <Ionicons name="flask" size={15} color={Colors.base.accent} />
+          <Text style={styles.testRouteText}>Ruta de prueba</Text>
+        </TouchableOpacity>
+      ) : null}
 
       {!viewModel.hasDestination && viewModel.hasLocation ? (
         <TouchableOpacity
@@ -410,11 +464,33 @@ const HomeScreen = observer(() => {
           accessibilityLabel="Centrar en mi ubicación"
           onPress={recenterOnUser}
         >
-          <Ionicons name="locate" size={18} color={Colors.base.textPrimary} />
+          <Ionicons name="locate" size={24} color={Colors.base.accent} />
         </TouchableOpacity>
       ) : null}
 
-      <BottomSheet visible={viewModel.hasDestination}>
+      {viewModel.isNavigating && viewModel.navRemaining ? (
+        <View style={styles.navBar}>
+          <View style={styles.navInfo}>
+            <Text style={styles.navDistance}>
+              {viewModel.navRemaining.distance}
+            </Text>
+            <Text style={styles.navEta}>
+              {viewModel.navRemaining.eta} restantes
+            </Text>
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={styles.navFinish}
+            accessibilityRole="button"
+            accessibilityLabel="Finalizar navegación"
+            onPress={() => viewModel.stopNavigation()}
+          >
+            <Ionicons name="close" size={20} color={Colors.base.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
+      <BottomSheet visible={viewModel.hasDestination && !isNavigating}>
         {/* CTA principal: degradado naranja, visible aun con el panel asomado. */}
         <TouchableOpacity
           activeOpacity={0.9}
@@ -788,6 +864,14 @@ const styles = StyleSheet.create({
     ...Fonts.bodyText,
     color: Colors.base.textPrimary,
   },
+  menuButton: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+  },
   profileAvatar: {
     width: 36,
     height: 36,
@@ -862,15 +946,94 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacings.lg,
     bottom: Spacings.xxl,
-    width: 40,
-    height: 40,
+    width: 56,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
+  },
+  testRouteButton: {
+    position: 'absolute',
+    right: Spacings.lg,
+    bottom: Spacings.xxl + 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accent,
+    ...Shadows.bankCard,
+  },
+  testRouteText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 12,
+    color: Colors.base.accent,
+  },
+
+  // ── Navegación activa ─────────────────────────────────────────────────────
+  navBar: {
+    position: 'absolute',
+    left: Spacings.lg,
+    right: Spacings.lg,
+    bottom: Spacings.xl,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacings.md,
+    paddingVertical: Spacings.md,
+    paddingHorizontal: Spacings.lg,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  navInfo: {
+    flex: 1,
+  },
+  navDistance: {
+    fontFamily: FontFamily.bold,
+    fontSize: 20,
+    color: Colors.base.textPrimary,
+  },
+  navEta: {
+    marginTop: 1,
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: Colors.base.textSecondary,
+  },
+  navFinish: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.alerts.error,
+    borderRadius: BorderRadius.pill,
+  },
+  navRiderHalo: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+  },
+  navRiderDot: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.accent,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.textPrimary,
   },
 
   // ── Panel inferior: boton iniciar ─────────────────────────────────────────
@@ -1223,9 +1386,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.base.accentDim,
     borderRadius: BorderRadius.pill,
   },
+  // Gasolinera a lo largo de la ruta (POI ambiente del mapa).
   fuelMarker: {
-    width: 30,
-    height: 30,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.bgGradientEnd,
@@ -1233,13 +1397,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.base.accent,
     ...Shadows.bankCard,
-  },
-  // Estaciones alternativas: marcador mas pequeno y discreto.
-  fuelMarkerAlternate: {
-    width: 22,
-    height: 22,
-    borderWidth: 1,
-    borderColor: Colors.base.textSecondary,
   },
   destinationDot: {
     width: 16,
