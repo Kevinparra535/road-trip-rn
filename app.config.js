@@ -9,6 +9,7 @@ module.exports = ({ config }) => ({
     ...config.extra,
     mapboxPublicToken:
       process.env.MAPBOX_PUBLIC_TOKEN || 'SET_MAPBOX_PUBLIC_TOKEN',
+    MAP_STYLE_URL: process.env.MAP_STYLE_URL || 'SET_MAP_STYLE_URL',
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || 'SET_FIREBASE_API_KEY',
       authDomain:

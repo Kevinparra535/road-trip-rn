@@ -12,6 +12,7 @@ type FirebaseEnv = {
 
 type AppEnv = {
   mapboxPublicToken: string;
+  MAP_STYLE_URL: string;
   firebase: FirebaseEnv;
 };
 
@@ -23,6 +24,7 @@ const extra = (Constants.expoConfig?.extra ?? {}) as Partial<AppEnv>;
  */
 export const ENV: AppEnv = {
   mapboxPublicToken: extra.mapboxPublicToken ?? 'SET_MAPBOX_PUBLIC_TOKEN',
+  MAP_STYLE_URL: extra.MAP_STYLE_URL ?? 'SET_MAP_STYLE_URL',
   firebase: {
     apiKey: extra.firebase?.apiKey ?? 'SET_FIREBASE_API_KEY',
     authDomain: extra.firebase?.authDomain ?? 'SET_FIREBASE_AUTH_DOMAIN',
