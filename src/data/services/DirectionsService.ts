@@ -31,6 +31,11 @@ export class DirectionsServiceImpl implements DirectionsService {
       geometries: 'geojson',
       overview: 'full',
       alternatives: 'true',
+      // `steps` habilita las maniobras turn-by-turn que alimentan el step
+      // indicator del Home (TurnBanner del Pencil); `language=es` pide las
+      // instrucciones ya localizadas ("Gira a la derecha en Calle X").
+      steps: 'true',
+      language: 'es',
       access_token: ENV.mapboxPublicToken,
     });
 

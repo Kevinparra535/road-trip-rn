@@ -26,6 +26,7 @@ import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
+import ArrivalPanel from '@/ui/components/ArrivalPanel';
 import BottomSheet from '@/ui/components/BottomSheet';
 import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
@@ -33,6 +34,7 @@ import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
+import TurnBanner from '@/ui/components/TurnBanner';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { AppTabsParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -47,6 +49,13 @@ type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 // Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
 const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 64, 320, 64];
+
+// Anchos del trazado segun el modo (frame "Active Route" / "Route 3D Core"
+// del Pencil). Nucleo mas grueso navegando para que la ruta se lea como una
+// "flecha 3D"; alternativas finas para no competir con la principal.
+const ROUTE_CORE_WIDTH_NAV = 14;
+const ROUTE_CORE_WIDTH_PLANNING = 6;
+const ROUTE_ALT_WIDTH = 3;
 
 // Tipos de rodada que ofrece el selector superior (Home v2).
 const RIDE_OPTIONS: { type: RideType; label: string; icon: MciName }[] = [
@@ -188,31 +197,35 @@ const HomeScreen = observer(() => {
           const stops = line.gradientStops;
           const gradient =
             stops && stops.length > 1 ? buildLineGradient(stops) : null;
+          const coreWidth = !line.isPrimary
+            ? ROUTE_ALT_WIDTH
+            : isNavigating
+              ? ROUTE_CORE_WIDTH_NAV
+              : ROUTE_CORE_WIDTH_PLANNING;
           return (
             <Mapbox.ShapeSource
               key={line.id}
               id={`route-${line.id}`}
               shape={line.shape}
-              // Estable desde el montaje: `lineGradient` necesita line-progress.
-              lineMetrics={line.isPrimary}
+              lineMetrics={line.isPrimary && gradient !== null}
             >
               <Mapbox.LineLayer
                 id={`route-${line.id}-line`}
                 style={
-                  gradient
+                  gradient && line.isPrimary
                     ? {
                         lineGradient: gradient,
                         lineColor: line.color,
-                        lineWidth: 6,
+                        lineWidth: coreWidth,
                         lineCap: 'round',
                         lineJoin: 'round',
                       }
                     : {
                         lineColor: line.color,
-                        lineWidth: line.isPrimary ? 6 : 4,
+                        lineWidth: coreWidth,
+                        lineOpacity: line.isPrimary ? 1 : 0.9,
                         lineCap: 'round',
                         lineJoin: 'round',
-                        lineOpacity: line.isPrimary ? 1 : 0.9,
                       }
                 }
               />
@@ -225,7 +238,13 @@ const HomeScreen = observer(() => {
             id="elevation-high"
             coordinate={highlights.highest.coordinate}
           >
-            <View style={[styles.elevationBadge, styles.elevationBadgeHigh]}>
+            {/* collapsable=false: iOS Mapbox PointAnnotation acepta como mucho
+                un subview, y sin esto RN aplana la View envoltura y expone los
+                hijos directamente, disparando el error nativo. */}
+            <View
+              collapsable={false}
+              style={[styles.elevationBadge, styles.elevationBadgeHigh]}
+            >
               <Ionicons
                 name="arrow-up"
                 size={11}
@@ -243,7 +262,10 @@ const HomeScreen = observer(() => {
             id="elevation-low"
             coordinate={highlights.lowest.coordinate}
           >
-            <View style={[styles.elevationBadge, styles.elevationBadgeLow]}>
+            <View
+              collapsable={false}
+              style={[styles.elevationBadge, styles.elevationBadgeLow]}
+            >
               <Ionicons
                 name="arrow-down"
                 size={11}
@@ -261,7 +283,7 @@ const HomeScreen = observer(() => {
             id="route-destination"
             coordinate={viewModel.destinationCoordinate}
           >
-            <View style={styles.destinationHalo}>
+            <View collapsable={false} style={styles.destinationHalo}>
               <View style={styles.destinationDot} />
             </View>
           </Mapbox.PointAnnotation>
@@ -272,7 +294,7 @@ const HomeScreen = observer(() => {
             id="nav-rider"
             coordinate={viewModel.navRiderCoordinate}
           >
-            <View style={styles.navRiderHalo}>
+            <View collapsable={false} style={styles.navRiderHalo}>
               <View style={styles.navRiderDot}>
                 <Ionicons
                   name="navigate"
@@ -290,7 +312,7 @@ const HomeScreen = observer(() => {
             id={`fuel-stop-${index}`}
             coordinate={station.coordinate}
           >
-            <View style={styles.fuelMarker}>
+            <View collapsable={false} style={styles.fuelMarker}>
               <MaterialCommunityIcons
                 name="gas-station"
                 size={13}
@@ -305,7 +327,7 @@ const HomeScreen = observer(() => {
             id="user-location"
             coordinate={viewModel.userCoordinates}
           >
-            <View style={styles.userHalo}>
+            <View collapsable={false} style={styles.userHalo}>
               <View style={styles.userDot} />
             </View>
           </Mapbox.PointAnnotation>
@@ -516,6 +538,23 @@ const HomeScreen = observer(() => {
       {/* ── Overlays durante la navegacion (frames 6a/6b del Pencil) ───── */}
       {viewModel.isNavigating ? (
         <>
+          {/* TurnBanner: step indicator con la maniobra siguiente. */}
+          {viewModel.currentTurn ? (
+            <SafeAreaView
+              edges={['top', 'left', 'right']}
+              style={styles.turnBannerWrap}
+              pointerEvents="box-none"
+            >
+              <TurnBanner
+                distanceText={viewModel.currentTurn.distanceText}
+                instruction={viewModel.currentTurn.instruction}
+                streetName={viewModel.currentTurn.streetName}
+                maneuverType={viewModel.currentTurn.maneuverType}
+                maneuverModifier={viewModel.currentTurn.maneuverModifier}
+              />
+            </SafeAreaView>
+          ) : null}
+
           {/* 6b: barra lateral con la rampa de elevacion + marcador del rider. */}
           {viewModel.isElevationStripOpen &&
           viewModel.currentNavElevation &&
@@ -598,7 +637,27 @@ const HomeScreen = observer(() => {
         </>
       ) : null}
 
-      <BottomSheet visible={viewModel.hasDestination && !isNavigating}>
+      {/* Panel de llegada (frame "8 - Home Llegada" del Pencil): oscurece el
+          mapa y resume el viaje. Se monta como overlay para que el mapa con
+          el pin de destino siga visible debajo. */}
+      {viewModel.isArrived && viewModel.arrivalSummary ? (
+        <ArrivalPanel
+          destinationName={viewModel.arrivalSummary.destinationName}
+          arrivalTime={viewModel.arrivalSummary.arrivalTime}
+          stats={[
+            { value: viewModel.arrivalSummary.distance, label: 'KM' },
+            { value: viewModel.arrivalSummary.duration, label: 'TIEMPO' },
+            { value: viewModel.arrivalSummary.fuel, label: 'COMBUSTIBLE' },
+          ]}
+          onFinish={() => viewModel.dismissArrival()}
+        />
+      ) : null}
+
+      <BottomSheet
+        visible={
+          viewModel.hasDestination && !isNavigating && !viewModel.isArrived
+        }
+      >
         {/* Cabecera "asomada": etiqueta + titular grande con la cifra clave de
             la ruta. Se ve incluso con el panel colapsado (frame "3 - Home Ruta
             Asomado" del Pencil). */}
@@ -1199,12 +1258,21 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
     ...Shadows.bankCard,
   },
+  // Step indicator (TurnBanner): se ancla arriba, sobre el mapa, respetando
+  // el notch / status bar via SafeAreaView.
+  turnBannerWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacings.lg,
+  },
   // 6b: barra lateral con la rampa de elevacion + marcador del rider.
   elevationStripWrap: {
     position: 'absolute',
-    top: '10%',
+    bottom: 150,
     right: Spacings.lg,
-    height: "100%",
+    height: '50%',
   },
   // 6a: chip flotante compacto con altitud y ascenso, encima del nav bar.
   elevationGlance: {
@@ -1238,6 +1306,8 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.base.accent,
   },
+  // "Driver Arrow" del Pencil: halo difuso 36, ring blanco exterior + nucleo
+  // naranja con la flecha de navegacion (frames 6 / 6a / 6b).
   navRiderHalo: {
     width: 36,
     height: 36,
@@ -1247,8 +1317,8 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   navRiderDot: {
-    width: 26,
-    height: 26,
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.accent,

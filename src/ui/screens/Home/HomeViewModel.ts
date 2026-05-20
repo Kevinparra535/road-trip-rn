@@ -7,6 +7,11 @@ import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
+import {
+  ManeuverModifier,
+  ManeuverType,
+  NavigationStep,
+} from '@/domain/entities/NavigationStep';
 import { Place } from '@/domain/entities/Place';
 import { Rider } from '@/domain/entities/Rider';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
@@ -220,6 +225,13 @@ export class HomeViewModel {
   // ── State: navegacion (simulacion del recorrido) ──
   isNavigating: boolean = false;
   simulatedDistanceKm: number = 0;
+  /**
+   * Pantalla "8 - Home Llegada" del Pencil: al alcanzar el destino, congela
+   * la nav y muestra el panel de llegada con el resumen del viaje. Permanece
+   * en `true` hasta que el rider toca "Finalizar" (`dismissArrival`).
+   */
+  isArrived: boolean = false;
+  private arrivedAt: Date | null = null;
   /**
    * Pantalla "6b - Home Nav Activa + Elevacion" del Pencil: muestra la barra
    * lateral con el perfil de altura. Cuando es `false` (pantalla 6a) solo se
@@ -736,6 +748,71 @@ export class HomeViewModel {
     };
   }
 
+  /**
+   * Datos del panel "8 - Home Llegada": resumen del viaje recien terminado.
+   * Disponible solo mientras `isArrived` esta activo y la moto/ruta siguen
+   * en memoria; al pulsar "Finalizar" se limpia todo y vuelve a `null`.
+   */
+  get arrivalSummary(): {
+    destinationName: string;
+    arrivalTime: string;
+    distance: string;
+    duration: string;
+    fuel: string;
+  } | null {
+    const route = this.isRouteResponse;
+    const destination = this.destination;
+    const arrivedAt = this.arrivedAt;
+    if (!this.isArrived || !route || !destination || !arrivedAt) return null;
+    const hh = String(arrivedAt.getHours()).padStart(2, '0');
+    const mm = String(arrivedAt.getMinutes()).padStart(2, '0');
+    const fuel = this.isFuelEstimateResponse;
+    return {
+      destinationName: destination.name,
+      arrivalTime: `${hh}:${mm}`,
+      distance: `${Math.round(route.distanceKm)}`,
+      duration: this.formatDuration(route.durationMin),
+      fuel: fuel ? `${fuel.fuelNeededLiters.toFixed(1)} L` : '—',
+    };
+  }
+
+  /**
+   * Step indicator del Pencil ("TurnBanner"): la maniobra que el rider va a
+   * encontrar mas adelante en la ruta. Busca el primer step (saltandose el
+   * `depart` del kilometro 0) cuyo punto de maniobra aun no se ha alcanzado,
+   * y devuelve la distancia restante hasta el, la instruccion ya localizada
+   * por Mapbox y los datos para escoger el icono del giro.
+   */
+  get currentTurn(): {
+    remainingKm: number;
+    distanceText: string;
+    instruction: string;
+    streetName: string;
+    maneuverType: ManeuverType;
+    maneuverModifier: ManeuverModifier | null;
+  } | null {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return null;
+    const steps: NavigationStep[] = route.steps;
+    if (steps.length === 0) return null;
+    const progress = this.navProgressKm;
+    // Empezamos a partir del segundo step: el primero es siempre `depart`,
+    // no es una maniobra para anticipar.
+    const next = steps
+      .slice(1)
+      .find((step) => step.distanceFromStartKm > progress - 0.001);
+    if (!next) return null;
+    const remainingKm = Math.max(0, next.distanceFromStartKm - progress);
+    return {
+      remainingKm,
+      distanceText: this.formatTurnDistance(remainingKm),
+      instruction: next.instruction || this.fallbackInstruction(next),
+      streetName: next.streetName,
+      maneuverType: next.maneuverType,
+      maneuverModifier: next.maneuverModifier,
+    };
+  }
+
   // ── Computed: rider ─────────────────────────────────────────────────────────
 
   /** Iniciales del rider para el avatar del buscador; `--` si aun no carga. */
@@ -861,6 +938,32 @@ export class HomeViewModel {
     });
   }
 
+  /**
+   * Marca el viaje como completado: detiene la simulacion / GPS, fija la
+   * hora de llegada y conserva la ruta para que el panel "8 - Home Llegada"
+   * pueda mostrar el resumen. La navegacion se considera terminada
+   * (`isNavigating = false`) pero la ruta sigue en memoria hasta que el
+   * rider toca "Finalizar".
+   */
+  private markArrived(): void {
+    this.clearNavTimer();
+    runInAction(() => {
+      this.isNavigating = false;
+      this.isArrived = true;
+      this.arrivedAt = new Date();
+      this.offRouteTicks = 0;
+    });
+  }
+
+  /** Cierra el panel de llegada y limpia la ruta (vuelve al Home vacio). */
+  dismissArrival(): void {
+    runInAction(() => {
+      this.isArrived = false;
+      this.arrivedAt = null;
+    });
+    this.clearRoute();
+  }
+
   /** Avanza al conductor simulado un tick sobre la ruta. */
   private advanceSimulation(): void {
     const route = this.isRouteResponse;
@@ -876,7 +979,7 @@ export class HomeViewModel {
     });
     this.monitorOffRoute();
     if (this.simulatedDistanceKm >= route.distanceKm) {
-      this.stopNavigation();
+      this.markArrived();
     }
   }
 
@@ -952,6 +1055,8 @@ export class HomeViewModel {
   clearRoute(): void {
     this.clearNavTimer();
     this.isNavigating = false;
+    this.isArrived = false;
+    this.arrivedAt = null;
     this.simulatedDistanceKm = 0;
     this.offRouteTicks = 0;
     this.destination = null;
@@ -979,6 +1084,8 @@ export class HomeViewModel {
       this.isPerspective = false;
       this.hasAutoCentered = false;
       this.isNavigating = false;
+      this.isArrived = false;
+      this.arrivedAt = null;
       this.simulatedDistanceKm = 0;
       this.offRouteTicks = 0;
       this.isElevationStripOpen = true;
@@ -1247,6 +1354,48 @@ export class HomeViewModel {
     const hh = String(arrival.getHours()).padStart(2, '0');
     const mm = String(arrival.getMinutes()).padStart(2, '0');
     return `${hh}:${mm}`;
+  }
+
+  /**
+   * Distancia "antes del giro" en formato amigable para el TurnBanner:
+   * metros redondeados a la decena/cincuentena, kilometros con un decimal
+   * cuando ya sobra recorrido.
+   */
+  private formatTurnDistance(km: number): string {
+    if (km < 0.05) return 'Ahora';
+    if (km < 1) {
+      // Redonda a multiplos de 50m para que no parpadee tanto.
+      const meters = Math.max(50, Math.round((km * 1000) / 50) * 50);
+      return `En ${meters} m`;
+    }
+    return `En ${km.toFixed(1)} km`;
+  }
+
+  /** Texto de respaldo cuando Mapbox no entrega `maneuver.instruction`. */
+  private fallbackInstruction(step: NavigationStep): string {
+    if (step.maneuverType === 'arrive') return 'Llegas al destino';
+    if (step.maneuverType === 'roundabout' || step.maneuverType === 'rotary') {
+      return 'Entra a la rotonda';
+    }
+    switch (step.maneuverModifier) {
+      case 'left':
+        return 'Gira a la izquierda';
+      case 'right':
+        return 'Gira a la derecha';
+      case 'sharp left':
+        return 'Giro cerrado a la izquierda';
+      case 'sharp right':
+        return 'Giro cerrado a la derecha';
+      case 'slight left':
+        return 'Mantente a la izquierda';
+      case 'slight right':
+        return 'Mantente a la derecha';
+      case 'uturn':
+        return 'Da media vuelta';
+      case 'straight':
+      default:
+        return 'Continua de frente';
+    }
   }
 
   private updateLoadingState(
