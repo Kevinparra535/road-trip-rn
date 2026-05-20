@@ -16083,6 +16083,46 @@
           ]
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "T9mlG",
+      "x": 6342,
+      "y": 0,
+      "name": "Button/Recenter",
+      "reusable": true,
+      "width": 64,
+      "height": 64,
+      "fill": "#1A1A1AF2",
+      "cornerRadius": 32,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "$border-medium"
+      },
+      "effect": {
+        "type": "shadow",
+        "shadowType": "outer",
+        "color": "#00000099",
+        "offset": {
+          "x": 0,
+          "y": 6
+        },
+        "blur": 16
+      },
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "icon_font",
+          "id": "VA7RZ",
+          "width": 26,
+          "height": 26,
+          "iconFontName": "locate-fixed",
+          "iconFontFamily": "lucide",
+          "fill": "$accent-primary"
+        }
+      ]
     }
   ],
   "variables": {
