@@ -77,6 +77,10 @@ const SIM_KM_PER_TICK =
 const OFF_ROUTE_THRESHOLD_KM = 0.06;
 // Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
 const OFF_ROUTE_CONFIRM_TICKS = 4;
+// Distancia (km) al final de la ruta a partir de la cual se considera que el
+// rider llego al destino. Tolerancia para que el GPS no tenga que coincidir
+// exactamente con la geometria de Mapbox.
+const NAV_ARRIVAL_THRESHOLD_KM = 0.05;
 // Puntos de muestreo de la ruta para buscar gasolineras a lo largo de ella.
 const ROUTE_STATION_SAMPLES = 6;
 // Idioma para las anuncios de voz turn-by-turn (Mapbox ya las localiza).
@@ -257,6 +261,8 @@ export class HomeViewModel {
 
   private searchDisposer: (() => void) | null = null;
   private navTimer: ReturnType<typeof setInterval> | null = null;
+  /** Disposer de la reaccion que escucha el avance del GPS real. */
+  private navReactionDisposer: (() => void) | null = null;
   /** Claves de los anuncios de voz ya reproducidos (no repetir). */
   private spokenVoiceIds: Set<string> = new Set();
   private offRouteTicks: number = 0;
@@ -658,11 +664,21 @@ export class HomeViewModel {
       : this.routeProgressKm;
   }
 
-  /** Posicion del conductor sobre la ruta, como GeoPoint. */
+  /**
+   * Posicion del conductor sobre la ruta, como GeoPoint. En modo simulado se
+   * proyecta sobre la polilinea (siempre sobre la ruta). En modo GPS real se
+   * usa la coordenada cruda del `LocationStore` para que `monitorOffRoute`
+   * pueda detectar desviaciones reales del trazado.
+   */
   get navRiderPoint(): GeoPoint | null {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return null;
-    return pointAtDistanceAlong(route.geometry, this.navProgressKm);
+    if (this.isSimulatedNavigation) {
+      return pointAtDistanceAlong(route.geometry, this.simulatedDistanceKm);
+    }
+    const location = this.locationStore.isLocationResponse;
+    if (!location) return null;
+    return { latitude: location.latitude, longitude: location.longitude };
   }
 
   /** Posicion del conductor simulado en formato [lng, lat] para Mapbox. */
@@ -945,6 +961,15 @@ export class HomeViewModel {
     this.clearNavTimer();
     if (this.isSimulatedNavigation) {
       this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
+    } else {
+      // GPS real: el avance se deriva de `locationStore.coordinates` via
+      // `navProgressKm`. Reaccionamos a cada lectura nueva para disparar la
+      // voz, vigilar off-route y detectar llegada (mismo "tick" del sim).
+      this.navReactionDisposer = reaction(
+        () => this.navProgressKm,
+        () => this.handleRealNavTick(),
+        { fireImmediately: true },
+      );
     }
   }
 
@@ -1104,7 +1129,24 @@ export class HomeViewModel {
     }
   }
 
+  /**
+   * Hook que corre en cada lectura nueva del GPS durante navegacion real:
+   * dispara la voz turn-by-turn, vigila si se salio de la ruta y detecta
+   * la llegada. Es el equivalente, para GPS real, del tick del simulador.
+   */
+  private handleRealNavTick(): void {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return;
+    this.maybeSpeak();
+    this.monitorOffRoute();
+    if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
+      this.markArrived();
+    }
+  }
+
   private clearNavTimer(): void {
+    this.navReactionDisposer?.();
+    this.navReactionDisposer = null;
     if (this.navTimer) {
       clearInterval(this.navTimer);
       this.navTimer = null;
