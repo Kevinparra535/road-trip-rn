@@ -35,6 +35,10 @@ yarn-error.*
 .env*.local
 !.env.example
 
+# Claude Code: configuracion local del usuario (puede contener secretos)
+.claude/settings.local.json
+.claude/_roadtrip_claude_bak/
+
 # typescript
 *.tsbuildinfo
 
