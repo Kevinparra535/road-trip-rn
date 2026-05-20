@@ -1,6 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { observer } from 'mobx-react-lite';
 import {
   ComponentProps,
@@ -146,6 +147,16 @@ const HomeScreen = observer(() => {
       cameraRef.current?.setCamera({ ...target, animationDuration: 480 });
     }
   }, [viewModel, isNavigating, navProgress]);
+
+  // Pantalla siempre encendida mientras se navega — un motero no debe
+  // verla apagarse a 100 km/h. Se libera al terminar la navegacion.
+  useEffect(() => {
+    if (!isNavigating) return;
+    void activateKeepAwakeAsync('road-trip-nav');
+    return () => {
+      void deactivateKeepAwake('road-trip-nav');
+    };
+  }, [isNavigating]);
 
   const recenterOnUser = () => {
     const target = viewModel.followTarget;
@@ -595,6 +606,27 @@ const HomeScreen = observer(() => {
               </Text>
             </TouchableOpacity>
           ) : null}
+
+          {/* Boton flotante de silenciar voz turn-by-turn. */}
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.navMute}
+            accessibilityRole="button"
+            accessibilityLabel={
+              viewModel.isMuted
+                ? 'Activar anuncios de voz'
+                : 'Silenciar anuncios de voz'
+            }
+            onPress={() => viewModel.toggleMute()}
+          >
+            <Ionicons
+              name={viewModel.isMuted ? 'volume-mute' : 'volume-high'}
+              size={22}
+              color={
+                viewModel.isMuted ? Colors.base.textMuted : Colors.base.accent
+              }
+            />
+          </TouchableOpacity>
 
           {/* Boton flotante de recentrar: vuelve a seguir al rider (heading-up)
               tras pan-mover el mapa. Siempre visible durante la navegacion. */}
@@ -1309,6 +1341,21 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: Colors.base.textMuted,
     letterSpacing: 0.5,
+  },
+  // Boton flotante para silenciar / activar la voz turn-by-turn durante nav.
+  navMute: {
+    position: 'absolute',
+    right: Spacings.lg,
+    bottom: 260,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
   },
   // Boton flotante de recentrar durante la navegacion: vuelve a seguir al
   // rider en heading-up tras pan-mover el mapa.

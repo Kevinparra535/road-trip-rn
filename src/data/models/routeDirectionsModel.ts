@@ -6,6 +6,11 @@ import {
 import { GeoPoint } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 
+export type VoiceInstructionModelParams = {
+  distance_along_geometry: number;
+  announcement: string;
+};
+
 export type NavigationStepModelParams = {
   distance_meters: number;
   duration_seconds: number;
@@ -14,6 +19,7 @@ export type NavigationStepModelParams = {
   maneuver_type: string;
   maneuver_modifier: string | null;
   maneuver_location: [number, number];
+  voice_instructions: VoiceInstructionModelParams[];
 };
 
 export type RouteDirectionsModelConstructorParams = {
@@ -50,6 +56,9 @@ export class RouteDirectionsModel {
         const location: [number, number] = Array.isArray(maneuver?.location)
           ? maneuver.location
           : [0, 0];
+        const voice: any[] = Array.isArray(step?.voiceInstructions)
+          ? step.voiceInstructions
+          : [];
         out.push({
           distance_meters: Number(step?.distance ?? 0),
           duration_seconds: Number(step?.duration ?? 0),
@@ -59,6 +68,12 @@ export class RouteDirectionsModel {
           maneuver_modifier:
             typeof maneuver?.modifier === 'string' ? maneuver.modifier : null,
           maneuver_location: location,
+          voice_instructions: voice
+            .map((v) => ({
+              distance_along_geometry: Number(v?.distanceAlongGeometry ?? 0),
+              announcement: String(v?.announcement ?? ''),
+            }))
+            .filter((v) => v.announcement.length > 0),
         });
       });
     });
@@ -135,6 +150,10 @@ const buildDomainSteps = (
           ? null
           : (step.maneuver_modifier as ManeuverModifier),
       maneuverLocation: toGeoPoint(step.maneuver_location),
+      voiceInstructions: step.voice_instructions.map((v) => ({
+        distanceAlongGeometry: v.distance_along_geometry,
+        announcement: v.announcement,
+      })),
     });
     cumulativeKm += distanceKm;
     return entity;

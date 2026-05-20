@@ -32,9 +32,12 @@ export class DirectionsServiceImpl implements DirectionsService {
       overview: 'full',
       alternatives: 'true',
       // `steps` habilita las maniobras turn-by-turn que alimentan el step
-      // indicator del Home (TurnBanner del Pencil); `language=es` pide las
-      // instrucciones ya localizadas ("Gira a la derecha en Calle X").
+      // indicator del Home (TurnBanner del Pencil); `voice_instructions`
+      // agrega los anuncios pre-localizados para reproducirlos por voz
+      // mientras se conduce; `language=es` pide ambos en espanol.
       steps: 'true',
+      voice_instructions: 'true',
+      voice_units: 'metric',
       language: 'es',
       access_token: ENV.mapboxPublicToken,
     });
