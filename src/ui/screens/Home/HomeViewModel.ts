@@ -1001,6 +1001,21 @@ export class HomeViewModel {
     void this.computeRoute();
   }
 
+  /**
+   * Mueve una parada un puesto hacia atras (mas cerca del origen). Funciona
+   * sobre la cadena origen → intermedios → destino: si el destino sube, la
+   * ultima parada intermedia pasa a ser destino y viceversa. El origen es
+   * fijo (la ubicacion actual), no se reordena.
+   */
+  moveStopUp(placeId: string): void {
+    this.swapStop(placeId, -1);
+  }
+
+  /** Mueve una parada un puesto hacia adelante (mas cerca del destino). */
+  moveStopDown(placeId: string): void {
+    this.swapStop(placeId, +1);
+  }
+
   /** Quita una parada por su id y recalcula. Si era la unica, vuelve a A->B. */
   removeStop(placeId: string): void {
     const before = this.intermediateStops.length;
@@ -1012,6 +1027,26 @@ export class HomeViewModel {
     if (this.intermediateStops.length !== before && this.destination) {
       void this.computeRoute();
     }
+  }
+
+  /**
+   * Implementacion comun de `moveStopUp` / `moveStopDown`. Trabaja sobre la
+   * cadena completa [intermedios..., destino], hace el swap y vuelve a
+   * separar la cola (ultimo elemento = destino) para mantener el modelo del
+   * VM (`destination` + `intermediateStops`) sin redefinirlo.
+   */
+  private swapStop(placeId: string, direction: -1 | 1): void {
+    if (!this.destination) return;
+    const chain: Place[] = [...this.intermediateStops, this.destination];
+    const index = chain.findIndex((stop) => stop.id === placeId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= chain.length) return;
+    [chain[index], chain[target]] = [chain[target], chain[index]];
+    runInAction(() => {
+      this.intermediateStops = chain.slice(0, -1);
+      this.destination = chain[chain.length - 1];
+    });
+    void this.computeRoute();
   }
 
   /**

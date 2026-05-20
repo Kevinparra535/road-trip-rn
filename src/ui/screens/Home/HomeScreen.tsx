@@ -29,7 +29,9 @@ import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
 import ArrivalPanel from '@/ui/components/ArrivalPanel';
-import BottomSheet from '@/ui/components/BottomSheet';
+import BottomSheet, {
+  type BottomSheetHandle,
+} from '@/ui/components/BottomSheet';
 import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
@@ -88,6 +90,20 @@ const HomeScreen = observer(() => {
   const navigation = useNavigation<BottomTabNavigationProp<AppTabsParamList>>();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const fittedDestinationRef = useRef<string | null>(null);
+  const sheetRef = useRef<BottomSheetHandle>(null);
+  const searchInputRef = useRef<TextInput>(null);
+
+  // Llamar a "Agregar parada" desde la tarjeta de ruta expandida es un
+  // callejon sin salida si el sheet no se baja: el buscador del top queda
+  // tapado. Bajamos a asomado y enfocamos el input para que el motero pueda
+  // empezar a tipear con un solo gesto.
+  const handleStartAddStop = () => {
+    viewModel.startAddingStop();
+    sheetRef.current?.collapse();
+    // Damos un tick para que el snap del sheet libere el foco antes de
+    // pedirselo al TextInput; sin esto Android se lo come.
+    setTimeout(() => searchInputRef.current?.focus(), 80);
+  };
 
   useEffect(() => {
     viewModel.initialize();
@@ -395,6 +411,7 @@ const HomeScreen = observer(() => {
               </TouchableOpacity>
             )}
             <TextInput
+              ref={searchInputRef}
               style={styles.searchInput}
               value={viewModel.searchQuery}
               onChangeText={(text) => viewModel.setSearchQuery(text)}
@@ -736,6 +753,7 @@ const HomeScreen = observer(() => {
       ) : null}
 
       <BottomSheet
+        ref={sheetRef}
         visible={
           viewModel.hasDestination && !isNavigating && !viewModel.isArrived
         }
@@ -824,7 +842,34 @@ const HomeScreen = observer(() => {
                     {stop.name}
                   </Text>
                   <TouchableOpacity
-                    hitSlop={8}
+                    hitSlop={6}
+                    style={styles.stopActionBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Subir ${stop.name}`}
+                    onPress={() => viewModel.moveStopUp(stop.id)}
+                  >
+                    <Ionicons
+                      name="arrow-up"
+                      size={16}
+                      color={Colors.base.iconMuted}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    hitSlop={6}
+                    style={styles.stopActionBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Bajar ${stop.name}`}
+                    onPress={() => viewModel.moveStopDown(stop.id)}
+                  >
+                    <Ionicons
+                      name="arrow-down"
+                      size={16}
+                      color={Colors.base.iconMuted}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    hitSlop={6}
+                    style={styles.stopActionBtn}
                     accessibilityRole="button"
                     accessibilityLabel={`Quitar ${stop.name}`}
                     onPress={() => viewModel.removeStop(stop.id)}
@@ -837,9 +882,32 @@ const HomeScreen = observer(() => {
                   </TouchableOpacity>
                 </View>
               ))}
-              <Text style={styles.routeLabel} numberOfLines={1}>
-                {viewModel.destination?.name}
-              </Text>
+              <View style={styles.stopLabelRow}>
+                <Text
+                  style={[styles.routeLabel, styles.stopLabelText]}
+                  numberOfLines={1}
+                >
+                  {viewModel.destination?.name}
+                </Text>
+                {viewModel.intermediateStops.length > 0 &&
+                viewModel.destination ? (
+                  <TouchableOpacity
+                    hitSlop={6}
+                    style={styles.stopActionBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel="Subir destino"
+                    onPress={() =>
+                      viewModel.moveStopUp(viewModel.destination!.id)
+                    }
+                  >
+                    <Ionicons
+                      name="arrow-up"
+                      size={16}
+                      color={Colors.base.iconMuted}
+                    />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </View>
           </View>
 
@@ -848,7 +916,7 @@ const HomeScreen = observer(() => {
             style={styles.addStopButton}
             accessibilityRole="button"
             accessibilityLabel="Agregar parada"
-            onPress={() => viewModel.startAddingStop()}
+            onPress={handleStartAddStop}
           >
             <Ionicons name="add-circle" size={18} color={Colors.base.accent} />
             <Text style={styles.addStopText}>Agregar parada</Text>
@@ -1606,6 +1674,14 @@ const styles = StyleSheet.create({
   },
   stopLabelText: {
     flex: 1,
+  },
+  // Botones de accion por parada (subir, bajar, quitar). Tap target generoso
+  // para que se accionen con guante sin abrazar los iconos vecinos.
+  stopActionBtn: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   // Boton "Agregar parada" del Pencil 5 (Multi-parada). Visible siempre que
   // hay una ruta planeada (no en navegacion).

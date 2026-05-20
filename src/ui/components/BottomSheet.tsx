@@ -3,7 +3,14 @@ import GorhomBottomSheet, {
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ElementRef, ReactNode, useEffect, useRef } from 'react';
+import {
+  ElementRef,
+  ReactNode,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -44,39 +51,58 @@ type Props = {
 };
 
 /**
+ * Handle imperativo expuesto a la pantalla para forzar la posicion del
+ * panel cuando un flujo lo requiere (p. ej. al "Agregar parada" lo bajamos
+ * a asomado para que el buscador del top quede visible).
+ */
+export type BottomSheetHandle = {
+  collapse(): void;
+  expand(): void;
+};
+
+/**
  * Panel inferior basado en `@gorhom/bottom-sheet`: arrastre y scroll interno
  * coordinados de forma nativa. Dos posiciones (asomado / expandido) y, sobre
  * el diseno Home v2, un fondo en degradado que se funde con el mapa.
  */
-const BottomSheet = ({ visible, children }: Props) => {
-  const ref = useRef<ElementRef<typeof GorhomBottomSheet>>(null);
+const BottomSheet = forwardRef<BottomSheetHandle, Props>(
+  ({ visible, children }, handleRef) => {
+    const ref = useRef<ElementRef<typeof GorhomBottomSheet>>(null);
 
-  useEffect(() => {
-    if (visible) ref.current?.snapToIndex(0);
-    else ref.current?.close();
-  }, [visible]);
+    useEffect(() => {
+      if (visible) ref.current?.snapToIndex(0);
+      else ref.current?.close();
+    }, [visible]);
 
-  return (
-    <GorhomBottomSheet
-      ref={ref}
-      index={-1}
-      snapPoints={SNAP_POINTS}
-      enableDynamicSizing={false}
-      enablePanDownToClose={false}
-      backgroundComponent={SheetBackground}
-      handleStyle={styles.handle}
-      handleIndicatorStyle={styles.handleIndicator}
-      style={styles.sheet}
-    >
-      <BottomSheetScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+    useImperativeHandle(handleRef, () => ({
+      collapse: () => ref.current?.snapToIndex(0),
+      expand: () => ref.current?.snapToIndex(1),
+    }));
+
+    return (
+      <GorhomBottomSheet
+        ref={ref}
+        index={-1}
+        snapPoints={SNAP_POINTS}
+        enableDynamicSizing={false}
+        enablePanDownToClose={false}
+        backgroundComponent={SheetBackground}
+        handleStyle={styles.handle}
+        handleIndicatorStyle={styles.handleIndicator}
+        style={styles.sheet}
       >
-        {children}
-      </BottomSheetScrollView>
-    </GorhomBottomSheet>
-  );
-};
+        <BottomSheetScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </BottomSheetScrollView>
+      </GorhomBottomSheet>
+    );
+  },
+);
+
+BottomSheet.displayName = 'BottomSheet';
 
 const styles = StyleSheet.create({
   // El panel se funde con el mapa: sin esquinas, sin sombra (Pencil Home v2).
