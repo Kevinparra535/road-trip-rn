@@ -14,16 +14,18 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 // Posiciones de anclaje: asomado (peek) y expandido.
 const SNAP_POINTS: (number | string)[] = [264, '90%'];
 
-// Degradado del fondo del panel — valores exactos del Pencil Home v2
-// (#0D0D0D00 -> #0D0D0DCC -> #0D0D0D): transparente arriba que se funde con
-// el mapa y se vuelve solido hacia abajo. Sin esquinas ni borde: es un
-// panel que se asienta sobre el mapa, no una tarjeta.
+// Degradado del fondo del panel — inspirado en el frame "Panel Asomado" del
+// Pencil (#0D0D0D00 -> #0D0D0DCC -> #0D0D0D): franja de fundido contra el
+// mapa solo en el borde superior y panel solido para el contenido. En el
+// device el fundido del Pencil (40% de la altura) deja la cabecera demasiado
+// translucida, asi que apretamos las paradas para que el solido aparezca
+// debajo del handle.
 const FADE_COLORS = [
-  hexToRgba(Colors.base.bgPrimary, 0),
-  hexToRgba(Colors.base.bgPrimary, 0.8),
+  hexToRgba(Colors.base.bgPrimary, 1),
+  hexToRgba(Colors.base.bgPrimary, 1),
   Colors.base.bgPrimary,
 ] as const;
-const FADE_LOCATIONS = [0, 0.15, 0.35] as const;
+const FADE_LOCATIONS = [0, 0.05, 0.12] as const;
 
 /** Fondo personalizado: el degradado que funde el panel con el mapa. */
 const SheetBackground = ({ style }: BottomSheetBackgroundProps) => (

@@ -16,7 +16,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.roadtrip.app"
+      "bundleIdentifier": "com.kevcoders.roadtrip",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +28,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.roadtrip.app"
+      "package": "com.kevcoders.roadtrip"
     },
     "web": {
       "favicon": "./assets/favicon.png"

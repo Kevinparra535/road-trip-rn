@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
+import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
@@ -135,6 +136,8 @@ export type CameraTarget = {
   centerCoordinate: [number, number];
   zoomLevel: number;
   pitch: number;
+  /** Rumbo (bearing) de la camara en grados; opcional. */
+  heading?: number;
 };
 
 /** Caja envolvente en formato Mapbox [lng, lat] para `fitBounds`. */
@@ -217,6 +220,12 @@ export class HomeViewModel {
   // ── State: navegacion (simulacion del recorrido) ──
   isNavigating: boolean = false;
   simulatedDistanceKm: number = 0;
+  /**
+   * Pantalla "6b - Home Nav Activa + Elevacion" del Pencil: muestra la barra
+   * lateral con el perfil de altura. Cuando es `false` (pantalla 6a) solo se
+   * ve un chip compacto con altitud y ascenso al lado del marcador del rider.
+   */
+  isElevationStripOpen: boolean = true;
 
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
@@ -329,6 +338,15 @@ export class HomeViewModel {
 
   get hasSearchResults(): boolean {
     return this.searchResults.length > 0;
+  }
+
+  /**
+   * El usuario esta buscando activamente (hay texto en el campo). Sirve para
+   * despejar el overlay superior — esconder los chips de rodada y dejar que
+   * los resultados ocupen ese espacio (frame "Busqueda activa" del Pencil).
+   */
+  get isSearchActive(): boolean {
+    return this.searchQuery.trim().length > 0;
   }
 
   // ── Computed: ruta A->B ─────────────────────────────────────────────────────
@@ -600,11 +618,27 @@ export class HomeViewModel {
 
   // ── Computed: navegacion ────────────────────────────────────────────────────
 
-  /** Posicion del conductor simulado sobre la ruta, como GeoPoint. */
+  /** La ruta actual proviene del boton DEV "Ruta de prueba". */
+  get isSimulatedNavigation(): boolean {
+    return this.destination?.id === DEV_FAKE_DESTINATION.id;
+  }
+
+  /**
+   * Kilometros recorridos sobre la ruta durante la navegacion. En la ruta de
+   * prueba viene del simulador; en cualquier otra, del GPS real proyectado
+   * sobre la polyline.
+   */
+  get navProgressKm(): number {
+    return this.isSimulatedNavigation
+      ? this.simulatedDistanceKm
+      : this.routeProgressKm;
+  }
+
+  /** Posicion del conductor sobre la ruta, como GeoPoint. */
   get navRiderPoint(): GeoPoint | null {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return null;
-    return pointAtDistanceAlong(route.geometry, this.simulatedDistanceKm);
+    return pointAtDistanceAlong(route.geometry, this.navProgressKm);
   }
 
   /** Posicion del conductor simulado en formato [lng, lat] para Mapbox. */
@@ -613,28 +647,92 @@ export class HomeViewModel {
     return point ? [point.longitude, point.latitude] : null;
   }
 
+  /**
+   * Rumbo hacia el frente de la ruta desde la posicion del rider, en grados
+   * (0 = norte). Permite orientar la camara de navegacion para que la ruta
+   * salga siempre hacia adelante en el viewport — clave cuando el rider esta
+   * quieto en el origen y `pitch` inclina la camara.
+   */
+  get navHeading(): number | null {
+    const route = this.isRouteResponse;
+    const rider = this.navRiderPoint;
+    if (!route || !rider) return null;
+    const lookAhead = pointAtDistanceAlong(
+      route.geometry,
+      Math.min(route.distanceKm, this.navProgressKm + 0.05),
+    );
+    if (!lookAhead) return null;
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const toDeg = (rad: number) => (rad * 180) / Math.PI;
+    const lat1 = toRad(rider.latitude);
+    const lat2 = toRad(lookAhead.latitude);
+    const dLon = toRad(lookAhead.longitude - rider.longitude);
+    const y = Math.sin(dLon) * Math.cos(lat2);
+    const x =
+      Math.cos(lat1) * Math.sin(lat2) -
+      Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+    if (x === 0 && y === 0) return null;
+    return (toDeg(Math.atan2(y, x)) + 360) % 360;
+  }
+
   /** Objetivo de camara que sigue al conductor durante la navegacion. */
   get navCameraTarget(): CameraTarget | null {
     const coordinate = this.navRiderCoordinate;
     if (!coordinate) return null;
+    const heading = this.navHeading;
     return {
       centerCoordinate: coordinate,
       zoomLevel: FOLLOW_ZOOM,
       pitch: PERSPECTIVE_PITCH,
+      ...(heading !== null ? { heading } : {}),
     };
   }
 
-  /** Distancia y tiempo restantes de la navegacion, ya formateados. */
-  get navRemaining(): { distance: string; eta: string } | null {
+  /**
+   * Altitud y ascenso acumulado en la posicion actual del rider, listos para
+   * la barra lateral / chip "glance" de la pantalla de navegacion. `ratio`
+   * normaliza la altitud entre el minimo y el maximo del perfil para situar
+   * el marcador sobre el track del Pencil.
+   */
+  get currentNavElevation(): {
+    currentM: number;
+    ascentSoFarM: number;
+    ratio: number;
+  } | null {
+    const profile = this.isElevationResponse;
+    if (!profile || profile.isEmpty || !this.isNavigating) return null;
+    const km = this.navProgressKm;
+    const currentM = profile.elevationAtKm(km);
+    if (currentM === null) return null;
+    const min = profile.minElevationM;
+    const max = profile.maxElevationM;
+    const range = max - min;
+    const ratio = range > 0 ? (currentM - min) / range : 0.5;
+    return {
+      currentM,
+      ascentSoFarM: profile.ascentUpToKm(km),
+      ratio: Math.max(0, Math.min(1, ratio)),
+    };
+  }
+
+  /**
+   * Resumen de la navegacion para el panel inferior del Pencil 6a/6b:
+   * distancia restante en km, tiempo restante en formato corto y hora de
+   * llegada estimada calculada desde "ahora".
+   */
+  get navRemaining(): {
+    distance: string;
+    eta: string;
+    arrival: string;
+  } | null {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return null;
-    const remainingKm = Math.max(
-      0,
-      route.distanceKm - this.simulatedDistanceKm,
-    );
+    const remainingKm = Math.max(0, route.distanceKm - this.navProgressKm);
+    const remainingMin = (remainingKm / NAV_AVG_SPEED_KMH) * 60;
     return {
       distance: `${Math.round(remainingKm)} km`,
-      eta: this.formatDuration((remainingKm / NAV_AVG_SPEED_KMH) * 60),
+      eta: this.formatDuration(remainingMin),
+      arrival: this.formatArrivalTime(remainingMin),
     };
   }
 
@@ -730,8 +828,10 @@ export class HomeViewModel {
   }
 
   /**
-   * Inicia la navegacion: la pantalla se despeja (solo el mapa) y arranca la
-   * simulacion del recorrido a velocidad promedio.
+   * Inicia la navegacion: la pantalla se despeja (solo el mapa). En la ruta
+   * de prueba se arranca la simulacion a velocidad promedio; en cualquier
+   * otra ruta el avance se deriva del GPS real (ver `navProgressKm`), asi
+   * que el rider se queda quieto hasta que la moto se mueva fisicamente.
    */
   startNavigation(): void {
     if (!this.hasRoute) return;
@@ -741,7 +841,14 @@ export class HomeViewModel {
       this.offRouteTicks = 0;
     });
     this.clearNavTimer();
-    this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
+    if (this.isSimulatedNavigation) {
+      this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
+    }
+  }
+
+  /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */
+  toggleElevationStrip(): void {
+    this.isElevationStripOpen = !this.isElevationStripOpen;
   }
 
   /** Termina la navegacion y restaura la pantalla del Home. */
@@ -874,6 +981,7 @@ export class HomeViewModel {
       this.isNavigating = false;
       this.simulatedDistanceKm = 0;
       this.offRouteTicks = 0;
+      this.isElevationStripOpen = true;
       this.searchQuery = '';
       this.isSearchLoading = false;
       this.isSearchError = null;
@@ -1131,6 +1239,14 @@ export class HomeViewModel {
     const mins = Math.round(minutes % 60);
     if (hours <= 0) return `${mins} min`;
     return `${hours} h ${mins} min`;
+  }
+
+  /** Hora de llegada estimada en formato `HH:MM`, sumando los minutos restantes. */
+  private formatArrivalTime(remainingMin: number): string {
+    const arrival = new Date(Date.now() + remainingMin * 60_000);
+    const hh = String(arrival.getHours()).padStart(2, '0');
+    const mm = String(arrival.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
   }
 
   private updateLoadingState(

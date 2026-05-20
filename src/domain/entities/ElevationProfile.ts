@@ -67,6 +67,51 @@ export class ElevationProfile {
     );
   }
 
+  /**
+   * Altura interpolada en el kilometro dado. Devuelve `null` si el perfil
+   * esta vacio. Si `km` cae fuera del rango muestreado, devuelve la altura
+   * del extremo mas cercano.
+   */
+  elevationAtKm(km: number): number | null {
+    if (this.isEmpty) return null;
+    const samples = this.samples;
+    if (km <= samples[0].distanceKm) return samples[0].elevationM;
+    const last = samples[samples.length - 1];
+    if (km >= last.distanceKm) return last.elevationM;
+    for (let i = 1; i < samples.length; i += 1) {
+      const prev = samples[i - 1];
+      const next = samples[i];
+      if (km <= next.distanceKm) {
+        const span = next.distanceKm - prev.distanceKm;
+        if (span <= 0) return next.elevationM;
+        const t = (km - prev.distanceKm) / span;
+        return prev.elevationM + (next.elevationM - prev.elevationM) * t;
+      }
+    }
+    return last.elevationM;
+  }
+
+  /** Ascenso acumulado desde el origen hasta el kilometro dado. */
+  ascentUpToKm(km: number): number {
+    if (this.isEmpty) return 0;
+    let total = 0;
+    for (let i = 1; i < this.samples.length; i += 1) {
+      const prev = this.samples[i - 1];
+      const next = this.samples[i];
+      if (prev.distanceKm >= km) break;
+      const delta = next.elevationM - prev.elevationM;
+      if (delta <= 0) continue;
+      if (next.distanceKm <= km) {
+        total += delta;
+      } else {
+        const span = next.distanceKm - prev.distanceKm;
+        const t = span > 0 ? (km - prev.distanceKm) / span : 0;
+        total += delta * Math.max(0, Math.min(1, t));
+      }
+    }
+    return total;
+  }
+
   private accumulate(pick: (delta: number) => number): number {
     let total = 0;
     for (let i = 1; i < this.samples.length; i += 1) {

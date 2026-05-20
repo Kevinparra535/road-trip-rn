@@ -27,6 +27,7 @@ import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
 import BottomSheet from '@/ui/components/BottomSheet';
+import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
@@ -125,16 +126,17 @@ const HomeScreen = observer(() => {
     }
   }, [routeBounds, destinationId]);
 
-  // Durante la navegacion la camara sigue al conductor simulado en cada tick.
+  // Durante la navegacion la camara sigue al conductor en cada actualizacion
+  // de su posicion: viene del simulador (ruta de prueba) o del GPS real.
   const isNavigating = viewModel.isNavigating;
-  const simDistance = viewModel.simulatedDistanceKm;
+  const navProgress = viewModel.navProgressKm;
   useEffect(() => {
     if (!isNavigating) return;
     const target = viewModel.navCameraTarget;
     if (target) {
       cameraRef.current?.setCamera({ ...target, animationDuration: 480 });
     }
-  }, [viewModel, isNavigating, simDistance]);
+  }, [viewModel, isNavigating, navProgress]);
 
   const recenterOnUser = () => {
     const target = viewModel.followTarget;
@@ -334,20 +336,30 @@ const HomeScreen = observer(() => {
           pointerEvents="box-none"
         >
           <View style={styles.searchBar}>
-            <TouchableOpacity
-              activeOpacity={0.8}
-              hitSlop={8}
-              style={styles.menuButton}
-              accessibilityRole="button"
-              accessibilityLabel="Abrir perfil"
-              onPress={() => navigation.navigate('ProfileTab')}
-            >
-              <Ionicons
-                name="menu"
-                size={20}
-                color={Colors.base.textSecondary}
-              />
-            </TouchableOpacity>
+            {viewModel.isSearchActive ? (
+              <View style={styles.searchLeadingIcon}>
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={Colors.base.iconMuted}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                hitSlop={8}
+                style={styles.menuButton}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir perfil"
+                onPress={() => navigation.navigate('ProfileTab')}
+              >
+                <Ionicons
+                  name="menu"
+                  size={20}
+                  color={Colors.base.textPrimary}
+                />
+              </TouchableOpacity>
+            )}
             <TextInput
               style={styles.searchInput}
               value={viewModel.searchQuery}
@@ -359,7 +371,28 @@ const HomeScreen = observer(() => {
             />
             {viewModel.isSearchLoading ? (
               <ActivityIndicator size="small" color={Colors.base.accent} />
-            ) : null}
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Buscar por voz"
+                // Placeholder: busqueda por voz aun no implementada.
+                onPress={() => {}}
+              >
+                <GradientView
+                  preset="accent"
+                  direction="vertical"
+                  style={styles.voiceButton}
+                >
+                  <Ionicons
+                    name="mic"
+                    size={16}
+                    color={Colors.semantic.text.primaryDark}
+                  />
+                </GradientView>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               activeOpacity={0.85}
               hitSlop={8}
@@ -379,62 +412,74 @@ const HomeScreen = observer(() => {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.rideChips}>
-            {RIDE_OPTIONS.map((option) => {
-              const active = viewModel.rideType === option.type;
-              const tone = active
-                ? Colors.semantic.text.primaryDark
-                : Colors.base.textSecondary;
-              return (
-                <TouchableOpacity
-                  key={option.type}
-                  activeOpacity={0.8}
-                  style={[styles.rideChip, active && styles.rideChipActive]}
-                  onPress={() => viewModel.setRideType(option.type)}
-                >
-                  <MaterialCommunityIcons
-                    name={option.icon}
-                    size={14}
-                    color={tone}
-                  />
-                  <Text style={[styles.rideChipText, { color: tone }]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {!viewModel.isSearchActive ? (
+            <View style={styles.rideChips}>
+              {RIDE_OPTIONS.map((option) => {
+                const active = viewModel.rideType === option.type;
+                const tone = active
+                  ? Colors.semantic.text.primaryDark
+                  : Colors.base.textSecondary;
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    activeOpacity={0.8}
+                    style={[styles.rideChip, active && styles.rideChipActive]}
+                    onPress={() => viewModel.setRideType(option.type)}
+                  >
+                    <MaterialCommunityIcons
+                      name={option.icon}
+                      size={14}
+                      color={tone}
+                    />
+                    <Text style={[styles.rideChipText, { color: tone }]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : null}
 
           {viewModel.hasSearchResults ? (
             <SheetCard style={styles.resultsCard}>
               {viewModel.searchResults.map((place, index) => (
-                <TouchableOpacity
-                  key={place.id}
-                  activeOpacity={0.7}
-                  style={[
-                    styles.resultRow,
-                    index > 0 && styles.resultRowBorder,
-                  ]}
-                  onPress={() => handleSelectPlace(place)}
-                >
-                  <Ionicons
-                    name="location-outline"
-                    size={18}
-                    color={Colors.base.iconMuted}
-                  />
-                  <View style={styles.resultBody}>
-                    <Text style={styles.resultName} numberOfLines={1}>
-                      {place.name}
-                    </Text>
-                    <Text style={styles.resultAddress} numberOfLines={1}>
-                      {place.fullName}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
+                <View key={place.id}>
+                  {index > 0 ? <View style={styles.resultDivider} /> : null}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.resultRow}
+                    onPress={() => handleSelectPlace(place)}
+                  >
+                    <View
+                      style={[
+                        styles.resultIconBox,
+                        index === 0 && styles.resultIconBoxPrimary,
+                      ]}
+                    >
+                      <Ionicons
+                        name="location"
+                        size={18}
+                        color={
+                          index === 0
+                            ? Colors.base.accent
+                            : Colors.base.iconMuted
+                        }
+                      />
+                    </View>
+                    <View style={styles.resultBody}>
+                      <Text style={styles.resultName} numberOfLines={1}>
+                        {place.name}
+                      </Text>
+                      <Text style={styles.resultAddress} numberOfLines={1}>
+                        {place.fullName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
               ))}
             </SheetCard>
           ) : viewModel.isSearchError ? (
-            <SheetCard style={styles.resultsCard}>
+            <SheetCard style={styles.resultsCardError}>
               <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
             </SheetCard>
           ) : null}
@@ -468,29 +513,106 @@ const HomeScreen = observer(() => {
         </TouchableOpacity>
       ) : null}
 
-      {viewModel.isNavigating && viewModel.navRemaining ? (
-        <View style={styles.navBar}>
-          <View style={styles.navInfo}>
-            <Text style={styles.navDistance}>
-              {viewModel.navRemaining.distance}
-            </Text>
-            <Text style={styles.navEta}>
-              {viewModel.navRemaining.eta} restantes
-            </Text>
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            style={styles.navFinish}
-            accessibilityRole="button"
-            accessibilityLabel="Finalizar navegación"
-            onPress={() => viewModel.stopNavigation()}
-          >
-            <Ionicons name="close" size={20} color={Colors.base.textPrimary} />
-          </TouchableOpacity>
-        </View>
+      {/* ── Overlays durante la navegacion (frames 6a/6b del Pencil) ───── */}
+      {viewModel.isNavigating ? (
+        <>
+          {/* 6b: barra lateral con la rampa de elevacion + marcador del rider. */}
+          {viewModel.isElevationStripOpen &&
+          viewModel.currentNavElevation &&
+          elevation ? (
+            <View style={styles.elevationStripWrap} pointerEvents="box-none">
+              <ElevationStrip
+                maxLabel={elevation.max}
+                minLabel={elevation.min}
+                currentLabel={`${Math.round(
+                  viewModel.currentNavElevation.currentM,
+                )} m`}
+                ratio={viewModel.currentNavElevation.ratio}
+                onClose={() => viewModel.toggleElevationStrip()}
+              />
+            </View>
+          ) : null}
+
+          {/* 6a: chip compacto con altitud + ascenso, como fallback al strip. */}
+          {!viewModel.isElevationStripOpen && viewModel.currentNavElevation ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.elevationGlance}
+              accessibilityRole="button"
+              accessibilityLabel="Mostrar barra de elevación"
+              onPress={() => viewModel.toggleElevationStrip()}
+            >
+              <MaterialCommunityIcons
+                name="image-filter-hdr"
+                size={14}
+                color={Colors.base.accent}
+              />
+              <Text style={styles.elevationGlanceValue}>
+                {Math.round(viewModel.currentNavElevation.currentM)} m
+              </Text>
+              <View style={styles.elevationGlanceSeparator} />
+              <Text style={styles.elevationGlanceAscent}>
+                +{Math.round(viewModel.currentNavElevation.ascentSoFarM)} m
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
+          {/* Panel inferior grande (compartido por 6a y 6b). */}
+          {viewModel.navRemaining ? (
+            <SafeAreaView edges={['bottom']} style={styles.navBarSafe}>
+              <View style={styles.navBar}>
+                <View style={styles.navInfo}>
+                  <View style={styles.navDistanceRow}>
+                    <Text style={styles.navDistance}>
+                      {viewModel.navRemaining.distance.replace(' km', '')}
+                    </Text>
+                    <Text style={styles.navDistanceUnit}>km</Text>
+                  </View>
+                  <View style={styles.navEtaRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={14}
+                      color={Colors.base.textMuted}
+                    />
+                    <Text style={styles.navEta}>
+                      Llegada {viewModel.navRemaining.arrival}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={styles.navFinish}
+                  accessibilityRole="button"
+                  accessibilityLabel="Finalizar navegación"
+                  onPress={() => viewModel.stopNavigation()}
+                >
+                  <Ionicons
+                    name="stop"
+                    size={28}
+                    color={Colors.base.textPrimary}
+                  />
+                </TouchableOpacity>
+              </View>
+            </SafeAreaView>
+          ) : null}
+        </>
       ) : null}
 
       <BottomSheet visible={viewModel.hasDestination && !isNavigating}>
+        {/* Cabecera "asomada": etiqueta + titular grande con la cifra clave de
+            la ruta. Se ve incluso con el panel colapsado (frame "3 - Home Ruta
+            Asomado" del Pencil). */}
+        <View style={styles.peekHeader}>
+          <Text style={styles.peekKicker}>RUTA ACTIVA</Text>
+          <Text style={styles.peekHeadline} numberOfLines={1}>
+            {viewModel.routeSummary
+              ? `${viewModel.routeSummary.distance} · ${viewModel.routeSummary.duration}`
+              : viewModel.isRouteError
+                ? 'Sin ruta'
+                : 'Calculando…'}
+          </Text>
+        </View>
+
         {/* CTA principal: degradado naranja, visible aun con el panel asomado. */}
         <TouchableOpacity
           activeOpacity={0.9}
@@ -505,7 +627,7 @@ const HomeScreen = observer(() => {
           >
             <Ionicons
               name="navigate"
-              size={18}
+              size={20}
               color={Colors.semantic.text.primaryDark}
             />
             <Text style={styles.startButtonText}>Iniciar ruta</Text>
@@ -872,6 +994,21 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.base.bgCard,
     borderRadius: BorderRadius.pill,
   },
+  // Icono `search` que reemplaza al menu cuando el usuario esta buscando
+  // (frame "Home Busqueda Activa" del Pencil).
+  searchLeadingIcon: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  voiceButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+  },
   profileAvatar: {
     width: 36,
     height: 36,
@@ -911,29 +1048,52 @@ const styles = StyleSheet.create({
   },
   resultsCard: {
     marginTop: Spacings.sm,
+    padding: 0,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: Colors.base.separator,
+    ...Shadows.bankCard,
+  },
+  resultsCardError: {
+    marginTop: Spacings.sm,
     padding: Spacings.md,
     ...Shadows.bankCard,
   },
   resultRow: {
-    paddingVertical: Spacings.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacings.md,
+    gap: 14,
+    paddingVertical: Spacings.md,
+    paddingHorizontal: Spacings.lg,
+    height: 72,
   },
-  resultRowBorder: {
-    borderTopWidth: 1,
-    borderTopColor: Colors.base.separator,
+  resultDivider: {
+    height: 1,
+    backgroundColor: Colors.base.separator,
+  },
+  resultIconBox: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+  },
+  resultIconBoxPrimary: {
+    backgroundColor: Colors.base.accentDim,
   },
   resultBody: {
     flex: 1,
+    gap: 2,
   },
   resultName: {
-    ...Fonts.bodyTextBold,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 17,
     color: Colors.base.textPrimary,
   },
   resultAddress: {
-    marginTop: Spacings.xs,
-    ...Fonts.links,
+    fontFamily: FontFamily.regular,
+    fontSize: 13,
     color: Colors.base.textSecondary,
   },
   errorText: {
@@ -977,45 +1137,106 @@ const styles = StyleSheet.create({
     color: Colors.base.accent,
   },
 
-  // ── Navegación activa ─────────────────────────────────────────────────────
-  navBar: {
+  // ── Navegación activa (Pencil 6a / 6b) ────────────────────────────────────
+  // Bottom Nav Bar: barra inferior grande con la distancia restante, la hora
+  // de llegada y el boton rojo para finalizar el viaje.
+  navBarSafe: {
     position: 'absolute',
-    left: Spacings.lg,
-    right: Spacings.lg,
-    bottom: Spacings.xl,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: Colors.base.bgPrimary,
+  },
+  navBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacings.md,
-    paddingVertical: Spacings.md,
-    paddingHorizontal: Spacings.lg,
-    backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-    ...Shadows.bankCard,
+    paddingTop: Spacings.spacex2,
+    paddingHorizontal: Spacings.spacex2,
+    paddingBottom: Spacings.md,
+    backgroundColor: Colors.base.bgPrimary,
+    borderTopWidth: 1,
+    borderTopColor: Colors.base.cardBorder,
   },
   navInfo: {
     flex: 1,
+    gap: 2,
+  },
+  navDistanceRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: Spacings.xs + 2,
   },
   navDistance: {
     fontFamily: FontFamily.bold,
-    fontSize: 20,
+    fontSize: 56,
     color: Colors.base.textPrimary,
+    includeFontPadding: false,
+  },
+  navDistanceUnit: {
+    paddingBottom: 8,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 18,
+    color: Colors.base.textSecondary,
+  },
+  navEtaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs + 2,
   },
   navEta: {
-    marginTop: 1,
-    fontFamily: FontFamily.medium,
-    fontSize: 12,
+    fontFamily: FontFamily.semiBold,
+    fontSize: 14,
     color: Colors.base.textSecondary,
   },
   navFinish: {
-    width: 48,
-    height: 48,
+    width: 80,
+    height: 80,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.alerts.error,
     borderRadius: BorderRadius.pill,
+    ...Shadows.bankCard,
+  },
+  // 6b: barra lateral con la rampa de elevacion + marcador del rider.
+  elevationStripWrap: {
+    position: 'absolute',
+    top: '10%',
+    right: Spacings.lg,
+    height: "100%",
+  },
+  // 6a: chip flotante compacto con altitud y ascenso, encima del nav bar.
+  elevationGlance: {
+    position: 'absolute',
+    bottom: 152,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    paddingVertical: 6,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  elevationGlanceValue: {
+    fontFamily: FontFamily.bold,
+    fontSize: 15,
+    color: Colors.base.textPrimary,
+    letterSpacing: 0.2,
+  },
+  elevationGlanceSeparator: {
+    width: 1,
+    height: 14,
+    backgroundColor: Colors.base.cardBorder,
+  },
+  elevationGlanceAscent: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 11,
+    color: Colors.base.accent,
   },
   navRiderHalo: {
     width: 36,
@@ -1036,9 +1257,25 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.textPrimary,
   },
 
-  // ── Panel inferior: boton iniciar ─────────────────────────────────────────
+  // ── Panel inferior: cabecera asomada + boton iniciar ──────────────────────
+  // Coincide con el frame "Panel Asomado" del Pencil: kicker pequeno en gris
+  // sobre un titular grande blanco con la distancia y la duracion de la ruta.
+  peekHeader: {
+    gap: Spacings.xs,
+  },
+  peekKicker: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 12,
+    color: Colors.base.textMuted,
+    letterSpacing: 1.5,
+  },
+  peekHeadline: {
+    fontFamily: FontFamily.bold,
+    fontSize: 26,
+    color: Colors.base.textPrimary,
+  },
   startButton: {
-    height: 48,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1048,7 +1285,7 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     fontFamily: FontFamily.bold,
-    fontSize: 16,
+    fontSize: 17,
     color: Colors.semantic.text.primaryDark,
   },
 
