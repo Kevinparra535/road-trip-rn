@@ -209,9 +209,22 @@ export class HomeViewModel {
   isSearchError: string | null = null;
   isSearchResponse: Place[] | null = null;
 
-  // ── State: ruta A->B ──
+  // ── State: ruta A->B (+ paradas intermedias) ──
   rideType: RideType = DEFAULT_RIDE_TYPE;
   destination: Place | null = null;
+  /**
+   * Paradas intermedias entre el origen y el destino, en el orden en que el
+   * rider quiere visitarlas. Se chainean a Mapbox como waypoints; el primero
+   * aparece como B, el segundo como C, etc. La letra del destino se calcula
+   * en la pantalla (`tripStops`).
+   */
+  intermediateStops: Place[] = [];
+  /**
+   * El proximo `selectDestination` que llegue del buscador se interpreta
+   * como destino final o como nueva parada intermedia. La pantalla cambia
+   * el placeholder y desactiva el modo al cancelar / completar.
+   */
+  searchMode: 'destination' | 'addStop' = 'destination';
   isRouteLoading: boolean = false;
   isRouteError: string | null = null;
   isRouteResponse: RouteDirections | null = null;
@@ -936,12 +949,69 @@ export class HomeViewModel {
     if (this.destination) void this.computeRoute();
   }
 
-  /** Fija el destino elegido y calcula el trazado desde la ubicacion actual. */
+  /**
+   * Procesa el lugar elegido en el buscador. Segun `searchMode`, lo fija
+   * como destino final (y resetea las paradas intermedias) o lo agrega
+   * como nueva parada del trayecto actual. En ambos casos el buscador se
+   * cierra y la ruta se recalcula.
+   */
   selectDestination(place: Place): void {
-    this.destination = place;
-    this.searchQuery = '';
-    this.isSearchResponse = null;
+    if (this.searchMode === 'addStop' && this.destination) {
+      this.addStop(place);
+      return;
+    }
+    runInAction(() => {
+      this.destination = place;
+      this.intermediateStops = [];
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
     void this.computeRoute();
+  }
+
+  /** Activa el modo "agregar parada": el proximo lugar buscado sera waypoint. */
+  startAddingStop(): void {
+    if (!this.destination) return;
+    runInAction(() => {
+      this.searchMode = 'addStop';
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /** Vuelve al modo destino sin tocar las paradas ya agregadas. */
+  cancelAddingStop(): void {
+    runInAction(() => {
+      this.searchMode = 'destination';
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /** Agrega una parada intermedia al final del trayecto y recalcula la ruta. */
+  addStop(place: Place): void {
+    if (!this.destination) return;
+    runInAction(() => {
+      this.intermediateStops.push(place);
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+    void this.computeRoute();
+  }
+
+  /** Quita una parada por su id y recalcula. Si era la unica, vuelve a A->B. */
+  removeStop(placeId: string): void {
+    const before = this.intermediateStops.length;
+    runInAction(() => {
+      this.intermediateStops = this.intermediateStops.filter(
+        (stop) => stop.id !== placeId,
+      );
+    });
+    if (this.intermediateStops.length !== before && this.destination) {
+      void this.computeRoute();
+    }
   }
 
   /**
@@ -1164,6 +1234,8 @@ export class HomeViewModel {
     this.simulatedDistanceKm = 0;
     this.offRouteTicks = 0;
     this.destination = null;
+    this.intermediateStops = [];
+    this.searchMode = 'destination';
     this.isRouteResponse = null;
     this.isRouteError = null;
     this.isRouteLoading = false;
@@ -1202,6 +1274,8 @@ export class HomeViewModel {
       this.isSearchResponse = null;
       this.rideType = DEFAULT_RIDE_TYPE;
       this.destination = null;
+      this.intermediateStops = [];
+      this.searchMode = 'destination';
       this.isRouteLoading = false;
       this.isRouteError = null;
       this.isRouteResponse = null;
@@ -1287,7 +1361,19 @@ export class HomeViewModel {
     });
     this.updateLoadingState(true, null, 'route');
     try {
-      const waypoints = [
+      // Origen (ubicacion actual) -> paradas intermedias -> destino final.
+      const stops = this.intermediateStops.map(
+        (stop, index) =>
+          new Waypoint({
+            id: stop.id,
+            name: stop.name,
+            latitude: stop.latitude,
+            longitude: stop.longitude,
+            kind: 'stop',
+            order: index + 1,
+          }),
+      );
+      const waypoints: Waypoint[] = [
         new Waypoint({
           id: 'origin',
           name: 'Mi ubicacion',
@@ -1296,13 +1382,14 @@ export class HomeViewModel {
           kind: 'start',
           order: 0,
         }),
+        ...stops,
         new Waypoint({
           id: place.id,
           name: place.name,
           latitude: place.latitude,
           longitude: place.longitude,
           kind: 'destination',
-          order: 1,
+          order: stops.length + 1,
         }),
       ];
       const directions = await this.calculateDirectionsUseCase.run({

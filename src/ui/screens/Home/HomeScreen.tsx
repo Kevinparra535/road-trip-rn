@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 import {
   ComponentProps,
   ElementRef,
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -397,7 +398,11 @@ const HomeScreen = observer(() => {
               style={styles.searchInput}
               value={viewModel.searchQuery}
               onChangeText={(text) => viewModel.setSearchQuery(text)}
-              placeholder="¿A dónde vamos hoy?"
+              placeholder={
+                viewModel.searchMode === 'addStop'
+                  ? 'Agregar parada…'
+                  : '¿A dónde vamos hoy?'
+              }
               placeholderTextColor={Colors.base.textMuted}
               returnKeyType="search"
               autoCorrect={false}
@@ -445,7 +450,24 @@ const HomeScreen = observer(() => {
             </TouchableOpacity>
           </View>
 
-          {!viewModel.isSearchActive ? (
+          {viewModel.searchMode === 'addStop' ? (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              style={styles.addStopHint}
+              accessibilityRole="button"
+              accessibilityLabel="Cancelar agregar parada"
+              onPress={() => viewModel.cancelAddingStop()}
+            >
+              <Ionicons
+                name="close-circle"
+                size={16}
+                color={Colors.base.accent}
+              />
+              <Text style={styles.addStopHintText}>
+                Buscá la parada que querés agregar al viaje. Tap para cancelar.
+              </Text>
+            </TouchableOpacity>
+          ) : !viewModel.isSearchActive ? (
             <View style={styles.rideChips}>
               {RIDE_OPTIONS.map((option) => {
                 const active = viewModel.rideType === option.type;
@@ -778,6 +800,14 @@ const HomeScreen = observer(() => {
           <View style={styles.routePoints}>
             <View style={styles.timeline}>
               <View style={[styles.timelineDot, styles.timelineDotOrigin]} />
+              {viewModel.intermediateStops.map((stop) => (
+                <Fragment key={`tl-${stop.id}`}>
+                  <View style={styles.timelineLine} />
+                  <View
+                    style={[styles.timelineDot, styles.timelineDotIntermediate]}
+                  />
+                </Fragment>
+              ))}
               <View style={styles.timelineLine} />
               <View style={[styles.timelineDot, styles.timelineDotDest]} />
             </View>
@@ -785,11 +815,44 @@ const HomeScreen = observer(() => {
               <Text style={styles.routeLabel} numberOfLines={1}>
                 Mi ubicación
               </Text>
+              {viewModel.intermediateStops.map((stop) => (
+                <View key={`lbl-${stop.id}`} style={styles.stopLabelRow}>
+                  <Text
+                    style={[styles.routeLabel, styles.stopLabelText]}
+                    numberOfLines={1}
+                  >
+                    {stop.name}
+                  </Text>
+                  <TouchableOpacity
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Quitar ${stop.name}`}
+                    onPress={() => viewModel.removeStop(stop.id)}
+                  >
+                    <Ionicons
+                      name="close-circle"
+                      size={18}
+                      color={Colors.base.iconMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
+              ))}
               <Text style={styles.routeLabel} numberOfLines={1}>
                 {viewModel.destination?.name}
               </Text>
             </View>
           </View>
+
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.addStopButton}
+            accessibilityRole="button"
+            accessibilityLabel="Agregar parada"
+            onPress={() => viewModel.startAddingStop()}
+          >
+            <Ionicons name="add-circle" size={18} color={Colors.base.accent} />
+            <Text style={styles.addStopText}>Agregar parada</Text>
+          </TouchableOpacity>
 
           <View style={styles.divider} />
 
@@ -1528,6 +1591,60 @@ const styles = StyleSheet.create({
   },
   timelineDotDest: {
     backgroundColor: Colors.elevation.low,
+  },
+  // Parada intermedia: punto bordeado sin relleno para diferenciarla del
+  // origen (naranja) y el destino (verde).
+  timelineDotIntermediate: {
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderWidth: 2,
+    borderColor: Colors.base.iconMuted,
+  },
+  stopLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  stopLabelText: {
+    flex: 1,
+  },
+  // Boton "Agregar parada" del Pencil 5 (Multi-parada). Visible siempre que
+  // hay una ruta planeada (no en navegacion).
+  addStopButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: 14,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  addStopText: {
+    fontFamily: FontFamily.semiBold,
+    fontSize: 13,
+    color: Colors.base.accent,
+  },
+  // Hint que reemplaza a los chips de rodada cuando se esta agregando una
+  // parada: explica el modo y cancela al tap.
+  addStopHint: {
+    marginTop: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    paddingVertical: Spacings.md,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  addStopHintText: {
+    flex: 1,
+    fontFamily: FontFamily.medium,
+    fontSize: 12,
+    color: Colors.base.accent,
   },
   timelineLine: {
     width: 2,
