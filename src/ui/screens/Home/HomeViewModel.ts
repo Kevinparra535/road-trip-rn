@@ -1,3 +1,4 @@
+import * as Speech from 'expo-speech';
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
@@ -78,6 +79,8 @@ const OFF_ROUTE_THRESHOLD_KM = 0.06;
 const OFF_ROUTE_CONFIRM_TICKS = 4;
 // Puntos de muestreo de la ruta para buscar gasolineras a lo largo de ella.
 const ROUTE_STATION_SAMPLES = 6;
+// Idioma para las anuncios de voz turn-by-turn (Mapbox ya las localiza).
+const NAV_VOICE_LANGUAGE = 'es-CO';
 // Tipo de rodada por defecto del trazado del Home.
 const DEFAULT_RIDE_TYPE: RideType = 'highway';
 
@@ -239,6 +242,12 @@ export class HomeViewModel {
    * ve un chip compacto con altitud y ascenso al lado del marcador del rider.
    */
   isElevationStripOpen: boolean = true;
+  /**
+   * Silencia los anuncios de voz turn-by-turn. Persiste solo en memoria —
+   * se reinicia al cerrar la app. Por defecto el motero recibe voz cuando
+   * arranca la navegacion para que no haya que mirar la pantalla.
+   */
+  isMuted: boolean = false;
 
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
@@ -248,6 +257,8 @@ export class HomeViewModel {
 
   private searchDisposer: (() => void) | null = null;
   private navTimer: ReturnType<typeof setInterval> | null = null;
+  /** Claves de los anuncios de voz ya reproducidos (no repetir). */
+  private spokenVoiceIds: Set<string> = new Set();
   private offRouteTicks: number = 0;
   private logger = new Logger('HomeViewModel');
 
@@ -862,6 +873,7 @@ export class HomeViewModel {
     this.searchDisposer?.();
     this.searchDisposer = null;
     this.clearNavTimer();
+    Speech.stop();
     this.locationStore.dispose();
   }
 
@@ -929,10 +941,19 @@ export class HomeViewModel {
       this.simulatedDistanceKm = 0;
       this.offRouteTicks = 0;
     });
+    this.spokenVoiceIds.clear();
     this.clearNavTimer();
     if (this.isSimulatedNavigation) {
       this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
     }
+  }
+
+  /** Alterna los anuncios de voz turn-by-turn. */
+  toggleMute(): void {
+    runInAction(() => {
+      this.isMuted = !this.isMuted;
+    });
+    if (this.isMuted) Speech.stop();
   }
 
   /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */
@@ -943,6 +964,8 @@ export class HomeViewModel {
   /** Termina la navegacion y restaura la pantalla del Home. */
   stopNavigation(): void {
     this.clearNavTimer();
+    Speech.stop();
+    this.spokenVoiceIds.clear();
     runInAction(() => {
       this.isNavigating = false;
       this.simulatedDistanceKm = 0;
@@ -989,9 +1012,34 @@ export class HomeViewModel {
         this.simulatedDistanceKm + SIM_KM_PER_TICK,
       );
     });
+    this.maybeSpeak();
     this.monitorOffRoute();
     if (this.simulatedDistanceKm >= route.distanceKm) {
       this.markArrived();
+    }
+  }
+
+  /**
+   * Reproduce los anuncios de voz turn-by-turn de Mapbox cuyo punto de
+   * disparo ya quedo atras del rider. Cada anuncio se identifica por step +
+   * `distanceAlongGeometry` para evitar repetirlo y se omite si el motero
+   * silencio la voz con `toggleMute`.
+   */
+  private maybeSpeak(): void {
+    if (this.isMuted) return;
+    const route = this.isRouteResponse;
+    if (!route) return;
+    const progressKm = this.navProgressKm;
+    for (const step of route.steps) {
+      for (const voice of step.voiceInstructions) {
+        const triggerKm =
+          step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
+        if (progressKm < triggerKm) continue;
+        const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
+        if (this.spokenVoiceIds.has(key)) continue;
+        this.spokenVoiceIds.add(key);
+        Speech.speak(voice.announcement, { language: NAV_VOICE_LANGUAGE });
+      }
     }
   }
 
@@ -1066,6 +1114,8 @@ export class HomeViewModel {
   /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
     this.clearNavTimer();
+    Speech.stop();
+    this.spokenVoiceIds.clear();
     this.isNavigating = false;
     this.isArrived = false;
     this.arrivedAt = null;
@@ -1091,8 +1141,11 @@ export class HomeViewModel {
 
   reset(): void {
     this.clearNavTimer();
+    Speech.stop();
+    this.spokenVoiceIds.clear();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
+      this.isMuted = false;
       this.isPerspective = false;
       this.hasAutoCentered = false;
       this.isNavigating = false;

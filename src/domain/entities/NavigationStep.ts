@@ -29,6 +29,17 @@ export type ManeuverModifier =
   | 'straight'
   | 'uturn';
 
+/**
+ * Anuncio de voz asociado a un step. Mapbox suele emitir 1-3 por step
+ * (p. ej. "En 1 km gira a la derecha" / "En 400 m gira a la derecha" /
+ * "Gira a la derecha"). El campo `distanceAlongGeometry` indica desde el
+ * INICIO del step (en metros) cuando debe sonar.
+ */
+export type VoiceInstruction = {
+  distanceAlongGeometry: number;
+  announcement: string;
+};
+
 export type NavigationStepConstructorParams = {
   /** Longitud del segmento que cubre este step, en kilometros. */
   distanceKm: number;
@@ -44,6 +55,8 @@ export type NavigationStepConstructorParams = {
   maneuverModifier: ManeuverModifier | null;
   /** Coordenada exacta donde ocurre la maniobra (campo `maneuver.location`). */
   maneuverLocation: GeoPoint;
+  /** Anuncios de voz que Mapbox sugiere disparar a lo largo del step. */
+  voiceInstructions?: VoiceInstruction[];
 };
 
 /**
@@ -62,6 +75,7 @@ export class NavigationStep {
   maneuverType: ManeuverType;
   maneuverModifier: ManeuverModifier | null;
   maneuverLocation: GeoPoint;
+  voiceInstructions: VoiceInstruction[];
 
   constructor(params: NavigationStepConstructorParams) {
     this.distanceKm = params.distanceKm;
@@ -72,6 +86,7 @@ export class NavigationStep {
     this.maneuverType = params.maneuverType;
     this.maneuverModifier = params.maneuverModifier;
     this.maneuverLocation = params.maneuverLocation;
+    this.voiceInstructions = params.voiceInstructions ?? [];
   }
 
   /** Distancia acumulada desde el origen hasta el FIN del step. */
