@@ -2,7 +2,6 @@ import GorhomBottomSheet, {
   BottomSheetBackgroundProps,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   ElementRef,
   ReactNode,
@@ -11,62 +10,59 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Keyboard, StyleSheet, View } from 'react-native';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Spacings from '@/ui/styles/Spacings';
-import { hexToRgba } from '@/ui/utils/colorUtils';
 
-// Posiciones de anclaje: asomado (peek) y expandido.
-const SNAP_POINTS: (number | string)[] = [264, '90%'];
+// Tres detents estilo Apple Maps: peek (solo searchbar + algo de body),
+// medium (~mitad de pantalla) y expanded (casi full). El peek es 200 px en
+// vez de un porcentaje para que el header del search siempre se vea sin
+// importar el alto de pantalla del device.
+const SNAP_POINTS: (number | string)[] = [200, '55%', '92%'];
 
-// Degradado del fondo del panel — inspirado en el frame "Panel Asomado" del
-// Pencil (#0D0D0D00 -> #0D0D0DCC -> #0D0D0D): franja de fundido contra el
-// mapa solo en el borde superior y panel solido para el contenido. En el
-// device el fundido del Pencil (40% de la altura) deja la cabecera demasiado
-// translucida, asi que apretamos las paradas para que el solido aparezca
-// debajo del handle.
-const FADE_COLORS = [
-  hexToRgba(Colors.base.bgPrimary, 1),
-  hexToRgba(Colors.base.bgPrimary, 1),
-  Colors.base.bgPrimary,
-] as const;
-const FADE_LOCATIONS = [0, 0.05, 0.12] as const;
-
-/** Fondo personalizado: el degradado que funde el panel con el mapa. */
+/**
+ * Fondo del sheet: panel sólido oscuro con esquinas redondeadas, estilo Apple
+ * Maps. Reemplaza el "Panel Asomado" en gradiente del Pencil — el gradiente
+ * fundía el sheet con el mapa, lo opuesto al feel iOS-y de tarjeta flotante.
+ */
 const SheetBackground = ({ style }: BottomSheetBackgroundProps) => (
-  <View style={[style, styles.background]} pointerEvents="none">
-    <LinearGradient
-      colors={FADE_COLORS}
-      locations={FADE_LOCATIONS}
-      style={StyleSheet.absoluteFill}
-    />
-  </View>
+  <View style={[style, styles.background]} pointerEvents="none" />
 );
 
 type Props = {
   visible: boolean;
+  /**
+   * Slot sticky en la cabecera del sheet (debajo del handle). Acá vive el
+   * SearchBar estilo Apple Maps: queda pinneado al top via
+   * `stickyHeaderIndices` del scroll interno.
+   */
+  header?: ReactNode;
   children: ReactNode;
 };
 
 /**
- * Handle imperativo expuesto a la pantalla para forzar la posicion del
- * panel cuando un flujo lo requiere (p. ej. al "Agregar parada" lo bajamos
- * a asomado para que el buscador del top quede visible).
+ * Handle imperativo: la pantalla decide a qué detent ir según la interacción.
+ * - `peek`: solo searchbar visible (estado idle).
+ * - `medium`: ~mitad — buen lugar al elegir destino para ver el resumen.
+ * - `expand`: full — durante búsqueda activa o al revisar detalles.
  */
 export type BottomSheetHandle = {
-  collapse(): void;
+  peek(): void;
+  medium(): void;
   expand(): void;
+  /** Alias de peek por retrocompat con flujos previos (ej: "Agregar parada"). */
+  collapse(): void;
 };
 
 /**
- * Panel inferior basado en `@gorhom/bottom-sheet`: arrastre y scroll interno
- * coordinados de forma nativa. Dos posiciones (asomado / expandido) y, sobre
- * el diseno Home v2, un fondo en degradado que se funde con el mapa.
+ * Panel inferior estilo Apple Maps: siempre presente (mientras `visible`),
+ * con 3 snap points, esquinas redondeadas y un SearchBar sticky en la
+ * cabecera. El cuerpo scrollea internamente vía `BottomSheetScrollView`.
  */
 const BottomSheet = forwardRef<BottomSheetHandle, Props>(
-  ({ visible, children }, handleRef) => {
+  ({ visible, header, children }, handleRef) => {
     const ref = useRef<ElementRef<typeof GorhomBottomSheet>>(null);
 
     useEffect(() => {
@@ -75,9 +71,17 @@ const BottomSheet = forwardRef<BottomSheetHandle, Props>(
     }, [visible]);
 
     useImperativeHandle(handleRef, () => ({
+      peek: () => ref.current?.snapToIndex(0),
+      medium: () => ref.current?.snapToIndex(1),
+      expand: () => ref.current?.snapToIndex(2),
       collapse: () => ref.current?.snapToIndex(0),
-      expand: () => ref.current?.snapToIndex(1),
     }));
+
+    // Si el usuario arrastra el sheet al peek con el teclado abierto, lo
+    // cerramos: Apple Maps hace lo mismo y evita el caso de input tapado.
+    const handleSheetChange = (index: number) => {
+      if (index === 0) Keyboard.dismiss();
+    };
 
     return (
       <GorhomBottomSheet
@@ -86,15 +90,21 @@ const BottomSheet = forwardRef<BottomSheetHandle, Props>(
         snapPoints={SNAP_POINTS}
         enableDynamicSizing={false}
         enablePanDownToClose={false}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         backgroundComponent={SheetBackground}
         handleStyle={styles.handle}
         handleIndicatorStyle={styles.handleIndicator}
         style={styles.sheet}
+        onChange={handleSheetChange}
       >
         <BottomSheetScrollView
           contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          stickyHeaderIndices={header ? [0] : undefined}
         >
+          {header ? <View style={styles.headerSlot}>{header}</View> : null}
           {children}
         </BottomSheetScrollView>
       </GorhomBottomSheet>
@@ -105,18 +115,27 @@ const BottomSheet = forwardRef<BottomSheetHandle, Props>(
 BottomSheet.displayName = 'BottomSheet';
 
 const styles = StyleSheet.create({
-  // El panel se funde con el mapa: sin esquinas, sin sombra (Pencil Home v2).
+  // Panel flotante con sombra superior — feel iOS sheet.
   sheet: {
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    // El borderTopRadius se aplica via el background custom; el shadow va
+    // sobre el contenedor del sheet (no se ve si lo ponemos en background).
+    shadowColor: Colors.base.shadow,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
   },
+  // Solid background con esquinas redondeadas. NOTA: no aplicamos
+  // `iOSCornerStyle` aquí — gorhom anima este View internamente y mezclar
+  // `borderCurve` rompe el render del sheet (queda invisible). Los corners
+  // rounded-rect normales son suficientemente iOS en este surface.
   background: {
-    borderRadius: 0,
-    overflow: 'hidden',
+    backgroundColor: Colors.base.bgPrimary,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
   },
-  // Padding superior generoso: deja respirar la franja en degradado.
   handle: {
-    paddingTop: Spacings.spacex2,
+    paddingTop: Spacings.sm,
     paddingBottom: Spacings.sm,
   },
   handleIndicator: {
@@ -124,6 +143,12 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: BorderRadius.pill,
     backgroundColor: Colors.base.hairline,
+  },
+  // El header sticky necesita su propio bg sólido para que al scrollear el
+  // contenido de abajo no se transparente debajo del SearchBar.
+  headerSlot: {
+    paddingBottom: Spacings.sm,
+    backgroundColor: Colors.base.bgPrimary,
   },
   content: {
     paddingHorizontal: Spacings.lg,

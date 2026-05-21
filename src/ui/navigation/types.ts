@@ -16,7 +16,7 @@ export type GarageStackParamList = {
   MotorcycleForm: { motorcycleId?: string } | undefined;
 };
 
-export type AppTabsParamList = {
+export type AppDrawerParamList = {
   HomeTab: undefined;
   RoutesTab: NavigatorScreenParams<RoutesStackParamList>;
   GarageTab: NavigatorScreenParams<GarageStackParamList>;

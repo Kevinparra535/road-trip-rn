@@ -1,5 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { observer } from 'mobx-react-lite';
@@ -17,7 +18,6 @@ import {
   Keyboard,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -40,8 +40,8 @@ import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
-import { AppTabsParamList } from '@/ui/navigation/types';
-import BorderRadius from '@/ui/styles/BorderRadius';
+import { AppDrawerParamList } from '@/ui/navigation/types';
+import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts, { FontFamily } from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
@@ -78,19 +78,18 @@ const HomeScreen = observer(() => {
     () => container.get<HomeViewModel>(TYPES.HomeViewModel),
     [],
   );
-  const navigation = useNavigation<BottomTabNavigationProp<AppTabsParamList>>();
+  const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const fittedDestinationRef = useRef<string | null>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
-  const searchInputRef = useRef<TextInput>(null);
+  const searchInputRef = useRef<ElementRef<typeof BottomSheetTextInput>>(null);
 
-  // Llamar a "Agregar parada" desde la tarjeta de ruta expandida es un
-  // callejon sin salida si el sheet no se baja: el buscador del top queda
-  // tapado. Bajamos a asomado y enfocamos el input para que el motero pueda
-  // empezar a tipear con un solo gesto.
+  // Apple Maps UX: el SearchBar vive adentro del sheet. Al "Agregar parada"
+  // expandimos el sheet (no colapsamos, como antes) y enfocamos el input —
+  // el motero ve los resultados arriba del fold sin tener que tirar el sheet.
   const handleStartAddStop = () => {
     viewModel.startAddingStop();
-    sheetRef.current?.collapse();
+    sheetRef.current?.expand();
     // Damos un tick para que el snap del sheet libere el foco antes de
     // pedirselo al TextInput; sin esto Android se lo come.
     setTimeout(() => searchInputRef.current?.focus(), 80);
@@ -176,6 +175,18 @@ const HomeScreen = observer(() => {
   const handleSelectPlace = (place: Place) => {
     Keyboard.dismiss();
     viewModel.selectDestination(place);
+    // Al elegir destino bajamos a medium para que el resumen quede visible
+    // sin tapar el mapa — Apple Maps hace exactamente esto.
+    sheetRef.current?.medium();
+  };
+
+  // Al tocar el input expandimos al detent grande: el usuario está buscando,
+  // necesita máxima superficie de resultados.
+  const handleSearchFocus = () => sheetRef.current?.expand();
+
+  const handleClearRoute = () => {
+    viewModel.clearRoute();
+    sheetRef.current?.peek();
   };
 
   const fuel = viewModel.fuelSummary;
@@ -225,6 +236,10 @@ const HomeScreen = observer(() => {
             >
               <Mapbox.LineLayer
                 id={`route-${line.id}-line`}
+                // Mapbox Standard v11 usa "slots" para ordenar capas custom;
+                // sin slot, los paint properties caen en un grupo donde no
+                // aplican y la linea queda con su color por defecto (negro).
+                slot="top"
                 style={{
                   lineColor: line.color,
                   lineWidth: coreWidth,
@@ -300,10 +315,12 @@ const HomeScreen = observer(() => {
           <Mapbox.ShapeSource id="user-heading" shape={viewModel.headingShape}>
             <Mapbox.FillLayer
               id="user-heading-fill"
+              slot="top"
               style={{ fillColor: Colors.base.accent, fillOpacity: 0.9 }}
             />
             <Mapbox.LineLayer
               id="user-heading-outline"
+              slot="top"
               style={{
                 lineColor: Colors.base.textPrimary,
                 lineWidth: 2,
@@ -313,185 +330,6 @@ const HomeScreen = observer(() => {
           </Mapbox.ShapeSource>
         ) : null}
       </Mapbox.MapView>
-
-      {!isNavigating ? (
-        <SafeAreaView
-          style={styles.topOverlay}
-          edges={['top', 'left', 'right']}
-          pointerEvents="box-none"
-        >
-          <View style={styles.searchBar}>
-            {viewModel.isSearchActive ? (
-              <View style={styles.searchLeadingIcon}>
-                <Ionicons
-                  name="search"
-                  size={20}
-                  color={Colors.base.iconMuted}
-                />
-              </View>
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                hitSlop={8}
-                style={styles.menuButton}
-                accessibilityRole="button"
-                accessibilityLabel="Abrir perfil"
-                onPress={() => navigation.navigate('ProfileTab')}
-              >
-                <Ionicons
-                  name="menu"
-                  size={20}
-                  color={Colors.base.textPrimary}
-                />
-              </TouchableOpacity>
-            )}
-            <TextInput
-              ref={searchInputRef}
-              style={styles.searchInput}
-              value={viewModel.searchQuery}
-              onChangeText={(text) => viewModel.setSearchQuery(text)}
-              placeholder={
-                viewModel.searchMode === 'addStop'
-                  ? 'Agregar parada…'
-                  : '¿A dónde vamos hoy?'
-              }
-              placeholderTextColor={Colors.base.textMuted}
-              returnKeyType="search"
-              autoCorrect={false}
-            />
-            {viewModel.isSearchLoading ? (
-              <ActivityIndicator size="small" color={Colors.base.accent} />
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.85}
-                hitSlop={8}
-                accessibilityRole="button"
-                accessibilityLabel="Buscar por voz"
-                // Placeholder: busqueda por voz aun no implementada.
-                onPress={() => {}}
-              >
-                <GradientView
-                  preset="accent"
-                  direction="vertical"
-                  style={styles.voiceButton}
-                >
-                  <Ionicons
-                    name="mic"
-                    size={16}
-                    color={Colors.semantic.text.primaryDark}
-                  />
-                </GradientView>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Abrir perfil"
-              onPress={() => navigation.navigate('ProfileTab')}
-            >
-              <GradientView
-                preset="accent"
-                direction="vertical"
-                style={styles.profileAvatar}
-              >
-                <Text style={styles.profileInitials}>
-                  {viewModel.riderInitials}
-                </Text>
-              </GradientView>
-            </TouchableOpacity>
-          </View>
-
-          {viewModel.searchMode === 'addStop' ? (
-            <TouchableOpacity
-              activeOpacity={0.85}
-              style={styles.addStopHint}
-              accessibilityRole="button"
-              accessibilityLabel="Cancelar agregar parada"
-              onPress={() => viewModel.cancelAddingStop()}
-            >
-              <Ionicons
-                name="close-circle"
-                size={16}
-                color={Colors.base.accent}
-              />
-              <Text style={styles.addStopHintText}>
-                Buscá la parada que querés agregar al viaje. Tap para cancelar.
-              </Text>
-            </TouchableOpacity>
-          ) : !viewModel.isSearchActive ? (
-            <View style={styles.rideChips}>
-              {RIDE_OPTIONS.map((option) => {
-                const active = viewModel.rideType === option.type;
-                const tone = active
-                  ? Colors.semantic.text.primaryDark
-                  : Colors.base.textSecondary;
-                return (
-                  <TouchableOpacity
-                    key={option.type}
-                    activeOpacity={0.8}
-                    style={[styles.rideChip, active && styles.rideChipActive]}
-                    onPress={() => viewModel.setRideType(option.type)}
-                  >
-                    <MaterialCommunityIcons
-                      name={option.icon}
-                      size={14}
-                      color={tone}
-                    />
-                    <Text style={[styles.rideChipText, { color: tone }]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : null}
-
-          {viewModel.hasSearchResults ? (
-            <SheetCard style={styles.resultsCard}>
-              {viewModel.searchResults.map((place, index) => (
-                <View key={place.id}>
-                  {index > 0 ? <View style={styles.resultDivider} /> : null}
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    style={styles.resultRow}
-                    onPress={() => handleSelectPlace(place)}
-                  >
-                    <View
-                      style={[
-                        styles.resultIconBox,
-                        index === 0 && styles.resultIconBoxPrimary,
-                      ]}
-                    >
-                      <Ionicons
-                        name="location"
-                        size={18}
-                        color={
-                          index === 0
-                            ? Colors.base.accent
-                            : Colors.base.iconMuted
-                        }
-                      />
-                    </View>
-                    <View style={styles.resultBody}>
-                      <Text style={styles.resultName} numberOfLines={1}>
-                        {place.name}
-                      </Text>
-                      <Text style={styles.resultAddress} numberOfLines={1}>
-                        {place.fullName}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </SheetCard>
-          ) : viewModel.isSearchError ? (
-            <SheetCard style={styles.resultsCardError}>
-              <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
-            </SheetCard>
-          ) : null}
-        </SafeAreaView>
-      ) : null}
 
       {DEV_FLAGS.mockDestination &&
       !viewModel.hasDestination &&
@@ -689,14 +527,160 @@ const HomeScreen = observer(() => {
 
       <BottomSheet
         ref={sheetRef}
-        visible={
-          viewModel.hasDestination && !isNavigating && !viewModel.isArrived
+        visible={!isNavigating && !viewModel.isArrived}
+        header={
+          <View style={styles.searchBar}>
+            {viewModel.isSearchActive ? (
+              <View style={styles.searchLeadingIcon}>
+                <Ionicons
+                  name="search"
+                  size={20}
+                  color={Colors.base.iconMuted}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                hitSlop={8}
+                style={styles.menuButton}
+                accessibilityRole="button"
+                accessibilityLabel="Abrir menú"
+                onPress={() => navigation.openDrawer()}
+              >
+                <Ionicons
+                  name="menu"
+                  size={20}
+                  color={Colors.base.textPrimary}
+                />
+              </TouchableOpacity>
+            )}
+            <BottomSheetTextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              value={viewModel.searchQuery}
+              onChangeText={(text) => viewModel.setSearchQuery(text)}
+              onFocus={handleSearchFocus}
+              placeholder={
+                viewModel.searchMode === 'addStop'
+                  ? 'Agregar parada…'
+                  : '¿A dónde vamos hoy?'
+              }
+              placeholderTextColor={Colors.base.textMuted}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+            {viewModel.isSearchLoading ? (
+              <ActivityIndicator size="small" color={Colors.base.accent} />
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.85}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Buscar por voz"
+                onPress={() => {}}
+              >
+                <GradientView
+                  preset="accent"
+                  direction="vertical"
+                  style={styles.voiceButton}
+                >
+                  <Ionicons
+                    name="mic"
+                    size={16}
+                    color={Colors.semantic.text.primaryDark}
+                  />
+                </GradientView>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir perfil"
+              onPress={() => navigation.navigate('ProfileTab')}
+            >
+              <GradientView
+                preset="accent"
+                direction="vertical"
+                style={styles.profileAvatar}
+              >
+                <Text style={styles.profileInitials}>
+                  {viewModel.riderInitials}
+                </Text>
+              </GradientView>
+            </TouchableOpacity>
+          </View>
         }
       >
-        {/* Cabecera "asomada": etiqueta + titular grande con la cifra clave de
-            la ruta. Se ve incluso con el panel colapsado (frame "3 - Home Ruta
-            Asomado" del Pencil). */}
-        <View style={styles.peekHeader}>
+        {viewModel.searchMode === 'addStop' ? (
+          <TouchableOpacity
+            activeOpacity={0.85}
+            style={styles.addStopHint}
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar agregar parada"
+            onPress={() => viewModel.cancelAddingStop()}
+          >
+            <Ionicons
+              name="close-circle"
+              size={16}
+              color={Colors.base.accent}
+            />
+            <Text style={styles.addStopHintText}>
+              Buscá la parada que querés agregar al viaje. Tap para cancelar.
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
+        {viewModel.isSearchActive ? (
+          viewModel.hasSearchResults ? (
+            <SheetCard style={styles.resultsCard}>
+              {viewModel.searchResults.map((place, index) => (
+                <View key={place.id}>
+                  {index > 0 ? <View style={styles.resultDivider} /> : null}
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    style={styles.resultRow}
+                    onPress={() => handleSelectPlace(place)}
+                  >
+                    <View
+                      style={[
+                        styles.resultIconBox,
+                        index === 0 && styles.resultIconBoxPrimary,
+                      ]}
+                    >
+                      <Ionicons
+                        name="location"
+                        size={18}
+                        color={
+                          index === 0
+                            ? Colors.base.accent
+                            : Colors.base.iconMuted
+                        }
+                      />
+                    </View>
+                    <View style={styles.resultBody}>
+                      <Text style={styles.resultName} numberOfLines={1}>
+                        {place.name}
+                      </Text>
+                      <Text style={styles.resultAddress} numberOfLines={1}>
+                        {place.fullName}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </SheetCard>
+          ) : viewModel.isSearchError ? (
+            <SheetCard style={styles.resultsCardError}>
+              <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
+            </SheetCard>
+          ) : null
+        ) : viewModel.hasDestination ? (
+          <>
+            {/* Cabecera "asomada": etiqueta + titular grande con la cifra clave de
+                la ruta. Se ve incluso con el panel colapsado (frame "3 - Home Ruta
+                Asomado" del Pencil). */}
+            <View style={styles.peekHeader}>
           <Text style={styles.peekKicker}>RUTA ACTIVA</Text>
           <Text style={styles.peekHeadline} numberOfLines={1}>
             {viewModel.routeSummary
@@ -744,7 +728,7 @@ const HomeScreen = observer(() => {
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel="Cerrar ruta"
-              onPress={() => viewModel.clearRoute()}
+              onPress={handleClearRoute}
             >
               <Ionicons name="close" size={15} color={Colors.base.iconMuted} />
             </TouchableOpacity>
@@ -1116,6 +1100,40 @@ const HomeScreen = observer(() => {
             )}
           </SheetCard>
         ) : null}
+          </>
+        ) : (
+          /* Estado idle: chips del tipo de rodada + hint para empezar. */
+          <View style={styles.emptyState}>
+            <View style={styles.rideChips}>
+              {RIDE_OPTIONS.map((option) => {
+                const active = viewModel.rideType === option.type;
+                const tone = active
+                  ? Colors.semantic.text.primaryDark
+                  : Colors.base.textSecondary;
+                return (
+                  <TouchableOpacity
+                    key={option.type}
+                    activeOpacity={0.8}
+                    style={[styles.rideChip, active && styles.rideChipActive]}
+                    onPress={() => viewModel.setRideType(option.type)}
+                  >
+                    <MaterialCommunityIcons
+                      name={option.icon}
+                      size={14}
+                      color={tone}
+                    />
+                    <Text style={[styles.rideChipText, { color: tone }]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            <Text style={styles.emptyHint}>
+              Buscá tu destino arriba para empezar a trazar la ruta.
+            </Text>
+          </View>
+        )}
       </BottomSheet>
 
       {/* ── Estado: sin permiso de ubicación ──────────────────────────────── */}
@@ -1146,16 +1164,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // ── Overlay superior ──────────────────────────────────────────────────────
-  topOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: Spacings.lg,
-  },
+  // ── SearchBar (header del sheet, estilo Apple Maps) ───────────────────────
   searchBar: {
-    marginTop: Spacings.md,
     height: 52,
     paddingHorizontal: Spacings.lg,
     flexDirection: 'row',
@@ -1163,7 +1173,19 @@ const styles = StyleSheet.create({
     gap: Spacings.md,
     backgroundColor: Colors.base.bgGradientEnd,
     borderRadius: BorderRadius.md,
+    ...iOSCornerStyle,
     ...Shadows.bankCard,
+  },
+  // Empty state: ride chips + hint cuando todavia no hay destino ni busqueda.
+  emptyState: {
+    gap: Spacings.md,
+    paddingTop: Spacings.sm,
+  },
+  emptyHint: {
+    fontFamily: FontFamily.medium,
+    fontSize: 13,
+    color: Colors.base.textMuted,
+    textAlign: 'center',
   },
   searchInput: {
     flex: 1,

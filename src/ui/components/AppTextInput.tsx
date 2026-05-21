@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 
-import BorderRadius from '@/ui/styles/BorderRadius';
+import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
   fieldDefault: {
     height: 52,
     borderRadius: BorderRadius.md,
+    ...iOSCornerStyle,
   },
   fieldSearch: {
     height: 48,

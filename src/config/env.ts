@@ -28,8 +28,7 @@ export const ENV: AppEnv = {
   // (cuando MAP_STYLE_URL no se configura via env) el MapView recibia un
   // styleURL invalido, el mapa quedaba en negro y nuestros LineLayer /
   // FillLayer rendereaban sin color.
-  MAP_STYLE_URL:
-    extra.MAP_STYLE_URL ?? 'mapbox://styles/mapbox/navigation-night-v1',
+  MAP_STYLE_URL: 'mapbox://styles/mapbox/navigation-night-v1',
   firebase: {
     apiKey: extra.firebase?.apiKey ?? 'SET_FIREBASE_API_KEY',
     authDomain: extra.firebase?.authDomain ?? 'SET_FIREBASE_AUTH_DOMAIN',

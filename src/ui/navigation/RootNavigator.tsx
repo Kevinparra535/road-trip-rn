@@ -7,7 +7,7 @@ import { TYPES } from '@/config/types';
 import Colors from '@/ui/styles/Colors';
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
 
-import AppTabs from './AppTabs';
+import AppDrawer from './AppDrawer';
 import AuthNavigator from './AuthNavigator';
 
 const RootNavigator = observer(() => {
@@ -29,7 +29,7 @@ const RootNavigator = observer(() => {
     );
   }
 
-  return session.isAuthenticated ? <AppTabs /> : <AuthNavigator />;
+  return session.isAuthenticated ? <AppDrawer /> : <AuthNavigator />;
 });
 
 const styles = StyleSheet.create({
