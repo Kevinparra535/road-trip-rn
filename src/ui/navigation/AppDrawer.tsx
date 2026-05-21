@@ -20,7 +20,6 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Rider } from '@/domain/entities/Rider';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
-import HomeScreen from '@/ui/screens/Home/HomeScreen';
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -28,6 +27,7 @@ import { FontFamily } from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 import GarageNavigator from './GarageNavigator';
+import HomeNavigator from './HomeNavigator';
 import RoutesNavigator from './RoutesNavigator';
 import { AppDrawerParamList } from './types';
 
@@ -233,7 +233,7 @@ const AppDrawer = () => {
         },
       }}
     >
-      <Drawer.Screen name="HomeTab" component={HomeScreen} />
+      <Drawer.Screen name="HomeTab" component={HomeNavigator} />
       <Drawer.Screen name="RoutesTab" component={RoutesNavigator} />
       <Drawer.Screen name="GarageTab" component={GarageNavigator} />
       <Drawer.Screen name="ProfileTab" component={ProfileScreen} />

@@ -247,4 +247,10 @@ container
 container
   .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
   .to(RouteDetailViewModel);
-container.bind<HomeViewModel>(TYPES.HomeViewModel).to(HomeViewModel);
+// Singleton: HomeScreen y DestinationPreviewScreen (formSheet sobre el mapa)
+// comparten estado vía VM — el previewPlace lo setea Home al elegir un
+// resultado y lo lee el sheet para mostrar la card de confirmación.
+container
+  .bind<HomeViewModel>(TYPES.HomeViewModel)
+  .to(HomeViewModel)
+  .inSingletonScope();

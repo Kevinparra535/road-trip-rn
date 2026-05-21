@@ -16,8 +16,15 @@ export type GarageStackParamList = {
   MotorcycleForm: { motorcycleId?: string } | undefined;
 };
 
+export type HomeStackParamList = {
+  HomeMain: undefined;
+  // DestinationPreview se monta como native formSheet sobre el mapa; el Place
+  // a previsualizar vive en `HomeViewModel.previewPlace` (singleton).
+  DestinationPreview: undefined;
+};
+
 export type AppDrawerParamList = {
-  HomeTab: undefined;
+  HomeTab: NavigatorScreenParams<HomeStackParamList>;
   RoutesTab: NavigatorScreenParams<RoutesStackParamList>;
   GarageTab: NavigatorScreenParams<GarageStackParamList>;
   ProfileTab: undefined;

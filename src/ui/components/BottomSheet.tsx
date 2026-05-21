@@ -1,5 +1,6 @@
-import GorhomBottomSheet, {
+import {
   BottomSheetBackgroundProps,
+  BottomSheetModal,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
 import {
@@ -24,8 +25,8 @@ const SNAP_POINTS: (number | string)[] = [200, '55%', '92%'];
 
 /**
  * Fondo del sheet: panel sólido oscuro con esquinas redondeadas, estilo Apple
- * Maps. Reemplaza el "Panel Asomado" en gradiente del Pencil — el gradiente
- * fundía el sheet con el mapa, lo opuesto al feel iOS-y de tarjeta flotante.
+ * Maps. NOTA: no aplicamos `iOSCornerStyle` aquí — gorhom anima este View
+ * internamente y mezclar `borderCurve` rompe el render del sheet.
  */
 const SheetBackground = ({ style }: BottomSheetBackgroundProps) => (
   <View style={[style, styles.background]} pointerEvents="none" />
@@ -57,17 +58,20 @@ export type BottomSheetHandle = {
 };
 
 /**
- * Panel inferior estilo Apple Maps: siempre presente (mientras `visible`),
- * con 3 snap points, esquinas redondeadas y un SearchBar sticky en la
- * cabecera. El cuerpo scrollea internamente vía `BottomSheetScrollView`.
+ * Panel inferior estilo Apple Maps usando `BottomSheetModal` de gorhom — la
+ * variante con Portal que rendea al root del app (vía `BottomSheetModalProvider`).
+ * Crítico: usar `BottomSheetModal` y NO `BottomSheet`. La versión inline rompe
+ * cuando algún ancestro envuelve al screen en `createNativeStackNavigator`
+ * (los containers nativos de react-native-screens reportan layout async y
+ * gorhom inicializa con `containerHeight: 0`). El Modal escapa esa cadena.
  */
 const BottomSheet = forwardRef<BottomSheetHandle, Props>(
   ({ visible, header, children }, handleRef) => {
-    const ref = useRef<ElementRef<typeof GorhomBottomSheet>>(null);
+    const ref = useRef<ElementRef<typeof BottomSheetModal>>(null);
 
     useEffect(() => {
-      if (visible) ref.current?.snapToIndex(0);
-      else ref.current?.close();
+      if (visible) ref.current?.present();
+      else ref.current?.dismiss();
     }, [visible]);
 
     useImperativeHandle(handleRef, () => ({
@@ -84,12 +88,13 @@ const BottomSheet = forwardRef<BottomSheetHandle, Props>(
     };
 
     return (
-      <GorhomBottomSheet
+      <BottomSheetModal
         ref={ref}
-        index={-1}
+        index={0}
         snapPoints={SNAP_POINTS}
         enableDynamicSizing={false}
         enablePanDownToClose={false}
+        enableDismissOnClose={false}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         backgroundComponent={SheetBackground}
@@ -107,7 +112,7 @@ const BottomSheet = forwardRef<BottomSheetHandle, Props>(
           {header ? <View style={styles.headerSlot}>{header}</View> : null}
           {children}
         </BottomSheetScrollView>
-      </GorhomBottomSheet>
+      </BottomSheetModal>
     );
   },
 );
@@ -117,18 +122,12 @@ BottomSheet.displayName = 'BottomSheet';
 const styles = StyleSheet.create({
   // Panel flotante con sombra superior — feel iOS sheet.
   sheet: {
-    // El borderTopRadius se aplica via el background custom; el shadow va
-    // sobre el contenedor del sheet (no se ve si lo ponemos en background).
     shadowColor: Colors.base.shadow,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 12,
   },
-  // Solid background con esquinas redondeadas. NOTA: no aplicamos
-  // `iOSCornerStyle` aquí — gorhom anima este View internamente y mezclar
-  // `borderCurve` rompe el render del sheet (queda invisible). Los corners
-  // rounded-rect normales son suficientemente iOS en este surface.
   background: {
     backgroundColor: Colors.base.bgPrimary,
     borderTopLeftRadius: BorderRadius.xl,

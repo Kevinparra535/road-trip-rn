@@ -213,6 +213,13 @@ export class HomeViewModel {
   rideType: RideType = DEFAULT_RIDE_TYPE;
   destination: Place | null = null;
   /**
+   * Lugar previsualizado (formSheet "DestinationPreview"): el rider eligió un
+   * resultado del buscador pero aún no confirmó. El mapa enfoca este punto
+   * y el sheet de preview lee `previewPlace` para mostrar info + CTA. Al
+   * aceptar pasa a `destination` (y dispara la ruta); al cancelar se descarta.
+   */
+  previewPlace: Place | null = null;
+  /**
    * Paradas intermedias entre el origen y el destino, en el orden en que el
    * rider quiere visitarlas. Se chainean a Mapbox como waypoints; el primero
    * aparece como B, el segundo como C, etc. La letra del destino se calcula
@@ -970,6 +977,47 @@ export class HomeViewModel {
     void this.computeRoute();
   }
 
+  /**
+   * Previsualiza un lugar elegido del buscador. La pantalla navega al
+   * formSheet "DestinationPreview" y la cámara del mapa se enfoca sobre el
+   * punto. El destino real (y la ruta) se aplican solo al confirmar.
+   */
+  setPreviewPlace(place: Place): void {
+    runInAction(() => {
+      this.previewPlace = place;
+      // Limpiamos la búsqueda para que al volver al Home no quede el listado
+      // de resultados arriba — el rider ya eligió uno.
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /**
+   * Confirma el preview: pasa el lugar a `destination` y dispara cómputo de
+   * ruta vía `selectDestination`. Si estábamos en modo "agregar parada", lo
+   * apila a la cadena en vez de reemplazar el destino.
+   */
+  confirmPreview(): void {
+    const place = this.previewPlace;
+    if (!place) return;
+    runInAction(() => {
+      this.previewPlace = null;
+    });
+    this.selectDestination(place);
+  }
+
+  /** Descarta el preview sin tocar el destino actual ni la ruta existente. */
+  cancelPreview(): void {
+    runInAction(() => {
+      this.previewPlace = null;
+    });
+  }
+
+  /** Coordenada [lng, lat] del lugar previsualizado, para enfocar la cámara. */
+  get previewCoordinate(): [number, number] | null {
+    return this.previewPlace ? this.previewPlace.toLngLat() : null;
+  }
+
   /** Activa el modo "agregar parada": el proximo lugar buscado sera waypoint. */
   startAddingStop(): void {
     if (!this.destination) return;
@@ -1269,6 +1317,7 @@ export class HomeViewModel {
     this.simulatedDistanceKm = 0;
     this.offRouteTicks = 0;
     this.destination = null;
+    this.previewPlace = null;
     this.intermediateStops = [];
     this.searchMode = 'destination';
     this.isRouteResponse = null;
@@ -1309,6 +1358,7 @@ export class HomeViewModel {
       this.isSearchResponse = null;
       this.rideType = DEFAULT_RIDE_TYPE;
       this.destination = null;
+      this.previewPlace = null;
       this.intermediateStops = [];
       this.searchMode = 'destination';
       this.isRouteLoading = false;

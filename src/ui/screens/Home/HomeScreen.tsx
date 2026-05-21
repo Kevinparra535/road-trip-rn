@@ -1,7 +1,12 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { DrawerNavigationProp } from '@react-navigation/drawer';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import {
+  CompositeNavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { observer } from 'mobx-react-lite';
 import {
@@ -40,7 +45,10 @@ import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
-import { AppDrawerParamList } from '@/ui/navigation/types';
+import {
+  AppDrawerParamList,
+  HomeStackParamList,
+} from '@/ui/navigation/types';
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts, { FontFamily } from '@/ui/styles/Fonts';
@@ -78,7 +86,16 @@ const HomeScreen = observer(() => {
     () => container.get<HomeViewModel>(TYPES.HomeViewModel),
     [],
   );
-  const navigation = useNavigation<DrawerNavigationProp<AppDrawerParamList>>();
+  // HomeScreen vive dentro del HomeNavigator (Stack) que vive dentro del
+  // AppDrawer. CompositeNavigationProp permite tipear navigate para ambos:
+  // rutas del Stack (DestinationPreview) y del Drawer (ProfileTab, openDrawer).
+  const navigation =
+    useNavigation<
+      CompositeNavigationProp<
+        NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
+        DrawerNavigationProp<AppDrawerParamList>
+      >
+    >();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const fittedDestinationRef = useRef<string | null>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
@@ -120,6 +137,20 @@ const HomeScreen = observer(() => {
       });
     }
   }, [viewModel, followTarget, hasAutoCentered]);
+
+  // Mientras hay un previewPlace activo (formSheet "DestinationPreview"
+  // abierto), enfocamos la cámara al punto previsualizado. Esto es
+  // independiente del fitBounds de la ruta — la ruta aún no existe.
+  const previewCoordinate = viewModel.previewCoordinate;
+  useEffect(() => {
+    if (previewCoordinate) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: previewCoordinate,
+        zoomLevel: 12,
+        animationDuration: 700,
+      });
+    }
+  }, [previewCoordinate]);
 
   // Encuadra la camara sobre la ruta una vez por destino calculado.
   const routeBounds = viewModel.routeBounds;
@@ -172,12 +203,15 @@ const HomeScreen = observer(() => {
     cameraRef.current?.setCamera({ ...target, animationDuration: 600 });
   };
 
+  // Apple Maps flow: tocar un resultado NO selecciona destino directo. Setea
+  // un previewPlace en el VM, baja el sheet al peek (libera el mapa para que
+  // se vea la ciudad enfocada), y empuja la pantalla "DestinationPreview"
+  // como native formSheet. El destino real se aplica solo al confirmar.
   const handleSelectPlace = (place: Place) => {
     Keyboard.dismiss();
-    viewModel.selectDestination(place);
-    // Al elegir destino bajamos a medium para que el resumen quede visible
-    // sin tapar el mapa — Apple Maps hace exactamente esto.
-    sheetRef.current?.medium();
+    viewModel.setPreviewPlace(place);
+    sheetRef.current?.peek();
+    navigation.navigate('DestinationPreview');
   };
 
   // Al tocar el input expandimos al detent grande: el usuario está buscando,
