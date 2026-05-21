@@ -8,6 +8,7 @@ export const TYPES = {
   FuelStationService: Symbol.for('FuelStationService'),
   LocationService: Symbol.for('LocationService'),
   PlaceSearchService: Symbol.for('PlaceSearchService'),
+  PlaceSummaryService: Symbol.for('PlaceSummaryService'),
   ElevationService: Symbol.for('ElevationService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
@@ -19,6 +20,7 @@ export const TYPES = {
   FuelStationRepository: Symbol.for('FuelStationRepository'),
   LocationRepository: Symbol.for('LocationRepository'),
   PlaceSearchRepository: Symbol.for('PlaceSearchRepository'),
+  PlaceSummaryRepository: Symbol.for('PlaceSummaryRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
 
   // ── UseCases (capa domain) ──
@@ -48,6 +50,7 @@ export const TYPES = {
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
   SearchPlacesUseCase: Symbol.for('SearchPlacesUseCase'),
+  GetPlaceSummaryUseCase: Symbol.for('GetPlaceSummaryUseCase'),
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
   EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
 
