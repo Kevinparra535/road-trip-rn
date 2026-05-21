@@ -47,7 +47,7 @@ import Fonts, { FontFamily } from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { GradientStop, HomeViewModel } from './HomeViewModel';
+import { HomeViewModel } from './HomeViewModel';
 
 type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -67,15 +67,6 @@ const RIDE_OPTIONS: { type: RideType; label: string; icon: MciName }[] = [
   { type: 'offroad', label: 'OFFROAD', icon: 'terrain' },
   { type: 'group', label: 'GRUPAL', icon: 'account-group' },
 ];
-
-/** Construye la expresion `lineGradient` de Mapbox a partir de las paradas. */
-const buildLineGradient = (stops: GradientStop[]): any => {
-  const expression: unknown[] = ['interpolate', ['linear'], ['line-progress']];
-  stops.forEach((stop) => {
-    expression.push(stop.progress, stop.color);
-  });
-  return expression;
-};
 
 /**
  * Pantalla principal (Home v2): mapa estilo navegacion, buscador y selector
@@ -187,7 +178,6 @@ const HomeScreen = observer(() => {
     viewModel.selectDestination(place);
   };
 
-  const highlights = viewModel.elevationHighlights;
   const fuel = viewModel.fuelSummary;
   const fuelReachFails = fuel !== null && !fuel.reaches;
   const autonomy = viewModel.autonomySummary;
@@ -222,9 +212,6 @@ const HomeScreen = observer(() => {
         />
 
         {viewModel.routeLines.map((line) => {
-          const stops = line.gradientStops;
-          const gradient =
-            stops && stops.length > 1 ? buildLineGradient(stops) : null;
           const coreWidth = !line.isPrimary
             ? ROUTE_ALT_WIDTH
             : isNavigating
@@ -235,86 +222,32 @@ const HomeScreen = observer(() => {
               key={line.id}
               id={`route-${line.id}`}
               shape={line.shape}
-              lineMetrics={line.isPrimary && gradient !== null}
             >
               <Mapbox.LineLayer
                 id={`route-${line.id}-line`}
-                style={
-                  gradient && line.isPrimary
-                    ? {
-                        lineGradient: gradient,
-                        lineColor: line.color,
-                        lineWidth: coreWidth,
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                      }
-                    : {
-                        lineColor: line.color,
-                        lineWidth: coreWidth,
-                        lineOpacity: line.isPrimary ? 1 : 0.9,
-                        lineCap: 'round',
-                        lineJoin: 'round',
-                      }
-                }
+                style={{
+                  lineColor: line.color,
+                  lineWidth: coreWidth,
+                  lineOpacity: line.isPrimary ? 1 : 0.9,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                }}
               />
             </Mapbox.ShapeSource>
           );
         })}
 
-        {highlights ? (
-          <Mapbox.PointAnnotation
-            id="elevation-high"
-            coordinate={highlights.highest.coordinate}
-          >
-            {/* collapsable=false: iOS Mapbox PointAnnotation acepta como mucho
-                un subview, y sin esto RN aplana la View envoltura y expone los
-                hijos directamente, disparando el error nativo. */}
-            <View
-              collapsable={false}
-              style={[styles.elevationBadge, styles.elevationBadgeHigh]}
-            >
-              <Ionicons
-                name="arrow-up"
-                size={11}
-                color={Colors.elevation.peak}
-              />
-              <Text style={styles.elevationBadgeText}>
-                {highlights.highest.label}
-              </Text>
-            </View>
-          </Mapbox.PointAnnotation>
-        ) : null}
-
-        {highlights ? (
-          <Mapbox.PointAnnotation
-            id="elevation-low"
-            coordinate={highlights.lowest.coordinate}
-          >
-            <View
-              collapsable={false}
-              style={[styles.elevationBadge, styles.elevationBadgeLow]}
-            >
-              <Ionicons
-                name="arrow-down"
-                size={11}
-                color={Colors.elevation.low}
-              />
-              <Text style={styles.elevationBadgeText}>
-                {highlights.lowest.label}
-              </Text>
-            </View>
-          </Mapbox.PointAnnotation>
-        ) : null}
-
         {viewModel.destinationCoordinate ? (
-          <Mapbox.PointAnnotation
+          <Mapbox.MarkerView
             id="route-destination"
             coordinate={viewModel.destinationCoordinate}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
           >
-            <View collapsable={false} style={styles.destinationHalo}>
+            <View style={styles.destinationHalo}>
               <View style={styles.destinationDot} />
             </View>
-          </Mapbox.PointAnnotation>
+          </Mapbox.MarkerView>
         ) : null}
 
         {viewModel.navRiderCoordinate ? (
@@ -351,14 +284,16 @@ const HomeScreen = observer(() => {
         ))}
 
         {viewModel.isUserDotVisible && viewModel.userCoordinates ? (
-          <Mapbox.PointAnnotation
+          <Mapbox.MarkerView
             id="user-location"
             coordinate={viewModel.userCoordinates}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
           >
-            <View collapsable={false} style={styles.userHalo}>
+            <View style={styles.userHalo}>
               <View style={styles.userDot} />
             </View>
-          </Mapbox.PointAnnotation>
+          </Mapbox.MarkerView>
         ) : null}
 
         {viewModel.isHeadingMarkerVisible && viewModel.headingShape ? (
@@ -1973,26 +1908,6 @@ const styles = StyleSheet.create({
   },
 
   // ── Marcadores del mapa ───────────────────────────────────────────────────
-  elevationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingVertical: 3,
-    paddingHorizontal: Spacings.sm,
-    backgroundColor: Colors.base.bgPrimary,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-  },
-  elevationBadgeHigh: {
-    borderColor: Colors.elevation.peak,
-  },
-  elevationBadgeLow: {
-    borderColor: Colors.elevation.low,
-  },
-  elevationBadgeText: {
-    ...Fonts.links,
-    color: Colors.base.textPrimary,
-  },
   destinationHalo: {
     width: 24,
     height: 24,
