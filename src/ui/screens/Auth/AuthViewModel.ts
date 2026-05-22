@@ -116,11 +116,16 @@ export class AuthViewModel {
   private updateLoadingState(
     isLoading: boolean,
     error: string | null,
-    _type: ICalls,
+    type: ICalls,
   ) {
     runInAction(() => {
-      this.isSubmitting = isLoading;
-      this.isSubmitError = error;
+      switch (type) {
+        case 'signIn':
+        case 'signUp':
+          this.isSubmitting = isLoading;
+          this.isSubmitError = error;
+          break;
+      }
     });
   }
 

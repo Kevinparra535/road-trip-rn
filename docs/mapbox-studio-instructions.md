@@ -138,18 +138,18 @@ Eso es todo — los tres screens (`HomeScreen`, `RoutePlannerScreen`, `RouteDeta
 
 ## Paleta de referencia (extraída del Pencil)
 
-| Elemento Pencil          | Color    | Uso en Studio                            |
-|--------------------------|----------|------------------------------------------|
-| `YsVAk` gradient top     | #0A1A0A  | Background / Land                        |
-| `YsVAk` gradient mid     | #0E1A0E  | Landuse parks                            |
-| `YsVAk` gradient bottom  | #0D1117  | Water                                    |
-| `luxhj` Cross Road       | #1A2A1A  | Road tertiary / street fill              |
-| `DraFP` Cross Road 2     | #152015  | Road casing                              |
-| `HF5AM` Route Core       | #FF9800  | (NO va en Studio — lo dibuja la app)     |
-| Pin/Origin               | #FF9800  | (NO va en Studio — lo dibuja la app)     |
-| Pin/Destination          | #4CAF50  | (NO va en Studio — lo dibuja la app)     |
-| Pin/Gas Station          | #2196F3  | (NO va en Studio — lo dibuja la app)     |
-| Labels                   | #FFFFFF40 → #FFFFFF88 | road/place labels        |
+| Elemento Pencil         | Color                 | Uso en Studio                        |
+| ----------------------- | --------------------- | ------------------------------------ |
+| `YsVAk` gradient top    | #0A1A0A               | Background / Land                    |
+| `YsVAk` gradient mid    | #0E1A0E               | Landuse parks                        |
+| `YsVAk` gradient bottom | #0D1117               | Water                                |
+| `luxhj` Cross Road      | #1A2A1A               | Road tertiary / street fill          |
+| `DraFP` Cross Road 2    | #152015               | Road casing                          |
+| `HF5AM` Route Core      | #FF9800               | (NO va en Studio — lo dibuja la app) |
+| Pin/Origin              | #FF9800               | (NO va en Studio — lo dibuja la app) |
+| Pin/Destination         | #4CAF50               | (NO va en Studio — lo dibuja la app) |
+| Pin/Gas Station         | #2196F3               | (NO va en Studio — lo dibuja la app) |
+| Labels                  | #FFFFFF40 → #FFFFFF88 | road/place labels                    |
 
 ## Notas
 

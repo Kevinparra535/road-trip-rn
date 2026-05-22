@@ -1311,30 +1311,32 @@ export class HomeViewModel {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
-    this.isNavigating = false;
-    this.isArrived = false;
-    this.arrivedAt = null;
-    this.simulatedDistanceKm = 0;
-    this.offRouteTicks = 0;
-    this.destination = null;
-    this.previewPlace = null;
-    this.intermediateStops = [];
-    this.searchMode = 'destination';
-    this.isRouteResponse = null;
-    this.isRouteError = null;
-    this.isRouteLoading = false;
-    this.isElevationResponse = null;
-    this.isElevationError = null;
-    this.isElevationLoading = false;
-    this.isFuelEstimateResponse = null;
-    this.isFuelEstimateError = null;
-    this.isFuelEstimateLoading = false;
-    this.fuelStops = [];
-    this.isFuelStopResponse = null;
-    this.isFuelStopError = null;
-    this.isFuelStopLoading = false;
-    this.searchQuery = '';
-    this.isSearchResponse = null;
+    runInAction(() => {
+      this.isNavigating = false;
+      this.isArrived = false;
+      this.arrivedAt = null;
+      this.simulatedDistanceKm = 0;
+      this.offRouteTicks = 0;
+      this.destination = null;
+      this.previewPlace = null;
+      this.intermediateStops = [];
+      this.searchMode = 'destination';
+      this.isRouteResponse = null;
+      this.isRouteError = null;
+      this.isRouteLoading = false;
+      this.isElevationResponse = null;
+      this.isElevationError = null;
+      this.isElevationLoading = false;
+      this.isFuelEstimateResponse = null;
+      this.isFuelEstimateError = null;
+      this.isFuelEstimateLoading = false;
+      this.fuelStops = [];
+      this.isFuelStopResponse = null;
+      this.isFuelStopError = null;
+      this.isFuelStopLoading = false;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
   }
 
   reset(): void {

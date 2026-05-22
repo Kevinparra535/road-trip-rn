@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GradientView from '@/ui/components/GradientView';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
@@ -143,14 +143,12 @@ const styles = StyleSheet.create({
     ...Shadows.bankCard,
   },
   title: {
-    fontFamily: FontFamily.bold,
-    fontSize: 26,
+    ...Fonts.header2,
     color: Colors.base.textPrimary,
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: FontFamily.medium,
-    fontSize: 14,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
     textAlign: 'center',
   },
@@ -183,13 +181,11 @@ const styles = StyleSheet.create({
     gap: Spacings.xs,
   },
   statValue: {
-    fontFamily: FontFamily.bold,
-    fontSize: 24,
+    ...Fonts.header3,
     color: Colors.base.textPrimary,
   },
   statLabel: {
-    fontFamily: FontFamily.bold,
-    fontSize: 11,
+    ...Fonts.labelInputError,
     color: Colors.base.textMuted,
     letterSpacing: 1,
   },
@@ -204,8 +200,7 @@ const styles = StyleSheet.create({
     ...Shadows.bankButton,
   },
   finishText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 17,
+    ...Fonts.inputsBold,
     color: Colors.semantic.text.primaryDark,
   },
 });

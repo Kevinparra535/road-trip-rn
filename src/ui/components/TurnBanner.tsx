@@ -9,7 +9,7 @@ import {
 } from '@/domain/entities/NavigationStep';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
@@ -128,19 +128,16 @@ const styles = StyleSheet.create({
     gap: Spacings.xs + 2,
   },
   distance: {
-    fontFamily: FontFamily.bold,
-    fontSize: 32,
+    ...Fonts.header1,
     color: Colors.base.accent,
     includeFontPadding: false,
   },
   instruction: {
-    fontFamily: FontFamily.bold,
-    fontSize: 19,
+    ...Fonts.header4,
     color: Colors.base.textPrimary,
   },
   street: {
-    fontFamily: FontFamily.medium,
-    fontSize: 13,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
 });

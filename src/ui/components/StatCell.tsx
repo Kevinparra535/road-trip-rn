@@ -3,7 +3,7 @@ import { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -52,13 +52,11 @@ const styles = StyleSheet.create({
     borderLeftColor: Colors.base.separator,
   },
   value: {
-    fontFamily: FontFamily.bold,
-    fontSize: 16,
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
   label: {
-    fontFamily: FontFamily.medium,
-    fontSize: 10,
+    ...Fonts.links,
     color: Colors.base.textMuted,
   },
 });

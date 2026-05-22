@@ -63,5 +63,6 @@ export const TYPES = {
   RoutePlannerViewModel: Symbol.for('RoutePlannerViewModel'),
   RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
   HomeViewModel: Symbol.for('HomeViewModel'),
+  DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),
   LocationStore: Symbol.for('LocationStore'),
 } as const;

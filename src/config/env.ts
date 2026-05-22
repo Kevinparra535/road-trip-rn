@@ -13,6 +13,8 @@ type FirebaseEnv = {
 type AppEnv = {
   mapboxPublicToken: string;
   MAP_STYLE_URL: string;
+  /** Base URL del endpoint REST de Wikipedia (idioma configurable por env). */
+  placeSummaryBaseUrl: string;
   firebase: FirebaseEnv;
 };
 
@@ -29,6 +31,9 @@ export const ENV: AppEnv = {
   // styleURL invalido, el mapa quedaba en negro y nuestros LineLayer /
   // FillLayer rendereaban sin color.
   MAP_STYLE_URL: 'mapbox://styles/mapbox/navigation-night-v1',
+  placeSummaryBaseUrl:
+    extra.placeSummaryBaseUrl ??
+    'https://es.wikipedia.org/api/rest_v1/page/summary',
   firebase: {
     apiKey: extra.firebase?.apiKey ?? 'SET_FIREBASE_API_KEY',
     authDomain: extra.firebase?.authDomain ?? 'SET_FIREBASE_AUTH_DOMAIN',

@@ -15,10 +15,10 @@ const INPUT = path.join(__dirname, 'template-navigation-night-v1.json');
 const OUTPUT = path.join(__dirname, 'roadtrip-night.style.json');
 
 const PENCIL = {
-  bg: '#0A1A0A',        // land base
+  bg: '#0A1A0A', // land base
   landParks: '#0E1A0E', // parks/landcover
-  water: '#0D1117',     // water (tinte navy del horizonte)
-  building: '#0F1A0F',  // edificios 3D
+  water: '#0D1117', // water (tinte navy del horizonte)
+  building: '#0F1A0F', // edificios 3D
   roadStreet: '#1A2A1A',
   roadCasing: '#152015',
   roadPrimary: '#1F2F1F',
@@ -38,18 +38,24 @@ function transformColor(value) {
   if (typeof value !== 'string') return value;
   const re = /hsla?\((\d+),\s*(\d+)%,\s*(\d+)%(?:,\s*([\d.]+))?\)/g;
   return value.replace(re, (_m, h, s, l, a) => {
-    h = Number(h); s = Number(s); l = Number(l);
+    h = Number(h);
+    s = Number(s);
+    l = Number(l);
     const alpha = a !== undefined ? Number(a) : null;
 
     // Preserva trafico (naranja/rojo vibrantes)
-    const isTraffic = ((h <= 60 || h >= 330) && s >= 40);
+    const isTraffic = (h <= 60 || h >= 330) && s >= 40;
     if (isTraffic) {
-      return alpha !== null ? `hsla(${h}, ${s}%, ${l}%, ${alpha})` : `hsl(${h}, ${s}%, ${l}%)`;
+      return alpha !== null
+        ? `hsla(${h}, ${s}%, ${l}%, ${alpha})`
+        : `hsl(${h}, ${s}%, ${l}%)`;
     }
 
     // Preserva blancos/casi-blancos (etiquetas, halos claros)
     if (l >= 85) {
-      return alpha !== null ? `hsla(0, 0%, 100%, ${alpha})` : `hsl(0, 0%, 100%)`;
+      return alpha !== null
+        ? `hsla(0, 0%, 100%, ${alpha})`
+        : `hsl(0, 0%, 100%)`;
     }
 
     // Resto: olive shift
@@ -97,36 +103,47 @@ function applyLayerOverrides(layers) {
   for (const layer of layers) {
     const id = layer.id;
     if (id in overrides) {
-      Object.assign(layer.paint = layer.paint || {}, overrides[id].paint);
+      Object.assign((layer.paint = layer.paint || {}), overrides[id].paint);
     }
 
     if (!layer.paint) continue;
 
     // Motorway / Trunk (autopistas)
     if (/motorway|trunk/.test(id) && !/case|shield|label/.test(id)) {
-      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadMotorway;
+      if ('line-color' in layer.paint)
+        layer.paint['line-color'] = PENCIL.roadMotorway;
     }
     // Casing layers (perfilado)
     if (/-case/.test(id)) {
-      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadCasing;
+      if ('line-color' in layer.paint)
+        layer.paint['line-color'] = PENCIL.roadCasing;
     }
     // Primary / Secondary / Tertiary
-    if (/primary|secondary|tertiary/.test(id) && !/case|shield|label/.test(id)) {
-      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadPrimary;
+    if (
+      /primary|secondary|tertiary/.test(id) &&
+      !/case|shield|label/.test(id)
+    ) {
+      if ('line-color' in layer.paint)
+        layer.paint['line-color'] = PENCIL.roadPrimary;
     }
     // Street / minor
     if (/street|minor/.test(id) && !/case|shield|label/.test(id)) {
-      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadStreet;
+      if ('line-color' in layer.paint)
+        layer.paint['line-color'] = PENCIL.roadStreet;
     }
 
     // Labels: blanco translucido con halo oscuro
     if (layer.type === 'symbol' && /label/.test(id)) {
       if (layer.paint['text-color']) {
         const isMain = /country|state|settlement-major/.test(id);
-        layer.paint['text-color'] = isMain ? PENCIL.labelMain : PENCIL.labelSecondary;
+        layer.paint['text-color'] = isMain
+          ? PENCIL.labelMain
+          : PENCIL.labelSecondary;
       }
-      if (layer.paint['text-halo-color']) layer.paint['text-halo-color'] = PENCIL.labelHalo;
-      if (layer.paint['text-halo-width'] === undefined) layer.paint['text-halo-width'] = 1.5;
+      if (layer.paint['text-halo-color'])
+        layer.paint['text-halo-color'] = PENCIL.labelHalo;
+      if (layer.paint['text-halo-width'] === undefined)
+        layer.paint['text-halo-width'] = 1.5;
     }
   }
 

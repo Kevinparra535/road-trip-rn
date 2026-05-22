@@ -55,39 +55,4 @@ export class Place {
   toLngLat(): [number, number] {
     return [this.longitude, this.latitude];
   }
-
-  /**
-   * Etiqueta amigable del tipo de lugar para mostrar como badge en UI.
-   * Devuelve `null` si no hay un placeType claro o si no merece resaltarse.
-   */
-  typeLabel(): string | null {
-    if (this.category) {
-      // POI: capitalizo la primera categoría (vienen comma-separated).
-      const first = this.category.split(',')[0]?.trim();
-      if (first) return first.charAt(0).toUpperCase() + first.slice(1);
-    }
-    switch (this.placeType) {
-      case 'place':
-        return 'Ciudad';
-      case 'region':
-        return 'Región';
-      case 'country':
-        return 'País';
-      case 'address':
-        return 'Dirección';
-      case 'poi':
-        return 'Lugar';
-      case 'locality':
-        return 'Localidad';
-      case 'neighborhood':
-        return 'Barrio';
-      default:
-        return null;
-    }
-  }
-
-  /** "Ciudad, Región, País" según lo que esté disponible. */
-  contextLine(): string {
-    return [this.region, this.country].filter(Boolean).join(', ');
-  }
 }

@@ -15,9 +15,10 @@ export type GetPlaceSummaryInput = {
  * y la UI cae al estado "sin foto, solo info del geocoding".
  */
 @injectable()
-export class GetPlaceSummaryUseCase
-  implements UseCase<GetPlaceSummaryInput, PlaceSummary | null>
-{
+export class GetPlaceSummaryUseCase implements UseCase<
+  GetPlaceSummaryInput,
+  PlaceSummary | null
+> {
   constructor(
     @inject(TYPES.PlaceSummaryRepository)
     private readonly repository: PlaceSummaryRepository,

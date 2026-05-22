@@ -72,6 +72,7 @@ import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
+import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
@@ -270,3 +271,6 @@ container
   .bind<HomeViewModel>(TYPES.HomeViewModel)
   .to(HomeViewModel)
   .inSingletonScope();
+container
+  .bind<DestinationPreviewViewModel>(TYPES.DestinationPreviewViewModel)
+  .to(DestinationPreviewViewModel);

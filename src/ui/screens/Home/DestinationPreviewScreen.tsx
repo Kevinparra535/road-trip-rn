@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -16,26 +16,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
-import { Place } from '@/domain/entities/Place';
-import { PlaceSummary } from '@/domain/entities/PlaceSummary';
-import { haversineKm } from '@/domain/geo/geoMath';
-import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
-import GradientView from '@/ui/components/GradientView';
+import PrimaryButton from '@/ui/components/PrimaryButton';
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
-import { mapboxStaticImageUrl } from '@/ui/utils/mapboxStaticImage';
-import { LocationStore } from '@/ui/viewModels/LocationStore';
 
-import { HomeViewModel } from './HomeViewModel';
-
-// Velocidad promedio que asumimos para el ETA del preview. La ruta real
-// puede dar otro número (curvas, semáforos), pero da una idea de magnitud.
-const PREVIEW_AVG_SPEED_KMH = 80;
-// Multiplicador straight-line → ruta real (la línea recta sub-estima la
-// distancia por carretera ~1.3x en promedio para viajes largos).
-const STRAIGHT_TO_ROAD_FACTOR = 1.3;
+import { DestinationPreviewViewModel } from './DestinationPreviewViewModel';
 
 const formatDistance = (km: number): string => {
   if (km < 1) return `${Math.round(km * 1000)} m`;
@@ -52,113 +39,66 @@ const formatDuration = (minutes: number): string => {
   return `${hours} h ${mins} min`;
 };
 
-type PreviewBundle = {
-  place: Place;
-  staticMapUrl: string;
-  distanceKm: number | null;
-  etaMin: number | null;
-};
-
-const usePreviewBundle = (
-  place: Place | null,
-  width: number,
-): PreviewBundle | null => {
-  const locationStore = useMemo(
-    () => container.get<LocationStore>(TYPES.LocationStore),
-    [],
-  );
-  if (!place) return null;
-  const userLocation = locationStore.isLocationResponse;
-  const distanceKm = userLocation
-    ? haversineKm(
-        { latitude: userLocation.latitude, longitude: userLocation.longitude },
-        { latitude: place.latitude, longitude: place.longitude },
-      )
-    : null;
-  const roadKm = distanceKm !== null ? distanceKm * STRAIGHT_TO_ROAD_FACTOR : null;
-  const etaMin =
-    roadKm !== null ? (roadKm / PREVIEW_AVG_SPEED_KMH) * 60 : null;
-  return {
-    place,
-    staticMapUrl: mapboxStaticImageUrl(place.longitude, place.latitude, {
-      width: Math.round(width),
-      height: 220,
-      zoom: place.placeType === 'place' ? 11 : 14,
-    }),
-    distanceKm,
-    etaMin,
-  };
-};
-
 /**
- * Sheet de previsualización del destino: el rider eligió un resultado del
+ * Sheet de previsualizacion del destino: el rider eligio un resultado del
  * buscador, lo confirmamos antes de trazar la ruta. Tres capas de info:
  *
- * 1. Static Images API → thumbnail del mapa con pin sobre la ciudad.
- * 2. Metadata del geocoding → badge de tipo, contexto (región/país),
+ * 1. Static Images API -> thumbnail del mapa con pin sobre la ciudad.
+ * 2. Metadata del geocoding -> badge de tipo, contexto (region/pais),
  *    distancia straight-line + ETA aproximado al trazar ruta.
- * 3. Wikipedia REST → foto + descripción corta cuando hay artículo.
+ * 3. Wikipedia REST -> foto + descripcion corta cuando hay articulo.
  *
  * Se monta como native formSheet con detent `fitToContents` (alto auto).
+ * Es 100% presentacional: todo el estado vive en `DestinationPreviewViewModel`.
  */
 const DestinationPreviewScreen = observer(() => {
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const viewModel = useMemo(
-    () => container.get<HomeViewModel>(TYPES.HomeViewModel),
+    () =>
+      container.get<DestinationPreviewViewModel>(
+        TYPES.DestinationPreviewViewModel,
+      ),
     [],
   );
-  const place = viewModel.previewPlace;
-  const bundle = usePreviewBundle(place, width - Spacings.lg * 2);
 
-  // Wikipedia summary: una sola request por place.id. Tres estados: null
-  // (cargando), object (encontrado), undefined post-load (sin artículo).
-  const [summary, setSummary] = useState<PlaceSummary | null | undefined>(null);
+  // El ancho del thumbnail estatico depende del viewport; lo registramos en
+  // el VM para que `staticMapUrl` se recompute reactivamente.
   useEffect(() => {
-    if (!place) return;
-    let cancelled = false;
-    setSummary(null);
-    const fetchSummary = async () => {
-      const useCase = container.get<GetPlaceSummaryUseCase>(
-        TYPES.GetPlaceSummaryUseCase,
-      );
-      const result = await useCase.run({ name: place.name });
-      if (!cancelled) setSummary(result ?? undefined);
-    };
-    void fetchSummary();
-    return () => {
-      cancelled = true;
-    };
-  }, [place]);
+    viewModel.setViewportWidth(width - Spacings.lg * 2);
+  }, [viewModel, width]);
 
-  // Cleanup: si cerró por swipe-down (sin tocar botones), descartamos el
-  // preview en el VM. confirmPreview/cancelPreview ya lo limpian.
+  // Cleanup: si cerro por swipe-down (sin tocar botones), descartamos el
+  // preview en el VM padre. `confirm`/`cancel` ya lo limpian.
   useEffect(() => {
     return () => {
-      if (viewModel.previewPlace !== null) viewModel.cancelPreview();
+      if (viewModel.hasPreview) viewModel.cancel();
+      viewModel.dispose();
     };
   }, [viewModel]);
 
-  // Edge case: alguien aterriza acá sin preview previo (ej: deep link).
+  // Edge case: alguien aterriza aca sin preview previo (ej: deep link).
+  const place = viewModel.previewPlace;
   useEffect(() => {
     if (place === null) navigation.goBack();
   }, [place, navigation]);
 
-  if (!place || !bundle) return null;
+  if (!place) return null;
 
   const handleConfirm = () => {
-    viewModel.confirmPreview();
+    viewModel.confirm();
     navigation.goBack();
   };
 
   const handleCancel = () => {
-    viewModel.cancelPreview();
+    viewModel.cancel();
     navigation.goBack();
   };
 
-  const typeLabel = place.typeLabel();
-  const contextLine = place.contextLine();
-  const showStats = bundle.distanceKm !== null && bundle.etaMin !== null;
+  const typeLabel = viewModel.typeLabel;
+  const contextLine = viewModel.contextLine;
+  const summary = viewModel.isPlaceSummaryResponse;
+  const isSummaryLoading = viewModel.isPlaceSummaryLoading;
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.container}>
@@ -166,14 +106,14 @@ const DestinationPreviewScreen = observer(() => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Capa 1 — Static map thumbnail del lugar */}
-        <Image
-          source={{ uri: bundle.staticMapUrl }}
-          style={[styles.mapThumb, { width: width - Spacings.lg * 2 }]}
-          resizeMode="cover"
-        />
+        {viewModel.staticMapUrl ? (
+          <Image
+            source={{ uri: viewModel.staticMapUrl }}
+            style={[styles.mapThumb, { width: width - Spacings.lg * 2 }]}
+            resizeMode="cover"
+          />
+        ) : null}
 
-        {/* Capa 2 — Nombre + badge + contexto + distance/ETA */}
         <View style={styles.titleRow}>
           <Text style={styles.title} numberOfLines={2}>
             {place.name}
@@ -195,7 +135,7 @@ const DestinationPreviewScreen = observer(() => {
           </Text>
         )}
 
-        {showStats ? (
+        {viewModel.hasStats ? (
           <View style={styles.stats}>
             <View style={styles.statItem}>
               <Ionicons
@@ -204,7 +144,7 @@ const DestinationPreviewScreen = observer(() => {
                 color={Colors.base.accent}
               />
               <Text style={styles.statValue}>
-                {formatDistance(bundle.distanceKm!)}
+                {formatDistance(viewModel.distanceKm!)}
               </Text>
               <Text style={styles.statLabel}>aprox.</Text>
             </View>
@@ -216,15 +156,14 @@ const DestinationPreviewScreen = observer(() => {
                 color={Colors.base.accent}
               />
               <Text style={styles.statValue}>
-                {formatDuration(bundle.etaMin!)}
+                {formatDuration(viewModel.etaMin!)}
               </Text>
               <Text style={styles.statLabel}>en moto</Text>
             </View>
           </View>
         ) : null}
 
-        {/* Capa 3 — Wikipedia summary (si hay) */}
-        {summary === null ? (
+        {isSummaryLoading ? (
           <View style={styles.summaryLoading}>
             <ActivityIndicator size="small" color={Colors.base.textMuted} />
           </View>
@@ -245,44 +184,25 @@ const DestinationPreviewScreen = observer(() => {
           </View>
         ) : null}
 
-        {/* Acciones */}
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Cancelar"
             onPress={handleCancel}
             style={({ pressed }) => [
-              styles.button,
               styles.cancelButton,
-              pressed && styles.buttonPressed,
+              pressed && styles.cancelButtonPressed,
             ]}
           >
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Trazar ruta a este destino"
+          <PrimaryButton
+            label="Trazar ruta"
+            iconName="navigate"
             onPress={handleConfirm}
-            style={({ pressed }) => [
-              styles.button,
-              styles.confirmButton,
-              pressed && styles.buttonPressed,
-            ]}
-          >
-            <GradientView
-              preset="accent"
-              direction="vertical"
-              style={styles.confirmGradient}
-            >
-              <Ionicons
-                name="navigate"
-                size={18}
-                color={Colors.semantic.text.primaryDark}
-              />
-              <Text style={styles.confirmButtonText}>Trazar ruta</Text>
-            </GradientView>
-          </Pressable>
+            style={styles.confirmButton}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -318,8 +238,7 @@ const styles = StyleSheet.create({
   },
   title: {
     flex: 1,
-    fontFamily: FontFamily.bold,
-    fontSize: 24,
+    ...Fonts.header2,
     color: Colors.base.textPrimary,
   },
   typeBadge: {
@@ -331,14 +250,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.accentDimBorder,
   },
   typeBadgeText: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 11,
+    ...Fonts.links,
     color: Colors.base.accent,
     letterSpacing: 0.3,
   },
   context: {
-    fontFamily: FontFamily.medium,
-    fontSize: 14,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
 
@@ -360,13 +277,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   statValue: {
-    fontFamily: FontFamily.bold,
-    fontSize: 14,
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
   statLabel: {
-    fontFamily: FontFamily.medium,
-    fontSize: 11,
+    ...Fonts.links,
     color: Colors.base.textMuted,
   },
   statDivider: {
@@ -399,8 +314,7 @@ const styles = StyleSheet.create({
   },
   summaryExtract: {
     flex: 1,
-    fontFamily: FontFamily.regular,
-    fontSize: 13,
+    ...Fonts.smallBodyText,
     lineHeight: 18,
     color: Colors.base.textSecondary,
   },
@@ -411,39 +325,25 @@ const styles = StyleSheet.create({
     gap: Spacings.md,
     marginTop: Spacings.sm,
   },
-  button: {
+  cancelButton: {
     flex: 1,
     height: 52,
-    borderRadius: BorderRadius.md,
-    ...iOSCornerStyle,
-    overflow: 'hidden',
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  cancelButton: {
-    backgroundColor: Colors.base.bgGradientEnd,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
+    ...iOSCornerStyle,
+  },
+  cancelButtonPressed: {
+    opacity: 0.85,
   },
   cancelButtonText: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 16,
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
-  confirmButton: {},
-  confirmGradient: {
+  confirmButton: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacings.sm,
-  },
-  confirmButtonText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 16,
-    color: Colors.semantic.text.primaryDark,
   },
 });

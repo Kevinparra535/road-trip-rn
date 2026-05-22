@@ -3,7 +3,6 @@ import {
   createDrawerNavigator,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ReactElement, useEffect, useState } from 'react';
 import {
   Pressable,
@@ -20,11 +19,13 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Rider } from '@/domain/entities/Rider';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+import GradientView from '@/ui/components/GradientView';
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import GarageNavigator from './GarageNavigator';
 import HomeNavigator from './HomeNavigator';
@@ -67,9 +68,7 @@ const DRAWER_ITEMS: DrawerItemSpec[] = [
   {
     routeName: 'ProfileTab',
     label: 'Perfil',
-    icon: (color) => (
-      <Ionicons name="person-outline" size={22} color={color} />
-    ),
+    icon: (color) => <Ionicons name="person-outline" size={22} color={color} />,
   },
 ];
 
@@ -118,14 +117,9 @@ const DrawerHeader = () => {
 
   return (
     <View style={styles.header}>
-      <LinearGradient
-        colors={[Colors.base.accentGradientStart, Colors.base.accentGradientEnd]}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.avatar}
-      >
+      <GradientView preset="accent" direction="vertical" style={styles.avatar}>
         <Text style={styles.avatarText}>{initials}</Text>
-      </LinearGradient>
+      </GradientView>
       <View style={styles.headerInfo}>
         <Text style={styles.headerName} numberOfLines={1}>
           {name}
@@ -162,10 +156,7 @@ const NavRow = ({ item, active, onPress }: NavRowProps) => {
       style={[styles.navRow, active && styles.navRowActive]}
     >
       <View
-        style={[
-          styles.navIndicator,
-          active && styles.navIndicatorActive,
-        ]}
+        style={[styles.navIndicator, active && styles.navIndicatorActive]}
       />
       {item.icon(tone)}
       <Text style={[styles.navLabel, { color: tone }]} numberOfLines={1}>
@@ -224,7 +215,7 @@ const AppDrawer = () => {
       screenOptions={{
         headerShown: false,
         drawerType: 'front',
-        overlayColor: 'rgba(0,0,0,0.67)',
+        overlayColor: hexToRgba(Colors.base.shadow, 0.67),
         drawerStyle: {
           width: drawerWidth,
           backgroundColor: Colors.base.bgPrimary,
@@ -272,8 +263,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   avatarText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 22,
+    ...Fonts.header3,
     color: Colors.semantic.text.primaryDark,
   },
   headerInfo: {
@@ -281,8 +271,7 @@ const styles = StyleSheet.create({
     gap: Spacings.xs,
   },
   headerName: {
-    fontFamily: FontFamily.bold,
-    fontSize: 19,
+    ...Fonts.header4,
     color: Colors.base.textPrimary,
   },
   bikeRow: {
@@ -292,8 +281,7 @@ const styles = StyleSheet.create({
   },
   bikeText: {
     flexShrink: 1,
-    fontFamily: FontFamily.semiBold,
-    fontSize: 13,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
 
@@ -333,8 +321,7 @@ const styles = StyleSheet.create({
   },
   navLabel: {
     flex: 1,
-    fontFamily: FontFamily.semiBold,
-    fontSize: 16,
+    ...Fonts.bodyTextBold,
   },
   navChevron: {
     marginLeft: Spacings.xs,
@@ -349,8 +336,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacings.spacex2,
   },
   versionText: {
-    fontFamily: FontFamily.medium,
-    fontSize: 11,
+    ...Fonts.links,
     color: Colors.base.textMuted,
     textAlign: 'center',
   },
