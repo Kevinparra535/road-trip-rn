@@ -1,4 +1,3 @@
-import { injectable } from 'inversify';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -8,8 +7,10 @@ import {
   User,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { injectable } from 'inversify';
 
 import { RiderModel } from '@/data/models/riderModel';
+
 import { firebaseAuth, firestore } from '@/data/network/firebase';
 
 const RIDERS_COLLECTION = 'riders';

@@ -1,9 +1,10 @@
-import * as Speech from 'expo-speech';
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
+import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
+
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
@@ -19,15 +20,7 @@ import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
-import {
-  boundingBox,
-  distanceAlongNearest,
-  distanceToPolylineKm,
-  haversineKm,
-  headingTriangle,
-  pointAtDistanceAlong,
-  samplePolyline,
-} from '@/domain/geo/geoMath';
+
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -38,9 +31,21 @@ import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
+
+import {
+  boundingBox,
+  distanceAlongNearest,
+  distanceToPolylineKm,
+  haversineKm,
+  headingTriangle,
+  pointAtDistanceAlong,
+  samplePolyline,
+} from '@/domain/geo/geoMath';
+
+import { LocationStore } from '@/ui/viewModels/LocationStore';
+
 import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
-import { LocationStore } from '@/ui/viewModels/LocationStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.
@@ -209,9 +214,29 @@ export class HomeViewModel {
   isSearchError: string | null = null;
   isSearchResponse: Place[] | null = null;
 
-  // ── State: ruta A->B ──
+  // ── State: ruta A->B (+ paradas intermedias) ──
   rideType: RideType = DEFAULT_RIDE_TYPE;
   destination: Place | null = null;
+  /**
+   * Lugar previsualizado (formSheet "DestinationPreview"): el rider eligió un
+   * resultado del buscador pero aún no confirmó. El mapa enfoca este punto
+   * y el sheet de preview lee `previewPlace` para mostrar info + CTA. Al
+   * aceptar pasa a `destination` (y dispara la ruta); al cancelar se descarta.
+   */
+  previewPlace: Place | null = null;
+  /**
+   * Paradas intermedias entre el origen y el destino, en el orden en que el
+   * rider quiere visitarlas. Se chainean a Mapbox como waypoints; el primero
+   * aparece como B, el segundo como C, etc. La letra del destino se calcula
+   * en la pantalla (`tripStops`).
+   */
+  intermediateStops: Place[] = [];
+  /**
+   * El proximo `selectDestination` que llegue del buscador se interpreta
+   * como destino final o como nueva parada intermedia. La pantalla cambia
+   * el placeholder y desactiva el modo al cancelar / completar.
+   */
+  searchMode: 'destination' | 'addStop' = 'destination';
   isRouteLoading: boolean = false;
   isRouteError: string | null = null;
   isRouteResponse: RouteDirections | null = null;
@@ -936,11 +961,144 @@ export class HomeViewModel {
     if (this.destination) void this.computeRoute();
   }
 
-  /** Fija el destino elegido y calcula el trazado desde la ubicacion actual. */
+  /**
+   * Procesa el lugar elegido en el buscador. Segun `searchMode`, lo fija
+   * como destino final (y resetea las paradas intermedias) o lo agrega
+   * como nueva parada del trayecto actual. En ambos casos el buscador se
+   * cierra y la ruta se recalcula.
+   */
   selectDestination(place: Place): void {
-    this.destination = place;
-    this.searchQuery = '';
-    this.isSearchResponse = null;
+    if (this.searchMode === 'addStop' && this.destination) {
+      this.addStop(place);
+      return;
+    }
+    runInAction(() => {
+      this.destination = place;
+      this.intermediateStops = [];
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+    void this.computeRoute();
+  }
+
+  /**
+   * Previsualiza un lugar elegido del buscador. La pantalla navega al
+   * formSheet "DestinationPreview" y la cámara del mapa se enfoca sobre el
+   * punto. El destino real (y la ruta) se aplican solo al confirmar.
+   */
+  setPreviewPlace(place: Place): void {
+    runInAction(() => {
+      this.previewPlace = place;
+      // Limpiamos la búsqueda para que al volver al Home no quede el listado
+      // de resultados arriba — el rider ya eligió uno.
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /**
+   * Confirma el preview: pasa el lugar a `destination` y dispara cómputo de
+   * ruta vía `selectDestination`. Si estábamos en modo "agregar parada", lo
+   * apila a la cadena en vez de reemplazar el destino.
+   */
+  confirmPreview(): void {
+    const place = this.previewPlace;
+    if (!place) return;
+    runInAction(() => {
+      this.previewPlace = null;
+    });
+    this.selectDestination(place);
+  }
+
+  /** Descarta el preview sin tocar el destino actual ni la ruta existente. */
+  cancelPreview(): void {
+    runInAction(() => {
+      this.previewPlace = null;
+    });
+  }
+
+  /** Coordenada [lng, lat] del lugar previsualizado, para enfocar la cámara. */
+  get previewCoordinate(): [number, number] | null {
+    return this.previewPlace ? this.previewPlace.toLngLat() : null;
+  }
+
+  /** Activa el modo "agregar parada": el proximo lugar buscado sera waypoint. */
+  startAddingStop(): void {
+    if (!this.destination) return;
+    runInAction(() => {
+      this.searchMode = 'addStop';
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /** Vuelve al modo destino sin tocar las paradas ya agregadas. */
+  cancelAddingStop(): void {
+    runInAction(() => {
+      this.searchMode = 'destination';
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
+  }
+
+  /** Agrega una parada intermedia al final del trayecto y recalcula la ruta. */
+  addStop(place: Place): void {
+    if (!this.destination) return;
+    runInAction(() => {
+      this.intermediateStops.push(place);
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+    void this.computeRoute();
+  }
+
+  /**
+   * Mueve una parada un puesto hacia atras (mas cerca del origen). Funciona
+   * sobre la cadena origen → intermedios → destino: si el destino sube, la
+   * ultima parada intermedia pasa a ser destino y viceversa. El origen es
+   * fijo (la ubicacion actual), no se reordena.
+   */
+  moveStopUp(placeId: string): void {
+    this.swapStop(placeId, -1);
+  }
+
+  /** Mueve una parada un puesto hacia adelante (mas cerca del destino). */
+  moveStopDown(placeId: string): void {
+    this.swapStop(placeId, +1);
+  }
+
+  /** Quita una parada por su id y recalcula. Si era la unica, vuelve a A->B. */
+  removeStop(placeId: string): void {
+    const before = this.intermediateStops.length;
+    runInAction(() => {
+      this.intermediateStops = this.intermediateStops.filter(
+        (stop) => stop.id !== placeId,
+      );
+    });
+    if (this.intermediateStops.length !== before && this.destination) {
+      void this.computeRoute();
+    }
+  }
+
+  /**
+   * Implementacion comun de `moveStopUp` / `moveStopDown`. Trabaja sobre la
+   * cadena completa [intermedios..., destino], hace el swap y vuelve a
+   * separar la cola (ultimo elemento = destino) para mantener el modelo del
+   * VM (`destination` + `intermediateStops`) sin redefinirlo.
+   */
+  private swapStop(placeId: string, direction: -1 | 1): void {
+    if (!this.destination) return;
+    const chain: Place[] = [...this.intermediateStops, this.destination];
+    const index = chain.findIndex((stop) => stop.id === placeId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= chain.length) return;
+    [chain[index], chain[target]] = [chain[target], chain[index]];
+    runInAction(() => {
+      this.intermediateStops = chain.slice(0, -1);
+      this.destination = chain[chain.length - 1];
+    });
     void this.computeRoute();
   }
 
@@ -1158,27 +1316,32 @@ export class HomeViewModel {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
-    this.isNavigating = false;
-    this.isArrived = false;
-    this.arrivedAt = null;
-    this.simulatedDistanceKm = 0;
-    this.offRouteTicks = 0;
-    this.destination = null;
-    this.isRouteResponse = null;
-    this.isRouteError = null;
-    this.isRouteLoading = false;
-    this.isElevationResponse = null;
-    this.isElevationError = null;
-    this.isElevationLoading = false;
-    this.isFuelEstimateResponse = null;
-    this.isFuelEstimateError = null;
-    this.isFuelEstimateLoading = false;
-    this.fuelStops = [];
-    this.isFuelStopResponse = null;
-    this.isFuelStopError = null;
-    this.isFuelStopLoading = false;
-    this.searchQuery = '';
-    this.isSearchResponse = null;
+    runInAction(() => {
+      this.isNavigating = false;
+      this.isArrived = false;
+      this.arrivedAt = null;
+      this.simulatedDistanceKm = 0;
+      this.offRouteTicks = 0;
+      this.destination = null;
+      this.previewPlace = null;
+      this.intermediateStops = [];
+      this.searchMode = 'destination';
+      this.isRouteResponse = null;
+      this.isRouteError = null;
+      this.isRouteLoading = false;
+      this.isElevationResponse = null;
+      this.isElevationError = null;
+      this.isElevationLoading = false;
+      this.isFuelEstimateResponse = null;
+      this.isFuelEstimateError = null;
+      this.isFuelEstimateLoading = false;
+      this.fuelStops = [];
+      this.isFuelStopResponse = null;
+      this.isFuelStopError = null;
+      this.isFuelStopLoading = false;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+    });
   }
 
   reset(): void {
@@ -1202,6 +1365,9 @@ export class HomeViewModel {
       this.isSearchResponse = null;
       this.rideType = DEFAULT_RIDE_TYPE;
       this.destination = null;
+      this.previewPlace = null;
+      this.intermediateStops = [];
+      this.searchMode = 'destination';
       this.isRouteLoading = false;
       this.isRouteError = null;
       this.isRouteResponse = null;
@@ -1287,7 +1453,19 @@ export class HomeViewModel {
     });
     this.updateLoadingState(true, null, 'route');
     try {
-      const waypoints = [
+      // Origen (ubicacion actual) -> paradas intermedias -> destino final.
+      const stops = this.intermediateStops.map(
+        (stop, index) =>
+          new Waypoint({
+            id: stop.id,
+            name: stop.name,
+            latitude: stop.latitude,
+            longitude: stop.longitude,
+            kind: 'stop',
+            order: index + 1,
+          }),
+      );
+      const waypoints: Waypoint[] = [
         new Waypoint({
           id: 'origin',
           name: 'Mi ubicacion',
@@ -1296,13 +1474,14 @@ export class HomeViewModel {
           kind: 'start',
           order: 0,
         }),
+        ...stops,
         new Waypoint({
           id: place.id,
           name: place.name,
           latitude: place.latitude,
           longitude: place.longitude,
           kind: 'destination',
-          order: 1,
+          order: stops.length + 1,
         }),
       ];
       const directions = await this.calculateDirectionsUseCase.run({

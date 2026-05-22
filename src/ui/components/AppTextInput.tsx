@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   StyleSheet,
@@ -7,8 +6,9 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import BorderRadius from '@/ui/styles/BorderRadius';
+import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
   fieldDefault: {
     height: 52,
     borderRadius: BorderRadius.md,
+    ...iOSCornerStyle,
   },
   fieldSearch: {
     height: 48,

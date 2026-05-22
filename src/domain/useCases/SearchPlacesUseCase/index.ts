@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint } from '@/domain/entities/Route';
+
 import { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type SearchPlacesInput = {

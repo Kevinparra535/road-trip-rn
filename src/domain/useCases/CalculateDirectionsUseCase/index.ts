@@ -1,10 +1,13 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
+
 import { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type CalculateDirectionsInput = {

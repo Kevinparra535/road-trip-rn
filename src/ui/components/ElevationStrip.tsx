@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import GradientView from '@/ui/components/GradientView';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
@@ -119,14 +120,12 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
   },
   kicker: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 9,
+    ...Fonts.links,
     color: Colors.base.textMuted,
     letterSpacing: 1.5,
   },
   value: {
-    fontFamily: FontFamily.bold,
-    fontSize: 11,
+    ...Fonts.labelInputError,
     color: Colors.base.textPrimary,
   },
   trackWrap: {
@@ -167,8 +166,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.cardBorder,
   },
   currentLabelText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 11,
+    ...Fonts.labelInputError,
     color: Colors.base.textPrimary,
   },
 });

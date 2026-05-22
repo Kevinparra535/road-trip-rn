@@ -1,4 +1,5 @@
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
+
 import { makeRider } from '../factories';
 
 describe('AuthViewModel', () => {

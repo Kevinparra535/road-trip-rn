@@ -1,6 +1,7 @@
+import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
+
 import { DeviceHeadingModel } from '@/data/models/deviceHeadingModel';
 import { LocationModel } from '@/data/models/locationModel';
-import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 
 const makeService = () => ({
   requestPermission: jest.fn(),

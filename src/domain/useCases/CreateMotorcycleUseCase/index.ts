@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { Motorcycle } from '@/domain/entities/Motorcycle';
+
 import { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()

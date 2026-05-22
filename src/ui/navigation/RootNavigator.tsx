@@ -1,13 +1,15 @@
-import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { observer } from 'mobx-react-lite';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
-import Colors from '@/ui/styles/Colors';
+
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
 
-import AppTabs from './AppTabs';
+import Colors from '@/ui/styles/Colors';
+
+import AppDrawer from './AppDrawer';
 import AuthNavigator from './AuthNavigator';
 
 const RootNavigator = observer(() => {
@@ -29,7 +31,7 @@ const RootNavigator = observer(() => {
     );
   }
 
-  return session.isAuthenticated ? <AppTabs /> : <AuthNavigator />;
+  return session.isAuthenticated ? <AppDrawer /> : <AuthNavigator />;
 });
 
 const styles = StyleSheet.create({

@@ -1,5 +1,6 @@
-import { FUEL_REFERENCE_PRICES } from '@/data/datasets/fuelReferencePrices';
 import { FuelStation } from '@/domain/entities/FuelStation';
+
+import { FUEL_REFERENCE_PRICES } from '@/data/datasets/fuelReferencePrices';
 
 export type FuelStationModelConstructorParams = {
   mapbox_id: string;

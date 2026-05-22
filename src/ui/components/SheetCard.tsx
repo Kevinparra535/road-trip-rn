@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
-import BorderRadius from '@/ui/styles/BorderRadius';
+import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Spacings from '@/ui/styles/Spacings';
 
@@ -26,6 +26,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     padding: Spacings.lg,
+    ...iOSCornerStyle,
   },
 });
 

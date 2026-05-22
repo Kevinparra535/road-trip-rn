@@ -1,5 +1,6 @@
-import { PlaceModel } from '@/data/models/placeModel';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
+
+import { PlaceModel } from '@/data/models/placeModel';
 
 const mapboxFeature = {
   id: 'place.123',

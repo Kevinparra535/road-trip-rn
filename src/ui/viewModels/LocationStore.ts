@@ -2,13 +2,17 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { DeviceHeading } from '@/domain/entities/DeviceHeading';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
+
 import { LocationPermissionStatus } from '@/domain/repositories/LocationRepository';
+
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'permission' | 'location' | 'heading';

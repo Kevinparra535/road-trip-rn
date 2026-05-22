@@ -2,9 +2,12 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { Rider } from '@/domain/entities/Rider';
+
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'session' | 'signOut';

@@ -1,15 +1,17 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import GradientView from '@/ui/components/GradientView';
 import {
   ManeuverModifier,
   ManeuverType,
 } from '@/domain/entities/NavigationStep';
+
+import GradientView from '@/ui/components/GradientView';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
@@ -72,36 +74,34 @@ const TurnBanner = ({
   streetName,
   maneuverType,
   maneuverModifier,
-}: Props) => {
-  return (
-    <View style={styles.banner}>
-      <GradientView
-        preset="accent"
-        direction="horizontal"
-        style={styles.iconWrap}
-      >
-        <MaterialCommunityIcons
-          name={iconForManeuver(maneuverType, maneuverModifier)}
-          size={56}
-          color={Colors.semantic.text.primaryDark}
-        />
-      </GradientView>
-      <View style={styles.textCol}>
-        <Text style={styles.distance} numberOfLines={1}>
-          {distanceText}
+}: Props) => (
+  <View style={styles.banner}>
+    <GradientView
+      preset="accent"
+      direction="horizontal"
+      style={styles.iconWrap}
+    >
+      <MaterialCommunityIcons
+        name={iconForManeuver(maneuverType, maneuverModifier)}
+        size={56}
+        color={Colors.semantic.text.primaryDark}
+      />
+    </GradientView>
+    <View style={styles.textCol}>
+      <Text style={styles.distance} numberOfLines={1}>
+        {distanceText}
+      </Text>
+      <Text style={styles.instruction} numberOfLines={1}>
+        {instruction}
+      </Text>
+      {streetName ? (
+        <Text style={styles.street} numberOfLines={1}>
+          {streetName}
         </Text>
-        <Text style={styles.instruction} numberOfLines={1}>
-          {instruction}
-        </Text>
-        {streetName ? (
-          <Text style={styles.street} numberOfLines={1}>
-            {streetName}
-          </Text>
-        ) : null}
-      </View>
+      ) : null}
     </View>
-  );
-};
+  </View>
+);
 
 const styles = StyleSheet.create({
   banner: {
@@ -128,19 +128,16 @@ const styles = StyleSheet.create({
     gap: Spacings.xs + 2,
   },
   distance: {
-    fontFamily: FontFamily.bold,
-    fontSize: 32,
+    ...Fonts.header1,
     color: Colors.base.accent,
     includeFontPadding: false,
   },
   instruction: {
-    fontFamily: FontFamily.bold,
-    fontSize: 19,
+    ...Fonts.header4,
     color: Colors.base.textPrimary,
   },
   street: {
-    fontFamily: FontFamily.medium,
-    fontSize: 13,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
 });

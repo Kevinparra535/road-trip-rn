@@ -1,7 +1,9 @@
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+
 import { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
 import { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 import { RouteRepository } from '@/domain/repositories/RouteRepository';
+
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
@@ -9,6 +11,7 @@ import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCa
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
+
 import { makeRoute, makeWaypoint } from '../factories';
 
 const makeRouteRepo = (): jest.Mocked<RouteRepository> => ({

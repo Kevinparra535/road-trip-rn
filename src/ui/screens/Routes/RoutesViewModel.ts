@@ -2,10 +2,13 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { Route } from '@/domain/entities/Route';
+
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'routes' | 'delete';

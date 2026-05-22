@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { GeoPoint } from '@/domain/entities/Route';
+
 import { ElevationRepository } from '@/domain/repositories/ElevationRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 /** Obtiene el perfil de elevacion de un trazado de ruta. */

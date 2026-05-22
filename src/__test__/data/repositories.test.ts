@@ -1,15 +1,19 @@
 import { DEV_FLAGS } from '@/config/devFlags';
-import { FuelStationModel } from '@/data/models/fuelStationModel';
-import { MotorcycleModel } from '@/data/models/motorcycleModel';
-import { RiderModel } from '@/data/models/riderModel';
-import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
-import { RouteModel } from '@/data/models/routeModel';
+
+import { FuelStop } from '@/domain/entities/FuelStop';
+
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
 import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
 import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
-import { FuelStop } from '@/domain/entities/FuelStop';
+
+import { FuelStationModel } from '@/data/models/fuelStationModel';
+import { MotorcycleModel } from '@/data/models/motorcycleModel';
+import { RiderModel } from '@/data/models/riderModel';
+import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
+import { RouteModel } from '@/data/models/routeModel';
+
 import { makeMotorcycle, makeRoute } from '../factories';
 
 const riderModel = () =>

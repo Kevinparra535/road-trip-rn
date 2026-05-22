@@ -1,8 +1,10 @@
 import { LocationRepository } from '@/domain/repositories/LocationRepository';
+
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
+
 import { makeGeoLocation } from '../factories';
 
 const makeRepo = (): jest.Mocked<LocationRepository> => ({

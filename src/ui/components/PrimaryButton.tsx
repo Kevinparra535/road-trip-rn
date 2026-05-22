@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
   StyleProp,
@@ -8,8 +7,10 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import GradientView from '@/ui/components/GradientView';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';

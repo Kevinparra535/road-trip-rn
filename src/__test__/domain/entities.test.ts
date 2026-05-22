@@ -2,6 +2,7 @@ import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
+
 import {
   makeMotorcycle,
   makeRider,

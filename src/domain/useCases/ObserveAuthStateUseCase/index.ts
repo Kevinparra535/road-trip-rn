@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { Rider } from '@/domain/entities/Rider';
+
 import { AuthRepository } from '@/domain/repositories/AuthRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 type AuthStateListener = (rider: Rider | null) => void;

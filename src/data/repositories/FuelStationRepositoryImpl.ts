@@ -1,10 +1,13 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import type { FuelStationService } from '@/data/services/FuelStationService';
+
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
+
 import { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
+
+import type { FuelStationService } from '@/data/services/FuelStationService';
 
 const STATIONS_PER_STOP = 4;
 

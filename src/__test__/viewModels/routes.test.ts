@@ -1,8 +1,10 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
+
 import { makeMotorcycle, makeRider, makeRoute } from '../factories';
 
 describe('RoutesViewModel', () => {

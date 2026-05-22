@@ -1,4 +1,5 @@
 import { LocationStore } from '@/ui/viewModels/LocationStore';
+
 import { makeDeviceHeading, makeGeoLocation } from '../factories';
 
 const makeUseCases = () => ({

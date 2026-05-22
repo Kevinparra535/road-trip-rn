@@ -2,9 +2,12 @@ import { inject, injectable } from 'inversify';
 
 import { DEV_FAKE_MOTORCYCLE, DEV_FLAGS } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
-import type { MotorcycleService } from '@/data/services/MotorcycleService';
+
 import { Motorcycle } from '@/domain/entities/Motorcycle';
+
 import { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
+
+import type { MotorcycleService } from '@/data/services/MotorcycleService';
 
 @injectable()
 export class MotorcycleRepositoryImpl implements MotorcycleRepository {

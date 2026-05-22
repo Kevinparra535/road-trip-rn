@@ -1,6 +1,9 @@
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
+
 import { ElevationRepository } from '@/domain/repositories/ElevationRepository';
+
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
+
 import { makeElevationProfile } from '../factories';
 
 const makeRepo = (): jest.Mocked<ElevationRepository> => ({

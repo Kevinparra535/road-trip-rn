@@ -1,10 +1,10 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
@@ -76,13 +76,11 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
   },
   title: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 14,
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
   message: {
-    fontFamily: FontFamily.regular,
-    fontSize: 12,
+    ...Fonts.labelInputError,
     lineHeight: 17,
     textAlign: 'center',
     color: Colors.base.textMuted,
@@ -100,8 +98,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.accent,
   },
   actionLabel: {
-    fontFamily: FontFamily.semiBold,
-    fontSize: 12,
+    ...Fonts.links,
     color: Colors.base.accent,
   },
 });

@@ -1,12 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import GradientView from '@/ui/components/GradientView';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
-import { FontFamily } from '@/ui/styles/Fonts';
+import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
@@ -50,65 +51,63 @@ const ArrivalPanel = ({
   arrivalTime,
   stats,
   onFinish,
-}: Props) => {
-  return (
-    <View style={styles.root} pointerEvents="box-none">
-      <View style={styles.dim} pointerEvents="auto" />
-      <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
-        <LinearGradient
-          colors={PANEL_FADE_COLORS}
-          locations={PANEL_FADE_LOCATIONS}
-          style={styles.panel}
+}: Props) => (
+  <View style={styles.root} pointerEvents="box-none">
+    <View style={styles.dim} pointerEvents="auto" />
+    <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
+      <LinearGradient
+        colors={PANEL_FADE_COLORS}
+        locations={PANEL_FADE_LOCATIONS}
+        style={styles.panel}
+      >
+        <View style={styles.checkCircle}>
+          <Ionicons
+            name="checkmark"
+            size={48}
+            color={Colors.semantic.text.primaryDark}
+          />
+        </View>
+
+        <Text style={styles.title}>Llegaste a tu destino</Text>
+        <Text style={styles.subtitle} numberOfLines={1}>
+          {destinationName} · {arrivalTime}
+        </Text>
+
+        <View style={styles.statsCard}>
+          {stats.map((stat, index) => (
+            <View key={stat.label} style={styles.statRow}>
+              {index > 0 ? <View style={styles.statSeparator} /> : null}
+              <View style={styles.statCell}>
+                <Text style={styles.statValue}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.9}
+          accessibilityRole="button"
+          accessibilityLabel="Finalizar viaje"
+          onPress={onFinish}
         >
-          <View style={styles.checkCircle}>
+          <GradientView
+            preset="accent"
+            direction="vertical"
+            style={styles.finishBtn}
+          >
             <Ionicons
               name="checkmark"
-              size={48}
+              size={20}
               color={Colors.semantic.text.primaryDark}
             />
-          </View>
-
-          <Text style={styles.title}>Llegaste a tu destino</Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {destinationName} · {arrivalTime}
-          </Text>
-
-          <View style={styles.statsCard}>
-            {stats.map((stat, index) => (
-              <View key={stat.label} style={styles.statRow}>
-                {index > 0 ? <View style={styles.statSeparator} /> : null}
-                <View style={styles.statCell}>
-                  <Text style={styles.statValue}>{stat.value}</Text>
-                  <Text style={styles.statLabel}>{stat.label}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.9}
-            accessibilityRole="button"
-            accessibilityLabel="Finalizar viaje"
-            onPress={onFinish}
-          >
-            <GradientView
-              preset="accent"
-              direction="vertical"
-              style={styles.finishBtn}
-            >
-              <Ionicons
-                name="checkmark"
-                size={20}
-                color={Colors.semantic.text.primaryDark}
-              />
-              <Text style={styles.finishText}>Finalizar</Text>
-            </GradientView>
-          </TouchableOpacity>
-        </LinearGradient>
-      </SafeAreaView>
-    </View>
-  );
-};
+            <Text style={styles.finishText}>Finalizar</Text>
+          </GradientView>
+        </TouchableOpacity>
+      </LinearGradient>
+    </SafeAreaView>
+  </View>
+);
 
 const styles = StyleSheet.create({
   root: {
@@ -143,14 +142,12 @@ const styles = StyleSheet.create({
     ...Shadows.bankCard,
   },
   title: {
-    fontFamily: FontFamily.bold,
-    fontSize: 26,
+    ...Fonts.header2,
     color: Colors.base.textPrimary,
     textAlign: 'center',
   },
   subtitle: {
-    fontFamily: FontFamily.medium,
-    fontSize: 14,
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
     textAlign: 'center',
   },
@@ -183,13 +180,11 @@ const styles = StyleSheet.create({
     gap: Spacings.xs,
   },
   statValue: {
-    fontFamily: FontFamily.bold,
-    fontSize: 24,
+    ...Fonts.header3,
     color: Colors.base.textPrimary,
   },
   statLabel: {
-    fontFamily: FontFamily.bold,
-    fontSize: 11,
+    ...Fonts.labelInputError,
     color: Colors.base.textMuted,
     letterSpacing: 1,
   },
@@ -204,8 +199,7 @@ const styles = StyleSheet.create({
     ...Shadows.bankButton,
   },
   finishText: {
-    fontFamily: FontFamily.bold,
-    fontSize: 17,
+    ...Fonts.inputsBold,
     color: Colors.semantic.text.primaryDark,
   },
 });

@@ -1,9 +1,12 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
+
 import { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()

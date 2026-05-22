@@ -9,7 +9,11 @@ module.exports = ({ config }) => ({
     ...config.extra,
     mapboxPublicToken:
       process.env.MAPBOX_PUBLIC_TOKEN || 'SET_MAPBOX_PUBLIC_TOKEN',
-    MAP_STYLE_URL: process.env.MAP_STYLE_URL || 'SET_MAP_STYLE_URL',
+    MAP_STYLE_URL:
+      process.env.MAP_STYLE_URL || 'mapbox://styles/mapbox/navigation-night-v1',
+    placeSummaryBaseUrl:
+      process.env.PLACE_SUMMARY_BASE_URL ||
+      'https://es.wikipedia.org/api/rest_v1/page/summary',
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || 'SET_FIREBASE_API_KEY',
       authDomain:

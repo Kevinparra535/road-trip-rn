@@ -1,7 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
 import {
   ScrollView,
@@ -11,20 +7,28 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { observer } from 'mobx-react-lite';
+import { Ionicons } from '@expo/vector-icons';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+
 import AppTextInput from '@/ui/components/AppTextInput';
 import PrimaryButton from '@/ui/components/PrimaryButton';
+
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { RoutesStackParamList } from '@/ui/navigation/types';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RIDE_TYPES } from './rideTypeMeta';
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
+
+import { RIDE_TYPES } from './rideTypeMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
 type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;

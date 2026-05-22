@@ -2,17 +2,20 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
-import { Route } from '@/domain/entities/Route';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
+import { Route } from '@/domain/entities/Route';
+
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'route' | 'estimate' | 'stations' | 'delete';

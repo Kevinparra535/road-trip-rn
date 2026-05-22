@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 
 import { RideType } from '@/domain/entities/Route';
+
 import Colors from '@/ui/styles/Colors';
 
 export type RideTypeMeta = {

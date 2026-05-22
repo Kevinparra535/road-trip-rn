@@ -2,8 +2,10 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'signIn' | 'signUp';
@@ -116,11 +118,16 @@ export class AuthViewModel {
   private updateLoadingState(
     isLoading: boolean,
     error: string | null,
-    _type: ICalls,
+    type: ICalls,
   ) {
     runInAction(() => {
-      this.isSubmitting = isLoading;
-      this.isSubmitError = error;
+      switch (type) {
+        case 'signIn':
+        case 'signUp':
+          this.isSubmitting = isLoading;
+          this.isSubmitError = error;
+          break;
+      }
     });
   }
 

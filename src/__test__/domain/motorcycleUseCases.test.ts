@@ -1,11 +1,13 @@
-import { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
+import { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
+
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
+
 import { makeMotorcycle, makeMotorcycleSpecs } from '../factories';
 
 const makeRepo = (): jest.Mocked<MotorcycleRepository> => ({

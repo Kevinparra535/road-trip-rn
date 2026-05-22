@@ -1,8 +1,10 @@
 import { injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
-import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
+
 import { RideType } from '@/domain/entities/Route';
+
+import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
 
 const MAPBOX_DIRECTIONS_URL = 'https://api.mapbox.com/directions/v5/mapbox';
 

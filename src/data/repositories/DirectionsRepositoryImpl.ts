@@ -1,11 +1,14 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import type { DirectionsService } from '@/data/services/DirectionsService';
+
 import { RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
+
 import { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
+
+import type { DirectionsService } from '@/data/services/DirectionsService';
 
 @injectable()
 export class DirectionsRepositoryImpl implements DirectionsRepository {

@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+
 import { PlaceModel } from '@/data/models/placeModel';
 
 const MAPBOX_GEOCODING_URL =

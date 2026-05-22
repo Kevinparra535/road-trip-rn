@@ -1,7 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -15,14 +11,22 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { observer } from 'mobx-react-lite';
+import { Ionicons } from '@expo/vector-icons';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+
 import { FuelType, LuggagePosition } from '@/domain/entities/Motorcycle';
+
 import AppTextInput from '@/ui/components/AppTextInput';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 import WeightSlider from '@/ui/components/WeightSlider';
+
 import { GarageStackParamList } from '@/ui/navigation/types';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';

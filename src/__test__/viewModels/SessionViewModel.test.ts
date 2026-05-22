@@ -1,4 +1,5 @@
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
+
 import { makeRider } from '../factories';
 
 describe('SessionViewModel', () => {
