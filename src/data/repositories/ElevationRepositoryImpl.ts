@@ -1,14 +1,18 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import type { ElevationService } from '@/data/services/ElevationService';
+
 import {
   ElevationProfile,
   ElevationSample,
 } from '@/domain/entities/ElevationProfile';
 import { GeoPoint } from '@/domain/entities/Route';
-import { polylineLengthKm, samplePolyline } from '@/domain/geo/geoMath';
+
 import { ElevationRepository } from '@/domain/repositories/ElevationRepository';
+
+import { polylineLengthKm, samplePolyline } from '@/domain/geo/geoMath';
+
+import type { ElevationService } from '@/data/services/ElevationService';
 
 // Numero de puntos muestreados a lo largo de la ruta para el perfil.
 const SAMPLE_COUNT = 16;

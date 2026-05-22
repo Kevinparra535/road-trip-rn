@@ -2,8 +2,10 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'signIn' | 'signUp';

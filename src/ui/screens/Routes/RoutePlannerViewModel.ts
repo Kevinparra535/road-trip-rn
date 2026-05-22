@@ -2,14 +2,17 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint, WaypointKind } from '@/domain/entities/Waypoint';
+
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'load' | 'directions' | 'submit';

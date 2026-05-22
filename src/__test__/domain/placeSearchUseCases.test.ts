@@ -1,5 +1,7 @@
 import { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
+
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
+
 import { makePlace } from '../factories';
 
 const makeRepo = (): jest.Mocked<PlaceSearchRepository> => ({

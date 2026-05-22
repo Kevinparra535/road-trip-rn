@@ -3,10 +3,12 @@ import { injectable } from 'inversify';
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
-import { GeoPoint, Route } from '@/domain/entities/Route';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
-import { pointAtDistanceAlong } from '@/domain/geo/geoMath';
+import { GeoPoint, Route } from '@/domain/entities/Route';
+
 import { UseCase } from '@/domain/useCases/UseCase';
+
+import { pointAtDistanceAlong } from '@/domain/geo/geoMath';
 
 export type EstimateAutonomyInput = {
   motorcycle: Motorcycle;

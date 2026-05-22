@@ -1,12 +1,15 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import type { MotoStatsService } from '@/data/services/MotoStatsService';
+
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
+
 import {
   MotoStatsQuery,
   MotoStatsRepository,
 } from '@/domain/repositories/MotoStatsRepository';
+
+import type { MotoStatsService } from '@/data/services/MotoStatsService';
 
 @injectable()
 export class MotoStatsRepositoryImpl implements MotoStatsRepository {

@@ -1,10 +1,13 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
+
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint } from '@/domain/entities/Route';
+
 import { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
+
+import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
 
 @injectable()
 export class PlaceSearchRepositoryImpl implements PlaceSearchRepository {

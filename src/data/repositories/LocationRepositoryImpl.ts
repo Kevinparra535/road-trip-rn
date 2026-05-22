@@ -1,16 +1,20 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
-import { DeviceHeadingModel } from '@/data/models/deviceHeadingModel';
-import { LocationModel } from '@/data/models/locationModel';
-import type { LocationService } from '@/data/services/LocationService';
+
 import { GeoLocation } from '@/domain/entities/GeoLocation';
+
 import {
   HeadingListener,
   LocationListener,
   LocationPermissionStatus,
   LocationRepository,
 } from '@/domain/repositories/LocationRepository';
+
+import type { LocationService } from '@/data/services/LocationService';
+
+import { DeviceHeadingModel } from '@/data/models/deviceHeadingModel';
+import { LocationModel } from '@/data/models/locationModel';
 
 @injectable()
 export class LocationRepositoryImpl implements LocationRepository {

@@ -1,6 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { ReactNode } from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import Colors from '@/ui/styles/Colors';
 

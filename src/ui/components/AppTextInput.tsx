@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
   StyleSheet,
@@ -7,6 +6,7 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';

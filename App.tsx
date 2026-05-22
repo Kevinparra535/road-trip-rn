@@ -1,3 +1,6 @@
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import {
   Inter_400Regular,
   Inter_500Medium,
@@ -8,12 +11,10 @@ import {
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { initMapbox } from '@/ui/map/mapbox';
 import RootNavigator from '@/ui/navigation/RootNavigator';
+
 import Colors from '@/ui/styles/Colors';
 
 initMapbox();

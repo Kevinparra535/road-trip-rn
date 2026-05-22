@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import {
   LocationListener,
   LocationRepository,
 } from '@/domain/repositories/LocationRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 type Unsubscribe = () => void;

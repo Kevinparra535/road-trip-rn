@@ -1,11 +1,14 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
+
 import {
   MotoStatsQuery,
   MotoStatsRepository,
 } from '@/domain/repositories/MotoStatsRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()

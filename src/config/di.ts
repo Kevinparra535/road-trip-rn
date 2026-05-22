@@ -1,47 +1,50 @@
-import 'reflect-metadata';
 import { Container } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
+import type { AuthService } from '@/data/services/AuthService';
+import { AuthServiceImpl } from '@/data/services/AuthService';
+import type { DirectionsService } from '@/data/services/DirectionsService';
+import { DirectionsServiceImpl } from '@/data/services/DirectionsService';
+import type { ElevationService } from '@/data/services/ElevationService';
+import { ElevationServiceImpl } from '@/data/services/ElevationService';
+import type { FuelStationService } from '@/data/services/FuelStationService';
+import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
+import type { LocationService } from '@/data/services/LocationService';
+import { LocationServiceImpl } from '@/data/services/LocationService';
+import type { MotorcycleService } from '@/data/services/MotorcycleService';
+import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
+import type { MotoStatsService } from '@/data/services/MotoStatsService';
+import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
+import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
+import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
+import type { PlaceSummaryService } from '@/data/services/PlaceSummaryService';
+import { WikipediaSummaryService } from '@/data/services/PlaceSummaryService';
+import type { RouteService } from '@/data/services/RouteService';
+import { RouteServiceImpl } from '@/data/services/RouteService';
+
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
 import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
-import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
 import { ElevationRepositoryImpl } from '@/data/repositories/ElevationRepositoryImpl';
+import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationRepositoryImpl';
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
+import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
-import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
-import { AuthServiceImpl } from '@/data/services/AuthService';
-import type { AuthService } from '@/data/services/AuthService';
-import { DirectionsServiceImpl } from '@/data/services/DirectionsService';
-import type { DirectionsService } from '@/data/services/DirectionsService';
-import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
-import type { FuelStationService } from '@/data/services/FuelStationService';
-import { ElevationServiceImpl } from '@/data/services/ElevationService';
-import type { ElevationService } from '@/data/services/ElevationService';
-import { LocationServiceImpl } from '@/data/services/LocationService';
-import type { LocationService } from '@/data/services/LocationService';
-import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
-import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
-import { WikipediaSummaryService } from '@/data/services/PlaceSummaryService';
-import type { PlaceSummaryService } from '@/data/services/PlaceSummaryService';
-import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
-import type { MotoStatsService } from '@/data/services/MotoStatsService';
-import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
-import type { MotorcycleService } from '@/data/services/MotorcycleService';
-import { RouteServiceImpl } from '@/data/services/RouteService';
-import type { RouteService } from '@/data/services/RouteService';
+
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
 import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
 import type { ElevationRepository } from '@/domain/repositories/ElevationRepository';
 import type { FuelStationRepository } from '@/domain/repositories/FuelStationRepository';
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
+import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
+import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
 import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
-import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
-import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
+
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
@@ -54,13 +57,13 @@ import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCa
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
-import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
+import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
+import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
-import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
@@ -69,6 +72,9 @@ import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCa
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
+
+import { LocationStore } from '@/ui/viewModels/LocationStore';
+import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
@@ -77,8 +83,8 @@ import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
-import { LocationStore } from '@/ui/viewModels/LocationStore';
-import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
+
+import 'reflect-metadata';
 
 export const container = new Container();
 

@@ -1,5 +1,7 @@
-import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import Colors from '@/ui/styles/Colors';
+
+import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+
 import {
   makeElevationProfile,
   makeGeoLocation,

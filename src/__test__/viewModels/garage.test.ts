@@ -1,5 +1,6 @@
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
+
 import { makeMotorcycle, makeMotorcycleSpecs, makeRider } from '../factories';
 
 describe('GarageViewModel', () => {

@@ -1,5 +1,7 @@
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
+
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
+
 import { makeMotorcycle } from '../factories';
 
 const makeEstimate = (distanceKm: number, effectiveRangeKm: number) =>

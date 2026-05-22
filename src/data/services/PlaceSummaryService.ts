@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
 
 export interface PlaceSummaryService {

@@ -1,17 +1,17 @@
 import {
-  BottomSheetBackgroundProps,
-  BottomSheetModal,
-  BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
-import {
   ElementRef,
-  ReactNode,
   forwardRef,
+  ReactNode,
   useEffect,
   useImperativeHandle,
   useRef,
 } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
+import {
+  BottomSheetBackgroundProps,
+  BottomSheetModal,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';

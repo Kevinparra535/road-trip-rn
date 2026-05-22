@@ -1,4 +1,5 @@
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+
 import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 
 import { makeGeoLocation, makePlace } from '../factories';

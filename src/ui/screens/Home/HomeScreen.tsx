@@ -1,14 +1,3 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
-import {
-  CompositeNavigationProp,
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
-import { observer } from 'mobx-react-lite';
 import {
   ComponentProps,
   ElementRef,
@@ -27,12 +16,25 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { observer } from 'mobx-react-lite';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
+import {
+  CompositeNavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
+
 import ArrivalPanel from '@/ui/components/ArrivalPanel';
 import BottomSheet, {
   type BottomSheetHandle,
@@ -44,8 +46,10 @@ import JourneyBar from '@/ui/components/JourneyBar';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
+
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { AppDrawerParamList, HomeStackParamList } from '@/ui/navigation/types';
+
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';

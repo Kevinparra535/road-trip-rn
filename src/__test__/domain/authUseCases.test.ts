@@ -1,9 +1,11 @@
 import { AuthRepository } from '@/domain/repositories/AuthRepository';
+
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+
 import { makeRider } from '../factories';
 
 const makeRepo = (): jest.Mocked<AuthRepository> => ({

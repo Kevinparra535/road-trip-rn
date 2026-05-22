@@ -1,5 +1,7 @@
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+
 import { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
+
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 
 const makeRepo = (): jest.Mocked<PlaceSummaryRepository> => ({

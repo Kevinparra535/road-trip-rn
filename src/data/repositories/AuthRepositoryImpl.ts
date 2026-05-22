@@ -2,13 +2,16 @@ import { inject, injectable } from 'inversify';
 
 import { DEV_FAKE_RIDER, DEV_FLAGS } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
-import type { AuthService } from '@/data/services/AuthService';
+
 import { Rider } from '@/domain/entities/Rider';
+
 import {
   AuthRepository,
   SignInInput,
   SignUpInput,
 } from '@/domain/repositories/AuthRepository';
+
+import type { AuthService } from '@/data/services/AuthService';
 
 @injectable()
 export class AuthRepositoryImpl implements AuthRepository {

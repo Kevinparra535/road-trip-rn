@@ -1,8 +1,3 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  createDrawerNavigator,
-  DrawerContentComponentProps,
-} from '@react-navigation/drawer';
 import { ReactElement, useEffect, useState } from 'react';
 import {
   Pressable,
@@ -12,20 +7,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  createDrawerNavigator,
+  DrawerContentComponentProps,
+} from '@react-navigation/drawer';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Rider } from '@/domain/entities/Rider';
+
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+
 import GradientView from '@/ui/components/GradientView';
-import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 
 import GarageNavigator from './GarageNavigator';
 import HomeNavigator from './HomeNavigator';

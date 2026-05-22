@@ -1,6 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -13,10 +10,15 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { observer } from 'mobx-react-lite';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
+
 import PrimaryButton from '@/ui/components/PrimaryButton';
+
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
@@ -70,12 +72,13 @@ const DestinationPreviewScreen = observer(() => {
 
   // Cleanup: si cerro por swipe-down (sin tocar botones), descartamos el
   // preview en el VM padre. `confirm`/`cancel` ya lo limpian.
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (viewModel.hasPreview) viewModel.cancel();
       viewModel.dispose();
-    };
-  }, [viewModel]);
+    },
+    [viewModel],
+  );
 
   // Edge case: alguien aterriza aca sin preview previo (ej: deep link).
   const place = viewModel.previewPlace;

@@ -6,6 +6,7 @@ import {
   Motorcycle,
 } from '@/domain/entities/Motorcycle';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type EstimateRouteFuelInput = {

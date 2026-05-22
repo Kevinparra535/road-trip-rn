@@ -1,5 +1,7 @@
 import { RidingConditions } from '@/domain/entities/RidingConditions';
+
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
+
 import { makeMotorcycle, makeRoute } from '../factories';
 
 describe('EstimateAutonomyUseCase', () => {

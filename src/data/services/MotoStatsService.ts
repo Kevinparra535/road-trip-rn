@@ -1,11 +1,13 @@
 import { injectable } from 'inversify';
 
+import { MotoStatsQuery } from '@/domain/repositories/MotoStatsRepository';
+
+import { MotorcycleSpecsModel } from '@/data/models/motorcycleSpecsModel';
+
 import {
   MOTO_STATS_DATASET,
   MotoStatsEntry,
 } from '@/data/datasets/motoStatsDataset';
-import { MotorcycleSpecsModel } from '@/data/models/motorcycleSpecsModel';
-import { MotoStatsQuery } from '@/domain/repositories/MotoStatsRepository';
 
 /**
  * Endpoint de busqueda de fichas tecnicas. Vacio por defecto: el backend de

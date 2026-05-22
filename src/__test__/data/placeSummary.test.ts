@@ -2,6 +2,7 @@ import {
   PlaceSummaryService,
   WikipediaSummaryService,
 } from '@/data/services/PlaceSummaryService';
+
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
 
 // El servicio lee `ENV.placeSummaryBaseUrl`. Forzamos un valor predecible

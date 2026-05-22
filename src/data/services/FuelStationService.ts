@@ -1,6 +1,7 @@
 import { injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+
 import { FuelStationModel } from '@/data/models/fuelStationModel';
 
 const MAPBOX_CATEGORY_URL =

@@ -2,15 +2,21 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import { Place } from '@/domain/entities/Place';
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
-import { haversineKm } from '@/domain/geo/geoMath';
+
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
-import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+
+import { haversineKm } from '@/domain/geo/geoMath';
+
+import { LocationStore } from '@/ui/viewModels/LocationStore';
+
 import Logger from '@/ui/utils/Logger';
 import { mapboxStaticImageUrl } from '@/ui/utils/mapboxStaticImage';
 import { placeContextLine, placeTypeLabel } from '@/ui/utils/placeFormat';
-import { LocationStore } from '@/ui/viewModels/LocationStore';
+
+import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 
 // Velocidad promedio que asumimos para el ETA del preview. La ruta real
 // puede dar otro numero (curvas, semaforos), pero da una idea de magnitud.

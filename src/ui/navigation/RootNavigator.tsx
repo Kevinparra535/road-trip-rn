@@ -1,11 +1,13 @@
-import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { observer } from 'mobx-react-lite';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
-import Colors from '@/ui/styles/Colors';
+
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
+
+import Colors from '@/ui/styles/Colors';
 
 import AppDrawer from './AppDrawer';
 import AuthNavigator from './AuthNavigator';

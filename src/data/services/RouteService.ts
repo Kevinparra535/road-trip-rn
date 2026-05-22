@@ -1,4 +1,3 @@
-import { injectable } from 'inversify';
 import {
   addDoc,
   collection,
@@ -11,8 +10,10 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
+import { injectable } from 'inversify';
 
 import { RouteModel } from '@/data/models/routeModel';
+
 import { firestore } from '@/data/network/firebase';
 
 const ROUTES_COLLECTION = 'routes';

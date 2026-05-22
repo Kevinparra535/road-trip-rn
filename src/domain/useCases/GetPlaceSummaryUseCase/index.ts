@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+
 import { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type GetPlaceSummaryInput = {

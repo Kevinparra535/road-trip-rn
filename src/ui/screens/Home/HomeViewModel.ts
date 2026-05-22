@@ -1,9 +1,10 @@
-import * as Speech from 'expo-speech';
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
+import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
+
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
@@ -19,15 +20,7 @@ import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
-import {
-  boundingBox,
-  distanceAlongNearest,
-  distanceToPolylineKm,
-  haversineKm,
-  headingTriangle,
-  pointAtDistanceAlong,
-  samplePolyline,
-} from '@/domain/geo/geoMath';
+
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -38,9 +31,21 @@ import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
+
+import {
+  boundingBox,
+  distanceAlongNearest,
+  distanceToPolylineKm,
+  haversineKm,
+  headingTriangle,
+  pointAtDistanceAlong,
+  samplePolyline,
+} from '@/domain/geo/geoMath';
+
+import { LocationStore } from '@/ui/viewModels/LocationStore';
+
 import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
-import { LocationStore } from '@/ui/viewModels/LocationStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.

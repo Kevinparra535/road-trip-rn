@@ -1,8 +1,11 @@
 import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
+
 import { Route } from '@/domain/entities/Route';
+
 import { RouteRepository } from '@/domain/repositories/RouteRepository';
+
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()

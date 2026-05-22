@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
+
 import {
   DEFAULT_DRIVER_WEIGHT_KG,
   DEFAULT_PASSENGER_WEIGHT_KG,
@@ -12,11 +13,13 @@ import {
   Motorcycle,
 } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
+
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
+
 import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'load' | 'specs' | 'submit';
