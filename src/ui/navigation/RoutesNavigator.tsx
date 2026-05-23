@@ -10,9 +10,30 @@ const Stack = createNativeStackNavigator<RoutesStackParamList>();
 
 const RoutesNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="RoutesList" component={RoutesScreen} />
-    <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} />
-    <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
+    <Stack.Screen
+      name="RoutesList"
+      component={RoutesScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
+    <Stack.Screen
+      name="RoutePlanner"
+      component={RoutePlannerScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
+    <Stack.Screen
+      name="RouteDetail"
+      component={RouteDetailScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
   </Stack.Navigator>
 );
 

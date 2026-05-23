@@ -5,6 +5,7 @@ import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+import { RideType } from '@/domain/entities/Route';
 
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 
@@ -162,6 +163,23 @@ export class DestinationPreviewViewModel {
     } catch (error) {
       this.handleError(error, 'placeSummary');
     }
+  }
+
+  /**
+   * Tipo de rodada activo. Es un getter porque la fuente de verdad vive en
+   * `HomeViewModel.rideType` — `computeRoute()` lo lee desde ahi para
+   * elegir colores de linea y waypoints.
+   */
+  get rideType(): RideType {
+    return this.homeViewModel.rideType;
+  }
+
+  /**
+   * Cambia el tipo de rodada antes de confirmar el destino. UX del Pencil:
+   * el rider elige modo + confirma en un solo gesto, sin saltar al Planner.
+   */
+  setRideType(rideType: RideType): void {
+    this.homeViewModel.setRideType(rideType);
   }
 
   /** Confirma el preview (delegado al VM padre). */

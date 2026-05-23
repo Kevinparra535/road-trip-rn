@@ -17,7 +17,7 @@ const BorderRadius = {
   md: 10,
   lg: 14,
   xl: 20,
-  xxl: 28,
+  xxl: 40,
   pill: 999,
 };
 

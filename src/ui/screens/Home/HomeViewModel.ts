@@ -15,17 +15,21 @@ import {
   NavigationStep,
 } from '@/domain/entities/NavigationStep';
 import { Place } from '@/domain/entities/Place';
+import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
-import { GeoPoint, RideType } from '@/domain/entities/Route';
+import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
+import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
+import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
@@ -187,7 +191,27 @@ export type RouteLine = {
   gradientStops?: GradientStop[];
 };
 
-type ICalls = 'search' | 'route' | 'elevation' | 'fuel' | 'fuelStop';
+type ICalls =
+  | 'search'
+  | 'route'
+  | 'elevation'
+  | 'fuel'
+  | 'fuelStop'
+  | 'recents'
+  | 'savedRoutes';
+
+/**
+ * Item del feed de la pantalla idle. Mezcla destinos recientes (`Place` que
+ * el rider visito) y rutas guardadas (`Route` que ya planeo). El timestamp
+ * unifica el orden — el mas reciente primero.
+ */
+export type HomeFeedItem =
+  | { kind: 'place'; place: RecentDestination; timestamp: number }
+  | { kind: 'route'; route: Route; timestamp: number };
+
+// Tope del feed: con 8 items entran 2-3 pantallas completas del sheet expandido
+// sin volverse infinito. El "Ver todo" lleva a la lista completa cuando se haga.
+const HOME_FEED_MAX = 8;
 
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
@@ -284,6 +308,21 @@ export class HomeViewModel {
   isFuelStopError: string | null = null;
   isFuelStopResponse: FuelStation[] | null = null;
 
+  // ── State: feed del Home idle (destinos recientes + rutas guardadas) ──
+  isRecentsLoading: boolean = false;
+  isRecentsError: string | null = null;
+  isRecentsResponse: RecentDestination[] | null = null;
+
+  isSavedRoutesLoading: boolean = false;
+  isSavedRoutesError: string | null = null;
+  isSavedRoutesResponse: Route[] | null = null;
+
+  /**
+   * Id de ruta guardada que el rider tap del feed. El screen lo observa para
+   * navegar a `RouteDetail` — el VM no navega por contrato (regla canonica).
+   */
+  selectedSavedRouteId: string | null = null;
+
   private searchDisposer: (() => void) | null = null;
   private navTimer: ReturnType<typeof setInterval> | null = null;
   /** Disposer de la reaccion que escucha el avance del GPS real. */
@@ -310,6 +349,12 @@ export class HomeViewModel {
     private readonly estimateRouteFuelUseCase: EstimateRouteFuelUseCase,
     @inject(TYPES.FindFuelStationsUseCase)
     private readonly findFuelStationsUseCase: FindFuelStationsUseCase,
+    @inject(TYPES.GetRecentDestinationsUseCase)
+    private readonly getRecentDestinationsUseCase: GetRecentDestinationsUseCase,
+    @inject(TYPES.AddRecentDestinationUseCase)
+    private readonly addRecentDestinationUseCase: AddRecentDestinationUseCase,
+    @inject(TYPES.GetAllRoutesUseCase)
+    private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -402,6 +447,43 @@ export class HomeViewModel {
    */
   get isSearchActive(): boolean {
     return this.searchQuery.trim().length > 0;
+  }
+
+  // ── Computed: feed del Home idle (recientes + rutas guardadas) ──────────────
+
+  /**
+   * Feed unificado del Home idle: destinos visitados + rutas guardadas,
+   * ordenado descendente por timestamp. Se trunca a `HOME_FEED_MAX` (8).
+   * Si una capa todavia esta cargando devolvemos lo que ya tengamos —
+   * no bloqueamos al rider con spinners en el sheet idle.
+   */
+  get homeFeed(): HomeFeedItem[] {
+    const places = (this.isRecentsResponse ?? []).map(
+      (place): HomeFeedItem => ({
+        kind: 'place',
+        place,
+        timestamp: place.visitedAt.getTime(),
+      }),
+    );
+    const routes = (this.isSavedRoutesResponse ?? []).map(
+      (route): HomeFeedItem => ({
+        kind: 'route',
+        route,
+        timestamp: route.createdAt.getTime(),
+      }),
+    );
+    return [...places, ...routes]
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, HOME_FEED_MAX);
+  }
+
+  /** Primer item del feed — el unico que se ve en el detent peek. */
+  get homeFeedPeek(): HomeFeedItem[] {
+    return this.homeFeed.slice(0, 1);
+  }
+
+  get hasHomeFeed(): boolean {
+    return this.homeFeed.length > 0;
   }
 
   // ── Computed: ruta A->B ─────────────────────────────────────────────────────
@@ -889,6 +971,7 @@ export class HomeViewModel {
   /** Entrypoint: arranca la localizacion y carga la moto del rider. */
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
+    void this.loadHomeFeed();
     await this.locationStore.initialize();
   }
 
@@ -1009,6 +1092,94 @@ export class HomeViewModel {
       this.previewPlace = null;
     });
     this.selectDestination(place);
+    // Registra en background: si falla no rompe la confirmacion del rider.
+    void this.recordRecentDestination(place);
+  }
+
+  /**
+   * Carga el feed del Home idle: recientes (AsyncStorage) + rutas guardadas
+   * del rider activo. Los lanzamos en paralelo — si uno falla, el otro sigue.
+   */
+  async loadHomeFeed(): Promise<void> {
+    void this.loadRecentDestinations();
+    void this.loadSavedRoutes();
+  }
+
+  private async loadRecentDestinations(): Promise<void> {
+    this.updateLoadingState(true, null, 'recents');
+    try {
+      const items = await this.getRecentDestinationsUseCase.run();
+      runInAction(() => {
+        this.isRecentsResponse = items;
+      });
+      this.updateLoadingState(false, null, 'recents');
+    } catch (error) {
+      this.handleError(error, 'recents');
+    }
+  }
+
+  private async loadSavedRoutes(): Promise<void> {
+    // Las rutas dependen del rider; si aun no esta cargado, esperamos al
+    // proximo `refreshMotorcycle` o `initialize` para reintentar.
+    const rider = this.rider;
+    if (!rider) {
+      runInAction(() => {
+        this.isSavedRoutesResponse = [];
+      });
+      return;
+    }
+    this.updateLoadingState(true, null, 'savedRoutes');
+    try {
+      const routes = await this.getAllRoutesUseCase.run(rider.id);
+      runInAction(() => {
+        this.isSavedRoutesResponse = routes;
+      });
+      this.updateLoadingState(false, null, 'savedRoutes');
+    } catch (error) {
+      this.handleError(error, 'savedRoutes');
+    }
+  }
+
+  /**
+   * Registra un destino confirmado en la lista de recientes (AsyncStorage).
+   * Errores se loggean pero no propagan: nunca queremos que esto rompa el
+   * flow principal del rider.
+   */
+  async recordRecentDestination(place: Place): Promise<void> {
+    try {
+      await this.addRecentDestinationUseCase.run(place);
+      await this.loadRecentDestinations();
+    } catch (error) {
+      this.logger.error(
+        `Error recording recent destination: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * Tap en un item del feed:
+   *  - Un destino reciente abre el preview (igual flow que un resultado del
+   *    buscador).
+   *  - Una ruta guardada expone su id en `selectedSavedRouteId`; el screen
+   *    observa eso para navegar a `RouteDetail`.
+   */
+  selectFeedItem(item: HomeFeedItem): void {
+    if (item.kind === 'place') {
+      this.setPreviewPlace(item.place.toPlace());
+    } else {
+      runInAction(() => {
+        this.selectedSavedRouteId = item.route.id;
+      });
+    }
+  }
+
+  /** Limpia el id de ruta seleccionada despues de que el screen navego. */
+  clearSelectedSavedRoute(): void {
+    runInAction(() => {
+      this.selectedSavedRouteId = null;
+    });
   }
 
   /** Descarta el preview sin tocar el destino actual ni la ruta existente. */
@@ -1383,6 +1554,13 @@ export class HomeViewModel {
       this.isFuelStopLoading = false;
       this.isFuelStopError = null;
       this.isFuelStopResponse = null;
+      this.isRecentsLoading = false;
+      this.isRecentsError = null;
+      this.isRecentsResponse = null;
+      this.isSavedRoutesLoading = false;
+      this.isSavedRoutesError = null;
+      this.isSavedRoutesResponse = null;
+      this.selectedSavedRouteId = null;
     });
   }
 
@@ -1528,6 +1706,10 @@ export class HomeViewModel {
       runInAction(() => {
         this.motorcycle = motorcycles[0] ?? null;
       });
+      // Cuando el rider llega, las rutas guardadas pueden cargarse — si
+      // `loadHomeFeed()` ya corrio en `initialize`, esta vez si va a traer
+      // resultados (la primera ejecucion devolvio `[]` por falta de rider).
+      void this.loadSavedRoutes();
     } catch (error) {
       this.logger.error(
         `Error loading motorcycle: ${
@@ -1710,6 +1892,14 @@ export class HomeViewModel {
         case 'fuelStop':
           this.isFuelStopLoading = isLoading;
           this.isFuelStopError = error;
+          break;
+        case 'recents':
+          this.isRecentsLoading = isLoading;
+          this.isRecentsError = error;
+          break;
+        case 'savedRoutes':
+          this.isSavedRoutesLoading = isLoading;
+          this.isSavedRoutesError = error;
           break;
       }
     });

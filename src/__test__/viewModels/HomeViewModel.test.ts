@@ -35,6 +35,15 @@ const makeFuelUseCase = () => ({
 const makeFuelStationsUseCase = () => ({
   run: jest.fn().mockResolvedValue([]),
 });
+const makeGetRecentsUseCase = () => ({
+  run: jest.fn().mockResolvedValue([]),
+});
+const makeAddRecentUseCase = () => ({
+  run: jest.fn().mockResolvedValue(undefined),
+});
+const makeGetAllRoutesUseCase = () => ({
+  run: jest.fn().mockResolvedValue([]),
+});
 
 const makeVM = (
   store = makeLocationStore(),
@@ -45,6 +54,9 @@ const makeVM = (
   motos: { run: jest.Mock } = makeMotosUseCase(),
   fuel: { run: jest.Mock } = makeFuelUseCase(),
   fuelStations: { run: jest.Mock } = makeFuelStationsUseCase(),
+  getRecents: { run: jest.Mock } = makeGetRecentsUseCase(),
+  addRecent: { run: jest.Mock } = makeAddRecentUseCase(),
+  getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -55,6 +67,9 @@ const makeVM = (
     motos as any,
     fuel as any,
     fuelStations as any,
+    getRecents as any,
+    addRecent as any,
+    getAllRoutes as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -477,5 +492,172 @@ describe('HomeViewModel — perfil del rider', () => {
 
     expect(vm.rider).toBeNull();
     expect(vm.riderInitials).toBe('--');
+  });
+});
+
+describe('HomeViewModel — feed del Home idle', () => {
+  it('homeFeed mezcla recientes + rutas guardadas ordenado desc por timestamp', async () => {
+    const recents = [
+      {
+        id: 'r1',
+        placeId: 'p-old',
+        name: 'Antigua',
+        fullName: '',
+        latitude: 0,
+        longitude: 0,
+        visitedAt: new Date('2026-01-01T00:00:00Z'),
+        toPlace: () => makePlace({ id: 'p-old' }),
+      },
+      {
+        id: 'r2',
+        placeId: 'p-new',
+        name: 'Nueva',
+        fullName: '',
+        latitude: 0,
+        longitude: 0,
+        visitedAt: new Date('2026-06-01T00:00:00Z'),
+        toPlace: () => makePlace({ id: 'p-new' }),
+      },
+    ];
+    const routes = [
+      {
+        id: 'route-mid',
+        createdAt: new Date('2026-03-01T00:00:00Z'),
+        rideType: 'highway',
+        stops: () => [],
+        waypoints: [],
+      },
+    ];
+    const getRecents = { run: jest.fn().mockResolvedValue(recents) };
+    const getAllRoutes = { run: jest.fn().mockResolvedValue(routes) };
+    const rider = { run: jest.fn().mockResolvedValue(makeRider()) };
+
+    const vm = makeVM(
+      makeLocationStore(),
+      undefined,
+      undefined,
+      undefined,
+      rider,
+      undefined,
+      undefined,
+      undefined,
+      getRecents,
+      undefined,
+      getAllRoutes,
+    );
+
+    await vm.initialize();
+    await flush();
+    await flush();
+
+    expect(vm.homeFeed.map((item) => item.timestamp)).toEqual([
+      new Date('2026-06-01T00:00:00Z').getTime(),
+      new Date('2026-03-01T00:00:00Z').getTime(),
+      new Date('2026-01-01T00:00:00Z').getTime(),
+    ]);
+    expect(vm.homeFeed[0].kind).toBe('place');
+    expect(vm.homeFeed[1].kind).toBe('route');
+    expect(vm.homeFeedPeek).toHaveLength(1);
+    expect(vm.homeFeedPeek[0].kind).toBe('place');
+  });
+
+  it('homeFeed trunca a 8 items', async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({
+      id: `r${i}`,
+      placeId: `p${i}`,
+      name: `Place ${i}`,
+      fullName: '',
+      latitude: 0,
+      longitude: 0,
+      visitedAt: new Date(Date.UTC(2026, 0, i + 1)),
+      toPlace: () => makePlace({ id: `p${i}` }),
+    }));
+    const getRecents = { run: jest.fn().mockResolvedValue(many) };
+
+    const vm = makeVM(
+      makeLocationStore(),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      getRecents,
+    );
+
+    await vm.initialize();
+    await flush();
+
+    expect(vm.homeFeed).toHaveLength(8);
+  });
+
+  it('confirmPreview dispara AddRecentDestinationUseCase con el place confirmado', async () => {
+    const addRecent = { run: jest.fn().mockResolvedValue(undefined) };
+    const getRecents = { run: jest.fn().mockResolvedValue([]) };
+    const vm = makeVM(
+      makeLocationStore({ hasLocation: true, coordinates: [-74, 4] }),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      getRecents,
+      addRecent,
+    );
+
+    const place = makePlace({ id: 'place-confirmed' });
+    vm.setPreviewPlace(place);
+    vm.confirmPreview();
+    await flush();
+
+    expect(addRecent.run).toHaveBeenCalledWith(place);
+  });
+
+  it('selectFeedItem con kind=place abre preview; con kind=route expone selectedSavedRouteId', () => {
+    const vm = makeVM();
+    const place = makePlace({ id: 'p-tap' });
+    const recent = {
+      id: 'r1',
+      placeId: 'p-tap',
+      name: place.name,
+      fullName: place.fullName,
+      latitude: place.latitude,
+      longitude: place.longitude,
+      visitedAt: new Date(),
+      toPlace: () => place,
+    };
+
+    vm.selectFeedItem({ kind: 'place', place: recent as any, timestamp: 0 });
+    expect(vm.previewPlace).toBe(place);
+
+    const route = { id: 'route-42' };
+    vm.selectFeedItem({ kind: 'route', route: route as any, timestamp: 0 });
+    expect(vm.selectedSavedRouteId).toBe('route-42');
+
+    vm.clearSelectedSavedRoute();
+    expect(vm.selectedSavedRouteId).toBeNull();
+  });
+
+  it('recordRecentDestination silencia errores y no rompe el flow', async () => {
+    const addRecent = { run: jest.fn().mockRejectedValue(new Error('disk')) };
+    const vm = makeVM(
+      makeLocationStore(),
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      addRecent,
+    );
+
+    await expect(
+      vm.recordRecentDestination(makePlace()),
+    ).resolves.toBeUndefined();
   });
 });

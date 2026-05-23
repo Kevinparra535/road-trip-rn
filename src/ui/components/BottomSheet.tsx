@@ -21,7 +21,7 @@ import Spacings from '@/ui/styles/Spacings';
 // medium (~mitad de pantalla) y expanded (casi full). El peek es 200 px en
 // vez de un porcentaje para que el header del search siempre se vea sin
 // importar el alto de pantalla del device.
-const SNAP_POINTS: (number | string)[] = [200, '55%', '92%'];
+const SNAP_POINTS: (number | string)[] = [350, '55%', '92%'];
 
 /**
  * Fondo del sheet: panel sólido oscuro con esquinas redondeadas, estilo Apple
@@ -122,6 +122,7 @@ BottomSheet.displayName = 'BottomSheet';
 const styles = StyleSheet.create({
   // Panel flotante con sombra superior — feel iOS sheet.
   sheet: {
+    margin: Spacings.sm,
     shadowColor: Colors.base.shadow,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.25,
@@ -130,15 +131,15 @@ const styles = StyleSheet.create({
   },
   background: {
     backgroundColor: Colors.base.bgPrimary,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
+    borderTopLeftRadius: BorderRadius.xxl,
+    borderTopRightRadius: BorderRadius.xxl,
   },
   handle: {
     paddingTop: Spacings.sm,
     paddingBottom: Spacings.sm,
   },
   handleIndicator: {
-    width: 36,
+    width: 45,
     height: 4,
     borderRadius: BorderRadius.pill,
     backgroundColor: Colors.base.hairline,

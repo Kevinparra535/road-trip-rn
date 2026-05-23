@@ -89,9 +89,16 @@ const MotorcycleFormScreen = observer(() => {
 
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <ScrollView contentContainerStyle={styles.scroll}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentInsetAdjustmentBehavior="automatic"
+        >
           <Text style={styles.sectionLabel}>Identificacion</Text>
           <AppTextInput
             label="Marca"
@@ -345,6 +352,14 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContainer: {
+    padding: Spacings.spacex2,
+    paddingBottom: Spacings.spacex6,
+    flexGrow: 1,
   },
   navbar: {
     paddingHorizontal: Spacings.spacex2,

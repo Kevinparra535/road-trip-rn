@@ -9,7 +9,9 @@ import {
 } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -59,6 +61,8 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { HomeViewModel } from './HomeViewModel';
 
+import HomeFeedItem from './components/HomeFeedItem';
+
 type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 // Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
@@ -71,11 +75,15 @@ const ROUTE_CORE_WIDTH_NAV = 14;
 const ROUTE_CORE_WIDTH_PLANNING = 6;
 const ROUTE_ALT_WIDTH = 3;
 
-// Tipos de rodada que ofrece el selector superior (Home v2).
-const RIDE_OPTIONS: { type: RideType; label: string; icon: MciName }[] = [
-  { type: 'highway', label: 'CARRETERA', icon: 'road-variant' },
-  { type: 'offroad', label: 'OFFROAD', icon: 'terrain' },
-  { type: 'group', label: 'GRUPAL', icon: 'account-group' },
+// Acciones rapidas del Home idle (Pencil: "1 - Home Idle"). Son atajos a
+// flows principales — NO son selectores de rideType, esos viven en el
+// RoutePlanner / DestinationPreview ahora.
+type IdleActionType = 'plan_ride' | 'garage' | 'group';
+
+const IDLE_ACTIONS: { type: IdleActionType; label: string; icon: MciName }[] = [
+  { type: 'plan_ride', label: 'Planear viaje', icon: 'road-variant' },
+  { type: 'garage', label: 'Mi Garaje', icon: 'motorbike' },
+  { type: 'group', label: 'Viaje grupal', icon: 'account-group' },
 ];
 
 /**
@@ -224,6 +232,45 @@ const HomeScreen = observer(() => {
     viewModel.clearRoute();
     sheetRef.current?.peek();
   };
+
+  const handleIdleAction = (type: IdleActionType) => {
+    if (type === 'plan_ride') {
+      navigation.navigate('RoutesTab', { screen: 'RoutePlanner' });
+      return;
+    }
+    if (type === 'garage') {
+      navigation.navigate('GarageTab', { screen: 'GarageList' });
+      return;
+    }
+    // Viaje grupal: feature futura (rodadas con party). Placeholder visible.
+    Alert.alert(
+      'Viajes grupales',
+      'Estamos trabajando en esta funcion. Llega proximamente.',
+    );
+  };
+
+  /**
+   * Cancela la busqueda activa: limpia query, cierra teclado, baja el sheet a
+   * peek y, si estabamos en modo "agregar parada", lo cancela tambien.
+   */
+  const handleCancelSearch = () => {
+    viewModel.setSearchQuery('');
+    Keyboard.dismiss();
+    sheetRef.current?.peek();
+    if (viewModel.searchMode === 'addStop') viewModel.cancelAddingStop();
+  };
+
+  // Cuando el rider tap una ruta guardada del feed, el VM expone su id; el
+  // screen es quien navega (el VM no toca navigation por contrato).
+  const selectedSavedRouteId = viewModel.selectedSavedRouteId;
+  useEffect(() => {
+    if (!selectedSavedRouteId) return;
+    navigation.navigate('RoutesTab', {
+      screen: 'RouteDetail',
+      params: { routeId: selectedSavedRouteId },
+    } as never);
+    viewModel.clearSelectedSavedRoute();
+  }, [selectedSavedRouteId, navigation, viewModel]);
 
   const fuel = viewModel.fuelSummary;
   const fuelReachFails = fuel !== null && !fuel.reaches;
@@ -566,30 +613,9 @@ const HomeScreen = observer(() => {
         visible={!isNavigating && !viewModel.isArrived}
         header={
           <View style={styles.searchBar}>
-            {viewModel.isSearchActive ? (
-              <View style={styles.searchLeadingIcon}>
-                <Ionicons
-                  name="search"
-                  size={20}
-                  color={Colors.base.iconMuted}
-                />
-              </View>
-            ) : (
-              <TouchableOpacity
-                activeOpacity={0.8}
-                hitSlop={8}
-                style={styles.menuButton}
-                accessibilityRole="button"
-                accessibilityLabel="Abrir menú"
-                onPress={() => navigation.openDrawer()}
-              >
-                <Ionicons
-                  name="menu"
-                  size={20}
-                  color={Colors.base.textPrimary}
-                />
-              </TouchableOpacity>
-            )}
+            <View style={styles.searchLeadingIcon}>
+              <Ionicons name="search" size={20} color={Colors.base.iconMuted} />
+            </View>
             <BottomSheetTextInput
               ref={searchInputRef}
               style={styles.searchInput}
@@ -607,44 +633,58 @@ const HomeScreen = observer(() => {
             />
             {viewModel.isSearchLoading ? (
               <ActivityIndicator size="small" color={Colors.base.accent} />
-            ) : (
+            ) : viewModel.isSearchActive ? (
+              // Pencil "Home Idle - Busqueda activa": cuando hay query, el
+              // boton de voz + avatar se reemplazan por un "Cancelar" iOS.
               <TouchableOpacity
-                activeOpacity={0.85}
+                activeOpacity={0.7}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Buscar por voz"
-                onPress={() => {}}
+                accessibilityLabel="Cancelar busqueda"
+                onPress={handleCancelSearch}
               >
-                <GradientView
-                  preset="accent"
-                  direction="vertical"
-                  style={styles.voiceButton}
-                >
-                  <Ionicons
-                    name="mic"
-                    size={16}
-                    color={Colors.semantic.text.primaryDark}
-                  />
-                </GradientView>
+                <Text style={styles.cancelSearchText}>Cancelar</Text>
               </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Buscar por voz"
+                  onPress={() => {}}
+                >
+                  <GradientView
+                    preset="accent"
+                    direction="vertical"
+                    style={styles.voiceButton}
+                  >
+                    <Ionicons
+                      name="mic"
+                      size={16}
+                      color={Colors.semantic.text.primaryDark}
+                    />
+                  </GradientView>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Abrir perfil"
+                  onPress={() => navigation.navigate('ProfileTab')}
+                >
+                  <GradientView
+                    preset="accent"
+                    direction="vertical"
+                    style={styles.profileAvatar}
+                  >
+                    <Text style={styles.profileInitials}>
+                      {viewModel.riderInitials}
+                    </Text>
+                  </GradientView>
+                </TouchableOpacity>
+              </>
             )}
-            <TouchableOpacity
-              activeOpacity={0.85}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Abrir perfil"
-              onPress={() => navigation.navigate('ProfileTab')}
-            >
-              <GradientView
-                preset="accent"
-                direction="vertical"
-                style={styles.profileAvatar}
-              >
-                <Text style={styles.profileInitials}>
-                  {viewModel.riderInitials}
-                </Text>
-              </GradientView>
-            </TouchableOpacity>
           </View>
         }
       >
@@ -675,7 +715,10 @@ const HomeScreen = observer(() => {
                   {index > 0 ? <View style={styles.resultDivider} /> : null}
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    style={styles.resultRow}
+                    style={[
+                      styles.resultRow,
+                      index === 0 && styles.resultRowPrimary,
+                    ]}
                     onPress={() => handleSelectPlace(place)}
                   >
                     <View
@@ -1165,36 +1208,59 @@ const HomeScreen = observer(() => {
             ) : null}
           </>
         ) : (
-          /* Estado idle: chips del tipo de rodada + hint para empezar. */
-          <View style={styles.emptyState}>
-            <View style={styles.rideChips}>
-              {RIDE_OPTIONS.map((option) => {
-                const active = viewModel.rideType === option.type;
-                const tone = active
-                  ? Colors.semantic.text.primaryDark
-                  : Colors.base.textSecondary;
-                return (
-                  <TouchableOpacity
-                    key={option.type}
-                    activeOpacity={0.8}
-                    style={[styles.rideChip, active && styles.rideChipActive]}
-                    onPress={() => viewModel.setRideType(option.type)}
-                  >
-                    <MaterialCommunityIcons
-                      name={option.icon}
-                      size={14}
-                      color={tone}
-                    />
-                    <Text style={[styles.rideChipText, { color: tone }]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+          /* Estado idle (Pencil "1 - Home Idle" + "Detent grande"):
+             chips de accion arriba + seccion Recientes abajo. */
+          <View style={styles.idleContent}>
+            <View style={styles.idleActions}>
+              {IDLE_ACTIONS.map((action) => (
+                <TouchableOpacity
+                  key={action.type}
+                  activeOpacity={0.8}
+                  style={styles.idleActionChip}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.label}
+                  onPress={() => handleIdleAction(action.type)}
+                >
+                  <MaterialCommunityIcons
+                    name={action.icon}
+                    size={20}
+                    color={Colors.base.accent}
+                  />
+                  <Text style={styles.idleActionLabel}>{action.label}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            <Text style={styles.emptyHint}>
-              Buscá tu destino arriba para empezar a trazar la ruta.
-            </Text>
+
+            {viewModel.hasHomeFeed ? (
+              <View style={styles.recentsSection}>
+                <View style={styles.recentsHeader}>
+                  <Text style={styles.recentsTitle}>Recientes</Text>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Ver toda la lista de recientes"
+                    onPress={() =>
+                      navigation.navigate('RoutesTab', {
+                        screen: 'RoutesList',
+                      })
+                    }
+                  >
+                    <Text style={styles.recentsSeeAll}>Ver todo</Text>
+                  </TouchableOpacity>
+                </View>
+                {viewModel.homeFeed.map((item) => (
+                  <HomeFeedItem
+                    key={
+                      item.kind === 'place'
+                        ? `place-${item.place.id}`
+                        : `route-${item.route.id}`
+                    }
+                    item={item}
+                    onPress={() => viewModel.selectFeedItem(item)}
+                  />
+                ))}
+              </View>
+            ) : null}
           </View>
         )}
       </BottomSheet>
@@ -1235,7 +1301,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacings.md,
     backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.pill,
     ...iOSCornerStyle,
     ...Shadows.bankCard,
   },
@@ -1243,6 +1309,53 @@ const styles = StyleSheet.create({
   emptyState: {
     gap: Spacings.md,
     paddingTop: Spacings.sm,
+  },
+  // Contenedor del idle: chips arriba + recientes abajo, separados.
+  idleContent: {
+    paddingTop: Spacings.sm,
+    gap: Spacings.xl,
+  },
+  // Row de chips de accion: Planear viaje / Mi garaje / Viaje grupal.
+  idleActions: {
+    flexDirection: 'row',
+    gap: Spacings.sm,
+  },
+  idleActionChip: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.xs,
+    paddingVertical: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  idleActionLabel: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textPrimary,
+  },
+  recentsSection: {
+    gap: Spacings.xs,
+  },
+  recentsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacings.xs,
+  },
+  recentsTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  recentsSeeAll: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.accent,
+  },
+  // Boton "Cancelar" del searchbar activo (estilo iOS: solo texto, sin bg).
+  cancelSearchText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
   },
   emptyHint: {
     ...Fonts.smallBodyText,
@@ -1349,6 +1462,10 @@ const styles = StyleSheet.create({
   },
   resultIconBoxPrimary: {
     backgroundColor: Colors.base.accentDim,
+  },
+  // Primer resultado destacado: bg suave naranja (Pencil "Busqueda activa").
+  resultRowPrimary: {
+    backgroundColor: Colors.base.accentSoft,
   },
   resultBody: {
     flex: 1,

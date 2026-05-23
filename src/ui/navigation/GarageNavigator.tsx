@@ -9,7 +9,14 @@ const Stack = createNativeStackNavigator<GarageStackParamList>();
 
 const GarageNavigator = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="GarageList" component={GarageScreen} />
+    <Stack.Screen
+      name="GarageList"
+      component={GarageScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
     <Stack.Screen name="MotorcycleForm" component={MotorcycleFormScreen} />
   </Stack.Navigator>
 );

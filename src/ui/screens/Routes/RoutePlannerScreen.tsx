@@ -17,6 +17,7 @@ import { TYPES } from '@/config/types';
 
 import AppTextInput from '@/ui/components/AppTextInput';
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import RideTypeSelector from '@/ui/components/RideTypeSelector';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -27,8 +28,6 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
-
-import { RIDE_TYPES } from './rideTypeMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
 type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;
@@ -163,35 +162,10 @@ const RoutePlannerScreen = observer(() => {
           />
 
           <Text style={styles.panelLabel}>Tipo de rodada</Text>
-          <View style={styles.chips}>
-            {RIDE_TYPES.map((meta) => {
-              const active = viewModel.rideType === meta.value;
-              return (
-                <TouchableOpacity
-                  key={meta.value}
-                  style={[
-                    styles.chip,
-                    active && {
-                      backgroundColor: Colors.base.accentDim,
-                      borderColor: meta.color,
-                    },
-                  ]}
-                  onPress={() => viewModel.setRideType(meta.value)}
-                >
-                  <Ionicons
-                    name={meta.icon}
-                    size={15}
-                    color={active ? meta.color : Colors.base.iconMuted}
-                  />
-                  <Text
-                    style={[styles.chipText, active && styles.chipTextActive]}
-                  >
-                    {meta.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          <RideTypeSelector
+            value={viewModel.rideType}
+            onChange={(rideType) => viewModel.setRideType(rideType)}
+          />
 
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
@@ -320,29 +294,6 @@ const styles = StyleSheet.create({
     marginBottom: Spacings.sm,
     ...Fonts.header5,
     color: Colors.base.textSecondary,
-  },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacings.sm,
-  },
-  chip: {
-    paddingVertical: Spacings.sm,
-    paddingHorizontal: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.xs,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  chipText: {
-    ...Fonts.links,
-    color: Colors.base.textSecondary,
-  },
-  chipTextActive: {
-    color: Colors.base.textPrimary,
   },
   summaryRow: {
     marginTop: Spacings.lg,

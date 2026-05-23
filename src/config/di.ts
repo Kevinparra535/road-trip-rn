@@ -32,6 +32,7 @@ import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleReposito
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
+import { RecentDestinationRepositoryImpl } from '@/data/repositories/RecentDestinationRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
 
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
@@ -43,9 +44,12 @@ import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepos
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
 import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
+import type { RecentDestinationRepository } from '@/domain/repositories/RecentDestinationRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
 
+import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
@@ -60,6 +64,7 @@ import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationU
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
+import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
@@ -168,6 +173,10 @@ container
   .to(PlaceSummaryRepositoryImpl)
   .inSingletonScope();
 container
+  .bind<RecentDestinationRepository>(TYPES.RecentDestinationRepository)
+  .to(RecentDestinationRepositoryImpl)
+  .inSingletonScope();
+container
   .bind<ElevationRepository>(TYPES.ElevationRepository)
   .to(ElevationRepositoryImpl)
   .inSingletonScope();
@@ -242,6 +251,15 @@ container
 container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);
+container
+  .bind<GetRecentDestinationsUseCase>(TYPES.GetRecentDestinationsUseCase)
+  .to(GetRecentDestinationsUseCase);
+container
+  .bind<AddRecentDestinationUseCase>(TYPES.AddRecentDestinationUseCase)
+  .to(AddRecentDestinationUseCase);
+container
+  .bind<ClearRecentDestinationsUseCase>(TYPES.ClearRecentDestinationsUseCase)
+  .to(ClearRecentDestinationsUseCase);
 container
   .bind<GetRouteElevationUseCase>(TYPES.GetRouteElevationUseCase)
   .to(GetRouteElevationUseCase);

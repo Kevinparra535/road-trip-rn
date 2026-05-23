@@ -18,6 +18,7 @@ import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import RideTypeSelector from '@/ui/components/RideTypeSelector';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -187,6 +188,15 @@ const DestinationPreviewScreen = observer(() => {
           </View>
         ) : null}
 
+        <View style={styles.rideTypeSection}>
+          <Text style={styles.rideTypeLabel}>Tipo de rodada</Text>
+          <RideTypeSelector
+            value={viewModel.rideType}
+            onChange={(rideType) => viewModel.setRideType(rideType)}
+            variant="compact"
+          />
+        </View>
+
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
@@ -320,6 +330,15 @@ const styles = StyleSheet.create({
     ...Fonts.smallBodyText,
     lineHeight: 18,
     color: Colors.base.textSecondary,
+  },
+
+  // ── Tipo de rodada ────────────────────────────────────────────────────────
+  rideTypeSection: {
+    gap: Spacings.sm,
+  },
+  rideTypeLabel: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textMuted,
   },
 
   // ── Actions ───────────────────────────────────────────────────────────────

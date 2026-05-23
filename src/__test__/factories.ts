@@ -4,6 +4,7 @@ import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
 import { Place } from '@/domain/entities/Place';
+import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
 import { Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
@@ -105,6 +106,20 @@ export const makePlace = (overrides: Partial<Place> = {}): Place =>
     fullName: 'Villa de Leyva, Boyaca, Colombia',
     latitude: 5.6339,
     longitude: -73.5269,
+    ...overrides,
+  });
+
+export const makeRecentDestination = (
+  overrides: Partial<RecentDestination> = {},
+): RecentDestination =>
+  new RecentDestination({
+    id: 'recent-1',
+    placeId: 'place-1',
+    name: 'Villa de Leyva',
+    fullName: 'Villa de Leyva, Boyaca, Colombia',
+    latitude: 5.6339,
+    longitude: -73.5269,
+    visitedAt: new Date('2026-05-01T00:00:00Z'),
     ...overrides,
   });
 

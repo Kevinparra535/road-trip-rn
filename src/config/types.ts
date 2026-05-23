@@ -21,6 +21,7 @@ export const TYPES = {
   LocationRepository: Symbol.for('LocationRepository'),
   PlaceSearchRepository: Symbol.for('PlaceSearchRepository'),
   PlaceSummaryRepository: Symbol.for('PlaceSummaryRepository'),
+  RecentDestinationRepository: Symbol.for('RecentDestinationRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
 
   // ── UseCases (capa domain) ──
@@ -51,6 +52,9 @@ export const TYPES = {
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
   SearchPlacesUseCase: Symbol.for('SearchPlacesUseCase'),
   GetPlaceSummaryUseCase: Symbol.for('GetPlaceSummaryUseCase'),
+  GetRecentDestinationsUseCase: Symbol.for('GetRecentDestinationsUseCase'),
+  AddRecentDestinationUseCase: Symbol.for('AddRecentDestinationUseCase'),
+  ClearRecentDestinationsUseCase: Symbol.for('ClearRecentDestinationsUseCase'),
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
   EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
 

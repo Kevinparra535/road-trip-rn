@@ -1,5 +1,6 @@
 import { ReactElement, useEffect, useState } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import {
   createDrawerNavigator,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
@@ -28,214 +30,73 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
-import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
+
+import GarageScreen from '../screens/Garage/GarageScreen';
+import MotorcycleFormScreen from '../screens/Garage/MotorcycleFormScreen';
+import RouteDetailScreen from '../screens/Routes/RouteDetailScreen';
+import RoutePlannerScreen from '../screens/Routes/RoutePlannerScreen';
+import RoutesScreen from '../screens/Routes/RoutesScreen';
 
 import GarageNavigator from './GarageNavigator';
 import HomeNavigator from './HomeNavigator';
 import RoutesNavigator from './RoutesNavigator';
-import { AppDrawerParamList } from './types';
 
-// Ancho objetivo del drawer per Pencil 12 - Side Menu Drawer (334 sobre un
-// frame de 393). Se cappea con un tope para tablets/landscape.
-const DRAWER_TARGET_WIDTH_RATIO = 334 / 393;
-const DRAWER_MAX_WIDTH = 360;
+const Stack = createNativeStackNavigator();
 
-type DrawerItemSpec = {
-  routeName: keyof AppDrawerParamList;
-  label: string;
-  icon: (color: string) => ReactElement;
-};
-
-const DRAWER_ITEMS: DrawerItemSpec[] = [
-  {
-    routeName: 'HomeTab',
-    label: 'Explorar',
-    icon: (color) => (
-      <MaterialCommunityIcons name="compass-outline" size={22} color={color} />
-    ),
-  },
-  {
-    routeName: 'RoutesTab',
-    label: 'Rutas',
-    icon: (color) => (
-      <MaterialCommunityIcons name="map-marker-path" size={22} color={color} />
-    ),
-  },
-  {
-    routeName: 'GarageTab',
-    label: 'Garaje',
-    icon: (color) => (
-      <MaterialCommunityIcons name="motorbike" size={22} color={color} />
-    ),
-  },
-  {
-    routeName: 'ProfileTab',
-    label: 'Perfil',
-    icon: (color) => <Ionicons name="person-outline" size={22} color={color} />,
-  },
-];
-
-/**
- * Carga rider + moto activa via DI, sin acoplarse a HomeViewModel. El drawer
- * no requiere reactividad: una sola lectura al montar alcanza para el header.
- */
-const useRiderHeader = () => {
-  const [rider, setRider] = useState<Rider | null>(null);
-  const [motorcycle, setMotorcycle] = useState<Motorcycle | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const getRider = container.get<GetCurrentRiderUseCase>(
-          TYPES.GetCurrentRiderUseCase,
-        );
-        const getMotos = container.get<GetAllMotorcyclesUseCase>(
-          TYPES.GetAllMotorcyclesUseCase,
-        );
-        const r = await getRider.run();
-        if (cancelled || !r) return;
-        setRider(r);
-        const motos = await getMotos.run(r.id);
-        if (cancelled) return;
-        setMotorcycle(motos[0] ?? null);
-      } catch {
-        // El drawer no debe romper la UX si la carga falla; deja los placeholders.
-      }
-    };
-    void load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { rider, motorcycle };
-};
-
-const DrawerHeader = () => {
-  const { rider, motorcycle } = useRiderHeader();
-  const initials = rider?.initials() ?? '--';
-  const name = rider?.displayName ?? 'Conductor';
-  const bikeName = motorcycle?.displayName() ?? 'Sin moto registrada';
-
-  return (
-    <View style={styles.header}>
-      <GradientView preset="accent" direction="vertical" style={styles.avatar}>
-        <Text style={styles.avatarText}>{initials}</Text>
-      </GradientView>
-      <View style={styles.headerInfo}>
-        <Text style={styles.headerName} numberOfLines={1}>
-          {name}
-        </Text>
-        <View style={styles.bikeRow}>
-          <MaterialCommunityIcons
-            name="motorbike"
-            size={14}
-            color={Colors.base.textMuted}
-          />
-          <Text style={styles.bikeText} numberOfLines={1}>
-            {bikeName}
-          </Text>
-        </View>
-      </View>
-    </View>
-  );
-};
-
-type NavRowProps = {
-  item: DrawerItemSpec;
-  active: boolean;
-  onPress: () => void;
-};
-
-const NavRow = ({ item, active, onPress }: NavRowProps) => {
-  const tone = active ? Colors.base.accent : Colors.base.iconMuted;
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={item.label}
-      accessibilityState={{ selected: active }}
-      onPress={onPress}
-      style={[styles.navRow, active && styles.navRowActive]}
-    >
-      <View
-        style={[styles.navIndicator, active && styles.navIndicatorActive]}
-      />
-      {item.icon(tone)}
-      <Text style={[styles.navLabel, { color: tone }]} numberOfLines={1}>
-        {item.label}
-      </Text>
-      {active ? (
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color={Colors.base.accent}
-          style={styles.navChevron}
-        />
-      ) : null}
-    </Pressable>
-  );
-};
-
-const CustomDrawerContent = (props: DrawerContentComponentProps) => {
-  const { state, navigation } = props;
-  const activeRouteName = state.routeNames[state.index];
-
-  return (
-    <SafeAreaView edges={['top', 'bottom']} style={styles.container}>
-      <DrawerHeader />
-      <View style={styles.divider} />
-      <View style={styles.navList}>
-        {DRAWER_ITEMS.map((item) => (
-          <NavRow
-            key={item.routeName}
-            item={item}
-            active={item.routeName === activeRouteName}
-            onPress={() => navigation.navigate(item.routeName)}
-          />
-        ))}
-      </View>
-      <View style={styles.spacer} />
-      <View style={styles.versionWrap}>
-        <Text style={styles.versionText}>Road Trip v1.0.0</Text>
-      </View>
-    </SafeAreaView>
-  );
-};
-
-const Drawer = createDrawerNavigator<AppDrawerParamList>();
-
-const AppDrawer = () => {
-  const { width } = useWindowDimensions();
-  const drawerWidth = Math.min(
-    DRAWER_MAX_WIDTH,
-    Math.round(width * DRAWER_TARGET_WIDTH_RATIO),
-  );
-
-  return (
-    <Drawer.Navigator
-      drawerContent={(props) => <CustomDrawerContent {...props} />}
-      screenOptions={{
-        headerShown: false,
-        drawerType: 'front',
-        overlayColor: hexToRgba(Colors.base.shadow, 0.67),
-        drawerStyle: {
-          width: drawerWidth,
-          backgroundColor: Colors.base.bgPrimary,
-          borderRightColor: Colors.base.cardBorder,
-          borderRightWidth: 1,
-        },
+const AppDrawer = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+    }}
+  >
+    <Stack.Screen name="HomeTab" component={HomeNavigator} />
+    <Stack.Screen
+      name="RoutesTab"
+      component={RoutesScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: [0.6, 1],
       }}
-    >
-      <Drawer.Screen name="HomeTab" component={HomeNavigator} />
-      <Drawer.Screen name="RoutesTab" component={RoutesNavigator} />
-      <Drawer.Screen name="GarageTab" component={GarageNavigator} />
-      <Drawer.Screen name="ProfileTab" component={ProfileScreen} />
-    </Drawer.Navigator>
-  );
-};
+    />
+    <Stack.Screen
+      name="RoutePlanner"
+      component={RoutePlannerScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: [1],
+      }}
+    />
+    <Stack.Screen
+      name="RouteDetail"
+      component={RouteDetailScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: [0.5, 1],
+      }}
+    />
+    <Stack.Screen
+      name="GarageTab"
+      component={GarageScreen}
+      options={{
+        presentation: 'formSheet',
+        headerShown: false,
+        sheetAllowedDetents: [0.6, 1],
+      }}
+    />
+    <Stack.Screen name="MotorcycleForm" component={MotorcycleFormScreen} />
+    <Stack.Screen
+      name="ProfileTab"
+      component={ProfileScreen}
+      options={{
+        presentation: 'formSheet',
+        headerShown: false,
+        sheetAllowedDetents: [0.6, 1],
+      }}
+    />
+  </Stack.Navigator>
+);
 
 export default AppDrawer;
 

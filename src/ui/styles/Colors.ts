@@ -23,6 +23,8 @@ const base = {
   accentDim: hexToRgba('#FF9800', 0.12),
   accentDimBorder: hexToRgba('#FF9800', 0.31),
   accentGlow: hexToRgba('#FF9800', 0.27),
+  // Bg suave para destacar un item de lista (primer resultado de busqueda).
+  accentSoft: hexToRgba('#FF9800', 0.1),
 
   // Bordes y sombra
   cardBorder: '#2A2A2A',
