@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import JoinRouteScreen from '@/ui/screens/Routes/JoinRouteScreen';
 import RouteDetailScreen from '@/ui/screens/Routes/RouteDetailScreen';
 import RoutePlannerScreen from '@/ui/screens/Routes/RoutePlannerScreen';
 import RoutesScreen from '@/ui/screens/Routes/RoutesScreen';
@@ -29,6 +30,14 @@ const RoutesNavigator = () => (
     <Stack.Screen
       name="RouteDetail"
       component={RouteDetailScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
+    <Stack.Screen
+      name="JoinRoute"
+      component={JoinRouteScreen}
       options={{
         presentation: 'formSheet',
         sheetAllowedDetents: 'fitToContents',

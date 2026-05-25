@@ -24,6 +24,10 @@ import type { PlaceSummaryService } from '@/data/services/PlaceSummaryService';
 import { WikipediaSummaryService } from '@/data/services/PlaceSummaryService';
 import type { RouteService } from '@/data/services/RouteService';
 import { RouteServiceImpl } from '@/data/services/RouteService';
+import type { RouteShareService } from '@/data/services/RouteShareService';
+import { RouteShareServiceImpl } from '@/data/services/RouteShareService';
+import type { ShareCodeGeneratorService } from '@/data/services/ShareCodeGeneratorService';
+import { ShareCodeGeneratorServiceImpl } from '@/data/services/ShareCodeGeneratorService';
 
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
 import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
@@ -37,6 +41,7 @@ import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchReposi
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
 import { RecentDestinationRepositoryImpl } from '@/data/repositories/RecentDestinationRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
+import { RouteShareRepositoryImpl } from '@/data/repositories/RouteShareRepositoryImpl';
 
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
 import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
@@ -50,6 +55,7 @@ import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRep
 import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
 import type { RecentDestinationRepository } from '@/domain/repositories/RecentDestinationRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
+import type { RouteShareRepository } from '@/domain/repositories/RouteShareRepository';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
@@ -62,6 +68,7 @@ import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCa
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
+import { GenerateRouteShareCodeUseCase } from '@/domain/useCases/GenerateRouteShareCodeUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
@@ -74,6 +81,8 @@ import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
+import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
@@ -91,6 +100,7 @@ import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
 import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { JoinRouteViewModel } from '@/ui/screens/Routes/JoinRouteViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
@@ -137,6 +147,14 @@ container
   .to(PlaceCategorySearchServiceImpl)
   .inSingletonScope();
 container
+  .bind<RouteShareService>(TYPES.RouteShareService)
+  .to(RouteShareServiceImpl)
+  .inSingletonScope();
+container
+  .bind<ShareCodeGeneratorService>(TYPES.ShareCodeGeneratorService)
+  .to(ShareCodeGeneratorServiceImpl)
+  .inSingletonScope();
+container
   .bind<PlaceSummaryService>(TYPES.PlaceSummaryService)
   .to(WikipediaSummaryService)
   .inSingletonScope();
@@ -181,6 +199,10 @@ container
 container
   .bind<PlaceCategorySearchRepository>(TYPES.PlaceCategorySearchRepository)
   .to(PlaceCategorySearchRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<RouteShareRepository>(TYPES.RouteShareRepository)
+  .to(RouteShareRepositoryImpl)
   .inSingletonScope();
 container
   .bind<PlaceSummaryRepository>(TYPES.PlaceSummaryRepository)
@@ -266,6 +288,15 @@ container
   .bind<SearchPlacesByCategoryUseCase>(TYPES.SearchPlacesByCategoryUseCase)
   .to(SearchPlacesByCategoryUseCase);
 container
+  .bind<GenerateRouteShareCodeUseCase>(TYPES.GenerateRouteShareCodeUseCase)
+  .to(GenerateRouteShareCodeUseCase);
+container
+  .bind<ResolveRouteShareCodeUseCase>(TYPES.ResolveRouteShareCodeUseCase)
+  .to(ResolveRouteShareCodeUseCase);
+container
+  .bind<RevokeRouteShareCodeUseCase>(TYPES.RevokeRouteShareCodeUseCase)
+  .to(RevokeRouteShareCodeUseCase);
+container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);
 container
@@ -318,3 +349,6 @@ container
 container
   .bind<DestinationPreviewViewModel>(TYPES.DestinationPreviewViewModel)
   .to(DestinationPreviewViewModel);
+container
+  .bind<JoinRouteViewModel>(TYPES.JoinRouteViewModel)
+  .to(JoinRouteViewModel);

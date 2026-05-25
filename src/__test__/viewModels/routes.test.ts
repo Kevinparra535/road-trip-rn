@@ -1,6 +1,7 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { Place } from '@/domain/entities/Place';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
@@ -488,6 +489,18 @@ describe('RouteDetailViewModel', () => {
     };
     const findStations = { run: jest.fn().mockResolvedValue([]) };
     const del = { run: jest.fn().mockResolvedValue(undefined) };
+    const generateShare = {
+      run: jest.fn().mockResolvedValue(
+        new RouteShareCode({
+          code: 'ABCD2345',
+          routeId: 'route-1',
+          ownerId: 'rider-1',
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        }),
+      ),
+    };
+    const revokeShare = { run: jest.fn().mockResolvedValue(undefined) };
     const vm = new RouteDetailViewModel(
       getRoute as any,
       getCurrentRider as any,
@@ -495,8 +508,10 @@ describe('RouteDetailViewModel', () => {
       estimate as any,
       findStations as any,
       del as any,
+      generateShare as any,
+      revokeShare as any,
     );
-    return { vm, estimate };
+    return { vm, estimate, generateShare, revokeShare };
   };
 
   it('loads the route and auto-selects the first motorcycle', async () => {
@@ -528,5 +543,39 @@ describe('RouteDetailViewModel', () => {
     await vm.initialize('route-1');
     expect(vm.hasMotorcycles).toBe(false);
     expect(vm.canEstimate).toBe(false);
+  });
+
+  describe('share code flow (C.4)', () => {
+    it('openShareSheet abre + genera el codigo si no existe', async () => {
+      const { vm, generateShare } = build();
+      await vm.initialize('route-1');
+      await vm.openShareSheet();
+      expect(vm.isShareSheetOpen).toBe(true);
+      expect(generateShare.run).toHaveBeenCalledWith({
+        routeId: 'route-1',
+        ownerId: 'rider-1',
+      });
+      expect(vm.shareCode?.code).toBe('ABCD2345');
+    });
+
+    it('openShareSheet con codigo existente NO regenera', async () => {
+      const { vm, generateShare } = build();
+      await vm.initialize('route-1');
+      await vm.openShareSheet();
+      generateShare.run.mockClear();
+      vm.closeShareSheet();
+      await vm.openShareSheet();
+      expect(generateShare.run).not.toHaveBeenCalled();
+    });
+
+    it('revokeShareCode limpia el estado local incluso si el remoto falla', async () => {
+      const { vm, revokeShare } = build();
+      revokeShare.run.mockRejectedValueOnce(new Error('network'));
+      await vm.initialize('route-1');
+      await vm.openShareSheet();
+      expect(vm.shareCode).not.toBeNull();
+      await vm.revokeShareCode();
+      expect(vm.shareCode).toBeNull();
+    });
   });
 });

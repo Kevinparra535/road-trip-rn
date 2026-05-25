@@ -137,6 +137,14 @@ const RoutesScreen = observer(() => {
           iconName="add"
           onPress={() => navigation.navigate('RoutePlanner')}
         />
+        <TouchableOpacity
+          style={styles.joinBtn}
+          onPress={() => navigation.navigate('JoinRoute')}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="enter-outline" size={18} color={Colors.base.accent} />
+          <Text style={styles.joinBtnText}>Unirme a una ruta</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -232,6 +240,21 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: Spacings.spacex2,
+    gap: Spacings.md,
+  },
+  joinBtn: {
+    paddingVertical: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  joinBtnText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
   },
 });
 

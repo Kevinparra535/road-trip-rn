@@ -8,17 +8,20 @@ import { FuelStation } from '@/domain/entities/FuelStation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { Route } from '@/domain/entities/Route';
+import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
+import { GenerateRouteShareCodeUseCase } from '@/domain/useCases/GenerateRouteShareCodeUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
+import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 
 import Logger from '@/ui/utils/Logger';
 
-type ICalls = 'route' | 'estimate' | 'stations' | 'delete';
+type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share';
 
 @injectable()
 export class RouteDetailViewModel {
@@ -47,6 +50,14 @@ export class RouteDetailViewModel {
   isDeleteError: string | null = null;
   hasDeleteSuccess: boolean = false;
 
+  // ── Share code state (C.4) ─────────────────────────────────────────────
+  /** Codigo activo de compartir; `null` si no se ha generado o fue revocado. */
+  shareCode: RouteShareCode | null = null;
+  isShareLoading: boolean = false;
+  isShareError: string | null = null;
+  /** Controla la visibilidad del sheet de share. */
+  isShareSheetOpen: boolean = false;
+
   private logger = new Logger('RouteDetailViewModel');
 
   constructor(
@@ -62,6 +73,10 @@ export class RouteDetailViewModel {
     private readonly findFuelStationsUseCase: FindFuelStationsUseCase,
     @inject(TYPES.DeleteRouteUseCase)
     private readonly deleteRouteUseCase: DeleteRouteUseCase,
+    @inject(TYPES.GenerateRouteShareCodeUseCase)
+    private readonly generateShareCodeUseCase: GenerateRouteShareCodeUseCase,
+    @inject(TYPES.RevokeRouteShareCodeUseCase)
+    private readonly revokeShareCodeUseCase: RevokeRouteShareCodeUseCase,
   ) {
     makeAutoObservable(this);
   }
@@ -191,6 +206,71 @@ export class RouteDetailViewModel {
     }
   }
 
+  // ── Share code actions (C.4) ───────────────────────────────────────────
+
+  /**
+   * Abre el sheet de share. Si no hay `shareCode` activo, lo genera primero.
+   * Esto da la UX "tap Compartir → ya tengo el codigo a la vista" sin
+   * pre-generar codigos no pedidos.
+   */
+  async openShareSheet(): Promise<void> {
+    runInAction(() => {
+      this.isShareSheetOpen = true;
+    });
+    if (this.shareCode) return; // ya generado
+    await this.generateShareCode();
+  }
+
+  closeShareSheet(): void {
+    runInAction(() => {
+      this.isShareSheetOpen = false;
+      this.isShareError = null;
+    });
+  }
+
+  /** Genera un nuevo codigo para la ruta cargada. */
+  async generateShareCode(): Promise<void> {
+    const route = this.isRouteResponse;
+    if (!route) return;
+    this.updateLoadingState(true, null, 'share');
+    try {
+      const rider = await this.getCurrentRiderUseCase.run();
+      if (!rider) throw new Error('No hay un rider autenticado.');
+      const code = await this.generateShareCodeUseCase.run({
+        routeId: route.id,
+        ownerId: rider.id,
+      });
+      runInAction(() => {
+        this.shareCode = code;
+      });
+      this.updateLoadingState(false, null, 'share');
+    } catch (error) {
+      this.handleError(error, 'share');
+    }
+  }
+
+  /**
+   * Revoca el codigo activo. Limpia el estado local incluso si la llamada
+   * remota falla (el rider quiso revocar — mejor pecar de cautelosos).
+   */
+  async revokeShareCode(): Promise<void> {
+    const code = this.shareCode;
+    if (!code) return;
+    this.updateLoadingState(true, null, 'share');
+    try {
+      await this.revokeShareCodeUseCase.run({ code: code.code });
+    } catch (error) {
+      this.logger.error(
+        `Revoke remoto fallo: ${error instanceof Error ? error.message : error}`,
+      );
+    } finally {
+      runInAction(() => {
+        this.shareCode = null;
+      });
+      this.updateLoadingState(false, null, 'share');
+    }
+  }
+
   reset(): void {
     runInAction(() => {
       this.isRouteResponse = null;
@@ -207,6 +287,10 @@ export class RouteDetailViewModel {
       this.isStationsError = null;
       this.isDeleteError = null;
       this.hasDeleteSuccess = false;
+      this.shareCode = null;
+      this.isShareError = null;
+      this.isShareLoading = false;
+      this.isShareSheetOpen = false;
     });
   }
 
@@ -254,6 +338,10 @@ export class RouteDetailViewModel {
         case 'delete':
           this.isDeleteLoading = isLoading;
           this.isDeleteError = error;
+          break;
+        case 'share':
+          this.isShareLoading = isLoading;
+          this.isShareError = error;
           break;
       }
     });

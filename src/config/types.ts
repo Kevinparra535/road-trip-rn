@@ -11,6 +11,8 @@ export const TYPES = {
   PlaceCategorySearchService: Symbol.for('PlaceCategorySearchService'),
   PlaceSummaryService: Symbol.for('PlaceSummaryService'),
   ElevationService: Symbol.for('ElevationService'),
+  RouteShareService: Symbol.for('RouteShareService'),
+  ShareCodeGeneratorService: Symbol.for('ShareCodeGeneratorService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
   AuthRepository: Symbol.for('AuthRepository'),
@@ -25,6 +27,7 @@ export const TYPES = {
   PlaceSummaryRepository: Symbol.for('PlaceSummaryRepository'),
   RecentDestinationRepository: Symbol.for('RecentDestinationRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
+  RouteShareRepository: Symbol.for('RouteShareRepository'),
 
   // ── UseCases (capa domain) ──
   SignUpUseCase: Symbol.for('SignUpUseCase'),
@@ -61,6 +64,9 @@ export const TYPES = {
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
   EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
   InferStopKindUseCase: Symbol.for('InferStopKindUseCase'),
+  GenerateRouteShareCodeUseCase: Symbol.for('GenerateRouteShareCodeUseCase'),
+  ResolveRouteShareCodeUseCase: Symbol.for('ResolveRouteShareCodeUseCase'),
+  RevokeRouteShareCodeUseCase: Symbol.for('RevokeRouteShareCodeUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),
@@ -72,5 +78,6 @@ export const TYPES = {
   RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
   HomeViewModel: Symbol.for('HomeViewModel'),
   DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),
+  JoinRouteViewModel: Symbol.for('JoinRouteViewModel'),
   LocationStore: Symbol.for('LocationStore'),
 } as const;

@@ -9,6 +9,11 @@ export type RoutesStackParamList = {
   RoutesList: undefined;
   RoutePlanner: { routeId?: string } | undefined;
   RouteDetail: { routeId: string };
+  /**
+   * Pantalla para unirse a una ruta compartida. `initialCode` permite
+   * pre-llenar el input (ej. desde un deep link futuro). C.4.
+   */
+  JoinRoute: { initialCode?: string } | undefined;
 };
 
 export type GarageStackParamList = {
