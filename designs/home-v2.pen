@@ -9159,7 +9159,7 @@
       "type": "frame",
       "id": "UjrOg",
       "x": 0,
-      "y": 7616,
+      "y": 9520,
       "name": "Design Tokens",
       "width": 1600,
       "fill": "$bgPrimary",
@@ -11867,7 +11867,7 @@
       "type": "frame",
       "id": "yde3c",
       "x": 0,
-      "y": 8568,
+      "y": 7616,
       "name": "SearchBar/Default",
       "reusable": true,
       "width": 361,
@@ -12011,7 +12011,7 @@
       "type": "frame",
       "id": "IRAc4",
       "x": 400,
-      "y": 8568,
+      "y": 7616,
       "name": "SearchBar/Searching",
       "reusable": true,
       "width": 361,
@@ -12153,7 +12153,7 @@
       "type": "frame",
       "id": "Uz9qV",
       "x": 800,
-      "y": 8568,
+      "y": 7616,
       "name": "SearchBar/AddStop",
       "reusable": true,
       "width": 361,
@@ -19433,8 +19433,8 @@
       "type": "frame",
       "id": "hbEUd",
       "x": -440,
-      "y": 7616,
-      "name": "Label 09 Tokens",
+      "y": 9520,
+      "name": "Label 11 Tokens",
       "width": 360,
       "layout": "vertical",
       "gap": 6,
@@ -19443,7 +19443,7 @@
           "type": "text",
           "id": "GD6Rf",
           "fill": "$accent",
-          "content": "09 - TOKENS",
+          "content": "11 - TOKENS",
           "fontFamily": "Inter",
           "fontSize": 11,
           "fontWeight": "700",
@@ -19519,8 +19519,8 @@
       "type": "frame",
       "id": "YbQq0",
       "x": -440,
-      "y": 8568,
-      "name": "Label 10 Reusables",
+      "y": 7616,
+      "name": "Label 09 Reusables",
       "width": 360,
       "layout": "vertical",
       "gap": 6,
@@ -19529,7 +19529,7 @@
           "type": "text",
           "id": "sZwAk",
           "fill": "$accent",
-          "content": "10 - REUSABLES",
+          "content": "09 - REUSABLES",
           "fontFamily": "Inter",
           "fontSize": 11,
           "fontWeight": "700",
@@ -19547,221 +19547,6 @@
         {
           "type": "text",
           "id": "yvQSv",
-          "fill": "$textMuted",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Bloques compartidos entre pantallas (SearchBars, Map Nav 3D, drawers, etc).",
-          "lineHeight": 1.4,
-          "fontFamily": "Inter",
-          "fontSize": 13,
-          "fontWeight": "500"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "T5lZU4",
-      "x": -440,
-      "y": 7616,
-      "name": "Label 09 Tokens",
-      "width": 360,
-      "layout": "vertical",
-      "gap": 6,
-      "children": [
-        {
-          "type": "text",
-          "id": "E8WAO",
-          "fill": "$accent",
-          "content": "09 - TOKENS",
-          "fontFamily": "Inter",
-          "fontSize": 11,
-          "fontWeight": "700",
-          "letterSpacing": 1.5
-        },
-        {
-          "type": "text",
-          "id": "c56QJ",
-          "fill": "$textPrimary",
-          "content": "Design tokens",
-          "fontFamily": "Geist",
-          "fontSize": 28,
-          "fontWeight": "700"
-        },
-        {
-          "type": "text",
-          "id": "vvSSM",
-          "fill": "$textMuted",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Variables canonicas del proyecto: colores, spacings, radius, tipografia.",
-          "lineHeight": 1.4,
-          "fontFamily": "Inter",
-          "fontSize": 13,
-          "fontWeight": "500"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "N2sKTQ",
-      "x": -440,
-      "y": 8568,
-      "name": "Label 10 Reusables",
-      "width": 360,
-      "layout": "vertical",
-      "gap": 6,
-      "children": [
-        {
-          "type": "text",
-          "id": "zNnXq",
-          "fill": "$accent",
-          "content": "10 - REUSABLES",
-          "fontFamily": "Inter",
-          "fontSize": 11,
-          "fontWeight": "700",
-          "letterSpacing": 1.5
-        },
-        {
-          "type": "text",
-          "id": "A0hFIq",
-          "fill": "$textPrimary",
-          "content": "Componentes reusables",
-          "fontFamily": "Geist",
-          "fontSize": 28,
-          "fontWeight": "700"
-        },
-        {
-          "type": "text",
-          "id": "UWSpN",
-          "fill": "$textMuted",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Bloques compartidos entre pantallas (SearchBars, Map Nav 3D, drawers, etc).",
-          "lineHeight": 1.4,
-          "fontFamily": "Inter",
-          "fontSize": 13,
-          "fontWeight": "500"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "v4pXZX",
-      "x": -440,
-      "y": 6664,
-      "name": "lbl8",
-      "width": 360,
-      "layout": "vertical",
-      "gap": 6,
-      "children": [
-        {
-          "type": "text",
-          "id": "tbHDs",
-          "fill": "$accent",
-          "content": "08 - SISTEMA",
-          "fontFamily": "Inter",
-          "fontSize": 11,
-          "fontWeight": "700",
-          "letterSpacing": 1.5
-        },
-        {
-          "type": "text",
-          "id": "J8TgE",
-          "fill": "$textPrimary",
-          "content": "Mapa de navegacion",
-          "fontFamily": "Geist",
-          "fontSize": 28,
-          "fontWeight": "700"
-        },
-        {
-          "type": "text",
-          "id": "Ut8r7",
-          "fill": "$textMuted",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Diagrama del stack de form sheets para el equipo.",
-          "lineHeight": 1.4,
-          "fontFamily": "Inter",
-          "fontSize": 13,
-          "fontWeight": "500"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "EBrW5",
-      "x": -440,
-      "y": 7616,
-      "name": "lbl9",
-      "width": 360,
-      "layout": "vertical",
-      "gap": 6,
-      "children": [
-        {
-          "type": "text",
-          "id": "NoE2M",
-          "fill": "$accent",
-          "content": "09 - TOKENS",
-          "fontFamily": "Inter",
-          "fontSize": 11,
-          "fontWeight": "700",
-          "letterSpacing": 1.5
-        },
-        {
-          "type": "text",
-          "id": "VUVJe",
-          "fill": "$textPrimary",
-          "content": "Design tokens",
-          "fontFamily": "Geist",
-          "fontSize": 28,
-          "fontWeight": "700"
-        },
-        {
-          "type": "text",
-          "id": "JgNB2",
-          "fill": "$textMuted",
-          "textGrowth": "fixed-width",
-          "width": "fill_container",
-          "content": "Variables canonicas del proyecto: colores, spacings, radius, tipografia.",
-          "lineHeight": 1.4,
-          "fontFamily": "Inter",
-          "fontSize": 13,
-          "fontWeight": "500"
-        }
-      ]
-    },
-    {
-      "type": "frame",
-      "id": "NVWhL",
-      "x": -440,
-      "y": 8568,
-      "name": "lbl10",
-      "width": 360,
-      "layout": "vertical",
-      "gap": 6,
-      "children": [
-        {
-          "type": "text",
-          "id": "t1Vpqs",
-          "fill": "$accent",
-          "content": "10 - REUSABLES",
-          "fontFamily": "Inter",
-          "fontSize": 11,
-          "fontWeight": "700",
-          "letterSpacing": 1.5
-        },
-        {
-          "type": "text",
-          "id": "wuwIJ",
-          "fill": "$textPrimary",
-          "content": "Componentes reusables",
-          "fontFamily": "Geist",
-          "fontSize": 28,
-          "fontWeight": "700"
-        },
-        {
-          "type": "text",
-          "id": "jqHan",
           "fill": "$textMuted",
           "textGrowth": "fixed-width",
           "width": "fill_container",
@@ -20134,7 +19919,7 @@
       "type": "frame",
       "id": "ydBys",
       "x": 0,
-      "y": 9600,
+      "y": 8568,
       "name": "11 - Planear ruta v2 (StopKind)",
       "clip": true,
       "width": 393,
@@ -20159,7 +19944,7 @@
               "x": 0,
               "y": 0,
               "name": "seg1_food",
-              "geometry": "M25 240q55-20 127-48",
+              "geometry": "M25 170q60 5 127-40",
               "viewBox": [
                 0,
                 0,
@@ -20181,7 +19966,7 @@
               "x": 0,
               "y": 0,
               "name": "seg2_fuel",
-              "geometry": "M152 192q58-22 100-60",
+              "geometry": "M152 130q53-20 100-45",
               "viewBox": [
                 0,
                 0,
@@ -20203,7 +19988,7 @@
               "x": 0,
               "y": 0,
               "name": "seg3_dest",
-              "geometry": "M252 132q58-42 100-110",
+              "geometry": "M252 85q53-35 100-65",
               "viewBox": [
                 0,
                 0,
@@ -20223,7 +20008,7 @@
               "type": "ellipse",
               "id": "EBgBQ",
               "x": 17,
-              "y": 232,
+              "y": 162,
               "name": "pinStart",
               "fill": "$stopStart",
               "width": 16,
@@ -20238,7 +20023,7 @@
               "type": "ellipse",
               "id": "QZUTa",
               "x": 144,
-              "y": 184,
+              "y": 122,
               "name": "pinFood",
               "fill": "$stopFood",
               "width": 16,
@@ -20253,7 +20038,7 @@
               "type": "ellipse",
               "id": "meJNV",
               "x": 244,
-              "y": 124,
+              "y": 77,
               "name": "pinFuel",
               "fill": "$stopFuel",
               "width": 16,
@@ -20268,7 +20053,7 @@
               "type": "ellipse",
               "id": "HpURW",
               "x": 344,
-              "y": 14,
+              "y": 12,
               "name": "pinDestination",
               "fill": "$stopDestination",
               "width": 16,
@@ -20295,10 +20080,10 @@
           "type": "frame",
           "id": "EYMRN",
           "x": 0,
-          "y": 152,
+          "y": 200,
           "name": "sheet",
           "width": 393,
-          "height": 700,
+          "height": 652,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
             28,
@@ -20510,7 +20295,7 @@
                           "type": "text",
                           "id": "Zf2LH",
                           "fill": "$textMuted",
-                          "content": "Punto de arranque",
+                          "content": "Cundinamarca, CO",
                           "fontFamily": "Inter",
                           "fontSize": 12,
                           "fontWeight": "normal"
@@ -21115,7 +20900,7 @@
       "type": "frame",
       "id": "DiJJK",
       "x": 453,
-      "y": 9600,
+      "y": 8568,
       "name": "3b v2 - Agregar parada (Turismo + Mirador)",
       "clip": true,
       "width": 393,
@@ -21534,7 +21319,7 @@
                               "height": 32,
                               "iconFontName": "fuel",
                               "iconFontFamily": "lucide",
-                              "fill": "$accent"
+                              "fill": "$stopFuel"
                             }
                           ]
                         },
@@ -21607,7 +21392,7 @@
                               "height": 32,
                               "iconFontName": "utensils",
                               "iconFontFamily": "lucide",
-                              "fill": "$check"
+                              "fill": "$stopFood"
                             }
                           ]
                         },
@@ -22365,7 +22150,7 @@
       "type": "frame",
       "id": "LbG7X",
       "x": 906,
-      "y": 9600,
+      "y": 8568,
       "name": "Compartir ruta (sheet)",
       "clip": true,
       "width": 393,
@@ -23109,12 +22894,11 @@
                       "name": "segActive",
                       "width": "fill_container",
                       "height": "fill_container",
-                      "fill": "$accentDim",
+                      "fill": "#00000000",
                       "cornerRadius": 8,
                       "stroke": {
-                        "align": "inside",
-                        "thickness": 1,
-                        "fill": "$accentDimBorder"
+                        "thickness": 0,
+                        "fill": "#00000000"
                       },
                       "gap": 6,
                       "justifyContent": "center",
@@ -23127,12 +22911,12 @@
                           "height": 14,
                           "iconFontName": "eye",
                           "iconFontFamily": "lucide",
-                          "fill": "$accent"
+                          "fill": "$iconMuted"
                         },
                         {
                           "type": "text",
                           "id": "Z8mDU",
-                          "fill": "$accent",
+                          "fill": "$textSecondary",
                           "content": "Solo lectura",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -23146,6 +22930,13 @@
                       "name": "segInactive",
                       "width": "fill_container",
                       "height": "fill_container",
+                      "fill": "$accentDim",
+                      "cornerRadius": 8,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 1,
+                        "fill": "$accentDimBorder"
+                      },
                       "gap": 6,
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -23157,12 +22948,12 @@
                           "height": 14,
                           "iconFontName": "pencil",
                           "iconFontFamily": "lucide",
-                          "fill": "$iconMuted"
+                          "fill": "$accent"
                         },
                         {
                           "type": "text",
                           "id": "mwBFl",
-                          "fill": "$textSecondary",
+                          "fill": "$accent",
                           "content": "Permitir editar",
                           "fontFamily": "Inter",
                           "fontSize": 13,
@@ -23300,7 +23091,7 @@
       "type": "frame",
       "id": "gYdbc",
       "x": 1359,
-      "y": 9600,
+      "y": 8568,
       "name": "Party - Miembros (sheet)",
       "clip": true,
       "width": 393,
@@ -23974,6 +23765,45 @@
                               "fontFamily": "Inter",
                               "fontSize": 12,
                               "fontWeight": "700"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JM1er",
+                              "name": "weakBadge",
+                              "fill": "$accentDim",
+                              "cornerRadius": 999,
+                              "stroke": {
+                                "align": "inside",
+                                "thickness": 1,
+                                "fill": "$accent"
+                              },
+                              "gap": 4,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon_font",
+                                  "id": "kKLcB",
+                                  "width": 10,
+                                  "height": 10,
+                                  "iconFontName": "triangle-alert",
+                                  "iconFontFamily": "lucide",
+                                  "fill": "$accent"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "eWaHw",
+                                  "fill": "$accent",
+                                  "content": "MÁS DÉBIL",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 9,
+                                  "fontWeight": "800",
+                                  "letterSpacing": 1
+                                }
+                              ]
                             }
                           ]
                         }
@@ -24203,6 +24033,49 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "Bb4Xa",
+      "x": -440,
+      "y": 8568,
+      "name": "Label 10 Variantes",
+      "width": 360,
+      "layout": "vertical",
+      "gap": 6,
+      "children": [
+        {
+          "type": "text",
+          "id": "Hhj83",
+          "fill": "$accent",
+          "content": "10 - VARIANTES",
+          "fontFamily": "Inter",
+          "fontSize": 11,
+          "fontWeight": "700",
+          "letterSpacing": 1.5
+        },
+        {
+          "type": "text",
+          "id": "RitaU",
+          "fill": "$textPrimary",
+          "content": "Variantes y sheets adicionales",
+          "fontFamily": "Geist",
+          "fontSize": 28,
+          "fontWeight": "700"
+        },
+        {
+          "type": "text",
+          "id": "M2XOO",
+          "fill": "$textMuted",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Experimentos y pantallas auxiliares: StopKind v2, Turismo + Mirador, Compartir ruta, Party miembros.",
+          "lineHeight": 1.4,
+          "fontFamily": "Inter",
+          "fontSize": 13,
+          "fontWeight": "500"
         }
       ]
     }
