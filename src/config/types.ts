@@ -8,6 +8,7 @@ export const TYPES = {
   FuelStationService: Symbol.for('FuelStationService'),
   LocationService: Symbol.for('LocationService'),
   PlaceSearchService: Symbol.for('PlaceSearchService'),
+  PlaceCategorySearchService: Symbol.for('PlaceCategorySearchService'),
   PlaceSummaryService: Symbol.for('PlaceSummaryService'),
   ElevationService: Symbol.for('ElevationService'),
 
@@ -20,6 +21,7 @@ export const TYPES = {
   FuelStationRepository: Symbol.for('FuelStationRepository'),
   LocationRepository: Symbol.for('LocationRepository'),
   PlaceSearchRepository: Symbol.for('PlaceSearchRepository'),
+  PlaceCategorySearchRepository: Symbol.for('PlaceCategorySearchRepository'),
   PlaceSummaryRepository: Symbol.for('PlaceSummaryRepository'),
   RecentDestinationRepository: Symbol.for('RecentDestinationRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
@@ -51,6 +53,7 @@ export const TYPES = {
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
   SearchPlacesUseCase: Symbol.for('SearchPlacesUseCase'),
+  SearchPlacesByCategoryUseCase: Symbol.for('SearchPlacesByCategoryUseCase'),
   GetPlaceSummaryUseCase: Symbol.for('GetPlaceSummaryUseCase'),
   GetRecentDestinationsUseCase: Symbol.for('GetRecentDestinationsUseCase'),
   AddRecentDestinationUseCase: Symbol.for('AddRecentDestinationUseCase'),

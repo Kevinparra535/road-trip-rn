@@ -1,4 +1,5 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
+import { Place } from '@/domain/entities/Place';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
@@ -37,7 +38,14 @@ describe('RoutesViewModel', () => {
 });
 
 describe('RoutePlannerViewModel', () => {
-  const build = () => {
+  const build = (
+    overrides: {
+      searchResults?: Place[];
+      searchError?: Error;
+      categoryResults?: Place[];
+      categoryError?: Error;
+    } = {},
+  ) => {
     const getCurrentRider = { run: jest.fn().mockResolvedValue(makeRider()) };
     const getRoute = { run: jest.fn() };
     const calculate = {
@@ -51,14 +59,42 @@ describe('RoutePlannerViewModel', () => {
     };
     const create = { run: jest.fn().mockResolvedValue(makeRoute()) };
     const update = { run: jest.fn().mockResolvedValue(makeRoute()) };
+    const searchPlaces = {
+      run: jest.fn(async () => {
+        if (overrides.searchError) throw overrides.searchError;
+        return overrides.searchResults ?? [];
+      }),
+    };
+    const searchPlacesByCategory = {
+      run: jest.fn(async () => {
+        if (overrides.categoryError) throw overrides.categoryError;
+        return overrides.categoryResults ?? [];
+      }),
+    };
     const vm = new RoutePlannerViewModel(
       getCurrentRider as any,
       getRoute as any,
       calculate as any,
       create as any,
       update as any,
+      searchPlaces as any,
+      searchPlacesByCategory as any,
     );
-    return { vm, calculate, create };
+    return {
+      vm,
+      calculate,
+      create,
+      searchPlaces,
+      searchPlacesByCategory,
+    };
+  };
+
+  // Ayuda: avanza el debounce de search (400ms) sin esperar tiempo real.
+  const flushDebounce = async () => {
+    jest.advanceTimersByTime(450);
+    // Vacia microtasks pendientes (promises encadenadas por el reaction).
+    await Promise.resolve();
+    await Promise.resolve();
   };
 
   it('normalizes waypoint kinds as points are added', async () => {
@@ -104,6 +140,330 @@ describe('RoutePlannerViewModel', () => {
     await vm.calculateDirections();
     vm.setRideType('offroad');
     expect(vm.directions).toBeNull();
+  });
+
+  it('setStopKind only updates intermediate waypoints and marks override', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.7, -74.1, 'B');
+    vm.addWaypoint(4.8, -74.2, 'C');
+
+    const intermediateId = vm.waypoints[1].id;
+    vm.setStopKind(intermediateId, 'fuel');
+
+    const updated = vm.waypoints.find((w) => w.id === intermediateId);
+    expect(updated?.kind).toBe('fuel');
+    expect(updated?.userOverrideKind).toBe(true);
+
+    // start/destination no se pueden cambiar
+    const startId = vm.waypoints[0].id;
+    const destId = vm.waypoints[2].id;
+    vm.setStopKind(startId, 'tourism');
+    vm.setStopKind(destId, 'tourism');
+    expect(vm.waypoints[0].kind).toBe('start');
+    expect(vm.waypoints[2].kind).toBe('destination');
+
+    // un kind invalido (start/destination) sobre un intermedio es no-op
+    vm.setStopKind(intermediateId, 'start');
+    expect(vm.waypoints[1].kind).toBe('fuel');
+  });
+
+  it('removeStop only removes intermediate waypoints', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.7, -74.1, 'B');
+    vm.addWaypoint(4.8, -74.2, 'C');
+
+    const startId = vm.waypoints[0].id;
+    const intermediateId = vm.waypoints[1].id;
+
+    vm.removeStop(startId);
+    expect(vm.waypoints).toHaveLength(3); // no se removio el start
+
+    vm.removeStop(intermediateId);
+    expect(vm.waypoints).toHaveLength(2);
+    expect(vm.waypoints.find((w) => w.id === intermediateId)).toBeUndefined();
+  });
+
+  it('addWaypointWithKind inserta antes del destination y marca override', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start');
+    vm.addWaypoint(4.8, -74.2, 'End'); // start + destination ya existen
+    vm.addWaypointWithKind({
+      latitude: 4.65,
+      longitude: -74.09,
+      name: 'Estacion Terpel',
+      kind: 'fuel',
+      mapboxCategory: 'gas_station',
+    });
+
+    // El intermedio quedo en posicion 1 (entre start y destination).
+    expect(vm.waypoints).toHaveLength(3);
+    expect(vm.waypoints[0].kind).toBe('start');
+    expect(vm.waypoints[2].kind).toBe('destination');
+
+    const intermediate = vm.waypoints[1];
+    expect(intermediate.kind).toBe('fuel');
+    expect(intermediate.userOverrideKind).toBe(true);
+    expect(intermediate.mapboxCategory).toBe('gas_station');
+  });
+
+  describe('search flow', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    it('setSearchQuery dispara la busqueda con debounce', async () => {
+      const { vm, searchPlaces } = build({
+        searchResults: [
+          new Place({
+            id: 'p1',
+            name: 'Villa de Leyva',
+            fullName: 'Villa de Leyva, Boyaca, CO',
+            latitude: 5.6325,
+            longitude: -73.5253,
+            placeType: 'place',
+          }),
+        ],
+      });
+      await vm.initialize();
+
+      vm.setSearchQuery('Villa');
+      // antes del debounce no se llamo aun
+      expect(searchPlaces.run).not.toHaveBeenCalled();
+
+      await flushDebounce();
+      expect(searchPlaces.run).toHaveBeenCalledWith({
+        query: 'Villa',
+        proximity: undefined,
+      });
+      expect(vm.searchResults).toHaveLength(1);
+      expect(vm.searchResults?.[0].name).toBe('Villa de Leyva');
+      vm.dispose();
+    });
+
+    it('runSearch ignora queries menores a MIN_PLACE_QUERY_LENGTH', async () => {
+      const { vm, searchPlaces } = build();
+      await vm.initialize();
+      vm.setSearchQuery('Vi'); // 2 chars
+      await flushDebounce();
+      expect(searchPlaces.run).not.toHaveBeenCalled();
+      expect(vm.searchResults).toBeNull();
+      vm.dispose();
+    });
+
+    it('selectSearchResult agrega waypoint con StopKind inferido y override', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      // Start + destination ya existen para que el resultado sea intermedio.
+      vm.addWaypoint(4.6, -74.08, 'Bogota');
+      vm.addWaypoint(5.6, -73.5, 'Villa de Leyva');
+
+      const gasStation = new Place({
+        id: 'p2',
+        name: 'Estacion Terpel',
+        fullName: 'Estacion Terpel, Tunja',
+        latitude: 5.5,
+        longitude: -73.4,
+        placeType: 'poi',
+        category: 'gas_station',
+      });
+      vm.selectSearchResult(gasStation);
+
+      const intermediate = vm.waypoints[1];
+      expect(intermediate.name).toBe('Estacion Terpel');
+      expect(intermediate.kind).toBe('fuel');
+      expect(intermediate.userOverrideKind).toBe(true);
+      expect(intermediate.mapboxCategory).toBe('gas_station');
+      // El search se limpia luego de elegir.
+      expect(vm.searchQuery).toBe('');
+      expect(vm.searchResults).toBeNull();
+      vm.dispose();
+    });
+
+    it('selectSearchResult cae a kind=food si Mapbox no devuelve categoria util', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'Bogota');
+      vm.addWaypoint(5.6, -73.5, 'Villa de Leyva');
+
+      const ambiguous = new Place({
+        id: 'p3',
+        name: 'Lugar X',
+        fullName: 'Lugar X, CO',
+        latitude: 5.5,
+        longitude: -73.4,
+        placeType: 'address',
+        // sin category, sin placeType=poi -> InferStopKind devuelve null
+      });
+      vm.selectSearchResult(ambiguous);
+      expect(vm.waypoints[1].kind).toBe('food');
+      vm.dispose();
+    });
+
+    it('clearSearch resetea estado del buscador', async () => {
+      const { vm } = build({
+        searchResults: [
+          new Place({
+            id: 'p1',
+            name: 'X',
+            fullName: 'X',
+            latitude: 0,
+            longitude: 0,
+          }),
+        ],
+      });
+      await vm.initialize();
+      vm.setSearchQuery('Villa');
+      await flushDebounce();
+      expect(vm.searchResults).not.toBeNull();
+
+      vm.clearSearch();
+      expect(vm.searchQuery).toBe('');
+      expect(vm.searchResults).toBeNull();
+      expect(vm.isSearchError).toBeNull();
+      expect(vm.isSearchLoading).toBe(false);
+      vm.dispose();
+    });
+  });
+
+  describe('category search flow', () => {
+    it('searchByCategory activa la categoria y guarda resultados', async () => {
+      const place = new Place({
+        id: 'gas-1',
+        name: 'Terpel Norte',
+        fullName: 'Terpel Norte, Bogota',
+        latitude: 4.65,
+        longitude: -74.05,
+        category: 'gas_station',
+      });
+      const { vm, searchPlacesByCategory } = build({
+        categoryResults: [place],
+      });
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'Bogota');
+      vm.addWaypoint(5.6, -73.5, 'Villa de Leyva');
+
+      await vm.searchByCategory('fuel');
+      expect(searchPlacesByCategory.run).toHaveBeenCalledWith(
+        expect.objectContaining({ category: 'fuel' }),
+      );
+      expect(vm.activeCategory).toBe('fuel');
+      expect(vm.categoryResults).toHaveLength(1);
+      expect(vm.categoryResults?.[0].name).toBe('Terpel Norte');
+      vm.dispose();
+    });
+
+    it('searchByCategory toggle: re-tap a la misma categoria la apaga', async () => {
+      const { vm } = build({ categoryResults: [] });
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+
+      await vm.searchByCategory('food');
+      expect(vm.activeCategory).toBe('food');
+      await vm.searchByCategory('food');
+      expect(vm.activeCategory).toBeNull();
+      expect(vm.categoryResults).toBeNull();
+      vm.dispose();
+    });
+
+    it('searchByCategory limpia el text search activo', async () => {
+      const { vm } = build({ categoryResults: [] });
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+
+      vm.setSearchQuery('estacion'); // text search activo
+      await vm.searchByCategory('fuel');
+      expect(vm.searchQuery).toBe('');
+      expect(vm.searchResults).toBeNull();
+      vm.dispose();
+    });
+
+    it('selectCategoryResult agrega waypoint con el kind del chip activo', async () => {
+      const place = new Place({
+        id: 'tour-1',
+        name: 'Catedral de Sal',
+        fullName: 'Catedral de Sal, Zipaquira',
+        latitude: 5.02,
+        longitude: -74.0,
+        category: 'place_of_worship', // categoria que NO mapearia a 'tourism'
+      });
+      const { vm } = build({ categoryResults: [place] });
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'Bogota');
+      vm.addWaypoint(5.6, -73.5, 'Villa de Leyva');
+
+      await vm.searchByCategory('tourism');
+      vm.selectCategoryResult(place);
+
+      const intermediate = vm.waypoints[1];
+      expect(intermediate.name).toBe('Catedral de Sal');
+      // El kind viene del chip activo, NO de inferencia de categoria.
+      expect(intermediate.kind).toBe('tourism');
+      expect(intermediate.userOverrideKind).toBe(true);
+      // El filtro se cierra despues de elegir.
+      expect(vm.activeCategory).toBeNull();
+      vm.dispose();
+    });
+
+    it('selectCategoryResult sin activeCategory es no-op (defensa)', async () => {
+      const place = new Place({
+        id: 'p1',
+        name: 'X',
+        fullName: 'X',
+        latitude: 0,
+        longitude: 0,
+      });
+      const { vm } = build();
+      await vm.initialize();
+      vm.selectCategoryResult(place);
+      expect(vm.waypoints).toHaveLength(0);
+      vm.dispose();
+    });
+
+    it('searchByCategory sin waypoints devuelve [] sin llamar al use case', async () => {
+      const { vm, searchPlacesByCategory } = build({ categoryResults: [] });
+      await vm.initialize();
+      // sin waypoints, alongRoute esta vacio -> no llamada
+      await vm.searchByCategory('rest');
+      expect(searchPlacesByCategory.run).not.toHaveBeenCalled();
+      expect(vm.categoryResults).toEqual([]);
+      vm.dispose();
+    });
+  });
+
+  it('timelineItems devuelve metadata ordenada con flags posicionales', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Bogota');
+    vm.addWaypoint(4.8, -74.2, 'Villa de Leyva');
+    vm.addWaypointWithKind({
+      latitude: 4.65,
+      longitude: -74.09,
+      name: 'La Calera',
+      kind: 'food',
+      mapboxCategory: 'restaurant',
+    });
+
+    const items = vm.timelineItems;
+    expect(items).toHaveLength(3);
+    expect(items[0].isFirst).toBe(true);
+    expect(items[0].isLast).toBe(false);
+    expect(items[0].isIntermediate).toBe(false);
+    expect(items[0].kind).toBe('start');
+
+    expect(items[1].isIntermediate).toBe(true);
+    expect(items[1].kind).toBe('food');
+    expect(items[1].sub).toBe('restaurant'); // mapboxCategory prioritized
+
+    expect(items[2].isLast).toBe(true);
+    expect(items[2].kind).toBe('destination');
+    // sub cae a coord cuando no hay mapboxCategory
+    expect(items[2].sub).toMatch(/^\d+\.\d+, -?\d+\.\d+$/);
   });
 });
 

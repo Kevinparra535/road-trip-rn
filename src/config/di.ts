@@ -16,6 +16,8 @@ import type { MotorcycleService } from '@/data/services/MotorcycleService';
 import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
 import type { MotoStatsService } from '@/data/services/MotoStatsService';
 import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
+import type { PlaceCategorySearchService } from '@/data/services/PlaceCategorySearchService';
+import { PlaceCategorySearchServiceImpl } from '@/data/services/PlaceCategorySearchService';
 import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
 import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
 import type { PlaceSummaryService } from '@/data/services/PlaceSummaryService';
@@ -30,6 +32,7 @@ import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationReposi
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
+import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCategorySearchRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
 import { RecentDestinationRepositoryImpl } from '@/data/repositories/RecentDestinationRepositoryImpl';
@@ -42,6 +45,7 @@ import type { FuelStationRepository } from '@/domain/repositories/FuelStationRep
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
+import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceCategorySearchRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
 import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
 import type { RecentDestinationRepository } from '@/domain/repositories/RecentDestinationRepository';
@@ -70,6 +74,7 @@ import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
@@ -128,6 +133,10 @@ container
   .to(PlaceSearchServiceImpl)
   .inSingletonScope();
 container
+  .bind<PlaceCategorySearchService>(TYPES.PlaceCategorySearchService)
+  .to(PlaceCategorySearchServiceImpl)
+  .inSingletonScope();
+container
   .bind<PlaceSummaryService>(TYPES.PlaceSummaryService)
   .to(WikipediaSummaryService)
   .inSingletonScope();
@@ -168,6 +177,10 @@ container
 container
   .bind<PlaceSearchRepository>(TYPES.PlaceSearchRepository)
   .to(PlaceSearchRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<PlaceCategorySearchRepository>(TYPES.PlaceCategorySearchRepository)
+  .to(PlaceCategorySearchRepositoryImpl)
   .inSingletonScope();
 container
   .bind<PlaceSummaryRepository>(TYPES.PlaceSummaryRepository)
@@ -249,6 +262,9 @@ container
 container
   .bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase)
   .to(SearchPlacesUseCase);
+container
+  .bind<SearchPlacesByCategoryUseCase>(TYPES.SearchPlacesByCategoryUseCase)
+  .to(SearchPlacesByCategoryUseCase);
 container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);

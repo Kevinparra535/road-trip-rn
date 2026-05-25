@@ -93,6 +93,68 @@ export class PlaceModel {
     });
   }
 
+  /**
+   * Parsea una feature de la Mapbox Search Box API (`/category`). La forma
+   * es distinta a la Geocoding v5: usa `properties.coordinates` o
+   * `geometry.coordinates`, `properties.name`, `properties.full_address`,
+   * `properties.category` como array y `properties.context` como objeto.
+   */
+  static fromSearchBoxFeature(feature: any): PlaceModel | null {
+    const props = feature?.properties ?? {};
+    const coordsObj = props?.coordinates;
+    const geomCoords = feature?.geometry?.coordinates;
+    const longitude: number | null =
+      coordsObj?.longitude ?? geomCoords?.[0] ?? null;
+    const latitude: number | null =
+      coordsObj?.latitude ?? geomCoords?.[1] ?? null;
+    if (typeof longitude !== 'number' || typeof latitude !== 'number') {
+      return null;
+    }
+
+    const name = String(
+      props?.name ?? props?.name_preferred ?? feature?.text ?? 'Lugar',
+    );
+    const fullName = String(
+      props?.full_address ?? props?.place_formatted ?? props?.address ?? name,
+    );
+
+    // Search Box devuelve `category` como array; tomamos el primero por
+    // consistencia con la forma de Geocoding (string comma-separated).
+    const categoryRaw = props?.category;
+    const category: string | undefined = Array.isArray(categoryRaw)
+      ? categoryRaw.join(', ')
+      : typeof categoryRaw === 'string'
+        ? categoryRaw
+        : undefined;
+
+    // Context viene como objeto (no array como en Geocoding). Buscamos
+    // region y country por shape `{ region: { name }, country: { name } }`.
+    const ctx = props?.context ?? {};
+    const region: string | undefined = ctx?.region?.name
+      ? String(ctx.region.name)
+      : undefined;
+    const country: string | undefined = ctx?.country?.name
+      ? String(ctx.country.name)
+      : undefined;
+
+    const id: string = String(
+      feature?.id ?? props?.mapbox_id ?? `${longitude},${latitude}`,
+    );
+
+    return new PlaceModel({
+      id,
+      name,
+      fullName,
+      longitude,
+      latitude,
+      placeType: props?.feature_type ? String(props.feature_type) : 'poi',
+      category,
+      maki: props?.maki ? String(props.maki) : undefined,
+      region,
+      country,
+    });
+  }
+
   toJson(): Record<string, unknown> {
     return {
       id: this.id,
