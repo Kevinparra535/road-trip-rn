@@ -69,6 +69,17 @@ const Colors = {
     high: '#FF9800',
     peak: '#E74446',
   },
+  // Colores semanticos por tipo de parada (StopKind). El color del SEGMENTO
+  // entre 2 waypoints se deriva del kind del waypoint destino.
+  // Sincronizado con los tokens del Pencil: stopStart/stopFood/stopFuel/etc.
+  stopKind: {
+    start: '#4CAF50', // verde (mismo que check / elevation.low)
+    food: '#E6C229', // amarillo dorado (mismo que elevation.mid)
+    fuel: '#E8A030', // naranja oscuro (diferenciado del accent #FF9800)
+    tourism: '#9B59B6', // morado violeta
+    rest: '#3DA5D9', // azul cielo
+    destination: '#E74446', // rojo (mismo que error / elevation.peak)
+  },
   semantic: {
     text: {
       primaryDark: '#000000',

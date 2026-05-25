@@ -1,4 +1,11 @@
-export type WaypointKind = 'start' | 'stop' | 'destination';
+import { StopKind } from '@/domain/entities/StopKind';
+
+/**
+ * Tipo canonico de un waypoint. Alias de `StopKind` — el modelo legacy
+ * `'start' | 'stop' | 'destination'` se preserva como migracion: los
+ * waypoints guardados con `kind: 'stop'` se mapean a `'food'` en `routeModel`.
+ */
+export type WaypointKind = StopKind;
 
 export type WaypointConstructorParams = {
   id: string;
@@ -7,6 +14,17 @@ export type WaypointConstructorParams = {
   longitude: number;
   kind: WaypointKind;
   order: number;
+  /**
+   * Categoria de Mapbox (`restaurant`, `gas_station`, `tourist_attraction`,
+   * etc.) que el geocoder devolvio para este punto. Sirve para inferir el
+   * `kind` cuando el rider agrega por texto libre.
+   */
+  mapboxCategory?: string;
+  /**
+   * `true` si el rider edito el kind manualmente (no fue inferido). Permite
+   * que la inferencia automatica NO sobrescriba elecciones explicitas.
+   */
+  userOverrideKind?: boolean;
   [key: string]: any;
 };
 
@@ -20,6 +38,8 @@ export class Waypoint {
   longitude: number;
   kind: WaypointKind;
   order: number;
+  mapboxCategory?: string;
+  userOverrideKind?: boolean;
 
   constructor(params: WaypointConstructorParams) {
     this.id = params.id;
@@ -28,6 +48,8 @@ export class Waypoint {
     this.longitude = params.longitude;
     this.kind = params.kind;
     this.order = params.order;
+    this.mapboxCategory = params.mapboxCategory;
+    this.userOverrideKind = params.userOverrideKind;
 
     Object.assign(this, params);
   }
@@ -35,5 +57,10 @@ export class Waypoint {
   /** Coordenada en formato [lng, lat] como espera Mapbox / GeoJSON. */
   toLngLat(): [number, number] {
     return [this.longitude, this.latitude];
+  }
+
+  /** `true` si es una parada intermedia (no start ni destination). */
+  isIntermediate(): boolean {
+    return this.kind !== 'start' && this.kind !== 'destination';
   }
 }

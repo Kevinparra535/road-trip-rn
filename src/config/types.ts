@@ -57,6 +57,7 @@ export const TYPES = {
   ClearRecentDestinationsUseCase: Symbol.for('ClearRecentDestinationsUseCase'),
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
   EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
+  InferStopKindUseCase: Symbol.for('InferStopKindUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),

@@ -25,12 +25,12 @@ La planeación de ruta es **el fuerte del MVP** de Road Trip. No es una pantalla
 
 ## 2. Decisiones de producto (cerradas)
 
-| # | Decisión | Implicancia |
-|---|---|---|
-| D1 | **Scope MVP = slices C.1–C.6** | Tramos + party + share + cálculo colectivo. Diferimos edición colaborativa real-time (C.7) y voz (C.8). |
-| D2 | **`StopKind` vive en `Waypoint`** | El color del SEGMENTO entre 2 waypoints se deriva del kind del waypoint destino. Modelo simple, sin entidad nueva. |
-| D3 | **Detección híbrida del kind** | Categoría → fija el kind directo. Texto libre → infiere de Mapbox category. Usuario puede editar. |
-| D4 | **Backend = Firestore + rules** | Ruta + party + shareCode viven en Firestore. Sin cloud functions custom. `onSnapshot` para sync. |
+| #   | Decisión                          | Implicancia                                                                                                        |
+| --- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| D1  | **Scope MVP = slices C.1–C.6**    | Tramos + party + share + cálculo colectivo. Diferimos edición colaborativa real-time (C.7) y voz (C.8).            |
+| D2  | **`StopKind` vive en `Waypoint`** | El color del SEGMENTO entre 2 waypoints se deriva del kind del waypoint destino. Modelo simple, sin entidad nueva. |
+| D3  | **Detección híbrida del kind**    | Categoría → fija el kind directo. Texto libre → infiere de Mapbox category. Usuario puede editar.                  |
+| D4  | **Backend = Firestore + rules**   | Ruta + party + shareCode viven en Firestore. Sin cloud functions custom. `onSnapshot` para sync.                   |
 
 ---
 
@@ -41,11 +41,11 @@ La planeación de ruta es **el fuerte del MVP** de Road Trip. No es una pantalla
 ```ts
 // src/domain/entities/StopKind.ts (nuevo)
 export type StopKind =
-  | 'start'        // Punto de arranque (verde)
-  | 'food'         // Alimentación (amarillo)
-  | 'fuel'         // Tanqueo (naranja oscuro)
-  | 'tourism'      // Turismo / visita / atracción (morado)
-  | 'rest'         // Descanso / mirador / parador (azul claro)
+  | 'start' // Punto de arranque (verde)
+  | 'food' // Alimentación (amarillo)
+  | 'fuel' // Tanqueo (naranja oscuro)
+  | 'tourism' // Turismo / visita / atracción (morado)
+  | 'rest' // Descanso / mirador / parador (azul claro)
   | 'destination'; // Punto final (rojo / acento)
 ```
 
@@ -84,7 +84,7 @@ isSolo: boolean;               // si es solo o grupal (orthogonal a rideType)
 export type TripParty = {
   id: string;
   routeId: string;
-  ownerId: string;              // rider que creó el party
+  ownerId: string; // rider que creó el party
   members: PartyMember[];
   createdAt: Date;
   // Estado del party
@@ -153,6 +153,7 @@ src/data/services/
 ```
 
 Reglas de Firestore (resumen):
+
 - `/routes/{routeId}`: lectura permitida si `request.auth.uid` está en `party.members[].riderId` O si la ruta es del propio rider (`riderId`)
 - `/parties/{partyId}`: lectura para members; escritura solo para owner (o editores para campos limitados)
 - `/shareCodes/{shareCode}`: lectura pública (necesario para resolver el código), escritura solo Cloud Function o regla restringida (anti-flood)
@@ -163,23 +164,23 @@ Reglas de Firestore (resumen):
 
 ### 4.1. Frames a actualizar
 
-| Frame Pencil | Cambios necesarios |
-|---|---|
-| `11 - Planear ruta (formSheet full)` | **Timeline coloreado por `StopKind`**. Cada parada con su ícono + color. CTA "Iniciar navegación" condicional según si la ruta es del rider o party. |
-| `3 - Home Ruta Asomado` | Stats card sin cambio mayor, pero los dots del mapa pasan a usar colores por `StopKind`. Agregar chip "Party (3)" si aplica. |
-| `3b - Agregar parada (Quick + Voice)` | El grid de categorías ya muestra Gasolinera/Comida/Café/Baño — **agregar Turismo y Mirador**. Voz queda para C.8. |
-| `12 - Detalle de ruta (formSheet)` | Agregar acción **"Compartir ruta"** que abre el sheet de share (frame nuevo abajo). Mostrar miembros del party si existe. |
+| Frame Pencil                          | Cambios necesarios                                                                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `11 - Planear ruta (formSheet full)`  | **Timeline coloreado por `StopKind`**. Cada parada con su ícono + color. CTA "Iniciar navegación" condicional según si la ruta es del rider o party. |
+| `3 - Home Ruta Asomado`               | Stats card sin cambio mayor, pero los dots del mapa pasan a usar colores por `StopKind`. Agregar chip "Party (3)" si aplica.                         |
+| `3b - Agregar parada (Quick + Voice)` | El grid de categorías ya muestra Gasolinera/Comida/Café/Baño — **agregar Turismo y Mirador**. Voz queda para C.8.                                    |
+| `12 - Detalle de ruta (formSheet)`    | Agregar acción **"Compartir ruta"** que abre el sheet de share (frame nuevo abajo). Mostrar miembros del party si existe.                            |
 
 ### 4.2. Frames nuevos por crear en Pencil
 
-| Frame nuevo | Rol | Slice |
-|---|---|---|
-| `Selector tipo de viaje` | Onboarding del flow: ¿solo o grupal? × ¿carretera, offroad, largo? | C.2 |
-| `Compartir ruta` | Sheet con código grande + QR + botón copiar link + selector de permisos | C.4 |
-| `Party — Miembros` | Lista de riders con nombre, iniciales, moto, autonomía. Botón "Invitar" + indicador "Esperando…" | C.5 |
-| `Unirse a party` | Pantalla para pegar/escanear código, ingresar nombre + elegir moto del garage | C.5 |
-| `Plan de tanqueo del party` | Sub-card o sheet del Planear ruta mostrando paradas de tanqueo sugeridas con cálculo del par `(moto débil, moto fuerte)` | C.6 |
-| `Cambios pendientes` (post-MVP) | Cuando otro miembro edita, banner "Juan agregó una parada" con ✓ / ✗ | C.7 |
+| Frame nuevo                     | Rol                                                                                                                      | Slice |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----- |
+| `Selector tipo de viaje`        | Onboarding del flow: ¿solo o grupal? × ¿carretera, offroad, largo?                                                       | C.2   |
+| `Compartir ruta`                | Sheet con código grande + QR + botón copiar link + selector de permisos                                                  | C.4   |
+| `Party — Miembros`              | Lista de riders con nombre, iniciales, moto, autonomía. Botón "Invitar" + indicador "Esperando…"                         | C.5   |
+| `Unirse a party`                | Pantalla para pegar/escanear código, ingresar nombre + elegir moto del garage                                            | C.5   |
+| `Plan de tanqueo del party`     | Sub-card o sheet del Planear ruta mostrando paradas de tanqueo sugeridas con cálculo del par `(moto débil, moto fuerte)` | C.6   |
+| `Cambios pendientes` (post-MVP) | Cuando otro miembro edita, banner "Juan agregó una parada" con ✓ / ✗                                                     | C.7   |
 
 ---
 
@@ -188,20 +189,24 @@ Reglas de Firestore (resumen):
 ### Slice C.1 — `StopKind` + colores por segmento (S, 1–2 días)
 
 **Dominio:**
+
 - `src/domain/entities/StopKind.ts` (nuevo)
 - `src/domain/entities/Waypoint.ts`: `kind: StopKind` + `mapboxCategory?` + `userOverrideKind?`
 - `src/domain/useCases/InferStopKindUseCase/` (nuevo, puro mapping)
 
 **Data:**
+
 - `src/data/models/waypointModel.ts`: actualizar `fromJson`/`toJson` (cubierto vía RouteModel)
 - `src/data/models/routeModel.ts`: handle migración de `kind: 'stop'` → `food` o `userOverrideKind: false`
 
 **UI:**
+
 - `src/ui/styles/Colors.ts`: agregar `Colors.stopKind.{food,fuel,tourism,rest,destination}`
 - `src/ui/screens/Home/HomeViewModel.ts` `routeLines`: en vez de una línea uniforme, generar **N líneas** (una por segmento) con color del waypoint destino
 - `src/ui/screens/Home/HomeScreen.tsx`: render N `Mapbox.LineLayer` (uno por segmento). `slot="top"` ya está.
 
 **Tests:**
+
 - `InferStopKindUseCase` con categorías Mapbox conocidas
 - `routeLines` getter genera segmentos con colores correctos
 - Migración: ruta legacy con `kind: 'stop'` carga sin romper
@@ -217,6 +222,7 @@ Reglas de Firestore (resumen):
 **Domain/Data**: ninguno nuevo (reusa C.1).
 
 **UI:**
+
 - `src/ui/screens/Routes/RoutePlannerScreen.tsx`: rediseño completo siguiendo frame 11
   - Header: "Planear ruta" + X (cerrar)
   - Mapa thumbnail (no interactivo) — reusar Mapbox Static Images como en `DestinationPreview`
@@ -227,9 +233,11 @@ Reglas de Firestore (resumen):
 - **Saca de la pantalla**: input "Nombre de la ruta" + `RideTypeSelector`. Estos se mueven a un sheet secundario "Guardar como ruta" disparado desde el `Detalle de ruta` (frame 12), no obligatorio para planear.
 
 **ViewModel**:
+
 - Probablemente extender `RoutePlannerViewModel` con `stopKinds`, `setStopKind(waypointId, kind)`, `removeStop(waypointId)`.
 
 **Tests:**
+
 - Estado: timeline ordenado por waypoint order, colores correctos
 - Acción: removeStop, addStop con kind explícito, reordenar
 
@@ -238,21 +246,25 @@ Reglas de Firestore (resumen):
 ### Slice C.3 — Sugerencias semánticas por categoría (M, 3–4 días)
 
 **Domain:**
+
 - `src/domain/repositories/PlaceCategorySearchRepository.ts` (nuevo)
 - `src/domain/useCases/SearchPlacesByCategoryUseCase/` (nuevo)
   - Input: `{ category: 'food' | 'tourism' | 'fuel' | 'rest', alongRoute: GeoPoint[], maxResults: number }`
   - Output: `Place[]` ranked por proximidad al trazado
 
 **Data:**
+
 - `src/data/repositories/PlaceCategorySearchRepositoryImpl.ts`
 - `src/data/services/PlaceCategorySearchService.ts`: wrapper de Mapbox Search Box API (`category=fuel|restaurant|tourist_attraction|rest_area`)
 
 **UI:**
+
 - Frame 3b ya existe; ahora con datos reales
 - Grid de categorías → tap → muestra lista de POIs cercanos a la ruta, agrupados por tramo
 - Tap en POI → agrega como waypoint con `stopKind` derivado
 
 **Tests:**
+
 - `SearchPlacesByCategoryUseCase` con mock del service
 - Ranking por proximidad al trazado
 
@@ -261,23 +273,28 @@ Reglas de Firestore (resumen):
 ### Slice C.4 — `RouteShareCode` (M, 3–4 días)
 
 **Domain:**
+
 - `src/domain/repositories/RouteShareRepository.ts`
 - `src/domain/useCases/GenerateRouteShareCodeUseCase/`: genera código corto (`r-XXXX-YYYY`), inserta en `/shareCodes/{code}` con `routeId`
 - `src/domain/useCases/ResolveRouteShareCodeUseCase/`: dado un código, devuelve `{ route, partyOrNull }`
 
 **Data:**
+
 - `src/data/repositories/RouteShareRepositoryImpl.ts` (Firestore)
 - `src/data/services/ShareCodeService.ts`: generador de códigos cortos con retry si colisiona
 
 **UI:**
+
 - Nuevo sheet `RouteShareSheet` (frame nuevo en Pencil)
 - Botón "Compartir ruta" en `RouteDetailScreen` (frame 12)
 - Pantalla nueva `JoinRouteScreen` para pegar código (deep link `roadtrip://join/r-XXXX-YYYY` → resuelve y muestra preview)
 
 **Firestore:**
+
 - Migración rules + index en `/shareCodes`
 
 **Tests:**
+
 - Generación de códigos únicos (mock collision)
 - Resolución: código válido → ruta; código inválido → null; código expirado → null
 
@@ -286,15 +303,18 @@ Reglas de Firestore (resumen):
 ### Slice C.5 — `TripParty` + `PartyMember` (L, 5–7 días)
 
 **Domain:**
+
 - `src/domain/entities/TripParty.ts`, `PartyMember.ts`
 - `src/domain/repositories/TripPartyRepository.ts` con `observe(partyId): Observable<TripParty>` (para sync)
 - 3 useCases: `CreateTripParty`, `JoinTripParty`, `LeaveTripParty`
 
 **Data:**
+
 - `src/data/repositories/TripPartyRepositoryImpl.ts` con `onSnapshot`
 - `src/data/models/tripPartyModel.ts`
 
 **UI:**
+
 - 2 frames nuevos en Pencil: `Party — Miembros`, `Unirse a party`
 - `PartyMembersScreen` listando miembros con sus motos
 - `JoinPartyScreen` con campo código + selector de moto del garage
@@ -303,6 +323,7 @@ Reglas de Firestore (resumen):
 **Decisión técnica importante**: el `HomeViewModel` necesita observar el party activo. Probablemente conviene crear `TripPartyStore` (singleton) inyectado en `HomeViewModel` — el party es estado global de la app durante un viaje.
 
 **Tests:**
+
 - Crear party → owner es el primer member
 - Join: agrega member, sync via `onSnapshot`
 - Leave: si era owner, se promociona el siguiente; si no, solo se elimina
@@ -313,17 +334,20 @@ Reglas de Firestore (resumen):
 ### Slice C.6 — `PartyFuelPlan` (M, 3–4 días)
 
 **Domain:**
+
 - `src/domain/useCases/EstimatePartyFuelPlanUseCase/`
   - Input: `{ route: Route, party: TripParty }`
   - Output: `PartyFuelPlan { stops: FuelStop[], weakestMotoId: string, strongestMotoId: string }`
 - Algoritmo: por cada km de la ruta, calcula combustible restante de la moto débil. Cuando llega al 30% del tanque, marca punto de tanqueo. (Reusar `EstimateRouteFuelUseCase` por moto, agregar lógica de envelope)
 
 **UI:**
+
 - Card nueva en `RoutePlannerScreen` (cuando hay party): "Plan de tanqueo del party"
 - Muestra: gasolinera sugerida, "Tanqueo necesario para Yamaha XTZ 250 (más débil)", "Margen: 50 km hasta la siguiente"
 - Visual: timeline de tanqueo paralelo al timeline de paradas
 
 **Tests:**
+
 - Cálculo con 2 motos: una de 100km de rango, otra de 300km. Debe sugerir tanqueo cuando la de 100km llega al 30%.
 - Edge cases: party de 1 (igual a single rider), motos con consumo extremo
 
@@ -338,16 +362,16 @@ Reglas de Firestore (resumen):
 
 ## 6. Plan de ejecución (orden por semanas)
 
-| Semana | Fase | Output |
-|---|---|---|
-| **1** | Diseño en Pencil (Fase B) | Frames actualizados (3, 3b, 11, 12) + frames nuevos (selector tipo viaje, compartir, party, unirse, fuel plan). Snapshot del Pencil compartido. |
-| **2** | Slice C.1 | `StopKind` + colores por segmento. PR pequeño. |
-| **3** | Slice C.2 | Frame 11 rediseñado en código. PR mediano. |
-| **4** | Slice C.3 | Sugerencias por categoría. PR mediano. |
-| **5–6** | Slice C.4 | RouteShareCode + JoinRoute. PR mediano. |
-| **7–9** | Slice C.5 | TripParty + PartyMember + sync. PR grande. |
-| **10** | Slice C.6 | PartyFuelPlan. PR mediano. |
-| **11** | Buffer / QA / smoke tests en device | MVP completo. |
+| Semana  | Fase                                | Output                                                                                                                                          |
+| ------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1**   | Diseño en Pencil (Fase B)           | Frames actualizados (3, 3b, 11, 12) + frames nuevos (selector tipo viaje, compartir, party, unirse, fuel plan). Snapshot del Pencil compartido. |
+| **2**   | Slice C.1                           | `StopKind` + colores por segmento. PR pequeño.                                                                                                  |
+| **3**   | Slice C.2                           | Frame 11 rediseñado en código. PR mediano.                                                                                                      |
+| **4**   | Slice C.3                           | Sugerencias por categoría. PR mediano.                                                                                                          |
+| **5–6** | Slice C.4                           | RouteShareCode + JoinRoute. PR mediano.                                                                                                         |
+| **7–9** | Slice C.5                           | TripParty + PartyMember + sync. PR grande.                                                                                                      |
+| **10**  | Slice C.6                           | PartyFuelPlan. PR mediano.                                                                                                                      |
+| **11**  | Buffer / QA / smoke tests en device | MVP completo.                                                                                                                                   |
 
 Total estimado: **~10–11 semanas** para el MVP completo si dedico ~4 días/semana de programación efectiva.
 
@@ -355,14 +379,14 @@ Total estimado: **~10–11 semanas** para el MVP completo si dedico ~4 días/sem
 
 ## 7. Riesgos y desconocidos
 
-| Riesgo | Mitigación |
-|---|---|
-| **Mapbox Search by category cobertura en Colombia** | Validar con búsquedas reales (Bogotá → Zipaquirá) antes de C.3. Si la cobertura es pobre, fallback a OSM Overpass como ya hacemos para gasolineras. |
-| **Firestore rules complejas con party** | Empezar con rules simples (owner-only edit) y refinar con tests en el emulador. No abrir edición colaborativa hasta tener tests sólidos. |
-| **Conflictos de edición simultánea** | C.7 (diferida). En C.5 el owner es el único que edita; otros members ven la ruta read-only. Esto evita race conditions complejas. |
-| **`Waypoint.kind` migration** | Las rutas guardadas actualmente tienen `kind: 'stop'`. El modelo lo mapea a `'food'` con `userOverrideKind: false` para que el rider pueda cambiarlo después sin perder información. |
-| **UX de "moto del party"** | Cada party member debe tener UNA moto registrada. Si no la tiene, lo redirigimos a registrar antes de unirse. Edge case: cambiar moto mid-trip. Por ahora bloqueamos el cambio una vez unido al party. |
-| **Cost de Firestore reads con onSnapshot** | Limitar el observer al party activo; cancelar al salir de la pantalla. Cache local con MobX para datos no críticos. |
+| Riesgo                                              | Mitigación                                                                                                                                                                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Mapbox Search by category cobertura en Colombia** | Validar con búsquedas reales (Bogotá → Zipaquirá) antes de C.3. Si la cobertura es pobre, fallback a OSM Overpass como ya hacemos para gasolineras.                                                    |
+| **Firestore rules complejas con party**             | Empezar con rules simples (owner-only edit) y refinar con tests en el emulador. No abrir edición colaborativa hasta tener tests sólidos.                                                               |
+| **Conflictos de edición simultánea**                | C.7 (diferida). En C.5 el owner es el único que edita; otros members ven la ruta read-only. Esto evita race conditions complejas.                                                                      |
+| **`Waypoint.kind` migration**                       | Las rutas guardadas actualmente tienen `kind: 'stop'`. El modelo lo mapea a `'food'` con `userOverrideKind: false` para que el rider pueda cambiarlo después sin perder información.                   |
+| **UX de "moto del party"**                          | Cada party member debe tener UNA moto registrada. Si no la tiene, lo redirigimos a registrar antes de unirse. Edge case: cambiar moto mid-trip. Por ahora bloqueamos el cambio una vez unido al party. |
+| **Cost de Firestore reads con onSnapshot**          | Limitar el observer al party activo; cancelar al salir de la pantalla. Cache local con MobX para datos no críticos.                                                                                    |
 
 ---
 

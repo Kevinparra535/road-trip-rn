@@ -39,15 +39,16 @@ describe('Motorcycle', () => {
 });
 
 describe('Route', () => {
-  it('filters stops', () => {
+  it('filters stops (intermediates regardless of kind)', () => {
     const route = makeRoute({
       waypoints: [
         makeWaypoint({ id: 'a', kind: 'start', order: 0 }),
-        makeWaypoint({ id: 'b', kind: 'stop', order: 1 }),
-        makeWaypoint({ id: 'c', kind: 'destination', order: 2 }),
+        makeWaypoint({ id: 'b', kind: 'food', order: 1 }),
+        makeWaypoint({ id: 'c', kind: 'fuel', order: 2 }),
+        makeWaypoint({ id: 'd', kind: 'destination', order: 3 }),
       ],
     });
-    expect(route.stops()).toHaveLength(1);
+    expect(route.stops()).toHaveLength(2);
   });
 
   it('formats duration label with and without hours', () => {

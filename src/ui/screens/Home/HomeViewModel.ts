@@ -20,6 +20,7 @@ import { Rider } from '@/domain/entities/Rider';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
+import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
@@ -31,6 +32,10 @@ import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
+import {
+  inferStopKindFromInput,
+  InferStopKindUseCase,
+} from '@/domain/useCases/InferStopKindUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
@@ -355,6 +360,8 @@ export class HomeViewModel {
     private readonly addRecentDestinationUseCase: AddRecentDestinationUseCase,
     @inject(TYPES.GetAllRoutesUseCase)
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
+    @inject(TYPES.InferStopKindUseCase)
+    private readonly inferStopKindUseCase: InferStopKindUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -518,6 +525,8 @@ export class HomeViewModel {
 
     const colors = colorsForRideType(this.rideType);
     const lines: RouteLine[] = [];
+
+    // Alternatives sin cambio: gris uniforme (no son "el viaje", son opciones).
     route.alternatives.forEach((alternative, index) => {
       const shape = this.toLineFeature(alternative.geometry);
       if (shape) {
@@ -529,17 +538,106 @@ export class HomeViewModel {
         });
       }
     });
-    const primaryShape = this.toLineFeature(route.geometry);
-    if (primaryShape) {
-      lines.push({
-        id: 'primary',
-        shape: primaryShape,
-        color: colors.primary,
-        isPrimary: true,
-        gradientStops: this.elevationGradientStops,
+
+    // Primaria: si tenemos waypoints, descomponer en N segmentos coloreados
+    // por StopKind del destino. Sino, fallback a 1 linea uniforme.
+    const segments = this.computeColoredSegments(route.geometry);
+    if (segments.length > 0) {
+      segments.forEach((seg, index) => {
+        lines.push({
+          id: `primary-seg-${index}`,
+          shape: seg.shape,
+          color: seg.color,
+          isPrimary: true,
+        });
       });
+    } else {
+      const primaryShape = this.toLineFeature(route.geometry);
+      if (primaryShape) {
+        lines.push({
+          id: 'primary',
+          shape: primaryShape,
+          color: colors.primary,
+          isPrimary: true,
+          gradientStops: this.elevationGradientStops,
+        });
+      }
     }
     return lines;
+  }
+
+  /**
+   * Descompone la polyline del trazado en N sub-segmentos (uno por par de
+   * waypoints consecutivos), cada uno con el color del `StopKind` del waypoint
+   * DESTINO (regla canonica del plan, ver `docs/planning/mvp-route-planning.md`).
+   *
+   * Si falta info (no hay ubicacion del rider o no hay destino), devuelve `[]`
+   * para que `routeLines` caiga al fallback de 1 sola linea.
+   */
+  private computeColoredSegments(
+    geometry: GeoPoint[],
+  ): { shape: GeoJSON.Feature<GeoJSON.LineString>; color: string }[] {
+    const userLocation = this.locationStore.isLocationResponse;
+    const dest = this.destination;
+    if (!userLocation || !dest || geometry.length < 2) return [];
+
+    // Cadena origen -> intermedios -> destino con su StopKind inferido.
+    type ChainEntry = { lat: number; lng: number; kind: StopKind };
+    const chain: ChainEntry[] = [
+      {
+        lat: userLocation.latitude,
+        lng: userLocation.longitude,
+        kind: 'start',
+      },
+      ...this.intermediateStops.map((stop): ChainEntry => {
+        const inferred = inferStopKindFromInput({
+          mapboxCategory: stop.category,
+          placeType: stop.placeType,
+        });
+        return {
+          lat: stop.latitude,
+          lng: stop.longitude,
+          kind: inferred ?? 'food',
+        };
+      }),
+      { lat: dest.latitude, lng: dest.longitude, kind: 'destination' },
+    ];
+
+    // Proyectar cada waypoint en la geometry (indice mas cercano).
+    const projectIdx = (target: GeoPoint): number => {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < geometry.length; i++) {
+        const d = haversineKm(geometry[i], target);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    };
+    const indices = chain.map((wp) =>
+      projectIdx({ latitude: wp.lat, longitude: wp.lng }),
+    );
+
+    // Generar N-1 segmentos (uno por par consecutivo), color = destino.
+    const segments: {
+      shape: GeoJSON.Feature<GeoJSON.LineString>;
+      color: string;
+    }[] = [];
+    for (let i = 0; i < chain.length - 1; i++) {
+      const startIdx = Math.min(indices[i], indices[i + 1]);
+      const endIdx = Math.max(indices[i], indices[i + 1]);
+      const segGeom = geometry.slice(startIdx, endIdx + 1);
+      const shape = this.toLineFeature(segGeom);
+      if (!shape) continue;
+      const destKind = chain[i + 1].kind;
+      segments.push({
+        shape,
+        color: Colors.stopKind[destKind],
+      });
+    }
+    return segments;
   }
 
   /** Caja envolvente de la ruta principal, para encuadrar la camara. */
@@ -1632,16 +1730,26 @@ export class HomeViewModel {
     this.updateLoadingState(true, null, 'route');
     try {
       // Origen (ubicacion actual) -> paradas intermedias -> destino final.
-      const stops = this.intermediateStops.map(
-        (stop, index) =>
-          new Waypoint({
+      // Infiero el `stopKind` semantico desde la categoria de Mapbox (si el
+      // Place la trae); fallback `'food'` por ser la categoria mas comun para
+      // paradas intermedias.
+      const stops = await Promise.all(
+        this.intermediateStops.map(async (stop, index) => {
+          const inferred = await this.inferStopKindUseCase.run({
+            mapboxCategory: stop.category,
+            placeType: stop.placeType,
+          });
+          return new Waypoint({
             id: stop.id,
             name: stop.name,
             latitude: stop.latitude,
             longitude: stop.longitude,
-            kind: 'stop',
+            kind: inferred ?? 'food',
             order: index + 1,
-          }),
+            mapboxCategory: stop.category,
+            userOverrideKind: false,
+          });
+        }),
       );
       const waypoints: Waypoint[] = [
         new Waypoint({

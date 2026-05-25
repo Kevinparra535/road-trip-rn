@@ -109,6 +109,162 @@ describe('RouteModel', () => {
     expect(route.rideType).toBe('offroad');
     expect(route.waypoints[0].id).toBe('a');
   });
+
+  it('migra waypoint legacy kind="stop" a "food" con userOverrideKind=false', () => {
+    const route = RouteModel.fromJson({
+      id: 'r-legacy',
+      rider_id: 'rider-1',
+      name: 'Ruta vieja',
+      ride_type: 'highway',
+      waypoints: [
+        {
+          id: 'a',
+          name: 'A',
+          latitude: 0,
+          longitude: 0,
+          kind: 'start',
+          order: 0,
+        },
+        {
+          id: 'b',
+          name: 'B',
+          latitude: 1,
+          longitude: 1,
+          kind: 'stop',
+          order: 1,
+        },
+        {
+          id: 'c',
+          name: 'C',
+          latitude: 2,
+          longitude: 2,
+          kind: 'stop',
+          order: 2,
+        },
+        {
+          id: 'd',
+          name: 'D',
+          latitude: 3,
+          longitude: 3,
+          kind: 'destination',
+          order: 3,
+        },
+      ],
+      geometry: [],
+      distance_km: 100,
+      estimated_duration_min: 120,
+    }).toDomain();
+
+    expect(route.waypoints[0].kind).toBe('start');
+    expect(route.waypoints[1].kind).toBe('food');
+    expect(route.waypoints[1].userOverrideKind).toBe(false);
+    expect(route.waypoints[2].kind).toBe('food');
+    expect(route.waypoints[2].userOverrideKind).toBe(false);
+    expect(route.waypoints[3].kind).toBe('destination');
+  });
+
+  it('preserva el kind nuevo si ya esta migrado (no doble-migra)', () => {
+    const route = RouteModel.fromJson({
+      id: 'r-new',
+      rider_id: 'rider-1',
+      name: 'Ruta nueva',
+      ride_type: 'highway',
+      waypoints: [
+        {
+          id: 'a',
+          name: 'A',
+          latitude: 0,
+          longitude: 0,
+          kind: 'start',
+          order: 0,
+        },
+        {
+          id: 'b',
+          name: 'B',
+          latitude: 1,
+          longitude: 1,
+          kind: 'tourism',
+          order: 1,
+          user_override_kind: true,
+        },
+        {
+          id: 'c',
+          name: 'C',
+          latitude: 2,
+          longitude: 2,
+          kind: 'destination',
+          order: 2,
+        },
+      ],
+      geometry: [],
+      distance_km: 50,
+      estimated_duration_min: 60,
+    }).toDomain();
+
+    expect(route.waypoints[1].kind).toBe('tourism');
+    expect(route.waypoints[1].userOverrideKind).toBe(true);
+  });
+
+  it('Route.stops() devuelve todos los intermediates independiente del kind', () => {
+    const route = RouteModel.fromJson({
+      id: 'r-mixed',
+      rider_id: 'rider-1',
+      name: 'Mixed',
+      ride_type: 'highway',
+      waypoints: [
+        {
+          id: 'a',
+          name: 'A',
+          latitude: 0,
+          longitude: 0,
+          kind: 'start',
+          order: 0,
+        },
+        {
+          id: 'b',
+          name: 'B',
+          latitude: 1,
+          longitude: 1,
+          kind: 'food',
+          order: 1,
+        },
+        {
+          id: 'c',
+          name: 'C',
+          latitude: 2,
+          longitude: 2,
+          kind: 'fuel',
+          order: 2,
+        },
+        {
+          id: 'd',
+          name: 'D',
+          latitude: 3,
+          longitude: 3,
+          kind: 'tourism',
+          order: 3,
+        },
+        {
+          id: 'e',
+          name: 'E',
+          latitude: 4,
+          longitude: 4,
+          kind: 'destination',
+          order: 4,
+        },
+      ],
+      geometry: [],
+      distance_km: 100,
+      estimated_duration_min: 120,
+    }).toDomain();
+
+    expect(route.stops()).toHaveLength(3);
+    expect(route.stops().map((w) => w.kind)).toEqual([
+      'food',
+      'fuel',
+      'tourism',
+    ]);
+  });
 });
 
 describe('RouteDirectionsModel', () => {

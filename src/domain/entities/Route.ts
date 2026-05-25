@@ -50,7 +50,7 @@ export class Route {
 
   /** Paradas intermedias (excluye origen y destino). */
   stops(): Waypoint[] {
-    return this.waypoints.filter((w) => w.kind === 'stop');
+    return this.waypoints.filter((w) => w.isIntermediate());
   }
 
   durationLabel(): string {

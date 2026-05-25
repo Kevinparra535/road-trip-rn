@@ -44,6 +44,9 @@ const makeAddRecentUseCase = () => ({
 const makeGetAllRoutesUseCase = () => ({
   run: jest.fn().mockResolvedValue([]),
 });
+const makeInferStopKindUseCase = () => ({
+  run: jest.fn().mockResolvedValue(null),
+});
 
 const makeVM = (
   store = makeLocationStore(),
@@ -57,6 +60,7 @@ const makeVM = (
   getRecents: { run: jest.Mock } = makeGetRecentsUseCase(),
   addRecent: { run: jest.Mock } = makeAddRecentUseCase(),
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
+  inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -70,6 +74,7 @@ const makeVM = (
     getRecents as any,
     addRecent as any,
     getAllRoutes as any,
+    inferStopKind as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -267,11 +272,13 @@ describe('HomeViewModel — ruta A->B', () => {
       avgSpeed: '34 km/h',
     });
 
-    // alternativa primero (debajo), principal al final (encima)
+    // alternativa primero (debajo), primaria descompuesta en N segmentos.
+    // Sin paradas intermedias: 1 alternativa + 1 segmento primario => 2 lineas.
     expect(vm.routeLines).toHaveLength(2);
     const primary = vm.routeLines.find((line) => line.isPrimary);
     const alternative = vm.routeLines.find((line) => !line.isPrimary);
-    expect(primary?.color).toBe(Colors.route.highwayPrimary);
+    // El segmento unico va de origen a destino: color del destino = StopKind.destination
+    expect(primary?.color).toBe(Colors.stopKind.destination);
     expect(alternative?.color).toBe(Colors.route.highwayAlternative);
     expect(primary?.shape.geometry.type).toBe('LineString');
   });
@@ -293,8 +300,10 @@ describe('HomeViewModel — ruta A->B', () => {
 
     expect(vm.rideType).toBe('offroad');
     expect(directions.run).toHaveBeenCalledTimes(2);
+    // rideType solo afecta las ALTERNATIVAS (gris/marron); el segmento primario
+    // ahora va por StopKind del destino (no rideType).
     expect(vm.routeLines.find((line) => line.isPrimary)?.color).toBe(
-      Colors.route.offroadPrimary,
+      Colors.stopKind.destination,
     );
     expect(vm.routeLines.find((line) => !line.isPrimary)?.color).toBe(
       Colors.route.offroadAlternative,
@@ -317,9 +326,11 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.elevationBars).toHaveLength(3);
     // cada barra trae su color de la rampa de elevacion
     expect(vm.elevationBars[0].color).toMatch(/^#[0-9a-f]{6}$/i);
-    // la principal lleva degradado por altura
-    const primary = vm.routeLines.find((line) => line.isPrimary);
-    expect(primary?.gradientStops).toHaveLength(3);
+    // En el nuevo modelo, la linea primaria se descompone en segmentos por
+    // StopKind del destino (sin elevation gradient). El gradient de elevacion
+    // ya no aplica al fallback de 1-linea. El profile sigue existiendo en
+    // `elevationSummary` y `elevationBars` para la card del sheet.
+    expect(vm.routeLines.some((line) => line.isPrimary)).toBe(true);
     // puntos alto y bajo para marcar en el mapa
     expect(vm.elevationHighlights?.highest.coordinate).toEqual([-73.9, 4.9]);
     expect(vm.elevationHighlights?.lowest.coordinate).toEqual([-73.7, 5.2]);
@@ -659,5 +670,114 @@ describe('HomeViewModel — feed del Home idle', () => {
     await expect(
       vm.recordRecentDestination(makePlace()),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('HomeViewModel — routeLines coloreado por StopKind', () => {
+  // Helper para inyectar una ruta calculada en el VM sin pasar por el
+  // useCase real. Usamos `runInAction` indirecto via setters publicos no
+  // existentes — el truco es asignar el state observable directamente.
+  const installRoute = (vm: any, distanceKm = 100) => {
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm,
+      geometry: [
+        { latitude: 4.6, longitude: -74.08 }, // origen
+        { latitude: 4.7, longitude: -74.0 },
+        { latitude: 4.9, longitude: -73.9 },
+        { latitude: 5.1, longitude: -73.8 },
+        { latitude: 5.6, longitude: -73.5 }, // destino
+      ],
+    });
+  };
+
+  it('sin destino: routeLines vacio', () => {
+    const vm = makeVM(
+      makeLocationStore({
+        hasLocation: true,
+        coordinates: [-74.08, 4.6],
+        isLocationResponse: makeGeoLocation({
+          latitude: 4.6,
+          longitude: -74.08,
+        }),
+      }),
+    );
+    expect(vm.routeLines).toEqual([]);
+  });
+
+  it('con destino solo (sin intermedios): genera 1 segmento color destination', () => {
+    const vm = makeVM(
+      makeLocationStore({
+        hasLocation: true,
+        coordinates: [-74.08, 4.6],
+        isLocationResponse: makeGeoLocation({
+          latitude: 4.6,
+          longitude: -74.08,
+        }),
+      }),
+    );
+    vm.destination = makePlace({ latitude: 5.6, longitude: -73.5 });
+    installRoute(vm);
+
+    const lines = vm.routeLines;
+    const primarySegs = lines.filter((l: any) =>
+      l.id.startsWith('primary-seg-'),
+    );
+    expect(primarySegs).toHaveLength(1);
+    // Color del destino: stopKind.destination = '#E74446' (rojo)
+    expect(primarySegs[0].color).toBe('#E74446');
+  });
+
+  it('con 2 intermedios food + fuel: genera 3 segmentos coloreados por destino', () => {
+    const vm = makeVM(
+      makeLocationStore({
+        hasLocation: true,
+        coordinates: [-74.08, 4.6],
+        isLocationResponse: makeGeoLocation({
+          latitude: 4.6,
+          longitude: -74.08,
+        }),
+      }),
+    );
+    vm.destination = makePlace({ latitude: 5.6, longitude: -73.5 });
+    vm.intermediateStops = [
+      makePlace({
+        id: 'food1',
+        latitude: 4.7,
+        longitude: -74.0,
+        category: 'restaurant',
+      }),
+      makePlace({
+        id: 'fuel1',
+        latitude: 4.9,
+        longitude: -73.9,
+        category: 'gas_station',
+      }),
+    ];
+    installRoute(vm);
+
+    const lines = vm.routeLines;
+    const primarySegs = lines.filter((l: any) =>
+      l.id.startsWith('primary-seg-'),
+    );
+    expect(primarySegs).toHaveLength(3);
+    // Segment 0: origen -> food => color food
+    expect(primarySegs[0].color).toBe('#E6C229');
+    // Segment 1: food -> fuel => color fuel
+    expect(primarySegs[1].color).toBe('#E8A030');
+    // Segment 2: fuel -> destination => color destination
+    expect(primarySegs[2].color).toBe('#E74446');
+  });
+
+  it('sin ubicacion del rider: fallback a 1 sola linea uniforme', () => {
+    const vm = makeVM(); // location store vacio
+    vm.destination = makePlace();
+    installRoute(vm);
+
+    const lines = vm.routeLines;
+    const primary = lines.filter((l: any) => l.isPrimary);
+    expect(primary).toHaveLength(1);
+    expect(primary[0].id).toBe('primary');
+    // El color es del rideType (highway), no segmentado
+    expect(primary[0].color).toBe('#FF9800');
   });
 });

@@ -1,4 +1,5 @@
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
+import { isStopKind, StopKind } from '@/domain/entities/StopKind';
 import { Waypoint, WaypointKind } from '@/domain/entities/Waypoint';
 
 type WaypointJson = {
@@ -8,6 +9,8 @@ type WaypointJson = {
   longitude: number;
   kind: string;
   order: number;
+  mapbox_category?: string;
+  user_override_kind?: boolean;
 };
 
 type GeoPointJson = { latitude: number; longitude: number };
@@ -50,9 +53,26 @@ function toRideType(value: unknown): RideType {
   return 'highway';
 }
 
+/**
+ * Mapea el `kind` serializado a un `WaypointKind` valido del modelo nuevo.
+ * Las rutas legacy guardaron `'stop'` para paradas intermedias: lo mapeamos a
+ * `'food'` (kind por defecto) con la bandera implicita `userOverrideKind=false`
+ * para que el rider pueda corregir despues sin perder informacion.
+ */
 function toWaypointKind(value: unknown): WaypointKind {
-  if (value === 'start' || value === 'destination') return value;
-  return 'stop';
+  if (isStopKind(value)) return value as StopKind;
+  if (value === 'stop') return 'food';
+  if (value === 'start') return 'start';
+  if (value === 'destination') return 'destination';
+  return 'food';
+}
+
+/**
+ * Detecta si un waypoint legacy esta siendo migrado (kind=='stop' viejo).
+ * Si fue migrado, el usuario NO lo edito (userOverrideKind=false implicito).
+ */
+function wasLegacyMigrated(value: unknown): boolean {
+  return value === 'stop';
 }
 
 export class RouteModel {
@@ -92,6 +112,14 @@ export class RouteModel {
             longitude: Number(w.longitude ?? 0),
             kind: String(w.kind ?? 'stop'),
             order: Number(w.order ?? index),
+            mapbox_category:
+              typeof w.mapbox_category === 'string'
+                ? w.mapbox_category
+                : undefined,
+            user_override_kind:
+              typeof w.user_override_kind === 'boolean'
+                ? w.user_override_kind
+                : undefined,
           }))
         : [],
       geometry: Array.isArray(json.geometry)
@@ -129,17 +157,21 @@ declare module './routeModel' {
 
 RouteModel.prototype.toDomain = function toDomain(): Route {
   const waypoints: Waypoint[] = this.waypoints
-    .map(
-      (w) =>
-        new Waypoint({
-          id: w.id,
-          name: w.name,
-          latitude: w.latitude,
-          longitude: w.longitude,
-          kind: toWaypointKind(w.kind),
-          order: w.order,
-        }),
-    )
+    .map((w) => {
+      const migrated = wasLegacyMigrated(w.kind);
+      return new Waypoint({
+        id: w.id,
+        name: w.name,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        kind: toWaypointKind(w.kind),
+        order: w.order,
+        mapboxCategory: w.mapbox_category,
+        // Si fue migrado de 'stop' legacy, marcamos que NO fue eleccion del
+        // rider para que la UI permita re-categorizar sin friccion.
+        userOverrideKind: migrated ? false : w.user_override_kind,
+      });
+    })
     .sort((a, b) => a.order - b.order);
 
   const geometry: GeoPoint[] = this.geometry.map((g) => ({

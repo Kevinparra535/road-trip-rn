@@ -117,7 +117,7 @@ export class RoutePlannerViewModel {
         name: name ?? `Punto ${this.waypoints.length + 1}`,
         latitude,
         longitude,
-        kind: 'stop',
+        kind: 'food',
         order: this.waypoints.length,
       });
       this.waypoints = this.normalizeWaypoints([...this.waypoints, waypoint]);
@@ -245,10 +245,18 @@ export class RoutePlannerViewModel {
 
   private normalizeWaypoints(list: Waypoint[]): Waypoint[] {
     return list.map((w, index) => {
-      let kind: WaypointKind = 'stop';
-      if (index === 0) kind = 'start';
-      else if (index === list.length - 1 && list.length > 1) {
+      // Posicion en la lista define si es start/destination. Los intermedios
+      // preservan el kind del usuario si lo eligio; sino caen a 'food' default.
+      let kind: WaypointKind;
+      if (index === 0) {
+        kind = 'start';
+      } else if (index === list.length - 1 && list.length > 1) {
         kind = 'destination';
+      } else if (w.kind === 'start' || w.kind === 'destination') {
+        // Era start/destination pero ahora es intermedio: reset a food.
+        kind = 'food';
+      } else {
+        kind = w.kind;
       }
       return new Waypoint({
         id: w.id,
@@ -257,6 +265,8 @@ export class RoutePlannerViewModel {
         longitude: w.longitude,
         kind,
         order: index,
+        mapboxCategory: w.mapboxCategory,
+        userOverrideKind: w.userOverrideKind,
       });
     });
   }

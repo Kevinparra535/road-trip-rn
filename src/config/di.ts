@@ -67,6 +67,7 @@ import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
+import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
@@ -266,6 +267,9 @@ container
 container
   .bind<EstimateRouteFuelUseCase>(TYPES.EstimateRouteFuelUseCase)
   .to(EstimateRouteFuelUseCase);
+container
+  .bind<InferStopKindUseCase>(TYPES.InferStopKindUseCase)
+  .to(InferStopKindUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container
