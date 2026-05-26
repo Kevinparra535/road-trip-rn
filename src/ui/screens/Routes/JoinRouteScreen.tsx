@@ -48,6 +48,14 @@ const JoinRouteScreen = observer(() => {
     return () => viewModel.reset();
   }, [viewModel, params?.initialCode]);
 
+  useEffect(() => {
+    if (viewModel.hasJoinedParty && viewModel.resolved) {
+      const routeId = viewModel.resolved.route.id;
+      viewModel.consumeJoinPartyResult();
+      navigation.replace('RouteDetail', { routeId });
+    }
+  }, [viewModel, viewModel.hasJoinedParty, viewModel.resolved, navigation]);
+
   const handleViewRoute = () => {
     if (!viewModel.resolved) return;
     navigation.replace('RouteDetail', {
@@ -143,19 +151,92 @@ const JoinRouteScreen = observer(() => {
             <Text style={styles.previewSub} numberOfLines={1}>
               {Math.round(viewModel.resolved.route.distanceKm)} km ·{' '}
               {viewModel.resolved.route.waypoints.length} paradas
+              {viewModel.resolvedHasParty ? ' · Rodada grupal' : ''}
             </Text>
-            <TouchableOpacity
-              style={styles.previewCta}
-              onPress={handleViewRoute}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color={Colors.base.textPrimary}
-              />
-              <Text style={styles.ctaText}>Ver ruta</Text>
-            </TouchableOpacity>
+
+            {viewModel.resolvedHasParty ? (
+              <>
+                {viewModel.myMotorcycles.length === 0 ? (
+                  <Text style={styles.noMotos}>
+                    Necesitas registrar una moto en tu garaje para sumarte a una
+                    rodada.
+                  </Text>
+                ) : (
+                  <>
+                    <Text style={styles.motoLabel}>
+                      Tu moto para esta rodada
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.motoRow}
+                    >
+                      {viewModel.myMotorcycles.map((moto) => {
+                        const active =
+                          viewModel.selectedMotorcycleId === moto.id;
+                        return (
+                          <TouchableOpacity
+                            key={moto.id}
+                            style={[
+                              styles.motoChip,
+                              active && styles.motoChipActive,
+                            ]}
+                            onPress={() => viewModel.selectMotorcycle(moto.id)}
+                          >
+                            <Text
+                              style={[
+                                styles.motoChipText,
+                                active && styles.motoChipTextActive,
+                              ]}
+                            >
+                              {moto.displayName()}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+                  </>
+                )}
+                {viewModel.isJoinPartyError ? (
+                  <Text style={styles.error}>{viewModel.isJoinPartyError}</Text>
+                ) : null}
+                <TouchableOpacity
+                  style={[
+                    styles.previewCta,
+                    !viewModel.canJoinParty && styles.ctaDisabled,
+                  ]}
+                  disabled={!viewModel.canJoinParty}
+                  onPress={() => void viewModel.joinParty()}
+                  activeOpacity={0.85}
+                >
+                  {viewModel.isJoiningParty ? (
+                    <ActivityIndicator color={Colors.base.textPrimary} />
+                  ) : (
+                    <>
+                      <Ionicons
+                        name="people"
+                        size={18}
+                        color={Colors.base.textPrimary}
+                      />
+                      <Text style={styles.ctaText}>Sumarme a la rodada</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.previewCta}
+                onPress={handleViewRoute}
+                activeOpacity={0.85}
+              >
+                <Ionicons
+                  name="arrow-forward"
+                  size={18}
+                  color={Colors.base.textPrimary}
+                />
+                <Text style={styles.ctaText}>Ver ruta</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ) : null}
       </ScrollView>
@@ -279,6 +360,42 @@ const styles = StyleSheet.create({
     gap: Spacings.sm,
     backgroundColor: Colors.base.accent,
     borderRadius: BorderRadius.pill,
+  },
+  motoLabel: {
+    marginTop: Spacings.md,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+    letterSpacing: 0.5,
+  },
+  motoRow: {
+    gap: Spacings.sm,
+    paddingVertical: Spacings.sm,
+    paddingRight: Spacings.spacex2,
+  },
+  motoChip: {
+    paddingHorizontal: Spacings.md,
+    paddingVertical: Spacings.sm,
+    backgroundColor: Colors.base.bgInfoCard,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  motoChipActive: {
+    backgroundColor: Colors.base.accentDim,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  motoChipText: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  motoChipTextActive: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  noMotos: {
+    marginTop: Spacings.md,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
   },
 });
 

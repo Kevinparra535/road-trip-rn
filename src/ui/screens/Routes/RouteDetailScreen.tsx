@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -135,6 +136,7 @@ const RouteDetailScreen = observer(() => {
           {route.name}
         </Text>
         <View style={styles.navActions}>
+          <PartyAction viewModel={viewModel} navigation={navigation} />
           <TouchableOpacity
             onPress={() => void viewModel.openShareSheet()}
             hitSlop={8}
@@ -395,6 +397,82 @@ const RouteDetailScreen = observer(() => {
   );
 });
 
+// ── Party action (C.5) ────────────────────────────────────────────────────
+
+/**
+ * Icono que cambia segun haya party activa o no para esta ruta:
+ * - Sin party → icono "people-outline", tap crea la rodada.
+ * - Con party → icono "people" lleno + count, tap navega a PartyMembers.
+ */
+const PartyAction = observer(
+  ({
+    viewModel,
+    navigation,
+  }: {
+    viewModel: RouteDetailViewModel;
+    navigation: NativeStackNavigationProp<RoutesStackParamList, 'RouteDetail'>;
+  }) => {
+    const route = viewModel.isRouteResponse;
+    const matchesActive =
+      route !== null && viewModel.partyStore.isPartyForRoute(route.id);
+
+    const handleCreate = () => {
+      if (!viewModel.selectedMotorcycleId) {
+        Alert.alert(
+          'Selecciona una moto',
+          'Elegi la moto que vas a usar en la rodada antes de crearla.',
+        );
+        return;
+      }
+      Alert.alert(
+        'Crear rodada grupal',
+        'Tus amigos podran sumarse usando el codigo de compartir. Vos seras el owner.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Crear',
+            onPress: () => void viewModel.createParty(),
+          },
+        ],
+      );
+    };
+
+    if (matchesActive) {
+      return (
+        <TouchableOpacity
+          onPress={() => navigation.navigate('PartyMembers')}
+          hitSlop={8}
+          style={styles.partyChipNav}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="people" size={14} color={Colors.base.accent} />
+          <Text style={styles.partyChipNavText}>
+            {viewModel.partyStore.memberCount}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <TouchableOpacity
+        onPress={handleCreate}
+        hitSlop={8}
+        disabled={viewModel.isPartyLoading}
+      >
+        {viewModel.isPartyLoading ? (
+          <ActivityIndicator color={Colors.base.accent} />
+        ) : (
+          <Ionicons
+            name="people-outline"
+            size={22}
+            color={Colors.base.accent}
+          />
+        )}
+      </TouchableOpacity>
+    );
+  },
+);
+
 // ── Share sheet (C.4) ─────────────────────────────────────────────────────
 
 const ShareSheetModal = observer(
@@ -535,6 +613,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.lg,
+  },
+  partyChipNav: {
+    paddingHorizontal: Spacings.sm,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  partyChipNavText: {
+    ...Fonts.links,
+    color: Colors.base.accent,
   },
   scroll: {
     padding: Spacings.spacex2,

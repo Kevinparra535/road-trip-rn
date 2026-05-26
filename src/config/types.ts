@@ -13,6 +13,7 @@ export const TYPES = {
   ElevationService: Symbol.for('ElevationService'),
   RouteShareService: Symbol.for('RouteShareService'),
   ShareCodeGeneratorService: Symbol.for('ShareCodeGeneratorService'),
+  TripPartyService: Symbol.for('TripPartyService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
   AuthRepository: Symbol.for('AuthRepository'),
@@ -28,6 +29,7 @@ export const TYPES = {
   RecentDestinationRepository: Symbol.for('RecentDestinationRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
   RouteShareRepository: Symbol.for('RouteShareRepository'),
+  TripPartyRepository: Symbol.for('TripPartyRepository'),
 
   // ── UseCases (capa domain) ──
   SignUpUseCase: Symbol.for('SignUpUseCase'),
@@ -67,6 +69,10 @@ export const TYPES = {
   GenerateRouteShareCodeUseCase: Symbol.for('GenerateRouteShareCodeUseCase'),
   ResolveRouteShareCodeUseCase: Symbol.for('ResolveRouteShareCodeUseCase'),
   RevokeRouteShareCodeUseCase: Symbol.for('RevokeRouteShareCodeUseCase'),
+  CreateTripPartyUseCase: Symbol.for('CreateTripPartyUseCase'),
+  JoinTripPartyUseCase: Symbol.for('JoinTripPartyUseCase'),
+  LeaveTripPartyUseCase: Symbol.for('LeaveTripPartyUseCase'),
+  ObserveTripPartyUseCase: Symbol.for('ObserveTripPartyUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),
@@ -79,5 +85,7 @@ export const TYPES = {
   HomeViewModel: Symbol.for('HomeViewModel'),
   DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),
   JoinRouteViewModel: Symbol.for('JoinRouteViewModel'),
+  PartyMembersViewModel: Symbol.for('PartyMembersViewModel'),
   LocationStore: Symbol.for('LocationStore'),
+  TripPartyStore: Symbol.for('TripPartyStore'),
 } as const;

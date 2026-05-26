@@ -28,6 +28,7 @@ export class RouteShareRepositoryImpl implements RouteShareRepository {
     routeId: string;
     ownerId: string;
     ttlDays?: number;
+    partyId?: string;
   }): Promise<RouteShareCode> {
     const ttlDays = input.ttlDays ?? DEFAULT_TTL_DAYS;
     const now = new Date();
@@ -35,12 +36,13 @@ export class RouteShareRepositoryImpl implements RouteShareRepository {
 
     for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt += 1) {
       const code = this.generator.generate();
-      const payload = {
+      const payload: Record<string, unknown> = {
         code,
         route_id: input.routeId,
         owner_id: input.ownerId,
         expires_at: expiresAt.toISOString(),
       };
+      if (input.partyId) payload.party_id = input.partyId;
       const created = await this.service.createIfMissing(payload);
       if (created) {
         return new RouteShareCode({
@@ -49,6 +51,7 @@ export class RouteShareRepositoryImpl implements RouteShareRepository {
           ownerId: input.ownerId,
           createdAt: now,
           expiresAt,
+          partyId: input.partyId,
         });
       }
       // Colision: reintentar con otro codigo.

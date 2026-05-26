@@ -28,6 +28,8 @@ import type { RouteShareService } from '@/data/services/RouteShareService';
 import { RouteShareServiceImpl } from '@/data/services/RouteShareService';
 import type { ShareCodeGeneratorService } from '@/data/services/ShareCodeGeneratorService';
 import { ShareCodeGeneratorServiceImpl } from '@/data/services/ShareCodeGeneratorService';
+import type { TripPartyService } from '@/data/services/TripPartyService';
+import { TripPartyServiceImpl } from '@/data/services/TripPartyService';
 
 import { AuthRepositoryImpl } from '@/data/repositories/AuthRepositoryImpl';
 import { DirectionsRepositoryImpl } from '@/data/repositories/DirectionsRepositoryImpl';
@@ -42,6 +44,7 @@ import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepo
 import { RecentDestinationRepositoryImpl } from '@/data/repositories/RecentDestinationRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
 import { RouteShareRepositoryImpl } from '@/data/repositories/RouteShareRepositoryImpl';
+import { TripPartyRepositoryImpl } from '@/data/repositories/TripPartyRepositoryImpl';
 
 import type { AuthRepository } from '@/domain/repositories/AuthRepository';
 import type { DirectionsRepository } from '@/domain/repositories/DirectionsRepository';
@@ -56,12 +59,14 @@ import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryR
 import type { RecentDestinationRepository } from '@/domain/repositories/RecentDestinationRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
 import type { RouteShareRepository } from '@/domain/repositories/RouteShareRepository';
+import type { TripPartyRepository } from '@/domain/repositories/TripPartyRepository';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
+import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
@@ -79,7 +84,10 @@ import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestina
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
+import { JoinTripPartyUseCase } from '@/domain/useCases/JoinTripPartyUseCase';
+import { LeaveTripPartyUseCase } from '@/domain/useCases/LeaveTripPartyUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
+import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
@@ -95,11 +103,13 @@ import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
 import { LocationStore } from '@/ui/viewModels/LocationStore';
 import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
+import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
 import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { PartyMembersViewModel } from '@/ui/screens/Party/PartyMembersViewModel';
 import { JoinRouteViewModel } from '@/ui/screens/Routes/JoinRouteViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
@@ -155,6 +165,10 @@ container
   .to(ShareCodeGeneratorServiceImpl)
   .inSingletonScope();
 container
+  .bind<TripPartyService>(TYPES.TripPartyService)
+  .to(TripPartyServiceImpl)
+  .inSingletonScope();
+container
   .bind<PlaceSummaryService>(TYPES.PlaceSummaryService)
   .to(WikipediaSummaryService)
   .inSingletonScope();
@@ -203,6 +217,10 @@ container
 container
   .bind<RouteShareRepository>(TYPES.RouteShareRepository)
   .to(RouteShareRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<TripPartyRepository>(TYPES.TripPartyRepository)
+  .to(TripPartyRepositoryImpl)
   .inSingletonScope();
 container
   .bind<PlaceSummaryRepository>(TYPES.PlaceSummaryRepository)
@@ -297,6 +315,18 @@ container
   .bind<RevokeRouteShareCodeUseCase>(TYPES.RevokeRouteShareCodeUseCase)
   .to(RevokeRouteShareCodeUseCase);
 container
+  .bind<CreateTripPartyUseCase>(TYPES.CreateTripPartyUseCase)
+  .to(CreateTripPartyUseCase);
+container
+  .bind<JoinTripPartyUseCase>(TYPES.JoinTripPartyUseCase)
+  .to(JoinTripPartyUseCase);
+container
+  .bind<LeaveTripPartyUseCase>(TYPES.LeaveTripPartyUseCase)
+  .to(LeaveTripPartyUseCase);
+container
+  .bind<ObserveTripPartyUseCase>(TYPES.ObserveTripPartyUseCase)
+  .to(ObserveTripPartyUseCase);
+container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);
 container
@@ -327,6 +357,10 @@ container
   .bind<LocationStore>(TYPES.LocationStore)
   .to(LocationStore)
   .inSingletonScope();
+container
+  .bind<TripPartyStore>(TYPES.TripPartyStore)
+  .to(TripPartyStore)
+  .inSingletonScope();
 container.bind<AuthViewModel>(TYPES.AuthViewModel).to(AuthViewModel);
 container.bind<GarageViewModel>(TYPES.GarageViewModel).to(GarageViewModel);
 container
@@ -352,3 +386,6 @@ container
 container
   .bind<JoinRouteViewModel>(TYPES.JoinRouteViewModel)
   .to(JoinRouteViewModel);
+container
+  .bind<PartyMembersViewModel>(TYPES.PartyMembersViewModel)
+  .to(PartyMembersViewModel);

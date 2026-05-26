@@ -55,7 +55,30 @@ describe('JoinRouteViewModel', () => {
         return { shareCode: overrides.result, route: makeRoute() };
       }),
     };
-    return { vm: new JoinRouteViewModel(resolve as any), resolve };
+    const getCurrentRider = { run: jest.fn() };
+    const getAllMotorcycles = { run: jest.fn().mockResolvedValue([]) };
+    const joinParty = { run: jest.fn() };
+    const observePartyUseCase = {
+      subscribe: jest.fn(() => () => undefined),
+    };
+    const partyStore =
+      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+        observePartyUseCase as any,
+      );
+    return {
+      vm: new JoinRouteViewModel(
+        resolve as any,
+        getCurrentRider as any,
+        getAllMotorcycles as any,
+        joinParty as any,
+        partyStore as any,
+      ),
+      resolve,
+      getCurrentRider,
+      getAllMotorcycles,
+      joinParty,
+      partyStore,
+    };
   };
 
   it('setCode invalida el resultado previo y descarta error/triedFlag', () => {
@@ -101,7 +124,20 @@ describe('JoinRouteViewModel', () => {
 
   it('resolve atrapa errores y deja isError seteado', async () => {
     const resolve = { run: jest.fn().mockRejectedValue(new Error('boom')) };
-    const vm = new JoinRouteViewModel(resolve as any);
+    const observePartyUseCase = {
+      subscribe: jest.fn(() => () => undefined),
+    };
+    const partyStore =
+      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+        observePartyUseCase as any,
+      );
+    const vm = new JoinRouteViewModel(
+      resolve as any,
+      { run: jest.fn() } as any,
+      { run: jest.fn().mockResolvedValue([]) } as any,
+      { run: jest.fn() } as any,
+      partyStore as any,
+    );
     vm.setCode('ABCD2345');
     await vm.resolve();
     expect(vm.isError).toContain('boom');

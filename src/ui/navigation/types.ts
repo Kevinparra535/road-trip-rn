@@ -14,6 +14,8 @@ export type RoutesStackParamList = {
    * pre-llenar el input (ej. desde un deep link futuro). C.4.
    */
   JoinRoute: { initialCode?: string } | undefined;
+  /** Lista de miembros del party activo. C.5. */
+  PartyMembers: undefined;
 };
 
 export type GarageStackParamList = {

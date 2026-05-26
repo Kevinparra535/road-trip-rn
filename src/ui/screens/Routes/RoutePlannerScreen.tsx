@@ -26,6 +26,8 @@ import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRep
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
 
+import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
@@ -62,6 +64,10 @@ const RoutePlannerScreen = observer(() => {
 
   const viewModel = useMemo(
     () => container.get<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel),
+    [],
+  );
+  const partyStore = useMemo(
+    () => container.get<TripPartyStore>(TYPES.TripPartyStore),
     [],
   );
 
@@ -167,13 +173,28 @@ const RoutePlannerScreen = observer(() => {
         <Text style={styles.navTitle} numberOfLines={1}>
           {viewModel.title}
         </Text>
-        <TouchableOpacity
-          onPress={() => viewModel.clearWaypoints()}
-          hitSlop={8}
-          style={styles.navIcon}
-        >
-          <Ionicons name="close" size={26} color={Colors.base.iconMuted} />
-        </TouchableOpacity>
+        <View style={styles.navActions}>
+          {partyStore.hasActiveParty ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PartyMembers')}
+              style={styles.partyChip}
+              activeOpacity={0.85}
+              hitSlop={4}
+            >
+              <Ionicons name="people" size={14} color={Colors.base.accent} />
+              <Text style={styles.partyChipText}>
+                Party ({partyStore.memberCount})
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            onPress={() => viewModel.clearWaypoints()}
+            hitSlop={8}
+            style={styles.navIcon}
+          >
+            <Ionicons name="close" size={26} color={Colors.base.iconMuted} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.searchBar}>
@@ -524,6 +545,27 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  navActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  partyChip: {
+    paddingHorizontal: Spacings.sm,
+    paddingVertical: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  partyChipText: {
+    ...Fonts.links,
+    color: Colors.base.accent,
+    letterSpacing: 0.3,
   },
   navTitle: {
     flex: 1,

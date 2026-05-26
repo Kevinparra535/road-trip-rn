@@ -10,6 +10,7 @@ import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { Route } from '@/domain/entities/Route';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
+import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -19,9 +20,11 @@ import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 
+import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
+
 import Logger from '@/ui/utils/Logger';
 
-type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share';
+type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share' | 'party';
 
 @injectable()
 export class RouteDetailViewModel {
@@ -58,6 +61,10 @@ export class RouteDetailViewModel {
   /** Controla la visibilidad del sheet de share. */
   isShareSheetOpen: boolean = false;
 
+  // ── Party state (C.5) ──────────────────────────────────────────────────
+  isPartyLoading: boolean = false;
+  isPartyError: string | null = null;
+
   private logger = new Logger('RouteDetailViewModel');
 
   constructor(
@@ -77,6 +84,10 @@ export class RouteDetailViewModel {
     private readonly generateShareCodeUseCase: GenerateRouteShareCodeUseCase,
     @inject(TYPES.RevokeRouteShareCodeUseCase)
     private readonly revokeShareCodeUseCase: RevokeRouteShareCodeUseCase,
+    @inject(TYPES.CreateTripPartyUseCase)
+    private readonly createTripPartyUseCase: CreateTripPartyUseCase,
+    @inject(TYPES.TripPartyStore)
+    public readonly partyStore: TripPartyStore,
   ) {
     makeAutoObservable(this);
   }
@@ -271,6 +282,54 @@ export class RouteDetailViewModel {
     }
   }
 
+  // ── Party actions (C.5) ────────────────────────────────────────────────
+
+  /**
+   * Convierte esta ruta en una rodada grupal: crea el party con el rider
+   * actual como owner, suscribe el store al party para sync realtime, y
+   * regenera el share code asociado para que incluya el `partyId` (asi
+   * los joiners saben que se sumarian a una rodada, no solo a ver la ruta).
+   */
+  async createParty(): Promise<void> {
+    const route = this.isRouteResponse;
+    const motorcycleId = this.selectedMotorcycleId;
+    if (!route) return;
+    if (!motorcycleId) {
+      runInAction(() => {
+        this.isPartyError = 'Selecciona una moto antes de crear la rodada.';
+      });
+      return;
+    }
+    this.updateLoadingState(true, null, 'party');
+    try {
+      const rider = await this.getCurrentRiderUseCase.run();
+      if (!rider) throw new Error('No hay un rider autenticado.');
+
+      const party = await this.createTripPartyUseCase.run({
+        routeId: route.id,
+        ownerId: rider.id,
+        ownerDisplayName: rider.displayName ?? rider.email ?? 'Owner',
+        ownerMotorcycleId: motorcycleId,
+      });
+      // Suscribimos el store al party (otros screens veran la party activa).
+      this.partyStore.setActiveParty(party.id);
+
+      // Regeneramos el share code con el partyId attached para que el join
+      // flow sepa que esta invitando a una rodada.
+      const newCode = await this.generateShareCodeUseCase.run({
+        routeId: route.id,
+        ownerId: rider.id,
+        partyId: party.id,
+      });
+      runInAction(() => {
+        this.shareCode = newCode;
+      });
+      this.updateLoadingState(false, null, 'party');
+    } catch (error) {
+      this.handleError(error, 'party');
+    }
+  }
+
   reset(): void {
     runInAction(() => {
       this.isRouteResponse = null;
@@ -291,6 +350,8 @@ export class RouteDetailViewModel {
       this.isShareError = null;
       this.isShareLoading = false;
       this.isShareSheetOpen = false;
+      this.isPartyLoading = false;
+      this.isPartyError = null;
     });
   }
 
@@ -342,6 +403,10 @@ export class RouteDetailViewModel {
         case 'share':
           this.isShareLoading = isLoading;
           this.isShareError = error;
+          break;
+        case 'party':
+          this.isPartyLoading = isLoading;
+          this.isPartyError = error;
           break;
       }
     });

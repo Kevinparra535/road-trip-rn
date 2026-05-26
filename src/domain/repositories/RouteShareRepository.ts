@@ -8,12 +8,14 @@ export interface RouteShareRepository {
   /**
    * Crea un nuevo share code para `routeId`. La impl debe garantizar
    * unicidad (retry si colisiona). `ttlDays` permite override del default
-   * (30 dias).
+   * (30 dias). `partyId` se persiste para que el resolver sepa que el
+   * codigo invita a una rodada grupal (no solo a ver la ruta) — C.5.
    */
   create(input: {
     routeId: string;
     ownerId: string;
     ttlDays?: number;
+    partyId?: string;
   }): Promise<RouteShareCode>;
 
   /**

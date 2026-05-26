@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import PartyMembersScreen from '@/ui/screens/Party/PartyMembersScreen';
 import JoinRouteScreen from '@/ui/screens/Routes/JoinRouteScreen';
 import RouteDetailScreen from '@/ui/screens/Routes/RouteDetailScreen';
 import RoutePlannerScreen from '@/ui/screens/Routes/RoutePlannerScreen';
@@ -38,6 +39,14 @@ const RoutesNavigator = () => (
     <Stack.Screen
       name="JoinRoute"
       component={JoinRouteScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
+    <Stack.Screen
+      name="PartyMembers"
+      component={PartyMembersScreen}
       options={{
         presentation: 'formSheet',
         sheetAllowedDetents: 'fitToContents',

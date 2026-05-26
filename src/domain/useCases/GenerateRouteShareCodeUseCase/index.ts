@@ -13,6 +13,8 @@ export type GenerateRouteShareCodeInput = {
   ownerId: string;
   /** Opcional: override del TTL default del repo (30 dias). */
   ttlDays?: number;
+  /** Opcional: id del party que esta rodada acompaña — C.5. */
+  partyId?: string;
 };
 
 /**
@@ -44,6 +46,7 @@ export class GenerateRouteShareCodeUseCase implements UseCase<
       routeId: input.routeId,
       ownerId: input.ownerId,
       ttlDays: input.ttlDays,
+      partyId: input.partyId,
     });
   }
 }

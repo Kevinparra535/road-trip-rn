@@ -501,6 +501,14 @@ describe('RouteDetailViewModel', () => {
       ),
     };
     const revokeShare = { run: jest.fn().mockResolvedValue(undefined) };
+    const createParty = { run: jest.fn() };
+    const observePartyUseCase = {
+      subscribe: jest.fn(() => () => undefined),
+    };
+    const partyStore =
+      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+        observePartyUseCase as any,
+      );
     const vm = new RouteDetailViewModel(
       getRoute as any,
       getCurrentRider as any,
@@ -510,8 +518,17 @@ describe('RouteDetailViewModel', () => {
       del as any,
       generateShare as any,
       revokeShare as any,
+      createParty as any,
+      partyStore as any,
     );
-    return { vm, estimate, generateShare, revokeShare };
+    return {
+      vm,
+      estimate,
+      generateShare,
+      revokeShare,
+      createParty,
+      partyStore,
+    };
   };
 
   it('loads the route and auto-selects the first motorcycle', async () => {
