@@ -1,0 +1,54 @@
+appId: com.kevcoders.roadtrip
+name: Route planning flow
+tags:
+  - routes
+  - planning
+---
+# Valida el flow de planeacion de ruta usando el destino mock del devFlag
+# `mockDestination`. No requiere busqueda real (sin red ni Mapbox token).
+#
+# Pasos:
+# 1. Levantar app y confirmar Home.
+# 2. Tap "Ruta de prueba" (FAB visible solo con DEV_FLAGS.mockDestination).
+# 3. Validar que aparece la tarjeta de ruta con CTA "Iniciar ruta".
+# 4. Tap "Agregar parada" -> abre el RoutePlannerScreen (sheet).
+# 5. Tap chip categoria "food" para validar interactividad.
+# 6. Volver a Home y cerrar la ruta.
+
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: 'screen-home'
+
+# Si el FAB de ruta de prueba no esta visible, el dispositivo no concedio
+# permiso de ubicacion todavia. Detenemos el flow con un mensaje claro.
+- assertVisible:
+    id: 'home-test-route-fab'
+
+- tapOn:
+    id: 'home-test-route-fab'
+
+- assertVisible:
+    id: 'home-start-route-btn'
+
+- tapOn:
+    id: 'home-add-stop-btn'
+
+- assertVisible:
+    id: 'screen-route-planner'
+
+- tapOn:
+    id: 'route-planner-chip-food'
+
+# Volvemos al Home (formSheet usa swipe-down o back de Android)
+- back
+- assertVisible:
+    id: 'screen-home'
+
+# Limpiamos la ruta para dejar el Home en idle al terminar
+- tapOn:
+    id: 'home-close-route-btn'
+
+- assertVisible:
+    id: 'home-chip-plan-trip'

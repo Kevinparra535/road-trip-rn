@@ -1,0 +1,40 @@
+appId: com.kevcoders.roadtrip
+name: Home tabs navigation
+tags:
+  - home
+  - navigation
+---
+# Valida la navegacion desde los chips del idle del Home hacia Garage,
+# Profile y el alert de "Viaje grupal" (placeholder hasta C.7).
+
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: 'screen-home'
+
+# Chip "Mi Garaje" -> screen-garage (presentado como formSheet) -> back
+- tapOn:
+    id: 'home-chip-garage'
+- assertVisible:
+    id: 'screen-garage'
+- back
+- assertVisible:
+    id: 'screen-home'
+
+# Chip "Viaje grupal" -> Alert nativo "Viajes grupales" (feature futura)
+- tapOn:
+    id: 'home-chip-group-trip'
+- assertVisible: 'Viajes grupales'
+- tapOn: 'OK'
+- assertVisible:
+    id: 'screen-home'
+
+# Avatar de perfil -> screen-profile -> back
+- tapOn:
+    id: 'home-profile-button'
+- assertVisible:
+    id: 'screen-profile'
+- back
+- assertVisible:
+    id: 'screen-home'

@@ -157,7 +157,11 @@ const RoutePlannerScreen = observer(() => {
     viewModel.isSubmitting;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['top', 'left', 'right']}
+      testID="screen-route-planner"
+    >
       <View style={styles.navbar}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -201,6 +205,7 @@ const RoutePlannerScreen = observer(() => {
         <Ionicons name="search" size={18} color={Colors.base.iconMuted} />
         <TextInput
           style={styles.searchInput}
+          testID="route-planner-search-input"
           placeholder="Buscar otra parada o lugar..."
           placeholderTextColor={Colors.base.textMuted}
           value={viewModel.searchQuery}
@@ -327,6 +332,7 @@ const RoutePlannerScreen = observer(() => {
 
           <TouchableOpacity
             style={[styles.cta, ctaDisabled && styles.ctaDisabled]}
+            testID="route-planner-start-nav-btn"
             onPress={handleStartNavigation}
             disabled={ctaDisabled}
             activeOpacity={0.85}
@@ -436,6 +442,7 @@ const CategoryChipRow = ({
           key={category}
           onPress={() => onTap(category)}
           activeOpacity={0.8}
+          testID={`route-planner-chip-${category}`}
           style={[
             styles.chip,
             {

@@ -1,0 +1,26 @@
+appId: com.kevcoders.roadtrip
+name: Home smoke test
+tags:
+  - smoke
+  - home
+---
+# Smoke: la app arranca, el bypassAuth deja un rider falso y vemos Home
+# con el buscador y los chips de accion del estado idle.
+
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: 'screen-home'
+
+- assertVisible:
+    id: 'home-search-input'
+
+- assertVisible:
+    id: 'home-chip-plan-trip'
+
+- assertVisible:
+    id: 'home-chip-garage'
+
+- assertVisible:
+    id: 'home-chip-group-trip'

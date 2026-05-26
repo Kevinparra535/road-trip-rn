@@ -80,10 +80,30 @@ const ROUTE_ALT_WIDTH = 3;
 // RoutePlanner / DestinationPreview ahora.
 type IdleActionType = 'plan_ride' | 'garage' | 'group';
 
-const IDLE_ACTIONS: { type: IdleActionType; label: string; icon: MciName }[] = [
-  { type: 'plan_ride', label: 'Planear viaje', icon: 'road-variant' },
-  { type: 'garage', label: 'Mi Garaje', icon: 'motorbike' },
-  { type: 'group', label: 'Viaje grupal', icon: 'account-group' },
+const IDLE_ACTIONS: {
+  type: IdleActionType;
+  label: string;
+  icon: MciName;
+  testID: string;
+}[] = [
+  {
+    type: 'plan_ride',
+    label: 'Planear viaje',
+    icon: 'road-variant',
+    testID: 'home-chip-plan-trip',
+  },
+  {
+    type: 'garage',
+    label: 'Mi Garaje',
+    icon: 'motorbike',
+    testID: 'home-chip-garage',
+  },
+  {
+    type: 'group',
+    label: 'Viaje grupal',
+    icon: 'account-group',
+    testID: 'home-chip-group-trip',
+  },
 ];
 
 /**
@@ -279,7 +299,7 @@ const HomeScreen = observer(() => {
   const elevation = viewModel.elevationSummary;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="screen-home">
       <Mapbox.MapView
         style={styles.map}
         styleURL={MAP_STYLE_URL}
@@ -420,6 +440,7 @@ const HomeScreen = observer(() => {
         <TouchableOpacity
           activeOpacity={0.9}
           style={styles.testRouteButton}
+          testID="home-test-route-fab"
           accessibilityRole="button"
           accessibilityLabel="Trazar ruta de prueba"
           onPress={() => viewModel.selectDestination(DEV_FAKE_DESTINATION)}
@@ -433,6 +454,7 @@ const HomeScreen = observer(() => {
         <TouchableOpacity
           activeOpacity={0.9}
           style={styles.locateButton}
+          testID="home-locate-fab"
           accessibilityRole="button"
           accessibilityLabel="Centrar en mi ubicación"
           onPress={recenterOnUser}
@@ -619,6 +641,7 @@ const HomeScreen = observer(() => {
             <BottomSheetTextInput
               ref={searchInputRef}
               style={styles.searchInput}
+              testID="home-search-input"
               value={viewModel.searchQuery}
               onChangeText={(text) => viewModel.setSearchQuery(text)}
               onFocus={handleSearchFocus}
@@ -669,6 +692,7 @@ const HomeScreen = observer(() => {
                 <TouchableOpacity
                   activeOpacity={0.85}
                   hitSlop={8}
+                  testID="home-profile-button"
                   accessibilityRole="button"
                   accessibilityLabel="Abrir perfil"
                   onPress={() => navigation.navigate('ProfileTab')}
@@ -773,6 +797,7 @@ const HomeScreen = observer(() => {
             {/* CTA principal: degradado naranja, visible aun con el panel asomado. */}
             <TouchableOpacity
               activeOpacity={0.9}
+              testID="home-start-route-btn"
               accessibilityRole="button"
               accessibilityLabel="Iniciar ruta"
               onPress={() => viewModel.startNavigation()}
@@ -805,6 +830,7 @@ const HomeScreen = observer(() => {
                 <TouchableOpacity
                   style={styles.routeOptions}
                   hitSlop={8}
+                  testID="home-close-route-btn"
                   accessibilityRole="button"
                   accessibilityLabel="Cerrar ruta"
                   onPress={handleClearRoute}
@@ -921,6 +947,7 @@ const HomeScreen = observer(() => {
               <TouchableOpacity
                 activeOpacity={0.85}
                 style={styles.addStopButton}
+                testID="home-add-stop-btn"
                 accessibilityRole="button"
                 accessibilityLabel="Agregar parada"
                 onPress={handleStartAddStop}
@@ -1217,6 +1244,7 @@ const HomeScreen = observer(() => {
                   key={action.type}
                   activeOpacity={0.8}
                   style={styles.idleActionChip}
+                  testID={action.testID}
                   accessibilityRole="button"
                   accessibilityLabel={action.label}
                   onPress={() => handleIdleAction(action.type)}

@@ -24,7 +24,11 @@ const ProfileScreen = observer(() => {
   const rider = session.currentRider;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['top', 'left', 'right']}
+      testID="screen-profile"
+    >
       <GradientView preset="header" style={styles.header}>
         <Text style={styles.headerTitle}>Perfil</Text>
       </GradientView>

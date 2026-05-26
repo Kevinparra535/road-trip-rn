@@ -73,7 +73,11 @@ const GarageScreen = observer(() => {
   }, [navigation, viewModel]);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['top', 'left', 'right']}
+      testID="screen-garage"
+    >
       <GradientView preset="header" style={styles.header}>
         <Text style={styles.headerTitle}>Mi garaje</Text>
         <Text style={styles.headerSubtitle}>
