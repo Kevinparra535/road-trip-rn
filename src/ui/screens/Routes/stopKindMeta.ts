@@ -52,6 +52,12 @@ export const STOP_KIND_META: Record<StopKind, StopKindMeta> = {
     color: Colors.stopKind.rest,
     icon: 'leaf',
   },
+  other: {
+    value: 'other',
+    label: 'PARADA',
+    color: Colors.stopKind.other,
+    icon: 'ellipse-outline',
+  },
   destination: {
     value: 'destination',
     label: 'DESTINO',

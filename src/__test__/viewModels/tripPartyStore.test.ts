@@ -18,6 +18,12 @@ const makeParty = (overrides: Partial<TripParty> = {}): TripParty =>
         riderId: 'r-owner',
         displayName: 'Owner',
         motorcycleId: 'm-1',
+        motorcycleSpecs: {
+          displayName: 'Yamaha',
+          tankCapacityLiters: 12,
+          fuelConsumptionKmPerLiter: 30,
+          loadKg: 80,
+        },
         joinedAt: new Date(),
         isOwner: true,
       }),

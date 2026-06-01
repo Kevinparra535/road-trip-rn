@@ -13,6 +13,8 @@ export type RouteConstructorParams = {
   geometry?: GeoPoint[];
   distanceKm?: number;
   estimatedDurationMin?: number;
+  /** Notas opcionales que el rider deja al guardar (frame S85Zfj). */
+  notes?: string;
   createdAt?: Date;
   [key: string]: any;
 };
@@ -32,6 +34,7 @@ export class Route {
   geometry: GeoPoint[];
   distanceKm: number;
   estimatedDurationMin: number;
+  notes: string;
   createdAt: Date;
 
   constructor(params: RouteConstructorParams) {
@@ -43,6 +46,7 @@ export class Route {
     this.geometry = params.geometry ?? [];
     this.distanceKm = params.distanceKm ?? 0;
     this.estimatedDurationMin = params.estimatedDurationMin ?? 0;
+    this.notes = params.notes ?? '';
     this.createdAt = params.createdAt ?? new Date();
 
     Object.assign(this, params);

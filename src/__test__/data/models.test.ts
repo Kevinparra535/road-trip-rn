@@ -156,9 +156,9 @@ describe('RouteModel', () => {
     }).toDomain();
 
     expect(route.waypoints[0].kind).toBe('start');
-    expect(route.waypoints[1].kind).toBe('food');
+    expect(route.waypoints[1].kind).toBe('other');
     expect(route.waypoints[1].userOverrideKind).toBe(false);
-    expect(route.waypoints[2].kind).toBe('food');
+    expect(route.waypoints[2].kind).toBe('other');
     expect(route.waypoints[2].userOverrideKind).toBe(false);
     expect(route.waypoints[3].kind).toBe('destination');
   });

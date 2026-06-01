@@ -70,6 +70,7 @@ import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
+import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -110,6 +111,8 @@ import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewM
 import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { PartyMembersViewModel } from '@/ui/screens/Party/PartyMembersViewModel';
+import { AddStopViewModel } from '@/ui/screens/Routes/AddStopViewModel';
+import { CategorySublistViewModel } from '@/ui/screens/Routes/CategorySublistViewModel';
 import { JoinRouteViewModel } from '@/ui/screens/Routes/JoinRouteViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
@@ -327,6 +330,9 @@ container
   .bind<ObserveTripPartyUseCase>(TYPES.ObserveTripPartyUseCase)
   .to(ObserveTripPartyUseCase);
 container
+  .bind<EstimatePartyFuelPlanUseCase>(TYPES.EstimatePartyFuelPlanUseCase)
+  .to(EstimatePartyFuelPlanUseCase);
+container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);
 container
@@ -367,9 +373,14 @@ container
   .bind<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel)
   .to(MotorcycleFormViewModel);
 container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
+// Singleton: el Planner es estado compartido entre el RoutePlannerScreen, el
+// AddStopScreen y el CategorySublistScreen — todos mutaan los mismos
+// waypoints. Sin singleton, cada inyeccion crea un VM fantasma y las
+// mutaciones se pierden (bug visible: "el boton agregar parada no funciona").
 container
   .bind<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel)
-  .to(RoutePlannerViewModel);
+  .to(RoutePlannerViewModel)
+  .inSingletonScope();
 container
   .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
   .to(RouteDetailViewModel);
@@ -389,3 +400,7 @@ container
 container
   .bind<PartyMembersViewModel>(TYPES.PartyMembersViewModel)
   .to(PartyMembersViewModel);
+container.bind<AddStopViewModel>(TYPES.AddStopViewModel).to(AddStopViewModel);
+container
+  .bind<CategorySublistViewModel>(TYPES.CategorySublistViewModel)
+  .to(CategorySublistViewModel);

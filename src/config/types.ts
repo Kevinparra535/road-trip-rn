@@ -73,6 +73,7 @@ export const TYPES = {
   JoinTripPartyUseCase: Symbol.for('JoinTripPartyUseCase'),
   LeaveTripPartyUseCase: Symbol.for('LeaveTripPartyUseCase'),
   ObserveTripPartyUseCase: Symbol.for('ObserveTripPartyUseCase'),
+  EstimatePartyFuelPlanUseCase: Symbol.for('EstimatePartyFuelPlanUseCase'),
 
   // ── ViewModels (capa ui) ──
   SessionViewModel: Symbol.for('SessionViewModel'),
@@ -86,6 +87,8 @@ export const TYPES = {
   DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),
   JoinRouteViewModel: Symbol.for('JoinRouteViewModel'),
   PartyMembersViewModel: Symbol.for('PartyMembersViewModel'),
+  AddStopViewModel: Symbol.for('AddStopViewModel'),
+  CategorySublistViewModel: Symbol.for('CategorySublistViewModel'),
   LocationStore: Symbol.for('LocationStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
 } as const;

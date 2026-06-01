@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
 
+import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { PartyMember } from '@/domain/entities/PartyMember';
 import { TripParty } from '@/domain/entities/TripParty';
 
@@ -13,7 +14,8 @@ export type JoinTripPartyInput = {
   partyId: string;
   riderId: string;
   displayName: string;
-  motorcycleId: string;
+  /** Moto del rider que se une (entity entera para snapshot de specs — C.6). */
+  motorcycle: Motorcycle;
 };
 
 /**
@@ -33,8 +35,8 @@ export class JoinTripPartyUseCase implements UseCase<
   async run(input: JoinTripPartyInput): Promise<TripParty> {
     if (!input.partyId.trim()) throw new Error('partyId requerido.');
     if (!input.riderId.trim()) throw new Error('riderId requerido.');
-    if (!input.motorcycleId.trim()) {
-      throw new Error('motorcycleId requerido para unirse al party.');
+    if (!input.motorcycle?.id) {
+      throw new Error('motorcycle requerido para unirse al party.');
     }
 
     const current = await this.repository.getById(input.partyId);
@@ -46,10 +48,17 @@ export class JoinTripPartyUseCase implements UseCase<
       return current;
     }
 
+    const moto = input.motorcycle;
     const member = new PartyMember({
       riderId: input.riderId,
       displayName: input.displayName || 'Rider',
-      motorcycleId: input.motorcycleId,
+      motorcycleId: moto.id,
+      motorcycleSpecs: {
+        displayName: moto.displayName(),
+        tankCapacityLiters: moto.tankCapacityLiters,
+        fuelConsumptionKmPerLiter: moto.fuelConsumptionKmPerLiter,
+        loadKg: moto.totalLoadKg(),
+      },
       joinedAt: new Date(),
       isOwner: false,
     });

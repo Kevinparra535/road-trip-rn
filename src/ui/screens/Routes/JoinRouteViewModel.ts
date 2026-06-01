@@ -143,6 +143,14 @@ export class JoinRouteViewModel {
     const resolved = this.resolved;
     const motorcycleId = this.selectedMotorcycleId;
     if (!resolved?.shareCode.partyId || !motorcycleId) return;
+    const motorcycle = this.myMotorcycles.find((m) => m.id === motorcycleId);
+    if (!motorcycle) {
+      runInAction(() => {
+        this.isJoinPartyError =
+          'No encontre la moto seleccionada en tu garaje.';
+      });
+      return;
+    }
 
     runInAction(() => {
       this.isJoiningParty = true;
@@ -156,7 +164,7 @@ export class JoinRouteViewModel {
         partyId: resolved.shareCode.partyId,
         riderId: rider.id,
         displayName: rider.displayName ?? rider.email ?? 'Rider',
-        motorcycleId,
+        motorcycle,
       });
       this.partyStore.setActiveParty(party.id);
       runInAction(() => {

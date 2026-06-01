@@ -8,6 +8,7 @@ import {
 
 import { TYPES } from '@/config/types';
 
+import { PartyFuelPlan } from '@/domain/entities/PartyFuelPlan';
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
@@ -18,6 +19,7 @@ import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRep
 
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
+import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { inferStopKindFromInput } from '@/domain/useCases/InferStopKindUseCase';
@@ -28,13 +30,29 @@ import {
 } from '@/domain/useCases/SearchPlacesUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 
+import { LocationStore } from '@/ui/viewModels/LocationStore';
+import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
+
 import Logger from '@/ui/utils/Logger';
 
-type ICalls = 'load' | 'directions' | 'submit' | 'search' | 'category';
+type ICalls =
+  | 'load'
+  | 'directions'
+  | 'submit'
+  | 'search'
+  | 'category'
+  | 'partyFuel';
 type Mode = 'create' | 'edit';
 
 /** Debounce de la busqueda del Planner — coincide con el del Home (400ms). */
 const SEARCH_DEBOUNCE_MS = 400;
+
+/**
+ * Debounce del auto-recalc de directions tras cambiar waypoints. Mas largo
+ * que el de search porque cada calculo es una llamada de red — no queremos
+ * spamear Mapbox si el rider agrega 3 paradas en sucesion rapida.
+ */
+const AUTO_RECALC_DEBOUNCE_MS = 800;
 
 /**
  * Item del timeline visual del Planner (`RoutePlannerScreen` frame `ydBys`).
@@ -55,15 +73,23 @@ export type PlannerTimelineItem = {
   isLast: boolean;
   /** `true` si es una parada intermedia (no start/destination). */
   isIntermediate: boolean;
+  /** `true` si hay otra parada intermedia arriba para hacer swap. */
+  canMoveUp: boolean;
+  /** `true` si hay otra parada intermedia abajo para hacer swap. */
+  canMoveDown: boolean;
 };
 
 @injectable()
 export class RoutePlannerViewModel {
   // ── Form state ──────────────────────────────────────────────────────────
   name: string = '';
+  /** Notas opcionales del rider sobre la ruta (frame `S85Zfj`). */
+  notes: string = '';
   rideType: RideType = 'highway';
   waypoints: Waypoint[] = [];
   directions: RouteDirections | null = null;
+  /** Controla la visibilidad del sheet "Guardar ruta" (frame `S85Zfj`). */
+  isSaveSheetOpen: boolean = false;
 
   // ── Async state ─────────────────────────────────────────────────────────
   isLoadLoading: boolean = false;
@@ -89,12 +115,29 @@ export class RoutePlannerViewModel {
   isCategoryLoading: boolean = false;
   isCategoryError: string | null = null;
 
+  // ── Party fuel plan state (C.6) ────────────────────────────────────────
+  /** Plan de tanqueo del party para la ruta actual; `null` si no hay party. */
+  partyFuelPlan: PartyFuelPlan | null = null;
+  isPartyFuelLoading: boolean = false;
+  isPartyFuelError: string | null = null;
+
+  // ── Waypoint editing state (replace-in-place) ──────────────────────────
+  /**
+   * Id del waypoint que esta siendo editado. Mientras esto no sea `null`,
+   * el `AddStopScreen` y el `CategorySublistScreen` reemplazan ese waypoint
+   * en vez de agregar uno nuevo. El screen lo setea via
+   * `startEditingWaypoint(id)` y se limpia al confirmar (`replaceEditingWaypoint`)
+   * o cancelar (`cancelEditingWaypoint`).
+   */
+  editingWaypointId: string | null = null;
+
   private mode: Mode = 'create';
   private editingId: string | null = null;
   private riderId: string | null = null;
   private waypointSeq: number = 0;
   private logger = new Logger('RoutePlannerViewModel');
   private searchDisposer: IReactionDisposer | null = null;
+  private autoRecalcDisposer: IReactionDisposer | null = null;
 
   constructor(
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -111,6 +154,12 @@ export class RoutePlannerViewModel {
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
     @inject(TYPES.SearchPlacesByCategoryUseCase)
     private readonly searchPlacesByCategoryUseCase: SearchPlacesByCategoryUseCase,
+    @inject(TYPES.EstimatePartyFuelPlanUseCase)
+    private readonly estimatePartyFuelPlanUseCase: EstimatePartyFuelPlanUseCase,
+    @inject(TYPES.TripPartyStore)
+    public readonly partyStore: TripPartyStore,
+    @inject(TYPES.LocationStore)
+    public readonly locationStore: LocationStore,
   ) {
     makeAutoObservable(this);
     // Debounce de search: dispara la consulta 400ms tras la ultima tecla.
@@ -122,12 +171,44 @@ export class RoutePlannerViewModel {
       },
       { delay: SEARCH_DEBOUNCE_MS },
     );
+    // Auto-recalc de directions cuando cambian los waypoints (orden, kind,
+    // cantidad). Devuelve un "fingerprint" del conjunto: cambios en lat/lng/
+    // order/length disparan recompute, cambios solo de UI (e.g. name del
+    // search input) NO. Debounced para evitar spamear Mapbox.
+    this.autoRecalcDisposer = reaction(
+      () => this.waypointsFingerprint,
+      () => {
+        if (this.canCalculate) {
+          void this.calculateDirections();
+        } else {
+          // Si el rider quito paradas hasta dejar < 2, limpiar directions
+          // para que stats no muestren datos stale.
+          runInAction(() => {
+            this.directions = null;
+          });
+        }
+      },
+      { delay: AUTO_RECALC_DEBOUNCE_MS },
+    );
   }
 
-  /** Limpia la reaccion del debounce. Llamar al desmontar el screen. */
+  /** Limpia las reacciones MobX. Llamar al desmontar el screen. */
   dispose(): void {
     this.searchDisposer?.();
     this.searchDisposer = null;
+    this.autoRecalcDisposer?.();
+    this.autoRecalcDisposer = null;
+  }
+
+  /**
+   * Fingerprint serializable de los waypoints. La reaction MobX lo usa para
+   * decidir si recalcular; cualquier cambio en posicion u orden cambia el
+   * string y dispara el efecto.
+   */
+  private get waypointsFingerprint(): string {
+    return this.waypoints
+      .map((w) => `${w.order}:${w.latitude},${w.longitude}`)
+      .join('|');
   }
 
   // ── Computed ────────────────────────────────────────────────────────────
@@ -138,6 +219,25 @@ export class RoutePlannerViewModel {
 
   get title(): string {
     return this.isEditMode ? 'Editar ruta' : 'Planear ruta';
+  }
+
+  /**
+   * `true` cuando el rider esta viendo la ruta de un party del que NO es
+   * owner. En ese caso el Planner se renderea read-only (frame `AMu8J`):
+   * sin botones de edit, sin search, CTA "Esperando a {owner}".
+   */
+  get isReadOnly(): boolean {
+    const party = this.partyStore.activeParty;
+    if (!party || !this.riderId) return false;
+    // El party debe ser el de esta ruta + yo no soy el owner.
+    return party.routeId === this.editingId && !party.isOwnedBy(this.riderId);
+  }
+
+  /** Nombre del owner del party activo (para el banner "Esperando a..."). */
+  get partyOwnerName(): string | null {
+    const party = this.partyStore.activeParty;
+    if (!party) return null;
+    return party.findMember(party.ownerId)?.displayName ?? null;
   }
 
   get canCalculate(): boolean {
@@ -173,6 +273,11 @@ export class RoutePlannerViewModel {
     return ordered.map((w, index) => {
       const isFirst = index === 0;
       const isLast = index === ordered.length - 1 && ordered.length > 1;
+      const isIntermediate = !isFirst && !isLast;
+      // canMoveUp: hay otra intermedia arriba (index > 1, ya que index 0 es
+      // start). canMoveDown: hay otra intermedia abajo (index < length - 2).
+      const canMoveUp = isIntermediate && index > 1;
+      const canMoveDown = isIntermediate && index < ordered.length - 2;
       return {
         id: w.id,
         name: w.name,
@@ -181,7 +286,9 @@ export class RoutePlannerViewModel {
         order: w.order,
         isFirst,
         isLast,
-        isIntermediate: !isFirst && !isLast,
+        isIntermediate,
+        canMoveUp,
+        canMoveDown,
       };
     });
   }
@@ -215,9 +322,9 @@ export class RoutePlannerViewModel {
       mapboxCategory: place.category,
       placeType: place.placeType,
     });
-    // Fallback: si no hay match, usar 'food' (la categoria mas generica).
-    // El rider puede re-categorizar via setStopKind despues.
-    const kind: StopKind = inferred ?? 'food';
+    // Fallback: 'other' = parada generica sin categoria. El rider
+    // re-categoriza tocando el dot si quiere especificar.
+    const kind: StopKind = inferred ?? 'other';
     this.addWaypointWithKind({
       latitude: place.latitude,
       longitude: place.longitude,
@@ -356,6 +463,25 @@ export class RoutePlannerViewModel {
     });
   }
 
+  setNotes(value: string): void {
+    runInAction(() => {
+      this.notes = value;
+    });
+  }
+
+  /** Abre el sheet "Guardar ruta" (frame `S85Zfj`). */
+  openSaveSheet(): void {
+    runInAction(() => {
+      this.isSaveSheetOpen = true;
+    });
+  }
+
+  closeSaveSheet(): void {
+    runInAction(() => {
+      this.isSaveSheetOpen = false;
+    });
+  }
+
   setRideType(value: RideType): void {
     runInAction(() => {
       this.rideType = value;
@@ -365,6 +491,137 @@ export class RoutePlannerViewModel {
 
   // ── Waypoint editing ────────────────────────────────────────────────────
 
+  /**
+   * `true` si el rider esta editando un waypoint existente (vs agregando uno
+   * nuevo). El AddStop/CategorySublist consultan esto para decidir si llamar
+   * `replaceEditingWaypoint` (reemplaza in-place) o `addWaypointWithKind`
+   * (agrega nuevo).
+   */
+  get isEditingWaypoint(): boolean {
+    return this.editingWaypointId !== null;
+  }
+
+  /**
+   * El waypoint que esta siendo editado, o `null` si no hay edit activo. Se
+   * usa en el AddStopScreen header para mostrar "Cambiando: {nombre}".
+   */
+  get editingWaypoint(): Waypoint | null {
+    if (!this.editingWaypointId) return null;
+    return this.waypoints.find((w) => w.id === this.editingWaypointId) ?? null;
+  }
+
+  /**
+   * Marca un waypoint como "siendo editado". Disparado por el RoutePlanner
+   * al tappear el pencil icon de un waypoint, antes de navegar al AddStop.
+   * El siguiente `selectRecent` / `selectPoi` reemplazara ese waypoint en
+   * vez de agregar uno nuevo.
+   */
+  startEditingWaypoint(waypointId: string): void {
+    runInAction(() => {
+      this.editingWaypointId = waypointId;
+    });
+  }
+
+  /**
+   * Cancela la edicion activa sin tocar el waypoint. El AddStopScreen llama
+   * esto en su cleanup (cuando el rider hace goBack sin elegir reemplazo).
+   * No-op si no hay edit activo.
+   */
+  cancelEditingWaypoint(): void {
+    if (this.editingWaypointId === null) return;
+    runInAction(() => {
+      this.editingWaypointId = null;
+    });
+  }
+
+  /**
+   * Reemplaza el waypoint en edicion con los datos del lugar elegido. El
+   * `id` y `order` del waypoint original se conservan — solo cambia la
+   * posicion geografica + nombre + kind (si el rider eligio categoria
+   * explicita) + mapboxCategory.
+   *
+   * Si el waypoint era `start` o `destination`, el `kind` se mantiene
+   * posicional via `normalizeWaypoints` aunque el args.kind diga otra cosa.
+   * Si era intermedio, el args.kind sobrescribe.
+   *
+   * Limpia `editingWaypointId` al finalizar — no es necesario llamar
+   * `cancelEditingWaypoint()` despues.
+   */
+  replaceEditingWaypoint(args: {
+    latitude: number;
+    longitude: number;
+    name: string;
+    kind?: StopKind;
+    mapboxCategory?: string;
+  }): void {
+    runInAction(() => {
+      const id = this.editingWaypointId;
+      if (!id) return;
+      const target = this.waypoints.find((w) => w.id === id);
+      if (!target) {
+        // El waypoint desaparecio (race condition con removeStop). Cancela
+        // silenciosamente y delega al rider la decision de re-intentar.
+        this.editingWaypointId = null;
+        return;
+      }
+      this.waypoints = this.normalizeWaypoints(
+        this.waypoints.map((w) =>
+          w.id === id
+            ? new Waypoint({
+                id: w.id,
+                name: args.name,
+                latitude: args.latitude,
+                longitude: args.longitude,
+                // El kind explicito gana para intermedios; para start/dest la
+                // normalizacion va a forzar 'start'/'destination' segun
+                // posicion (esperado: cambiar el destino sigue siendo destino).
+                kind: args.kind ?? w.kind,
+                order: w.order,
+                mapboxCategory: args.mapboxCategory ?? w.mapboxCategory,
+                userOverrideKind: args.kind !== undefined,
+              })
+            : w,
+        ),
+      );
+      this.directions = null;
+      this.editingWaypointId = null;
+    });
+  }
+
+  /**
+   * `true` si el location store tiene una posicion lista para usar como start.
+   * La UI consulta esto para mostrar el boton "Usar mi ubicacion".
+   */
+  get canUseCurrentLocation(): boolean {
+    return this.locationStore.hasLocation;
+  }
+
+  /**
+   * Reemplaza el primer waypoint (start) con la ubicacion actual del rider.
+   * Si la lista esta vacia, lo agrega. Si ya hay un start, lo sobrescribe.
+   * No hace nada si el location store no tiene posicion (caller debe checar
+   * `canUseCurrentLocation` antes de tap).
+   */
+  useCurrentLocationAsStart(): void {
+    const location = this.locationStore.isLocationResponse;
+    if (!location) return;
+    runInAction(() => {
+      this.waypointSeq += 1;
+      const startWp = new Waypoint({
+        id: `wp-${this.waypointSeq}`,
+        name: 'Mi ubicacion',
+        latitude: location.latitude,
+        longitude: location.longitude,
+        kind: 'start',
+        order: 0,
+      });
+      // Si ya habia un start (waypoints[0]), reemplazarlo. Sino, prepend.
+      const tail = this.waypoints.length > 0 ? this.waypoints.slice(1) : [];
+      this.waypoints = this.normalizeWaypoints([startWp, ...tail]);
+      this.directions = null;
+    });
+  }
+
   addWaypoint(latitude: number, longitude: number, name?: string): void {
     runInAction(() => {
       this.waypointSeq += 1;
@@ -373,7 +630,9 @@ export class RoutePlannerViewModel {
         name: name ?? `Punto ${this.waypoints.length + 1}`,
         latitude,
         longitude,
-        kind: 'food',
+        // Default neutro 'other' (label "PARADA") en vez de 'food' — el rider
+        // re-categoriza tocando el dot si quiere.
+        kind: 'other',
         order: this.waypoints.length,
       });
       this.waypoints = this.normalizeWaypoints([...this.waypoints, waypoint]);
@@ -459,14 +718,45 @@ export class RoutePlannerViewModel {
   }
 
   /**
-   * Quita una parada intermedia. Las puntas (`start`/`destination`) no se
-   * pueden eliminar desde el timeline — el rider debe re-agregar el origen
-   * o cambiar el destino desde otra UI.
+   * Mueve una parada intermedia hacia arriba o abajo en el orden de la
+   * ruta. No mueve `start`/`destination` (sus posiciones son fijas por
+   * definicion). No-op si moverla la sacaria de las posiciones intermedias.
+   */
+  moveStop(waypointId: string, direction: 'up' | 'down'): void {
+    runInAction(() => {
+      const ordered = [...this.waypoints].sort((a, b) => a.order - b.order);
+      const idx = ordered.findIndex((w) => w.id === waypointId);
+      if (idx < 0) return;
+
+      const target = ordered[idx];
+      if (!target.isIntermediate()) return;
+
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1;
+      // Limites: no se puede mover por encima del start ni por debajo del
+      // destination (mantenemos las puntas fijas).
+      if (newIdx <= 0 || newIdx >= ordered.length - 1) return;
+
+      // Swap simple entre posiciones contiguas.
+      const swapped = [...ordered];
+      [swapped[idx], swapped[newIdx]] = [swapped[newIdx], swapped[idx]];
+      this.waypoints = this.normalizeWaypoints(swapped);
+      // Geometry calculada queda obsoleta tras reorder.
+      this.directions = null;
+    });
+  }
+
+  /**
+   * Quita cualquier waypoint del timeline, incluyendo start/destination.
+   * Cuando se elimina un extremo, `normalizeWaypoints` recategoriza el
+   * vecino mas cercano como nuevo start o destination automaticamente.
+   *
+   * Comportamiento intencional: el rider debe poder borrar el inicio y
+   * elegir uno nuevo (via search o "Usar mi ubicacion") sin reset total.
    */
   removeStop(waypointId: string): void {
     runInAction(() => {
       const target = this.waypoints.find((w) => w.id === waypointId);
-      if (!target || !target.isIntermediate()) return;
+      if (!target) return;
       this.waypoints = this.normalizeWaypoints(
         this.waypoints.filter((w) => w.id !== waypointId),
       );
@@ -530,8 +820,51 @@ export class RoutePlannerViewModel {
         this.directions = directions;
       });
       this.updateLoadingState(false, null, 'directions');
+      // C.6: si hay party activa para esta ruta, computar el fuel plan.
+      void this.computePartyFuelPlan();
     } catch (error) {
       this.handleError(error, 'directions');
+    }
+  }
+
+  /**
+   * Computa el plan de tanqueo grupal si hay party activa y directions
+   * calculadas. Si no se cumplen las precondiciones, no-op silencioso —
+   * el screen solo renderiza la card cuando `partyFuelPlan` no es null.
+   */
+  async computePartyFuelPlan(): Promise<void> {
+    const party = this.partyStore.activeParty;
+    const directions = this.directions;
+    if (!party || !directions) {
+      runInAction(() => {
+        this.partyFuelPlan = null;
+      });
+      return;
+    }
+    // Construimos la Route temporal con los waypoints + geometry actuales
+    // (el editingId puede ser null si es create-mode).
+    const route = new Route({
+      id: this.editingId ?? 'planner-draft',
+      riderId: this.riderId ?? 'unknown',
+      name: this.name || 'Ruta',
+      rideType: this.rideType,
+      waypoints: this.waypoints,
+      geometry: directions.geometry,
+      distanceKm: directions.distanceKm,
+      estimatedDurationMin: directions.durationMin,
+    });
+    this.updateLoadingState(true, null, 'partyFuel');
+    try {
+      const plan = await this.estimatePartyFuelPlanUseCase.run({
+        route,
+        party,
+      });
+      runInAction(() => {
+        this.partyFuelPlan = plan;
+      });
+      this.updateLoadingState(false, null, 'partyFuel');
+    } catch (error) {
+      this.handleError(error, 'partyFuel');
     }
   }
 
@@ -553,6 +886,7 @@ export class RoutePlannerViewModel {
         geometry: this.directions.geometry,
         distanceKm: this.directions.distanceKm,
         estimatedDurationMin: this.directions.durationMin,
+        notes: this.notes.trim() || undefined,
       });
 
       if (this.isEditMode) {
@@ -582,6 +916,8 @@ export class RoutePlannerViewModel {
   reset(): void {
     runInAction(() => {
       this.name = '';
+      this.notes = '';
+      this.isSaveSheetOpen = false;
       this.rideType = 'highway';
       this.waypoints = [];
       this.directions = null;
@@ -599,6 +935,10 @@ export class RoutePlannerViewModel {
       this.categoryResults = null;
       this.isCategoryError = null;
       this.isCategoryLoading = false;
+      this.partyFuelPlan = null;
+      this.isPartyFuelLoading = false;
+      this.isPartyFuelError = null;
+      this.editingWaypointId = null;
     });
   }
 
@@ -620,15 +960,15 @@ export class RoutePlannerViewModel {
   private normalizeWaypoints(list: Waypoint[]): Waypoint[] {
     return list.map((w, index) => {
       // Posicion en la lista define si es start/destination. Los intermedios
-      // preservan el kind del usuario si lo eligio; sino caen a 'food' default.
+      // preservan el kind del usuario si lo eligio; sino caen a 'other' default.
       let kind: WaypointKind;
       if (index === 0) {
         kind = 'start';
       } else if (index === list.length - 1 && list.length > 1) {
         kind = 'destination';
       } else if (w.kind === 'start' || w.kind === 'destination') {
-        // Era start/destination pero ahora es intermedio: reset a food.
-        kind = 'food';
+        // Era start/destination pero ahora es intermedio: reset a generico.
+        kind = 'other';
       } else {
         kind = w.kind;
       }
@@ -650,6 +990,7 @@ export class RoutePlannerViewModel {
       this.mode = 'edit';
       this.editingId = route.id;
       this.name = route.name;
+      this.notes = route.notes ?? '';
       this.rideType = route.rideType;
       this.waypoints = this.normalizeWaypoints(route.waypoints);
       this.waypointSeq = route.waypoints.length;
@@ -687,6 +1028,10 @@ export class RoutePlannerViewModel {
         case 'category':
           this.isCategoryLoading = isLoading;
           this.isCategoryError = error;
+          break;
+        case 'partyFuel':
+          this.isPartyFuelLoading = isLoading;
+          this.isPartyFuelError = error;
           break;
       }
     });

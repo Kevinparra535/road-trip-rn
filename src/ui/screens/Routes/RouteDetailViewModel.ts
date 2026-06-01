@@ -292,9 +292,9 @@ export class RouteDetailViewModel {
    */
   async createParty(): Promise<void> {
     const route = this.isRouteResponse;
-    const motorcycleId = this.selectedMotorcycleId;
+    const motorcycle = this.selectedMotorcycle;
     if (!route) return;
-    if (!motorcycleId) {
+    if (!motorcycle) {
       runInAction(() => {
         this.isPartyError = 'Selecciona una moto antes de crear la rodada.';
       });
@@ -309,7 +309,7 @@ export class RouteDetailViewModel {
         routeId: route.id,
         ownerId: rider.id,
         ownerDisplayName: rider.displayName ?? rider.email ?? 'Owner',
-        ownerMotorcycleId: motorcycleId,
+        ownerMotorcycle: motorcycle,
       });
       // Suscribimos el store al party (otros screens veran la party activa).
       this.partyStore.setActiveParty(party.id);

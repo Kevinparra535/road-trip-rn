@@ -31,17 +31,19 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
+import PartyMembersScreen from '@/ui/screens/Party/PartyMembersScreen';
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 
 import GarageScreen from '../screens/Garage/GarageScreen';
 import MotorcycleFormScreen from '../screens/Garage/MotorcycleFormScreen';
+import AddStopScreen from '../screens/Routes/AddStopScreen';
+import CategorySublistScreen from '../screens/Routes/CategorySublistScreen';
+import JoinRouteScreen from '../screens/Routes/JoinRouteScreen';
 import RouteDetailScreen from '../screens/Routes/RouteDetailScreen';
 import RoutePlannerScreen from '../screens/Routes/RoutePlannerScreen';
 import RoutesScreen from '../screens/Routes/RoutesScreen';
 
-import GarageNavigator from './GarageNavigator';
 import HomeNavigator from './HomeNavigator';
-import RoutesNavigator from './RoutesNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -93,6 +95,38 @@ const AppDrawer = () => (
         presentation: 'formSheet',
         headerShown: false,
         sheetAllowedDetents: [0.6, 1],
+      }}
+    />
+    {/*
+     * Sub-pantallas del flow de planeacion (registradas a nivel root porque
+     * `RoutesNavigator` quedo huerfano — todo vive en este stack plano).
+     * AddStop + CategorySublist usan `modal` intencionalmente: iOS no apila
+     * dos `formSheet` de forma confiable sobre el RoutePlanner.
+     */}
+    <Stack.Screen
+      name="AddStop"
+      component={AddStopScreen}
+      options={{ presentation: 'modal' }}
+    />
+    <Stack.Screen
+      name="CategorySublist"
+      component={CategorySublistScreen}
+      options={{ presentation: 'modal' }}
+    />
+    <Stack.Screen
+      name="JoinRoute"
+      component={JoinRouteScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      }}
+    />
+    <Stack.Screen
+      name="PartyMembers"
+      component={PartyMembersScreen}
+      options={{
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
       }}
     />
   </Stack.Navigator>

@@ -39,6 +39,12 @@ describe('TripPartyRepositoryImpl', () => {
       riderId: 'r-owner',
       displayName: 'Owner',
       motorcycleId: 'm-1',
+      motorcycleSpecs: {
+        displayName: 'Yamaha',
+        tankCapacityLiters: 12,
+        fuelConsumptionKmPerLiter: 30,
+        loadKg: 80,
+      },
       joinedAt: new Date(),
       isOwner: true,
     });
@@ -79,6 +85,12 @@ describe('TripPartyRepositoryImpl', () => {
         riderId: 'r-2',
         displayName: 'Maria',
         motorcycleId: 'm-2',
+        motorcycleSpecs: {
+          displayName: 'Suzuki',
+          tankCapacityLiters: 14,
+          fuelConsumptionKmPerLiter: 25,
+          loadKg: 80,
+        },
         joinedAt: new Date(),
         isOwner: false,
       }),
@@ -161,7 +173,7 @@ describe('TripPartyRepositoryImpl', () => {
   it('observe delega al service y wrappea para devolver TripParty al callback', () => {
     const service = buildService();
     let serviceCallback: any = null;
-    service.observe.mockImplementation(
+    (service.observe as any).mockImplementation(
       (_id: string, cb: (m: TripPartyModel | null) => void) => {
         serviceCallback = cb;
         return () => undefined;

@@ -3,6 +3,7 @@ import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { MotorcycleSpecs } from '@/domain/entities/MotorcycleSpecs';
+import { PartyMember } from '@/domain/entities/PartyMember';
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
@@ -159,6 +160,24 @@ export const makeRouteFuelEstimate = (
     effectiveRangeKm: 420,
     fullTankRangeKm: 455,
     loadKg: 95,
+    ...overrides,
+  });
+
+export const makePartyMember = (
+  overrides: Partial<PartyMember> = {},
+): PartyMember =>
+  new PartyMember({
+    riderId: 'rider-1',
+    displayName: 'Kevin',
+    motorcycleId: 'moto-1',
+    motorcycleSpecs: {
+      displayName: 'Yamaha XTZ 250',
+      tankCapacityLiters: 12,
+      fuelConsumptionKmPerLiter: 30,
+      loadKg: 80,
+    },
+    joinedAt: new Date('2026-01-01T10:00:00Z'),
+    isOwner: true,
     ...overrides,
   });
 

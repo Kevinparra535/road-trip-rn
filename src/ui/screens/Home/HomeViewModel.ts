@@ -56,6 +56,8 @@ import { LocationStore } from '@/ui/viewModels/LocationStore';
 import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
+import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
+
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.
 const DEFAULT_CENTER: [number, number] = [-74.0817, 4.6097];
@@ -362,6 +364,8 @@ export class HomeViewModel {
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
     @inject(TYPES.InferStopKindUseCase)
     private readonly inferStopKindUseCase: InferStopKindUseCase,
+    @inject(TYPES.RoutePlannerViewModel)
+    private readonly plannerViewModel: RoutePlannerViewModel,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -597,7 +601,8 @@ export class HomeViewModel {
         return {
           lat: stop.latitude,
           lng: stop.longitude,
-          kind: inferred ?? 'food',
+          // Fallback 'other' (parada generica) en vez de 'food' — bug fix.
+          kind: inferred ?? 'other',
         };
       }),
       { lat: dest.latitude, lng: dest.longitude, kind: 'destination' },
@@ -650,6 +655,155 @@ export class HomeViewModel {
       ne: [box.northEast.longitude, box.northEast.latitude],
       sw: [box.southWest.longitude, box.southWest.latitude],
     };
+  }
+
+  // ── Computed: preview de la ruta del Planner ───────────────────────────
+  //
+  // El RoutePlanner se monta como `formSheet` sobre el HomeScreen, asi que el
+  // mapa global queda visible debajo del sheet. Estos getters exponen las
+  // paradas + el polyline del planner para que el HomeScreen las renderee en
+  // tiempo real (auto-track de MobX: cualquier mutacion en planner.waypoints
+  // o planner.directions invalida estos computed y re-pinta el mapa).
+  //
+  // Visibilidad: cuando hay >= 1 waypoint en el planner. Se limpia cuando el
+  // rider hace `clearWaypoints()` o el screen del Planner llama `reset()`.
+
+  /** `true` si hay datos del Planner para overlay en el mapa global. */
+  get isPlannerPreviewVisible(): boolean {
+    return this.plannerViewModel.waypoints.length > 0;
+  }
+
+  /**
+   * Pins del Planner para el mapa. Uno por waypoint, coloreado por StopKind
+   * (start/destination/food/fuel/etc.). El indice ordinal sirve para
+   * etiquetar (A, B, C...) en la UI si hace falta.
+   */
+  get plannerWaypointPins(): {
+    id: string;
+    coordinate: [number, number];
+    color: string;
+    kind: StopKind;
+    name: string;
+    ordinalIndex: number;
+    isFirst: boolean;
+    isLast: boolean;
+  }[] {
+    const wps = this.plannerViewModel.waypoints;
+    if (wps.length === 0) return [];
+    return wps.map((w, index) => ({
+      id: w.id,
+      coordinate: [w.longitude, w.latitude] as [number, number],
+      color: Colors.stopKind[w.kind as StopKind],
+      kind: w.kind as StopKind,
+      name: w.name,
+      ordinalIndex: index,
+      isFirst: index === 0,
+      isLast: index === wps.length - 1 && wps.length > 1,
+    }));
+  }
+
+  /**
+   * Polyline del Planner para el mapa. Si las `directions` ya fueron
+   * calculadas, devuelve N sub-segmentos coloreados por StopKind del waypoint
+   * destino (igual que `routeLines`). Si no hay directions aun (rider esta
+   * agregando paradas), devuelve una linea recta punteada uniendo los pins
+   * — feedback visual mientras Mapbox aun no respondio.
+   */
+  get plannerRouteLines(): RouteLine[] {
+    const wps = this.plannerViewModel.waypoints;
+    const directions = this.plannerViewModel.directions;
+    if (wps.length < 2) return [];
+
+    // Con directions calculadas: usar la geometria real con sub-segmentos.
+    if (directions && directions.geometry.length >= 2) {
+      return this.computePlannerColoredSegments(directions.geometry, wps);
+    }
+
+    // Sin directions: linea recta punteada entre pins (feedback inmediato
+    // pre-calculo). El consumidor del shape la pinta con `lineDasharray`.
+    const coords = wps.map(
+      (w) => [w.longitude, w.latitude] as [number, number],
+    );
+    const shape: GeoJSON.Feature<GeoJSON.LineString> = {
+      type: 'Feature',
+      properties: { isDashed: true },
+      geometry: { type: 'LineString', coordinates: coords },
+    };
+    return [
+      {
+        id: 'planner-preview-dashed',
+        shape,
+        color: Colors.base.accent,
+        isPrimary: true,
+      },
+    ];
+  }
+
+  /**
+   * BoundingBox del Planner para auto-encuadrar la camara cuando el rider
+   * abre el sheet. Si hay >= 2 waypoints, encuadra todos los puntos; con 1
+   * solo, devuelve `null` (no hay rectangulo posible).
+   */
+  get plannerBounds(): MapBounds | null {
+    const wps = this.plannerViewModel.waypoints;
+    if (wps.length < 2) return null;
+    const points: GeoPoint[] = wps.map((w) => ({
+      latitude: w.latitude,
+      longitude: w.longitude,
+    }));
+    const box = boundingBox(points);
+    if (!box) return null;
+    return {
+      ne: [box.northEast.longitude, box.northEast.latitude],
+      sw: [box.southWest.longitude, box.southWest.latitude],
+    };
+  }
+
+  /**
+   * Variante de `computeColoredSegments` que usa los waypoints del Planner
+   * (en vez de origen=ubicacion del rider). Cada sub-segmento se colorea por
+   * el StopKind del waypoint DESTINO (regla canonica del Slice C.1).
+   */
+  private computePlannerColoredSegments(
+    geometry: GeoPoint[],
+    waypoints: Waypoint[],
+  ): RouteLine[] {
+    if (geometry.length < 2 || waypoints.length < 2) return [];
+
+    const projectIdx = (target: GeoPoint): number => {
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (let i = 0; i < geometry.length; i++) {
+        const d = haversineKm(geometry[i], target);
+        if (d < bestDist) {
+          bestDist = d;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    };
+
+    const indices = waypoints.map((w) =>
+      projectIdx({ latitude: w.latitude, longitude: w.longitude }),
+    );
+
+    const segments: RouteLine[] = [];
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const startIdx = Math.min(indices[i], indices[i + 1]);
+      const endIdx = Math.max(indices[i], indices[i + 1]);
+      const segGeom = geometry.slice(startIdx, endIdx + 1);
+      const shape = this.toLineFeature(segGeom);
+      if (!shape) continue;
+      // Color del destino del segmento (regla del Slice C.1).
+      const destKind = waypoints[i + 1].kind as StopKind;
+      segments.push({
+        id: `planner-seg-${i}`,
+        shape,
+        color: Colors.stopKind[destKind],
+        isPrimary: true,
+      });
+    }
+    return segments;
   }
 
   /** Resumen de distancia, duracion y velocidad media de la ruta. */
@@ -1731,8 +1885,9 @@ export class HomeViewModel {
     try {
       // Origen (ubicacion actual) -> paradas intermedias -> destino final.
       // Infiero el `stopKind` semantico desde la categoria de Mapbox (si el
-      // Place la trae); fallback `'food'` por ser la categoria mas comun para
-      // paradas intermedias.
+      // Place la trae); fallback `'other'` (parada generica) cuando no hay
+      // suficiente info — antes era `'food'` pero etiquetaba erroneamente
+      // todas las paradas sin categoria como comida.
       const stops = await Promise.all(
         this.intermediateStops.map(async (stop, index) => {
           const inferred = await this.inferStopKindUseCase.run({
@@ -1744,7 +1899,7 @@ export class HomeViewModel {
             name: stop.name,
             latitude: stop.latitude,
             longitude: stop.longitude,
-            kind: inferred ?? 'food',
+            kind: inferred ?? 'other',
             order: index + 1,
             mapboxCategory: stop.category,
             userOverrideKind: false,

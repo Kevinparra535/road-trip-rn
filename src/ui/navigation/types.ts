@@ -16,6 +16,10 @@ export type RoutesStackParamList = {
   JoinRoute: { initialCode?: string } | undefined;
   /** Lista de miembros del party activo. C.5. */
   PartyMembers: undefined;
+  /** Pantalla dedicada para agregar parada por categoría. UX gap fix. */
+  AddStop: undefined;
+  /** Sub-listado de POIs filtrados por categoría. UX gap fix. */
+  CategorySublist: { category: 'food' | 'fuel' | 'tourism' | 'rest' };
 };
 
 export type GarageStackParamList = {

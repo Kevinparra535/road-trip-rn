@@ -48,6 +48,19 @@ const makeInferStopKindUseCase = () => ({
   run: jest.fn().mockResolvedValue(null),
 });
 
+/**
+ * Mock minimo del RoutePlannerViewModel — el HomeViewModel solo lo lee para
+ * computar los getters de preview (`plannerWaypointPins`, `plannerRouteLines`,
+ * `plannerBounds`). Los tests que quieren preview activo pueden sobreescribir
+ * `waypoints` y `directions` con datos reales.
+ */
+const makePlannerVM = (
+  overrides: Partial<{ waypoints: unknown[]; directions: unknown }> = {},
+) => ({
+  waypoints: overrides.waypoints ?? [],
+  directions: overrides.directions ?? null,
+});
+
 const makeVM = (
   store = makeLocationStore(),
   searchPlaces: { run: jest.Mock } = makeSearchUseCase(),
@@ -61,6 +74,7 @@ const makeVM = (
   addRecent: { run: jest.Mock } = makeAddRecentUseCase(),
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
   inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
+  planner: ReturnType<typeof makePlannerVM> = makePlannerVM(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -75,6 +89,7 @@ const makeVM = (
     addRecent as any,
     getAllRoutes as any,
     inferStopKind as any,
+    planner as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -779,5 +794,174 @@ describe('HomeViewModel — routeLines coloreado por StopKind', () => {
     expect(primary[0].id).toBe('primary');
     // El color es del rideType (highway), no segmentado
     expect(primary[0].color).toBe('#FF9800');
+  });
+});
+
+describe('HomeViewModel — preview de Planner en mapa', () => {
+  // Forma minima de un Waypoint que el HomeViewModel.preview consume. No
+  // construimos la entity real para no acoplar el test al constructor.
+  const wp = (
+    id: string,
+    kind: string,
+    lat: number,
+    lng: number,
+    name = id,
+  ) => ({
+    id,
+    kind,
+    latitude: lat,
+    longitude: lng,
+    name,
+    order: 0,
+    mapboxCategory: undefined,
+    userOverrideKind: false,
+  });
+
+  it('sin waypoints: pins/lines/bounds vacios + isPlannerPreviewVisible false', () => {
+    const vm = makeVM();
+    expect(vm.isPlannerPreviewVisible).toBe(false);
+    expect(vm.plannerWaypointPins).toEqual([]);
+    expect(vm.plannerRouteLines).toEqual([]);
+    expect(vm.plannerBounds).toBeNull();
+  });
+
+  it('con waypoints + sin directions: pins coloreados + linea dashed', () => {
+    const planner = makePlannerVM({
+      waypoints: [
+        wp('w1', 'start', 4.6, -74.08, 'Start'),
+        wp('w2', 'food', 4.7, -74.1, 'Comida'),
+        wp('w3', 'destination', 4.8, -74.2, 'Dest'),
+      ],
+    });
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      planner,
+    );
+
+    expect(vm.isPlannerPreviewVisible).toBe(true);
+    expect(vm.plannerWaypointPins).toHaveLength(3);
+    expect(vm.plannerWaypointPins[0].isFirst).toBe(true);
+    expect(vm.plannerWaypointPins[2].isLast).toBe(true);
+    // Colores: start=verde, food=naranja claro, destination=rojo (de Colors.stopKind).
+    expect(vm.plannerWaypointPins[0].color).toBe(Colors.stopKind.start);
+    expect(vm.plannerWaypointPins[1].color).toBe(Colors.stopKind.food);
+    expect(vm.plannerWaypointPins[2].color).toBe(Colors.stopKind.destination);
+
+    // Sin directions, devuelve 1 sola linea preliminar dashed.
+    expect(vm.plannerRouteLines).toHaveLength(1);
+    const preview = vm.plannerRouteLines[0];
+    expect(preview.id).toBe('planner-preview-dashed');
+    expect(
+      (preview.shape.properties as Record<string, unknown>).isDashed,
+    ).toBe(true);
+  });
+
+  it('con waypoints + directions: N-1 segmentos coloreados por destino de cada par', () => {
+    const planner = makePlannerVM({
+      waypoints: [
+        wp('w1', 'start', 4.6, -74.08, 'Start'),
+        wp('w2', 'food', 4.7, -74.1, 'Comida'),
+        wp('w3', 'destination', 4.8, -74.2, 'Dest'),
+      ],
+      directions: {
+        distanceKm: 50,
+        durationMin: 60,
+        geometry: [
+          { latitude: 4.6, longitude: -74.08 },
+          { latitude: 4.65, longitude: -74.09 },
+          { latitude: 4.7, longitude: -74.1 },
+          { latitude: 4.75, longitude: -74.15 },
+          { latitude: 4.8, longitude: -74.2 },
+        ],
+      },
+    });
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      planner,
+    );
+
+    const lines = vm.plannerRouteLines;
+    // N waypoints -> N-1 segmentos.
+    expect(lines).toHaveLength(2);
+    // Segmento 0: start -> food, color del destino del segmento (food)
+    expect(lines[0].color).toBe(Colors.stopKind.food);
+    // Segmento 1: food -> destination, color del destino (destination)
+    expect(lines[1].color).toBe(Colors.stopKind.destination);
+  });
+
+  it('plannerBounds devuelve bbox cuando hay >= 2 waypoints', () => {
+    const planner = makePlannerVM({
+      waypoints: [
+        wp('w1', 'start', 4.6, -74.08),
+        wp('w2', 'destination', 4.8, -74.2),
+      ],
+    });
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      planner,
+    );
+
+    const bounds = vm.plannerBounds;
+    expect(bounds).not.toBeNull();
+    // ne = max lat/lng, sw = min lat/lng (en formato [lng, lat]).
+    expect(bounds!.ne[0]).toBeCloseTo(-74.08, 5);
+    expect(bounds!.ne[1]).toBeCloseTo(4.8, 5);
+    expect(bounds!.sw[0]).toBeCloseTo(-74.2, 5);
+    expect(bounds!.sw[1]).toBeCloseTo(4.6, 5);
+  });
+
+  it('plannerBounds es null con menos de 2 waypoints', () => {
+    const planner = makePlannerVM({
+      waypoints: [wp('w1', 'start', 4.6, -74.08)],
+    });
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      planner,
+    );
+    expect(vm.plannerBounds).toBeNull();
   });
 });

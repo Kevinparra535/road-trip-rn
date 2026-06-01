@@ -5,11 +5,19 @@ import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase
 import { JoinTripPartyUseCase } from '@/domain/useCases/JoinTripPartyUseCase';
 import { LeaveTripPartyUseCase } from '@/domain/useCases/LeaveTripPartyUseCase';
 
+import { makeMotorcycle } from '../factories';
+
 const makeMember = (overrides: Partial<PartyMember> = {}): PartyMember =>
   new PartyMember({
     riderId: 'r-owner',
     displayName: 'Owner Name',
     motorcycleId: 'm-1',
+    motorcycleSpecs: {
+      displayName: 'Yamaha',
+      tankCapacityLiters: 12,
+      fuelConsumptionKmPerLiter: 30,
+      loadKg: 80,
+    },
     joinedAt: new Date('2026-01-01'),
     isOwner: true,
     ...overrides,
@@ -33,7 +41,7 @@ describe('CreateTripPartyUseCase', () => {
       routeId: 'r-1',
       ownerId: 'r-owner',
       ownerDisplayName: 'Diego',
-      ownerMotorcycleId: 'm-1',
+      ownerMotorcycle: makeMotorcycle({ id: 'm-1' }),
     });
     const arg = repo.create.mock.calls[0][0];
     expect(arg.routeId).toBe('r-1');
@@ -50,7 +58,7 @@ describe('CreateTripPartyUseCase', () => {
         routeId: '',
         ownerId: 'r',
         ownerDisplayName: 'X',
-        ownerMotorcycleId: 'm',
+        ownerMotorcycle: makeMotorcycle({ id: 'm' }),
       }),
     ).rejects.toThrow(/routeId/);
     await expect(
@@ -58,7 +66,7 @@ describe('CreateTripPartyUseCase', () => {
         routeId: 'r',
         ownerId: '',
         ownerDisplayName: 'X',
-        ownerMotorcycleId: 'm',
+        ownerMotorcycle: makeMotorcycle({ id: 'm' }),
       }),
     ).rejects.toThrow(/ownerId/);
     await expect(
@@ -66,9 +74,9 @@ describe('CreateTripPartyUseCase', () => {
         routeId: 'r',
         ownerId: 'r',
         ownerDisplayName: 'X',
-        ownerMotorcycleId: '',
+        ownerMotorcycle: undefined as any,
       }),
-    ).rejects.toThrow(/ownerMotorcycleId/);
+    ).rejects.toThrow(/ownerMotorcycle/);
   });
 });
 
@@ -78,7 +86,7 @@ describe('JoinTripPartyUseCase', () => {
     const newMember = makeMember({
       riderId: 'r-2',
       displayName: 'Maria',
-      motorcycleId: 'm-2',
+      motorcycle: makeMotorcycle({ id: 'm-2' }),
       isOwner: false,
     });
     const updated = makeParty({ members: [...original.members, newMember] });
@@ -94,7 +102,7 @@ describe('JoinTripPartyUseCase', () => {
       partyId: 'p-1',
       riderId: 'r-2',
       displayName: 'Maria',
-      motorcycleId: 'm-2',
+      motorcycle: makeMotorcycle({ id: 'm-2' }),
     });
     expect(out.members).toHaveLength(2);
     expect(repo.addMember).toHaveBeenCalled();
@@ -115,7 +123,7 @@ describe('JoinTripPartyUseCase', () => {
       partyId: 'p-1',
       riderId: 'r-2',
       displayName: 'Maria',
-      motorcycleId: 'm-2',
+      motorcycle: makeMotorcycle({ id: 'm-2' }),
     });
     expect(out).toBe(party);
     expect(repo.addMember).not.toHaveBeenCalled();
@@ -132,7 +140,7 @@ describe('JoinTripPartyUseCase', () => {
         partyId: 'p-x',
         riderId: 'r-2',
         displayName: 'Maria',
-        motorcycleId: 'm-2',
+        motorcycle: makeMotorcycle({ id: 'm-2' }),
       }),
     ).rejects.toThrow(/no existe/);
   });
@@ -145,7 +153,7 @@ describe('JoinTripPartyUseCase', () => {
         partyId: '',
         riderId: 'r',
         displayName: 'X',
-        motorcycleId: 'm',
+        motorcycle: makeMotorcycle({ id: 'm' }),
       }),
     ).rejects.toThrow(/partyId/);
     await expect(
@@ -153,9 +161,9 @@ describe('JoinTripPartyUseCase', () => {
         partyId: 'p',
         riderId: 'r',
         displayName: 'X',
-        motorcycleId: '',
+        motorcycle: undefined as any,
       }),
-    ).rejects.toThrow(/motorcycleId/);
+    ).rejects.toThrow(/motorcycle/);
   });
 });
 

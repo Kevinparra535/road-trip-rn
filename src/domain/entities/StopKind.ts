@@ -12,6 +12,7 @@ export type StopKind =
   | 'fuel' // Tanqueo
   | 'tourism' // Turismo / visita / atraccion
   | 'rest' // Descanso / mirador / parador
+  | 'other' // Parada generica sin categoria definida — UX gap fix
   | 'destination'; // Punto final
 
 /** Conjunto canonico de todos los StopKind. Util para validacion y UI. */
@@ -21,6 +22,7 @@ export const STOP_KINDS: readonly StopKind[] = [
   'fuel',
   'tourism',
   'rest',
+  'other',
   'destination',
 ] as const;
 

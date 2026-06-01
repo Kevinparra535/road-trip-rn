@@ -72,6 +72,19 @@ describe('RoutePlannerViewModel', () => {
         return overrides.categoryResults ?? [];
       }),
     };
+    const estimatePartyFuel = { run: jest.fn() };
+    const observePartyUseCase = {
+      subscribe: jest.fn(() => () => undefined),
+    };
+
+    const partyStore =
+      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+        observePartyUseCase as any,
+      );
+    const locationStore = {
+      hasLocation: false,
+      isLocationResponse: null,
+    };
     const vm = new RoutePlannerViewModel(
       getCurrentRider as any,
       getRoute as any,
@@ -80,6 +93,9 @@ describe('RoutePlannerViewModel', () => {
       update as any,
       searchPlaces as any,
       searchPlacesByCategory as any,
+      estimatePartyFuel as any,
+      partyStore as any,
+      locationStore as any,
     );
     return {
       vm,
@@ -87,6 +103,8 @@ describe('RoutePlannerViewModel', () => {
       create,
       searchPlaces,
       searchPlacesByCategory,
+      estimatePartyFuel,
+      partyStore,
     };
   };
 
@@ -170,7 +188,116 @@ describe('RoutePlannerViewModel', () => {
     expect(vm.waypoints[1].kind).toBe('fuel');
   });
 
-  it('removeStop only removes intermediate waypoints', async () => {
+  it('moveStop reordena paradas intermedias y bloquea start/destination', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start');
+    vm.addWaypoint(4.7, -74.1, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+    vm.addWaypoint(4.9, -74.3, 'End');
+
+    const aId = vm.waypoints[1].id;
+    const bId = vm.waypoints[2].id;
+
+    // A esta en pos 1, B en pos 2. Movemos B hacia arriba.
+    vm.moveStop(bId, 'up');
+    expect(vm.waypoints[1].id).toBe(bId);
+    expect(vm.waypoints[2].id).toBe(aId);
+
+    // Tratamos de mover el destino (pos 3) hacia arriba — no-op.
+    const destId = vm.waypoints[3].id;
+    vm.moveStop(destId, 'up');
+    expect(vm.waypoints[3].id).toBe(destId);
+
+    // Tratamos de mover A (que ya esta en pos 2 luego del swap) por debajo del
+    // destination — no-op por limite.
+    vm.moveStop(aId, 'down');
+    expect(vm.waypoints[2].id).toBe(aId);
+  });
+
+  it('timelineItems setea canMoveUp/canMoveDown segun la posicion', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start');
+    vm.addWaypoint(4.7, -74.1, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+    vm.addWaypoint(4.9, -74.3, 'End');
+
+    const items = vm.timelineItems;
+    // start: no es intermedio
+    expect(items[0].canMoveUp).toBe(false);
+    expect(items[0].canMoveDown).toBe(false);
+    // A (primer intermedio): no puede subir mas (esta justo bajo el start)
+    expect(items[1].canMoveUp).toBe(false);
+    expect(items[1].canMoveDown).toBe(true);
+    // B (ultimo intermedio): no puede bajar mas (esta justo sobre destino)
+    expect(items[2].canMoveUp).toBe(true);
+    expect(items[2].canMoveDown).toBe(false);
+    // destination
+    expect(items[3].canMoveUp).toBe(false);
+    expect(items[3].canMoveDown).toBe(false);
+  });
+
+  it('save sheet open/close + persiste notes en submit', async () => {
+    const { vm, create } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start');
+    vm.addWaypoint(4.8, -74.2, 'End');
+    await vm.calculateDirections();
+
+    expect(vm.isSaveSheetOpen).toBe(false);
+    vm.openSaveSheet();
+    expect(vm.isSaveSheetOpen).toBe(true);
+
+    vm.setName('Test ruta');
+    vm.setNotes('Salida temprano');
+    const ok = await vm.submit();
+    expect(ok).toBe(true);
+
+    const routePassed = create.run.mock.calls[0][0];
+    expect(routePassed.name).toBe('Test ruta');
+    expect(routePassed.notes).toBe('Salida temprano');
+
+    vm.closeSaveSheet();
+    expect(vm.isSaveSheetOpen).toBe(false);
+  });
+
+  it('isReadOnly true cuando hay party activa de otra ruta', async () => {
+    const { vm, partyStore } = build();
+    await vm.initialize();
+    // Sin party activa: isReadOnly = false.
+    expect(vm.isReadOnly).toBe(false);
+
+    // Simular party activa con un OWNER distinto al rider actual + routeId
+    // que matchea con editingId. Como riderId = 'rider-1' (de makeRider),
+    // el party con ownerId 'other-rider' deberia hacer isReadOnly = true.
+    const party = new (require('@/domain/entities/TripParty').TripParty)({
+      id: 'p-1',
+      routeId: 'route-1',
+      ownerId: 'other-rider',
+      members: [],
+      createdAt: new Date(),
+    });
+    // Forzar editingId a 'route-1' (lo que normalmente se setea via hydrateFrom)
+    (vm as any).editingId = 'route-1';
+    // Bypass observer y setear directamente.
+    partyStore.activeParty = party;
+
+    expect(vm.isReadOnly).toBe(true);
+  });
+
+  it('addWaypoint usa kind=other por default (no food)', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.7, -74.1, 'B'); // intermediate
+    vm.addWaypoint(4.8, -74.2, 'C');
+    // start y destination quedan posicionales, pero el intermedio default
+    // debe ser 'other' (no 'food' que etiquetaria como comida).
+    expect(vm.waypoints[1].kind).toBe('other');
+  });
+
+  it('removeStop borra cualquier waypoint y reasigna start/destination', async () => {
     const { vm } = build();
     await vm.initialize();
     vm.addWaypoint(4.6, -74.08, 'A');
@@ -180,12 +307,17 @@ describe('RoutePlannerViewModel', () => {
     const startId = vm.waypoints[0].id;
     const intermediateId = vm.waypoints[1].id;
 
+    // Borrar el start: el waypoint vecino se convierte en nuevo start.
     vm.removeStop(startId);
-    expect(vm.waypoints).toHaveLength(3); // no se removio el start
-
-    vm.removeStop(intermediateId);
     expect(vm.waypoints).toHaveLength(2);
-    expect(vm.waypoints.find((w) => w.id === intermediateId)).toBeUndefined();
+    expect(vm.waypoints.find((w) => w.id === startId)).toBeUndefined();
+    expect(vm.waypoints[0].kind).toBe('start');
+    expect(vm.waypoints[1].kind).toBe('destination');
+
+    // Tras el primer borrado, lo que era el intermedio ahora es start.
+    // Volverlo a borrar deja una sola parada (sin start ni dest definidos).
+    vm.removeStop(intermediateId);
+    expect(vm.waypoints).toHaveLength(1);
   });
 
   it('addWaypointWithKind inserta antes del destination y marca override', async () => {
@@ -210,6 +342,122 @@ describe('RoutePlannerViewModel', () => {
     expect(intermediate.kind).toBe('fuel');
     expect(intermediate.userOverrideKind).toBe(true);
     expect(intermediate.mapboxCategory).toBe('gas_station');
+  });
+
+  it('startEditingWaypoint marca el id y editingWaypoint apunta al target', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+
+    const destId = vm.waypoints[1].id;
+    vm.startEditingWaypoint(destId);
+
+    expect(vm.isEditingWaypoint).toBe(true);
+    expect(vm.editingWaypointId).toBe(destId);
+    expect(vm.editingWaypoint?.id).toBe(destId);
+  });
+
+  it('cancelEditingWaypoint limpia el id sin tocar waypoints', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+
+    vm.startEditingWaypoint(vm.waypoints[1].id);
+    vm.cancelEditingWaypoint();
+
+    expect(vm.isEditingWaypoint).toBe(false);
+    expect(vm.editingWaypointId).toBeNull();
+    expect(vm.waypoints).toHaveLength(2);
+  });
+
+  it('replaceEditingWaypoint cambia coords/nombre del destino conservando posicion', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Bogota');
+    vm.addWaypoint(5.0, -74.0, 'Destino viejo');
+
+    const destId = vm.waypoints[1].id;
+    vm.startEditingWaypoint(destId);
+    vm.replaceEditingWaypoint({
+      latitude: 5.6325,
+      longitude: -73.5253,
+      name: 'Villa de Leyva',
+      mapboxCategory: 'place',
+    });
+
+    // Mismo id + misma posicion, nuevos datos.
+    expect(vm.waypoints[1].id).toBe(destId);
+    expect(vm.waypoints[1].name).toBe('Villa de Leyva');
+    expect(vm.waypoints[1].latitude).toBe(5.6325);
+    expect(vm.waypoints[1].longitude).toBe(-73.5253);
+    expect(vm.waypoints[1].kind).toBe('destination');
+    // Edit limpiado tras confirmar.
+    expect(vm.isEditingWaypoint).toBe(false);
+    // Directions invalidadas — proximo calculo recalcula.
+    expect(vm.directions).toBeNull();
+  });
+
+  it('replaceEditingWaypoint en un intermedio respeta el kind explicito', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start');
+    vm.addWaypoint(4.7, -74.1, 'Intermedio');
+    vm.addWaypoint(4.8, -74.2, 'End');
+
+    const interId = vm.waypoints[1].id;
+    vm.startEditingWaypoint(interId);
+    vm.replaceEditingWaypoint({
+      latitude: 4.75,
+      longitude: -74.15,
+      name: 'Terpel La Caro',
+      kind: 'fuel',
+      mapboxCategory: 'gas_station',
+    });
+
+    const updated = vm.waypoints[1];
+    expect(updated.id).toBe(interId);
+    expect(updated.kind).toBe('fuel');
+    expect(updated.name).toBe('Terpel La Caro');
+    expect(updated.userOverrideKind).toBe(true);
+  });
+
+  it('replaceEditingWaypoint en el start fuerza kind=start aunque pasen otro', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'Start viejo');
+    vm.addWaypoint(4.8, -74.2, 'End');
+
+    const startId = vm.waypoints[0].id;
+    vm.startEditingWaypoint(startId);
+    // Aunque pasemos kind 'fuel', la normalizacion lo fuerza a 'start' por
+    // estar en posicion 0.
+    vm.replaceEditingWaypoint({
+      latitude: 4.65,
+      longitude: -74.09,
+      name: 'Start nuevo',
+      kind: 'fuel',
+    });
+
+    expect(vm.waypoints[0].kind).toBe('start');
+    expect(vm.waypoints[0].name).toBe('Start nuevo');
+  });
+
+  it('replaceEditingWaypoint sin edit activo es no-op', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+
+    vm.replaceEditingWaypoint({
+      latitude: 99,
+      longitude: 99,
+      name: 'NO DEBE APARECER',
+    });
+
+    expect(vm.waypoints[0].name).toBe('A');
+    expect(vm.waypoints[1].name).toBe('B');
   });
 
   describe('search flow', () => {
@@ -284,7 +532,7 @@ describe('RoutePlannerViewModel', () => {
       vm.dispose();
     });
 
-    it('selectSearchResult cae a kind=food si Mapbox no devuelve categoria util', async () => {
+    it('selectSearchResult cae a kind=other si Mapbox no devuelve categoria util', async () => {
       const { vm } = build();
       await vm.initialize();
       vm.addWaypoint(4.6, -74.08, 'Bogota');
@@ -300,7 +548,7 @@ describe('RoutePlannerViewModel', () => {
         // sin category, sin placeType=poi -> InferStopKind devuelve null
       });
       vm.selectSearchResult(ambiguous);
-      expect(vm.waypoints[1].kind).toBe('food');
+      expect(vm.waypoints[1].kind).toBe('other');
       vm.dispose();
     });
 

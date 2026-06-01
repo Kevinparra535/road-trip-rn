@@ -204,6 +204,25 @@ const HomeScreen = observer(() => {
     }
   }, [routeBounds, destinationId]);
 
+  // Encuadra la camara sobre los waypoints del Planner cuando el sheet esta
+  // abierto. Reacciona al fingerprint de coords (no a la referencia del objeto)
+  // — sino el effect dispararia cada vez que MobX re-evalua el computed.
+  const plannerBounds = viewModel.plannerBounds;
+  const plannerBoundsKey = plannerBounds
+    ? `${plannerBounds.ne[0]},${plannerBounds.ne[1]},${plannerBounds.sw[0]},${plannerBounds.sw[1]}`
+    : null;
+  useEffect(() => {
+    if (!plannerBounds) return;
+    cameraRef.current?.fitBounds(
+      plannerBounds.ne,
+      plannerBounds.sw,
+      ROUTE_FIT_PADDING,
+      600,
+    );
+    // El bounds se compara por su fingerprint string (key), no por referencia.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plannerBoundsKey]);
+
   // Durante la navegacion la camara sigue al conductor en cada actualizacion
   // de su posicion: viene del simulador (ruta de prueba) o del GPS real.
   const isNavigating = viewModel.isNavigating;
@@ -354,6 +373,57 @@ const HomeScreen = observer(() => {
             </Mapbox.ShapeSource>
           );
         })}
+
+        {/*
+         * Preview en tiempo real de la ruta del Planner (mostrado mientras el
+         * formSheet del Planner esta abierto sobre el mapa). Multi-segmento
+         * coloreado por StopKind si hay directions; linea recta punteada si
+         * el rider acaba de agregar paradas y Mapbox aun no respondio.
+         */}
+        {viewModel.plannerRouteLines.map((line) => {
+          const isDashed =
+            (line.shape.properties as Record<string, unknown> | undefined)
+              ?.isDashed === true;
+          return (
+            <Mapbox.ShapeSource
+              key={line.id}
+              id={`planner-${line.id}`}
+              shape={line.shape}
+            >
+              <Mapbox.LineLayer
+                id={`planner-${line.id}-line`}
+                slot="top"
+                style={{
+                  lineColor: line.color,
+                  lineWidth: ROUTE_CORE_WIDTH_PLANNING,
+                  lineOpacity: isDashed ? 0.6 : 0.95,
+                  lineCap: 'round',
+                  lineJoin: 'round',
+                  ...(isDashed ? { lineDasharray: [2, 2] } : {}),
+                }}
+              />
+            </Mapbox.ShapeSource>
+          );
+        })}
+
+        {viewModel.plannerWaypointPins.map((pin) => (
+          <Mapbox.MarkerView
+            key={`planner-pin-${pin.id}`}
+            id={`planner-pin-${pin.id}`}
+            coordinate={pin.coordinate}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
+          >
+            <View
+              style={[
+                pin.isFirst || pin.isLast
+                  ? styles.plannerPinExtreme
+                  : styles.plannerPinDot,
+                { backgroundColor: pin.color, borderColor: pin.color },
+              ]}
+            />
+          </Mapbox.MarkerView>
+        ))}
 
         {viewModel.destinationCoordinate ? (
           <Mapbox.MarkerView
@@ -2166,6 +2236,23 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: Colors.base.bgPrimary,
     borderRadius: BorderRadius.pill,
+  },
+  // Pins de preview del Planner. Los intermedios son dots pequenos para no
+  // contaminar el mapa; start/destino son circulos mas grandes para resaltar
+  // los extremos del trazado.
+  plannerPinDot: {
+    width: 14,
+    height: 14,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.textPrimary,
+  },
+  plannerPinExtreme: {
+    width: 18,
+    height: 18,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 3,
+    borderColor: Colors.base.textPrimary,
   },
 });
 

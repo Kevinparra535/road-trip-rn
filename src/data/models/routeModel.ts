@@ -24,6 +24,7 @@ export type RouteModelConstructorParams = {
   geometry: GeoPointJson[];
   distance_km: number;
   estimated_duration_min: number;
+  notes?: string;
   created_at: unknown;
 };
 
@@ -56,15 +57,16 @@ function toRideType(value: unknown): RideType {
 /**
  * Mapea el `kind` serializado a un `WaypointKind` valido del modelo nuevo.
  * Las rutas legacy guardaron `'stop'` para paradas intermedias: lo mapeamos a
- * `'food'` (kind por defecto) con la bandera implicita `userOverrideKind=false`
- * para que el rider pueda corregir despues sin perder informacion.
+ * `'other'` (parada generica) con la bandera implicita `userOverrideKind=false`
+ * para que el rider pueda corregir despues sin perder informacion. Antes era
+ * `'food'` pero eso etiquetaba erroneamente todas las paradas como comida.
  */
 function toWaypointKind(value: unknown): WaypointKind {
   if (isStopKind(value)) return value as StopKind;
-  if (value === 'stop') return 'food';
+  if (value === 'stop') return 'other';
   if (value === 'start') return 'start';
   if (value === 'destination') return 'destination';
-  return 'food';
+  return 'other';
 }
 
 /**
@@ -84,6 +86,7 @@ export class RouteModel {
   geometry: GeoPointJson[];
   distance_km: number;
   estimated_duration_min: number;
+  notes?: string;
   created_at: unknown;
 
   constructor(params: RouteModelConstructorParams) {
@@ -95,6 +98,7 @@ export class RouteModel {
     this.geometry = params.geometry;
     this.distance_km = params.distance_km;
     this.estimated_duration_min = params.estimated_duration_min;
+    this.notes = params.notes;
     this.created_at = params.created_at;
   }
 
@@ -130,6 +134,7 @@ export class RouteModel {
         : [],
       distance_km: Number(json.distance_km ?? 0),
       estimated_duration_min: Number(json.estimated_duration_min ?? 0),
+      notes: typeof json.notes === 'string' ? json.notes : undefined,
       created_at: json.created_at ?? new Date().toISOString(),
     });
   }
@@ -144,6 +149,7 @@ export class RouteModel {
       geometry: this.geometry,
       distance_km: this.distance_km,
       estimated_duration_min: this.estimated_duration_min,
+      notes: this.notes,
       created_at: this.created_at,
     };
   }
@@ -188,6 +194,7 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
     geometry,
     distanceKm: this.distance_km,
     estimatedDurationMin: this.estimated_duration_min,
+    notes: this.notes,
     createdAt: toDate(this.created_at),
   });
 };

@@ -1,10 +1,18 @@
 import { PartyMember } from '@/domain/entities/PartyMember';
 import { TripParty } from '@/domain/entities/TripParty';
 
+export type PartyMotorcycleSpecsJson = {
+  display_name: string;
+  tank_capacity_liters: number;
+  fuel_consumption_km_per_liter: number;
+  load_kg: number;
+};
+
 export type PartyMemberJson = {
   rider_id: string;
   display_name: string;
   motorcycle_id: string;
+  motorcycle_specs?: PartyMotorcycleSpecsJson;
   joined_at: unknown;
   is_owner: boolean;
 };
@@ -56,6 +64,18 @@ export class TripPartyModel {
             rider_id: String(m.rider_id ?? ''),
             display_name: String(m.display_name ?? 'Rider'),
             motorcycle_id: String(m.motorcycle_id ?? ''),
+            motorcycle_specs: m.motorcycle_specs
+              ? {
+                  display_name: String(m.motorcycle_specs.display_name ?? ''),
+                  tank_capacity_liters: Number(
+                    m.motorcycle_specs.tank_capacity_liters ?? 0,
+                  ),
+                  fuel_consumption_km_per_liter: Number(
+                    m.motorcycle_specs.fuel_consumption_km_per_liter ?? 0,
+                  ),
+                  load_kg: Number(m.motorcycle_specs.load_kg ?? 80),
+                }
+              : undefined,
             joined_at: m.joined_at ?? new Date().toISOString(),
             is_owner: Boolean(m.is_owner),
           }))
@@ -87,6 +107,22 @@ TripPartyModel.prototype.toDomain = function toDomain(): TripParty {
         riderId: m.rider_id,
         displayName: m.display_name,
         motorcycleId: m.motorcycle_id,
+        // Fallback defensive: si una party legacy no tiene specs (creada en
+        // C.5), usamos defaults conservadores. C.6 backfill no es critico.
+        motorcycleSpecs: m.motorcycle_specs
+          ? {
+              displayName: m.motorcycle_specs.display_name,
+              tankCapacityLiters: m.motorcycle_specs.tank_capacity_liters,
+              fuelConsumptionKmPerLiter:
+                m.motorcycle_specs.fuel_consumption_km_per_liter,
+              loadKg: m.motorcycle_specs.load_kg,
+            }
+          : {
+              displayName: 'Moto',
+              tankCapacityLiters: 15,
+              fuelConsumptionKmPerLiter: 22,
+              loadKg: 80,
+            },
         joinedAt: toDate(m.joined_at),
         isOwner: m.is_owner,
       }),
@@ -106,6 +142,13 @@ export function partyMemberToJson(member: PartyMember): PartyMemberJson {
     rider_id: member.riderId,
     display_name: member.displayName,
     motorcycle_id: member.motorcycleId,
+    motorcycle_specs: {
+      display_name: member.motorcycleSpecs.displayName,
+      tank_capacity_liters: member.motorcycleSpecs.tankCapacityLiters,
+      fuel_consumption_km_per_liter:
+        member.motorcycleSpecs.fuelConsumptionKmPerLiter,
+      load_kg: member.motorcycleSpecs.loadKg,
+    },
     joined_at: member.joinedAt.toISOString(),
     is_owner: member.isOwner,
   };

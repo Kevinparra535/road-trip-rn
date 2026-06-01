@@ -78,6 +78,7 @@ const Colors = {
     fuel: '#E8A030', // naranja oscuro (diferenciado del accent #FF9800)
     tourism: '#9B59B6', // morado violeta
     rest: '#3DA5D9', // azul cielo
+    other: '#9CA3AF', // gris muted — parada generica sin categorizar
     destination: '#E74446', // rojo (mismo que error / elevation.peak)
   },
   semantic: {
