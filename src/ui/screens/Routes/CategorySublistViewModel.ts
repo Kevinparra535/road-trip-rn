@@ -40,6 +40,15 @@ const ON_ROUTE_THRESHOLD_KM = 5;
  * Tap-en-poi delega al `RoutePlannerViewModel.selectSearchResult` que ya
  * maneja inferencia de kind + insercion en posicion correcta (intermedio).
  */
+/**
+ * Factor de expansion del bbox cuando el rider activa "Ver todos, no solo en
+ * la ruta" (C2 del flow brief). El alongRoute se infla x4 manteniendo el
+ * centro — el API de Mapbox sigue filtrando por proximidad pero el "cerca"
+ * pasa de ~5km a ~20km, suficiente para mostrar POIs aledanos a la ruta sin
+ * irse a otro continente.
+ */
+const WIDE_SEARCH_EXPAND_FACTOR = 4;
+
 @injectable()
 export class CategorySublistViewModel {
   /** Categoria activa. Se setea via `setCategory` (chip row del screen). */
@@ -47,6 +56,12 @@ export class CategorySublistViewModel {
   results: Place[] = [];
   isLoading: boolean = false;
   isError: string | null = null;
+  /**
+   * `true` cuando el rider activo "Ver todos, no solo en la ruta" desde el
+   * empty state. El proximo search expande el bbox del alongRoute para ver
+   * POIs aledanos. Se resetea al cambiar de categoria (chip row).
+   */
+  isWideSearch: boolean = false;
 
   private logger = new Logger('CategorySublistViewModel');
 
@@ -138,6 +153,7 @@ export class CategorySublistViewModel {
   initialize(category: SearchableCategory): void {
     runInAction(() => {
       this.activeCategory = category;
+      this.isWideSearch = false;
     });
     void this.runSearch();
   }
@@ -146,6 +162,23 @@ export class CategorySublistViewModel {
     if (this.activeCategory === category) return;
     runInAction(() => {
       this.activeCategory = category;
+      this.results = [];
+      // Al cambiar de chip, volvemos al modo "solo en ruta" — ese es el
+      // default mas util. El rider puede volver a expandir si lo necesita.
+      this.isWideSearch = false;
+    });
+    void this.runSearch();
+  }
+
+  /**
+   * Activa el modo "Ver todos, no solo en la ruta" (C2 del flow brief). El
+   * `runSearch()` proximo expande el bbox del alongRoute para que el API
+   * devuelva POIs aledanos. No-op si ya estaba en modo wide.
+   */
+  expandSearchScope(): void {
+    if (this.isWideSearch) return;
+    runInAction(() => {
+      this.isWideSearch = true;
       this.results = [];
     });
     void this.runSearch();
@@ -220,12 +253,37 @@ export class CategorySublistViewModel {
    * Polyline a usar para el search. Prefiere `directions.geometry` si esta
    * calculada; sino cae a las coordenadas de los waypoints (peor cobertura
    * pero al menos cubre los extremos).
+   *
+   * Si `isWideSearch` esta activo, expande el bbox del polyline x4 manteniendo
+   * el centroide — el API sigue filtrando por proximidad pero el "cerca" se
+   * vuelve mucho mas amplio (~5km → ~20km tipico).
    */
   private buildAlongRoute(): GeoPoint[] {
-    if (this.planner.geometry.length > 0) return this.planner.geometry;
-    return this.planner.waypoints.map((w) => ({
-      latitude: w.latitude,
-      longitude: w.longitude,
+    const base =
+      this.planner.geometry.length > 0
+        ? this.planner.geometry
+        : this.planner.waypoints.map((w) => ({
+            latitude: w.latitude,
+            longitude: w.longitude,
+          }));
+    if (!this.isWideSearch || base.length === 0) return base;
+    return this.expandBbox(base, WIDE_SEARCH_EXPAND_FACTOR);
+  }
+
+  /**
+   * Expande las coordenadas del polyline alejandolas del centroide por un
+   * factor. El bbox resultante cubre `factor` veces el area original
+   * — el centroide se preserva.
+   */
+  private expandBbox(points: GeoPoint[], factor: number): GeoPoint[] {
+    if (points.length === 0) return points;
+    const centerLat =
+      points.reduce((sum, p) => sum + p.latitude, 0) / points.length;
+    const centerLng =
+      points.reduce((sum, p) => sum + p.longitude, 0) / points.length;
+    return points.map((p) => ({
+      latitude: centerLat + (p.latitude - centerLat) * factor,
+      longitude: centerLng + (p.longitude - centerLng) * factor,
     }));
   }
 
@@ -239,6 +297,7 @@ export class CategorySublistViewModel {
       this.results = [];
       this.isLoading = false;
       this.isError = null;
+      this.isWideSearch = false;
     });
   }
 }

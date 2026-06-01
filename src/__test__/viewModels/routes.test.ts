@@ -76,6 +76,15 @@ describe('RoutePlannerViewModel', () => {
     const observePartyUseCase = {
       subscribe: jest.fn(() => () => undefined),
     };
+    // Mock por defecto: rider sin motos. Tests que quieran el aviso de
+    // "Sin moto registrada" no necesitan tocar nada; los que quieran moto
+    // registrada sobreescriben `getAllMotorcycles.run`.
+    const getAllMotorcycles = {
+      run: jest.fn(async () => []),
+    };
+    // E3 draft mocks. Por defecto el draft repo es no-op.
+    const saveDraft = { run: jest.fn().mockResolvedValue(undefined) };
+    const clearDraft = { run: jest.fn().mockResolvedValue(undefined) };
 
     const partyStore =
       new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
@@ -94,6 +103,9 @@ describe('RoutePlannerViewModel', () => {
       searchPlaces as any,
       searchPlacesByCategory as any,
       estimatePartyFuel as any,
+      getAllMotorcycles as any,
+      saveDraft as any,
+      clearDraft as any,
       partyStore as any,
       locationStore as any,
     );
@@ -104,6 +116,9 @@ describe('RoutePlannerViewModel', () => {
       searchPlaces,
       searchPlacesByCategory,
       estimatePartyFuel,
+      getAllMotorcycles,
+      saveDraft,
+      clearDraft,
       partyStore,
     };
   };
@@ -458,6 +473,296 @@ describe('RoutePlannerViewModel', () => {
 
     expect(vm.waypoints[0].name).toBe('A');
     expect(vm.waypoints[1].name).toBe('B');
+  });
+
+  // ── Lote 1 flow brief: guard de salir + sheet "Ruta guardada" ─────────
+  describe('exit guard + confirm discard (Lote 1)', () => {
+    it('hasUnsavedChanges es false sin waypoints, true con al menos uno', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      expect(vm.hasUnsavedChanges).toBe(false);
+
+      vm.addWaypoint(4.6, -74.08, 'A');
+      expect(vm.hasUnsavedChanges).toBe(true);
+    });
+
+    it('requestExit sin cambios devuelve true sin abrir el sheet', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      expect(vm.requestExit()).toBe(true);
+      expect(vm.isExitConfirmOpen).toBe(false);
+    });
+
+    it('requestExit con cambios devuelve false y abre el sheet', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+
+      expect(vm.requestExit()).toBe(false);
+      expect(vm.isExitConfirmOpen).toBe(true);
+    });
+
+    it('confirmDiscard limpia waypoints + name + notes + cierra el sheet', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      vm.setName('Mi ruta');
+      vm.setNotes('Salida temprano');
+      vm.requestExit(); // abre el sheet
+
+      vm.confirmDiscard();
+
+      expect(vm.waypoints).toEqual([]);
+      expect(vm.directions).toBeNull();
+      expect(vm.name).toBe('');
+      expect(vm.notes).toBe('');
+      expect(vm.isExitConfirmOpen).toBe(false);
+    });
+
+    it('cancelExit solo cierra el sheet sin tocar waypoints', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.requestExit();
+
+      vm.cancelExit();
+
+      expect(vm.isExitConfirmOpen).toBe(false);
+      expect(vm.waypoints).toHaveLength(1);
+    });
+  });
+
+  describe('submit success → sheet "Ruta guardada" (Lote 1)', () => {
+    it('submit exitoso guarda savedRouteId y abre el sheet de confirmacion', async () => {
+      const { vm, create } = build();
+      // El mock de createRouteUseCase devuelve un Route con id 'route-1'
+      // (definido en factories.makeRoute()).
+      create.run.mockResolvedValueOnce({ ...makeRoute(), id: 'route-99' });
+      await vm.initialize();
+      vm.setName('Mi ruta');
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+
+      const ok = await vm.submit();
+      expect(ok).toBe(true);
+      expect(vm.savedRouteId).toBe('route-99');
+      expect(vm.isSavedSheetOpen).toBe(true);
+      // Bonus: el sheet "Guardar ruta" se cierra automaticamente.
+      expect(vm.isSaveSheetOpen).toBe(false);
+    });
+
+    it('closeSavedSheet apaga el flag', async () => {
+      const { vm, create } = build();
+      create.run.mockResolvedValueOnce({ ...makeRoute(), id: 'route-99' });
+      await vm.initialize();
+      vm.setName('Mi ruta');
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+      await vm.submit();
+
+      vm.closeSavedSheet();
+      expect(vm.isSavedSheetOpen).toBe(false);
+      // El id persiste por si el rider abre Ver detalle despues.
+      expect(vm.savedRouteId).toBe('route-99');
+    });
+  });
+
+  // ── Lote 2 flow brief: estados ricos del Planner ──────────────────────
+  describe('hasMotorcycleRegistered + loadMotorcycles (Lote 2)', () => {
+    it('default seguro: hasMotorcycleRegistered=true mientras motorcycles=null', () => {
+      const { vm } = build();
+      // No llamamos initialize — motorcycles sigue en null.
+      expect(vm.motorcycles).toBeNull();
+      // Devuelve true para no mostrar el notice prematuramente (parpadeo).
+      expect(vm.hasMotorcycleRegistered).toBe(true);
+    });
+
+    it('initialize carga motos vacias → hasMotorcycleRegistered=false', async () => {
+      const { vm, getAllMotorcycles } = build();
+      await vm.initialize();
+      // Espera al microtask para que loadMotorcycles termine.
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(getAllMotorcycles.run).toHaveBeenCalled();
+      expect(vm.motorcycles).toEqual([]);
+      expect(vm.hasMotorcycleRegistered).toBe(false);
+    });
+
+    it('rider con moto registrada → hasMotorcycleRegistered=true', async () => {
+      const { vm, getAllMotorcycles } = build();
+      getAllMotorcycles.run.mockResolvedValueOnce([makeMotorcycle()] as never);
+      await vm.initialize();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(vm.hasMotorcycleRegistered).toBe(true);
+    });
+
+    it('error cargando motos no rompe el flow + queda en null', async () => {
+      const { vm, getAllMotorcycles } = build();
+      getAllMotorcycles.run.mockRejectedValueOnce(new Error('boom'));
+      await vm.initialize();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(vm.motorcycles).toBeNull();
+      // Default seguro: no muestra el aviso si no podemos confirmar.
+      expect(vm.hasMotorcycleRegistered).toBe(true);
+    });
+  });
+
+  describe('initializeWithDestination + needsStartPoint (Lote 3b A2)', () => {
+    it('default needsStartPoint=false sin waypoints', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      expect(vm.needsStartPoint).toBe(false);
+    });
+
+    it('initializeWithDestination crea 1 waypoint kind=destination', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.initializeWithDestination({
+        latitude: 5.0,
+        longitude: -73.5,
+        name: 'Valle de Bravo',
+        mapboxCategory: 'place',
+      });
+      expect(vm.waypoints).toHaveLength(1);
+      expect(vm.waypoints[0].kind).toBe('destination');
+      expect(vm.waypoints[0].name).toBe('Valle de Bravo');
+      expect(vm.needsStartPoint).toBe(true);
+    });
+
+    it('normalize NO convierte el destino solo a start', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.initializeWithDestination({
+        latitude: 5.0,
+        longitude: -73.5,
+        name: 'Valle de Bravo',
+      });
+      // Bug que estaba antes: normalize forzaba kind=start por estar en pos 0.
+      expect(vm.waypoints[0].kind).toBe('destination');
+    });
+
+    it('useCurrentLocationAsStart conserva el destino existente', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.initializeWithDestination({
+        latitude: 5.0,
+        longitude: -73.5,
+        name: 'Valle de Bravo',
+      });
+      // Mock del location store: el rider tiene location.
+      (vm as any).locationStore.isLocationResponse = {
+        latitude: 4.6,
+        longitude: -74.08,
+      };
+      vm.useCurrentLocationAsStart();
+
+      expect(vm.waypoints).toHaveLength(2);
+      expect(vm.waypoints[0].kind).toBe('start');
+      expect(vm.waypoints[0].name).toBe('Mi ubicacion');
+      expect(vm.waypoints[1].kind).toBe('destination');
+      expect(vm.waypoints[1].name).toBe('Valle de Bravo');
+      expect(vm.needsStartPoint).toBe(false);
+    });
+  });
+
+  describe('draft persistence (Lote 3c E3)', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    const flushDraftDebounce = async () => {
+      jest.advanceTimersByTime(850);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    it('agregar waypoints dispara saveDraft (debounced)', async () => {
+      const { vm, saveDraft } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+
+      expect(saveDraft.run).not.toHaveBeenCalled();
+      await flushDraftDebounce();
+      expect(saveDraft.run).toHaveBeenCalled();
+
+      const draft = saveDraft.run.mock.calls[0][0];
+      expect(draft.waypoints).toHaveLength(2);
+      expect(draft.riderId).toBeTruthy();
+    });
+
+    it('confirmDiscard limpia el draft', async () => {
+      const { vm, clearDraft } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      vm.requestExit();
+
+      vm.confirmDiscard();
+      // El clear se llama async; le damos un microtask.
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(clearDraft.run).toHaveBeenCalled();
+    });
+
+    it('submit exitoso limpia el draft', async () => {
+      const { vm, create, clearDraft } = build();
+      create.run.mockResolvedValueOnce({ ...makeRoute(), id: 'route-99' });
+      await vm.initialize();
+      vm.setName('Mi ruta');
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+      await vm.submit();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(clearDraft.run).toHaveBeenCalled();
+    });
+
+    it('initializeFromDraft hidrata waypoints + name + notes', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      const draft = {
+        id: 'rider-1',
+        riderId: 'rider-1',
+        name: 'Mi viaje',
+        notes: 'Salida temprano',
+        rideType: 'highway' as const,
+        waypoints: [
+          { id: 'wp-1', name: 'Start', latitude: 4.6, longitude: -74.08, kind: 'start' as const, order: 0 } as any,
+          { id: 'wp-2', name: 'Dest', latitude: 4.8, longitude: -74.2, kind: 'destination' as const, order: 1 } as any,
+        ],
+        updatedAt: new Date(),
+      };
+      vm.initializeFromDraft(draft as any);
+
+      expect(vm.waypoints).toHaveLength(2);
+      expect(vm.name).toBe('Mi viaje');
+      expect(vm.notes).toBe('Salida temprano');
+      expect(vm.waypoints[0].name).toBe('Start');
+      expect(vm.waypoints[1].name).toBe('Dest');
+    });
+  });
+
+  describe('dismissDirectionsError (Lote 2)', () => {
+    it('limpia isDirectionsError tras error de calcula', async () => {
+      const { vm, calculate } = build();
+      calculate.run.mockRejectedValueOnce(new Error('No hay vias cercanas'));
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+
+      expect(vm.isDirectionsError).toContain('No hay vias cercanas');
+      vm.dismissDirectionsError();
+      expect(vm.isDirectionsError).toBeNull();
+    });
   });
 
   describe('search flow', () => {

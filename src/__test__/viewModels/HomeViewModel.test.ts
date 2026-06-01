@@ -75,6 +75,12 @@ const makeVM = (
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
   inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
   planner: ReturnType<typeof makePlannerVM> = makePlannerVM(),
+  getRouteDraft: { run: jest.Mock } = {
+    run: jest.fn().mockResolvedValue(null),
+  },
+  clearRouteDraft: { run: jest.Mock } = {
+    run: jest.fn().mockResolvedValue(undefined),
+  },
 ) =>
   new HomeViewModel(
     store as any,
@@ -90,6 +96,8 @@ const makeVM = (
     getAllRoutes as any,
     inferStopKind as any,
     planner as any,
+    getRouteDraft as any,
+    clearRouteDraft as any,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));

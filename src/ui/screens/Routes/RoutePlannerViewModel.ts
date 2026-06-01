@@ -8,21 +8,26 @@ import {
 
 import { TYPES } from '@/config/types';
 
+import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { PartyFuelPlan } from '@/domain/entities/PartyFuelPlan';
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint, WaypointKind } from '@/domain/entities/Waypoint';
 
 import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRepository';
 
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
+import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { inferStopKindFromInput } from '@/domain/useCases/InferStopKindUseCase';
+import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
@@ -90,6 +95,23 @@ export class RoutePlannerViewModel {
   directions: RouteDirections | null = null;
   /** Controla la visibilidad del sheet "Guardar ruta" (frame `S85Zfj`). */
   isSaveSheetOpen: boolean = false;
+  /**
+   * Sheet "¿Descartar ruta?" disparado cuando el rider intenta salir con
+   * cambios sin guardar (tap X / back chevron / gesto back). 3 acciones:
+   * descartar, guardar y salir, seguir editando.
+   */
+  isExitConfirmOpen: boolean = false;
+  /**
+   * Sheet "Ruta guardada ✓" disparado tras un submit exitoso. Reemplaza al
+   * `goBack()` mudo anterior — ofrece iniciar nav / ver detalle / cerrar.
+   */
+  isSavedSheetOpen: boolean = false;
+  /**
+   * Id de la ruta tras guardado exitoso. La UI lo usa para navegar al
+   * `RouteDetail` desde el sheet "Ruta guardada". `null` mientras no haya
+   * un save exitoso en esta sesion del Planner.
+   */
+  savedRouteId: string | null = null;
 
   // ── Async state ─────────────────────────────────────────────────────────
   isLoadLoading: boolean = false;
@@ -121,6 +143,15 @@ export class RoutePlannerViewModel {
   isPartyFuelLoading: boolean = false;
   isPartyFuelError: string | null = null;
 
+  // ── Motorcycles del rider (Lote 2: aviso "Sin moto registrada") ────────
+  /**
+   * Motos registradas del rider. `null` mientras carga; `[]` si no tiene
+   * ninguna registrada. La UI lo usa para mostrar el notice "Registra tu
+   * moto" cuando el array esta vacio — sin moto, no hay autonomia, y el
+   * pilar de la app pierde valor.
+   */
+  motorcycles: Motorcycle[] | null = null;
+
   // ── Waypoint editing state (replace-in-place) ──────────────────────────
   /**
    * Id del waypoint que esta siendo editado. Mientras esto no sea `null`,
@@ -138,6 +169,8 @@ export class RoutePlannerViewModel {
   private logger = new Logger('RoutePlannerViewModel');
   private searchDisposer: IReactionDisposer | null = null;
   private autoRecalcDisposer: IReactionDisposer | null = null;
+  /** Disposer del auto-save del draft (E3 flow brief). */
+  private draftAutoSaveDisposer: IReactionDisposer | null = null;
 
   constructor(
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -156,6 +189,12 @@ export class RoutePlannerViewModel {
     private readonly searchPlacesByCategoryUseCase: SearchPlacesByCategoryUseCase,
     @inject(TYPES.EstimatePartyFuelPlanUseCase)
     private readonly estimatePartyFuelPlanUseCase: EstimatePartyFuelPlanUseCase,
+    @inject(TYPES.GetAllMotorcyclesUseCase)
+    private readonly getAllMotorcyclesUseCase: GetAllMotorcyclesUseCase,
+    @inject(TYPES.SaveRouteDraftUseCase)
+    private readonly saveRouteDraftUseCase: SaveRouteDraftUseCase,
+    @inject(TYPES.ClearRouteDraftUseCase)
+    private readonly clearRouteDraftUseCase: ClearRouteDraftUseCase,
     @inject(TYPES.TripPartyStore)
     public readonly partyStore: TripPartyStore,
     @inject(TYPES.LocationStore)
@@ -190,6 +229,17 @@ export class RoutePlannerViewModel {
       },
       { delay: AUTO_RECALC_DEBOUNCE_MS },
     );
+    // Auto-save del draft (E3 del flow brief). El rider planea, cambia de
+    // pantalla, vuelve mas tarde — el plan sigue ahi. Solo guarda en modo
+    // create (en edit ya hay una Route persistida en Firestore).
+    this.draftAutoSaveDisposer = reaction(
+      () => this.draftFingerprint,
+      () => {
+        if (!this.shouldPersistDraft) return;
+        void this.persistDraft();
+      },
+      { delay: AUTO_RECALC_DEBOUNCE_MS },
+    );
   }
 
   /** Limpia las reacciones MobX. Llamar al desmontar el screen. */
@@ -198,6 +248,8 @@ export class RoutePlannerViewModel {
     this.searchDisposer = null;
     this.autoRecalcDisposer?.();
     this.autoRecalcDisposer = null;
+    this.draftAutoSaveDisposer?.();
+    this.draftAutoSaveDisposer = null;
   }
 
   /**
@@ -209,6 +261,29 @@ export class RoutePlannerViewModel {
     return this.waypoints
       .map((w) => `${w.order}:${w.latitude},${w.longitude}`)
       .join('|');
+  }
+
+  /**
+   * Fingerprint del draft persistible. Incluye nombre/notes/rideType ademas
+   * del waypointsFingerprint — cualquier cambio dispara el auto-save.
+   */
+  private get draftFingerprint(): string {
+    return [
+      this.name,
+      this.notes,
+      this.rideType,
+      this.waypointsFingerprint,
+    ].join('::');
+  }
+
+  /**
+   * Reglas para persistir el draft: solo en modo create, con rider conocido
+   * y al menos 1 waypoint (sino no hay nada que recuperar).
+   */
+  private get shouldPersistDraft(): boolean {
+    if (this.mode !== 'create') return false;
+    if (!this.riderId) return false;
+    return this.waypoints.length > 0;
   }
 
   // ── Computed ────────────────────────────────────────────────────────────
@@ -242,6 +317,17 @@ export class RoutePlannerViewModel {
 
   get canCalculate(): boolean {
     return this.waypoints.length >= 2;
+  }
+
+  /**
+   * `true` cuando el rider tiene al menos una moto registrada. Mientras
+   * `motorcycles` es `null` (cargando o fallo), devuelve `true` para NO
+   * mostrar el notice — solo lo mostramos cuando confirmamos `[]`.
+   * Asi evitamos parpadeos del notice al abrir el Planner.
+   */
+  get hasMotorcycleRegistered(): boolean {
+    if (this.motorcycles === null) return true; // default seguro
+    return this.motorcycles.length > 0;
   }
 
   get canSave(): boolean {
@@ -482,6 +568,79 @@ export class RoutePlannerViewModel {
     });
   }
 
+  /**
+   * `true` cuando hay datos en el plan que se perderian al salir sin guardar.
+   * El guard del back/X consulta esto: si es `false`, salida directa; si es
+   * `true`, abre el sheet "¿Descartar ruta?".
+   *
+   * Considera el plan "con cambios" si hay >= 1 waypoint. No miramos
+   * `directions` porque el rider podria haber agregado paradas sin recalcular
+   * aun (auto-recalc todavia debounced).
+   */
+  get hasUnsavedChanges(): boolean {
+    // En modo edit (cargando una ruta existente), no avisamos por cambios
+    // — el rider ya entendio que esta editando algo persistido.
+    if (this.mode === 'edit') return false;
+    return this.waypoints.length > 0;
+  }
+
+  /**
+   * Intencion del rider de salir del Planner. Si no hay cambios pendientes,
+   * la UI puede hacer `goBack()` directamente (este metodo lo "permite"
+   * devolviendo `true`). Si hay cambios, abre el sheet de confirmacion y
+   * devuelve `false` — la UI no debe navegar hasta que `confirmDiscard()`
+   * o el sheet "Guardar y salir" decidan.
+   */
+  requestExit(): boolean {
+    if (!this.hasUnsavedChanges) return true;
+    runInAction(() => {
+      this.isExitConfirmOpen = true;
+    });
+    return false;
+  }
+
+  /** Cancela la salida en curso (rider eligio "Seguir editando"). */
+  cancelExit(): void {
+    runInAction(() => {
+      this.isExitConfirmOpen = false;
+    });
+  }
+
+  /**
+   * Confirma el descarte: limpia el plan + cierra el sheet de confirmacion.
+   * La UI debe hacer `goBack()` despues de llamar esto. Tambien limpia el
+   * draft de AsyncStorage (E3 — el rider eligio descartar conscientemente).
+   */
+  confirmDiscard(): void {
+    runInAction(() => {
+      this.waypoints = [];
+      this.directions = null;
+      this.name = '';
+      this.notes = '';
+      this.isExitConfirmOpen = false;
+      this.editingWaypointId = null;
+    });
+    void this.clearDraft();
+  }
+
+  /** Cierra el sheet "Ruta guardada ✓" (consumido por la UI). */
+  closeSavedSheet(): void {
+    runInAction(() => {
+      this.isSavedSheetOpen = false;
+    });
+  }
+
+  /**
+   * Limpia el error del calculo de directions (B2 del flow brief). El rider
+   * dismisseo la card de error tappeando "Editar paradas" — vuelve al
+   * estado normal de edicion sin bloqueo.
+   */
+  dismissDirectionsError(): void {
+    runInAction(() => {
+      this.isDirectionsError = null;
+    });
+  }
+
   setRideType(value: RideType): void {
     runInAction(() => {
       this.rideType = value;
@@ -597,8 +756,21 @@ export class RoutePlannerViewModel {
   }
 
   /**
+   * `true` cuando el rider tiene destino seteado pero NO punto de arranque.
+   * Tipico cuando entra al Planner desde `DestinationPreview` con un place
+   * predefinido (A2 del flow brief). Dispara el bloque "Falta arranque" en
+   * la UI con los 3 botones (ubicación / mapa / dirección).
+   */
+  get needsStartPoint(): boolean {
+    return (
+      this.waypoints.length === 1 && this.waypoints[0].kind === 'destination'
+    );
+  }
+
+  /**
    * Reemplaza el primer waypoint (start) con la ubicacion actual del rider.
    * Si la lista esta vacia, lo agrega. Si ya hay un start, lo sobrescribe.
+   * Si solo hay un destino (caso A2), prepend el start sin perder el destino.
    * No hace nada si el location store no tiene posicion (caller debe checar
    * `canUseCurrentLocation` antes de tap).
    */
@@ -615,9 +787,15 @@ export class RoutePlannerViewModel {
         kind: 'start',
         order: 0,
       });
-      // Si ya habia un start (waypoints[0]), reemplazarlo. Sino, prepend.
-      const tail = this.waypoints.length > 0 ? this.waypoints.slice(1) : [];
-      this.waypoints = this.normalizeWaypoints([startWp, ...tail]);
+      // Conserva todos los waypoints existentes excepto el start anterior
+      // (si lo habia). Si solo hay un destino (A2), queda intacto.
+      const existingWithoutStart = this.waypoints.filter(
+        (w) => w.kind !== 'start',
+      );
+      this.waypoints = this.normalizeWaypoints([
+        startWp,
+        ...existingWithoutStart,
+      ]);
       this.directions = null;
     });
   }
@@ -803,9 +981,137 @@ export class RoutePlannerViewModel {
           this.hydrateFrom(route);
         }
       }
+      // Cargar motos del rider para el aviso "Sin moto registrada" (Lote 2).
+      // Errores silenciados: si falla, queda en `null` y la UI no muestra el
+      // aviso (default seguro: no insistir si no podemos confirmar el estado).
+      void this.loadMotorcycles();
       this.updateLoadingState(false, null, 'load');
     } catch (error) {
       this.handleError(error, 'load');
+    }
+  }
+
+  /**
+   * Entrypoint para recuperar un draft (E3 del flow brief). Se llama tras
+   * `initialize()` cuando el rider eligio "Continuar planeando" en el sheet
+   * "Continúa donde quedaste" del Home. Hidrata waypoints + name + notes +
+   * rideType. El auto-save volvera a persistir cualquier cambio nuevo.
+   *
+   * NO llama a `initialize()`; el caller debe haber hecho eso primero.
+   */
+  initializeFromDraft(draft: RouteDraft): void {
+    runInAction(() => {
+      this.name = draft.name;
+      this.notes = draft.notes;
+      this.rideType = draft.rideType;
+      this.waypoints = this.normalizeWaypoints(draft.waypoints);
+      // Avanzar el sequence para no chocar con ids de los waypoints cargados.
+      this.waypointSeq = Math.max(
+        this.waypointSeq,
+        ...draft.waypoints.map((w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0),
+      );
+      this.directions = null;
+    });
+  }
+
+  /**
+   * Entrypoint alternativo (A2 del flow brief): el rider eligio un destino
+   * desde `DestinationPreview` y vino al Planner para trazar la ruta. Setea
+   * 1 waypoint con kind `destination` explicito — el getter `needsStartPoint`
+   * arranca en `true` y la UI muestra el bloque "Falta arranque" con los 3
+   * botones.
+   *
+   * NO llama a `initialize()`; el caller debe haber hecho eso primero.
+   */
+  initializeWithDestination(args: {
+    latitude: number;
+    longitude: number;
+    name: string;
+    mapboxCategory?: string;
+    placeType?: string;
+  }): void {
+    runInAction(() => {
+      this.waypointSeq += 1;
+      const destWp = new Waypoint({
+        id: `wp-${this.waypointSeq}`,
+        name: args.name,
+        latitude: args.latitude,
+        longitude: args.longitude,
+        kind: 'destination',
+        order: 0,
+        mapboxCategory: args.mapboxCategory,
+      });
+      // normalize respeta el case especial: 1 waypoint con kind=destination
+      // queda asi (no se fuerza a 'start' por estar en pos 0).
+      this.waypoints = this.normalizeWaypoints([destWp]);
+      this.directions = null;
+    });
+  }
+
+  /**
+   * Persiste el draft del Planner en AsyncStorage (E3 flow brief). Disparado
+   * por la reaction MobX cuando cambia `draftFingerprint`. Errores
+   * silenciados — no rompe el flow de planeacion si el storage falla.
+   */
+  private async persistDraft(): Promise<void> {
+    if (!this.shouldPersistDraft || !this.riderId) return;
+    try {
+      const draft = new RouteDraft({
+        id: this.riderId, // un draft por rider; el id == riderId simplifica
+        riderId: this.riderId,
+        name: this.name,
+        notes: this.notes,
+        rideType: this.rideType,
+        waypoints: [...this.waypoints],
+        updatedAt: new Date(),
+      });
+      await this.saveRouteDraftUseCase.run(draft);
+    } catch (error) {
+      this.logger.error(
+        `Error persistiendo draft: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * Borra el draft del rider. Lo llamamos tras submit exitoso (la ruta ya
+   * esta en Firestore) y tras confirmDiscard (el rider eligio descartar).
+   */
+  private async clearDraft(): Promise<void> {
+    if (!this.riderId) return;
+    try {
+      await this.clearRouteDraftUseCase.run(this.riderId);
+    } catch (error) {
+      this.logger.error(
+        `Error limpiando draft: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * Carga las motos registradas del rider — alimenta el getter
+   * `hasMotorcycleRegistered` que dispara el notice "Registra tu moto" (B3
+   * del flow brief). Errores quedan en `null` (default seguro).
+   */
+  private async loadMotorcycles(): Promise<void> {
+    if (!this.riderId) return;
+    try {
+      const list = await this.getAllMotorcyclesUseCase.run(this.riderId);
+      runInAction(() => {
+        this.motorcycles = list;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error cargando motos: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      // No volcamos el error a la UI — el notice solo aparece cuando
+      // explicitamente sabemos que hay 0 motos.
     }
   }
 
@@ -889,15 +1195,26 @@ export class RoutePlannerViewModel {
         notes: this.notes.trim() || undefined,
       });
 
+      let persistedId: string;
       if (this.isEditMode) {
         await this.updateRouteUseCase.run(route);
+        persistedId = this.editingId ?? route.id;
       } else {
-        await this.createRouteUseCase.run(route);
+        const created = await this.createRouteUseCase.run(route);
+        persistedId = created.id;
       }
 
       runInAction(() => {
         this.hasSubmitSuccess = true;
+        this.savedRouteId = persistedId;
+        // Reemplaza el `goBack()` mudo: abrir el sheet de confirmacion para
+        // que el rider tenga proximo paso (iniciar / ver detalle / cerrar).
+        this.isSavedSheetOpen = true;
+        // Cierra el sheet "Guardar ruta" si estaba abierto.
+        this.isSaveSheetOpen = false;
       });
+      // E3: limpiar el draft, la ruta ya esta persistida en Firestore.
+      void this.clearDraft();
       this.updateLoadingState(false, null, 'submit');
       return true;
     } catch (error) {
@@ -939,6 +1256,10 @@ export class RoutePlannerViewModel {
       this.isPartyFuelLoading = false;
       this.isPartyFuelError = null;
       this.editingWaypointId = null;
+      this.isExitConfirmOpen = false;
+      this.isSavedSheetOpen = false;
+      this.savedRouteId = null;
+      this.motorcycles = null;
     });
   }
 
@@ -962,7 +1283,12 @@ export class RoutePlannerViewModel {
       // Posicion en la lista define si es start/destination. Los intermedios
       // preservan el kind del usuario si lo eligio; sino caen a 'other' default.
       let kind: WaypointKind;
-      if (index === 0) {
+      // Caso A2: 1 solo waypoint con kind 'destination' (el rider vino desde
+      // DestinationPreview y aun no eligio arranque). Lo dejamos como
+      // 'destination' explicito en lugar de forzar 'start' por estar en pos 0.
+      if (list.length === 1 && w.kind === 'destination') {
+        kind = 'destination';
+      } else if (index === 0) {
         kind = 'start';
       } else if (index === list.length - 1 && list.length > 1) {
         kind = 'destination';

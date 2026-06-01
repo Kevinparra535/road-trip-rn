@@ -5,9 +5,30 @@ export type AuthStackParamList = {
   SignUp: undefined;
 };
 
+/**
+ * Forma serializable de un Place para pasar como navigation param. Place es
+ * una clase con métodos (`toLngLat()`, etc.) — los params deben ser planos
+ * para que el state persistance no rompa. El RoutePlanner reconstruye con
+ * `initializeWithDestination(...)`.
+ */
+export type SerializedPlace = {
+  latitude: number;
+  longitude: number;
+  name: string;
+  mapboxCategory?: string;
+  placeType?: string;
+};
+
 export type RoutesStackParamList = {
   RoutesList: undefined;
-  RoutePlanner: { routeId?: string } | undefined;
+  /**
+   * `routeId` carga una ruta existente (modo edit). `destinationPlace` viene
+   * del DestinationPreview del Home (A2 del flow brief) — abre el Planner
+   * con un destino preseteado y el bloque "Falta arranque" arriba.
+   */
+  RoutePlanner:
+    | { routeId?: string; destinationPlace?: SerializedPlace }
+    | undefined;
   RouteDetail: { routeId: string };
   /**
    * Pantalla para unirse a una ruta compartida. `initialCode` permite

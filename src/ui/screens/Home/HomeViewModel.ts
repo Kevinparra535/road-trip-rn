@@ -19,18 +19,21 @@ import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
+import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   inferStopKindFromInput,
@@ -280,6 +283,15 @@ export class HomeViewModel {
   // ── State: rider (perfil) ──
   rider: Rider | null = null;
 
+  // ── State: draft del Planner (E3 flow brief) ──
+  /**
+   * Draft del Planner detectado en AsyncStorage al iniciar. Si no es null,
+   * el HomeScreen muestra el sheet "Continúa donde quedaste". El sheet se
+   * cierra con `consumePendingDraft()` (continuar) o `dismissPendingDraft()`
+   * (empezar de nuevo — borra el draft).
+   */
+  pendingDraft: RouteDraft | null = null;
+
   // ── State: moto y estimacion de gasolina ──
   motorcycle: Motorcycle | null = null;
   isFuelEstimateLoading: boolean = false;
@@ -366,6 +378,10 @@ export class HomeViewModel {
     private readonly inferStopKindUseCase: InferStopKindUseCase,
     @inject(TYPES.RoutePlannerViewModel)
     private readonly plannerViewModel: RoutePlannerViewModel,
+    @inject(TYPES.GetRouteDraftUseCase)
+    private readonly getRouteDraftUseCase: GetRouteDraftUseCase,
+    @inject(TYPES.ClearRouteDraftUseCase)
+    private readonly clearRouteDraftUseCase: ClearRouteDraftUseCase,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -1224,7 +1240,79 @@ export class HomeViewModel {
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
     void this.loadHomeFeed();
+    // E3 flow brief: detectar draft del Planner para mostrar el sheet
+    // "Continúa donde quedaste". Errores silenciados (no rompe el Home).
+    void this.loadPendingDraft();
     await this.locationStore.initialize();
+  }
+
+  /**
+   * Carga el draft del Planner desde AsyncStorage (si hay uno del rider
+   * actual). Espera a que el rider este cargado para conocer su id.
+   */
+  private async loadPendingDraft(): Promise<void> {
+    try {
+      // Asegurarse de tener el rider antes de buscar el draft (key por-rider).
+      let rider = this.rider;
+      if (!rider) {
+        rider = await this.getCurrentRiderUseCase.run();
+        if (rider) {
+          runInAction(() => {
+            this.rider = rider;
+          });
+        }
+      }
+      if (!rider) return;
+      const draft = await this.getRouteDraftUseCase.run(rider.id);
+      // Solo lo mostramos si tiene al menos 1 waypoint — sino no hay nada
+      // que recuperar.
+      if (!draft || draft.waypoints.length === 0) return;
+      runInAction(() => {
+        this.pendingDraft = draft;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error cargando draft pendiente: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * El rider tappeo "Continuar planeando" — hidratamos el plannerVM
+   * (singleton compartido) con el draft + limpiamos el sheet. El HomeScreen
+   * solo tiene que navegar al Planner; sus waypoints ya van a estar
+   * cargados gracias a este metodo.
+   */
+  continuePlanningDraft(): void {
+    const draft = this.pendingDraft;
+    if (!draft) return;
+    this.plannerViewModel.initializeFromDraft(draft);
+    runInAction(() => {
+      this.pendingDraft = null;
+    });
+  }
+
+  /**
+   * El rider tappeo "Empezar de nuevo" — borra el draft de AsyncStorage y
+   * cierra el sheet.
+   */
+  async dismissPendingDraft(): Promise<void> {
+    const draft = this.pendingDraft;
+    runInAction(() => {
+      this.pendingDraft = null;
+    });
+    if (!draft) return;
+    try {
+      await this.clearRouteDraftUseCase.run(draft.riderId);
+    } catch (error) {
+      this.logger.error(
+        `Error descartando draft: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   /** Reintenta el permiso de ubicacion y arranca el seguimiento si se concede. */

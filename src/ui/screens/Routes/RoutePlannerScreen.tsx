@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -74,14 +74,32 @@ const RoutePlannerScreen = observer(() => {
 
   // Waypoint cuya re-categorizacion esta abierta en el modal. `null` = cerrado.
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
+  // Modal "Activa tu ubicación" (A1 del flow brief) — visible cuando el rider
+  // tappea "Usar mi ubicación" pero el permiso fue denegado previamente.
+  const [showLocationPermissionDialog, setShowLocationPermissionDialog] =
+    useState(false);
+  // Ref al search input para hacer focus desde "Buscar una dirección".
+  const searchInputRef = useRef<TextInput>(null);
 
+  const destinationParam = route.params?.destinationPlace;
   useEffect(() => {
-    viewModel.initialize(routeId);
+    let cancelled = false;
+    (async () => {
+      await viewModel.initialize(routeId);
+      // Si vino un destino preseteado desde DestinationPreview (A2), lo
+      // hidratamos despues del initialize. No coexiste con `routeId` — si
+      // ambos vienen, gana el routeId (edit mode).
+      if (cancelled) return;
+      if (destinationParam && !routeId) {
+        viewModel.initializeWithDestination(destinationParam);
+      }
+    })();
     return () => {
+      cancelled = true;
       // Limpia la reaccion del debounce al desmontar el screen.
       viewModel.dispose();
     };
-  }, [viewModel, routeId]);
+  }, [viewModel, routeId, destinationParam]);
 
   // Guard del back gesto / chevron / X: intercepta cualquier salida si el
   // rider tiene cambios sin guardar. Se desactiva con un ref cuando el
@@ -248,6 +266,7 @@ const RoutePlannerScreen = observer(() => {
           <View style={styles.searchBar}>
             <Ionicons name="search" size={18} color={Colors.base.iconMuted} />
             <TextInput
+              ref={searchInputRef}
               style={styles.searchInput}
               testID="route-planner-search-input"
               placeholder="Buscar otra parada o lugar..."
@@ -297,26 +316,54 @@ const RoutePlannerScreen = observer(() => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-          {viewModel.timelineItems.length === 0 ? (
+          {viewModel.needsStartPoint ? (
+            <View
+              style={[
+                styles.missingStartNotice,
+                {
+                  backgroundColor: hexToRgba(Colors.alerts.error, 0.1),
+                  borderColor: hexToRgba(Colors.alerts.error, 0.4),
+                },
+              ]}
+            >
+              <Ionicons
+                name="flag"
+                size={16}
+                color={Colors.stopKind.destination}
+              />
+              <View style={styles.missingStartBody}>
+                <Text style={styles.missingStartTitle}>
+                  Falta tu punto de arranque
+                </Text>
+                <Text style={styles.missingStartSub}>
+                  Tu destino está listo. Elige desde dónde sales.
+                </Text>
+              </View>
+            </View>
+          ) : null}
+
+          {viewModel.needsStartPoint ? (
+            // Placeholder dashed para el start ausente — visual del Pencil A2.
+            <View style={styles.stopRow}>
+              <View
+                style={[styles.dot, styles.startPlaceholderDot]}
+              />
+              <View style={styles.stopBody}>
+                <Text style={styles.startPlaceholderName}>
+                  Punto de arranque
+                </Text>
+                <Text style={styles.startPlaceholderSub}>Sin definir</Text>
+              </View>
+            </View>
+          ) : null}
+
+          {viewModel.timelineItems.length === 0 &&
+          !viewModel.needsStartPoint ? (
             <View style={styles.emptyBlock}>
               <Text style={styles.emptyHint}>
                 Busca un lugar arriba o usa tu ubicacion actual como punto de
                 arranque.
               </Text>
-              {viewModel.canUseCurrentLocation ? (
-                <TouchableOpacity
-                  style={styles.locationBtn}
-                  onPress={() => viewModel.useCurrentLocationAsStart()}
-                  activeOpacity={0.85}
-                >
-                  <Ionicons
-                    name="locate"
-                    size={18}
-                    color={Colors.base.accent}
-                  />
-                  <Text style={styles.locationBtnText}>Usar mi ubicacion</Text>
-                </TouchableOpacity>
-              ) : null}
             </View>
           ) : null}
 
@@ -448,20 +495,56 @@ const RoutePlannerScreen = observer(() => {
             );
           })}
 
-          {viewModel.isDirectionsError ? (
-            <Text style={styles.error}>{viewModel.isDirectionsError}</Text>
+          {viewModel.needsStartPoint || viewModel.timelineItems.length === 0 ? (
+            <StartPointPicker
+              viewModel={viewModel}
+              onUseCurrentLocation={() => {
+                if (viewModel.locationStore.permissionDenied) {
+                  setShowLocationPermissionDialog(true);
+                  return;
+                }
+                viewModel.useCurrentLocationAsStart();
+              }}
+              onChooseFromMap={() =>
+                Alert.alert(
+                  'Próximamente',
+                  'Elegir el arranque tocando el mapa llega en una próxima versión. Por ahora, busca una dirección o usa tu ubicación.',
+                )
+              }
+              onSearchAddress={() => searchInputRef.current?.focus()}
+            />
           ) : null}
+
+          <DirectionsErrorCard
+            viewModel={viewModel}
+            onRetry={() => viewModel.calculateDirections()}
+          />
           {viewModel.isSubmitError ? (
             <Text style={styles.error}>{viewModel.isSubmitError}</Text>
           ) : null}
 
+          <NoMotorcycleNotice
+            viewModel={viewModel}
+            onPress={() => {
+              // Navega al Garaje. `GarageTab` vive en el root del AppDrawer
+              // (flat stack) — no esta en el RoutesStackParamList tipado.
+              // Cast `as never` documentado en el README de navegacion.
+              navigation.navigate('GarageTab' as never);
+            }}
+          />
+
           <PartyFuelPlanCard viewModel={viewModel} />
 
           <View style={styles.statsRow}>
-            <Stat label="DISTANCIA" value={`${viewModel.distanceKm} km`} />
+            <Stat
+              label="DISTANCIA"
+              value={`${viewModel.distanceKm} km`}
+              loading={viewModel.isDirectionsLoading}
+            />
             <Stat
               label="TIEMPO"
               value={formatDuration(viewModel.durationMin)}
+              loading={viewModel.isDirectionsLoading}
             />
             <Stat
               label="PARADAS"
@@ -543,15 +626,47 @@ const RoutePlannerScreen = observer(() => {
         onViewDetail={handleViewDetailFromSaved}
         onClose={handleCloseFromSaved}
       />
+
+      <LocationPermissionDialog
+        visible={showLocationPermissionDialog}
+        onDismiss={() => setShowLocationPermissionDialog(false)}
+        onAllow={async () => {
+          const granted = await viewModel.locationStore.ensurePermission();
+          setShowLocationPermissionDialog(false);
+          if (granted) {
+            await viewModel.locationStore.loadCurrentLocation();
+            viewModel.useCurrentLocationAsStart();
+          }
+        }}
+        onChooseFromMap={() => {
+          setShowLocationPermissionDialog(false);
+          Alert.alert(
+            'Próximamente',
+            'Elegir el arranque tocando el mapa llega en una próxima versión.',
+          );
+        }}
+      />
     </SafeAreaView>
   );
 });
 
 // ── Sub-componentes locales ───────────────────────────────────────────────
 
-const Stat = ({ label, value }: { label: string; value: string }) => (
+const Stat = ({
+  label,
+  value,
+  loading = false,
+}: {
+  label: string;
+  value: string;
+  loading?: boolean;
+}) => (
   <View style={styles.stat}>
-    <Text style={styles.statValue}>{value}</Text>
+    {loading ? (
+      <View style={styles.statSkeleton} />
+    ) : (
+      <Text style={styles.statValue}>{value}</Text>
+    )}
     <Text style={styles.statLabel}>{label}</Text>
   </View>
 );
@@ -680,6 +795,248 @@ const PartyFuelPlanCard = observer(
       </View>
     );
   },
+);
+
+/**
+ * Card accionable de error del calculo de directions (B2 del flow brief).
+ * Reemplaza el `Text` rojo perdido al final del scroll por un bloque
+ * con icono + titulo + sub + 2 acciones: Reintentar / Editar paradas.
+ */
+const DirectionsErrorCard = observer(
+  ({
+    viewModel,
+    onRetry,
+  }: {
+    viewModel: RoutePlannerViewModel;
+    onRetry: () => void;
+  }) => {
+    if (!viewModel.isDirectionsError) return null;
+    const errorColor = Colors.alerts.error;
+    return (
+      <View
+        style={[
+          styles.errorCard,
+          {
+            borderColor: hexToRgba(errorColor, 0.4),
+            backgroundColor: hexToRgba(errorColor, 0.07),
+          },
+        ]}
+      >
+        <View style={styles.errorCardHeader}>
+          <Ionicons name="alert-circle" size={22} color={errorColor} />
+          <Text style={styles.errorCardTitle}>
+            No pudimos trazar la ruta
+          </Text>
+        </View>
+        <Text style={styles.errorCardSub}>
+          {viewModel.isDirectionsError}
+        </Text>
+        <View style={styles.errorCardActions}>
+          <TouchableOpacity
+            style={styles.errorCardCtaPrimary}
+            onPress={onRetry}
+            activeOpacity={0.85}
+            testID="route-planner-error-retry-btn"
+          >
+            <Ionicons name="refresh" size={16} color={Colors.base.accent} />
+            <Text style={styles.errorCardCtaPrimaryText}>Reintentar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.errorCardCtaGhost}
+            onPress={() => viewModel.dismissDirectionsError()}
+            activeOpacity={0.85}
+            testID="route-planner-error-dismiss-btn"
+          >
+            <Ionicons name="create" size={16} color={Colors.base.textPrimary} />
+            <Text style={styles.errorCardCtaGhostText}>Editar paradas</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  },
+);
+
+/**
+ * Notice "Sin moto registrada" (B3 del flow brief). Aparece cuando el rider
+ * confirmadamente no tiene motos cargadas — el pilar de autonomia pierde
+ * valor sin moto. Tap navega al Garaje.
+ */
+const NoMotorcycleNotice = observer(
+  ({
+    viewModel,
+    onPress,
+  }: {
+    viewModel: RoutePlannerViewModel;
+    onPress: () => void;
+  }) => {
+    // Solo lo mostramos cuando hay ruta planificada (>= 2 wp) — sin paradas
+    // el aviso es ruido prematuro.
+    if (!viewModel.canCalculate) return null;
+    if (viewModel.hasMotorcycleRegistered) return null;
+    return (
+      <TouchableOpacity
+        style={styles.noMotoNotice}
+        onPress={onPress}
+        activeOpacity={0.85}
+        testID="route-planner-no-moto-notice"
+      >
+        <MaterialCommunityIcons
+          name="motorbike"
+          size={24}
+          color={Colors.base.accent}
+        />
+        <View style={styles.noMotoBody}>
+          <Text style={styles.noMotoTitle}>Registra tu moto</Text>
+          <Text style={styles.noMotoSub}>
+            Para estimar combustible, autonomía y dónde tanquear en esta ruta.
+          </Text>
+        </View>
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={Colors.base.iconMuted}
+        />
+      </TouchableOpacity>
+    );
+  },
+);
+
+/**
+ * Bloque "Empieza desde" (A2 del flow brief). Aparece cuando hay destino sin
+ * arranque, o cuando el plan esta vacio del todo. 3 botones:
+ * - Usar mi ubicación (delegado al caller que decide si pedir permiso)
+ * - Elegir en el mapa (placeholder: Alert "Próximamente")
+ * - Buscar una dirección (focus en el searchbar)
+ */
+const StartPointPicker = observer(
+  ({
+    viewModel,
+    onUseCurrentLocation,
+    onChooseFromMap,
+    onSearchAddress,
+  }: {
+    viewModel: RoutePlannerViewModel;
+    onUseCurrentLocation: () => void;
+    onChooseFromMap: () => void;
+    onSearchAddress: () => void;
+  }) => {
+    const hasLocation = viewModel.canUseCurrentLocation;
+    const permissionDenied = viewModel.locationStore.permissionDenied;
+    // El boton de ubicacion siempre se muestra; el tap decide si dispara el
+    // request o usa la lectura existente.
+    return (
+      <View style={styles.startPickerBlock}>
+        <Text style={styles.startPickerLabel}>Empieza desde</Text>
+        <TouchableOpacity
+          style={styles.startBtnPrimary}
+          onPress={onUseCurrentLocation}
+          activeOpacity={0.85}
+          testID="route-planner-start-from-location-btn"
+        >
+          <Ionicons name="locate" size={18} color={Colors.base.accent} />
+          <Text style={styles.startBtnPrimaryText}>
+            {hasLocation
+              ? 'Usar mi ubicación actual'
+              : permissionDenied
+                ? 'Activar mi ubicación'
+                : 'Usar mi ubicación actual'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.startBtnGhost}
+          onPress={onChooseFromMap}
+          activeOpacity={0.85}
+          testID="route-planner-start-from-map-btn"
+        >
+          <Ionicons name="map" size={18} color={Colors.base.textPrimary} />
+          <Text style={styles.startBtnGhostText}>Elegir en el mapa</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.startBtnGhost}
+          onPress={onSearchAddress}
+          activeOpacity={0.85}
+          testID="route-planner-start-from-search-btn"
+        >
+          <Ionicons name="search" size={18} color={Colors.base.textPrimary} />
+          <Text style={styles.startBtnGhostText}>Buscar una dirección</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  },
+);
+
+/**
+ * Modal "Activa tu ubicación" (A1 del flow brief). Se abre cuando el rider
+ * tappea "Usar mi ubicación" pero el permiso esta denegado. Explica el por
+ * que + da una salida manual ("Elegir en el mapa").
+ */
+const LocationPermissionDialog = ({
+  visible,
+  onDismiss,
+  onAllow,
+  onChooseFromMap,
+}: {
+  visible: boolean;
+  onDismiss: () => void;
+  onAllow: () => void;
+  onChooseFromMap: () => void;
+}) => (
+  <Modal
+    visible={visible}
+    transparent
+    animationType="fade"
+    onRequestClose={onDismiss}
+  >
+    <Pressable
+      style={[styles.modalBackdrop, { justifyContent: 'center' }]}
+      onPress={onDismiss}
+    >
+      <Pressable style={styles.permissionDialog} onPress={() => {}}>
+        <View
+          style={[
+            styles.permissionIcon,
+            {
+              backgroundColor: Colors.base.accentDim,
+              borderColor: Colors.base.accentDimBorder,
+            },
+          ]}
+        >
+          <Ionicons name="locate" size={28} color={Colors.base.accent} />
+        </View>
+        <Text style={styles.permissionTitle}>Activa tu ubicación</Text>
+        <Text style={styles.permissionSub}>
+          La usamos para trazar la ruta desde donde estás y sugerir tanqueos a
+          tiempo. Solo mientras planeas o navegas.
+        </Text>
+        <TouchableOpacity
+          style={styles.cta}
+          onPress={onAllow}
+          activeOpacity={0.85}
+          testID="route-planner-permission-allow-btn"
+        >
+          <Ionicons name="locate" size={18} color={Colors.base.textPrimary} />
+          <Text style={styles.ctaText}>Permitir ubicación</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.discardCtaPrimary}
+          onPress={onChooseFromMap}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="map" size={18} color={Colors.base.accent} />
+          <Text style={styles.discardCtaPrimaryText}>
+            Elegir inicio en el mapa
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.discardCtaGhost}
+          onPress={onDismiss}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.discardCtaGhostText}>Ahora no</Text>
+        </TouchableOpacity>
+      </Pressable>
+    </Pressable>
+  </Modal>
 );
 
 const KindPickerModal = ({
@@ -1446,6 +1803,12 @@ const styles = StyleSheet.create({
     ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
+  statSkeleton: {
+    width: 42,
+    height: 14,
+    backgroundColor: Colors.base.hairline,
+    borderRadius: BorderRadius.xs,
+  },
   statLabel: {
     marginTop: Spacings.xs,
     ...Fonts.links,
@@ -1824,6 +2187,201 @@ const styles = StyleSheet.create({
   savedCtaPlainText: {
     ...Fonts.bodyTextBold,
     color: Colors.base.textSecondary,
+  },
+  // ── DirectionsErrorCard (B2 del flow brief) ──────────────────────────
+  errorCard: {
+    marginTop: Spacings.md,
+    padding: Spacings.md,
+    gap: Spacings.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  errorCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  errorCardTitle: {
+    flex: 1,
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  errorCardSub: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+    lineHeight: 18,
+  },
+  errorCardActions: {
+    marginTop: Spacings.xs,
+    flexDirection: 'row',
+    gap: Spacings.sm,
+  },
+  errorCardCtaPrimary: {
+    flex: 1,
+    paddingVertical: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.xs,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  errorCardCtaPrimaryText: {
+    ...Fonts.links,
+    fontWeight: '600',
+    color: Colors.base.accent,
+  },
+  errorCardCtaGhost: {
+    flex: 1,
+    paddingVertical: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.xs,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  errorCardCtaGhostText: {
+    ...Fonts.links,
+    fontWeight: '600',
+    color: Colors.base.textPrimary,
+  },
+  // ── NoMotorcycleNotice (B3 del flow brief) ───────────────────────────
+  noMotoNotice: {
+    marginTop: Spacings.md,
+    padding: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.md,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  noMotoBody: {
+    flex: 1,
+  },
+  noMotoTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  noMotoSub: {
+    marginTop: 2,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  // ── A2 "Falta arranque" + StartPointPicker ───────────────────────────
+  missingStartNotice: {
+    marginBottom: Spacings.md,
+    padding: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+  },
+  missingStartBody: {
+    flex: 1,
+  },
+  missingStartTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  missingStartSub: {
+    marginTop: 2,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  startPlaceholderDot: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: Colors.base.accent,
+    borderStyle: 'dashed',
+  },
+  startPlaceholderName: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textMuted,
+  },
+  startPlaceholderSub: {
+    marginTop: 2,
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  startPickerBlock: {
+    marginTop: Spacings.lg,
+    gap: Spacings.sm,
+  },
+  startPickerLabel: {
+    marginBottom: Spacings.xs,
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
+    letterSpacing: 0.5,
+  },
+  startBtnPrimary: {
+    paddingVertical: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  startBtnPrimaryText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
+  },
+  startBtnGhost: {
+    paddingVertical: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  startBtnGhostText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  // ── A1 LocationPermissionDialog ──────────────────────────────────────
+  permissionDialog: {
+    margin: Spacings.spacex2,
+    padding: Spacings.spacex2,
+    alignItems: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  permissionIcon: {
+    marginBottom: Spacings.sm,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+  },
+  permissionTitle: {
+    ...Fonts.header5,
+    color: Colors.base.textPrimary,
+    textAlign: 'center',
+  },
+  permissionSub: {
+    marginBottom: Spacings.sm,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
 

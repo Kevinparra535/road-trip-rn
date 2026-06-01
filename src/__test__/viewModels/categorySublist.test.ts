@@ -160,4 +160,86 @@ describe('CategorySublistViewModel', () => {
     expect(search.run).not.toHaveBeenCalled();
     expect(vm.results).toEqual([]);
   });
+
+  // ── Lote 3a flow brief: modo "Ver todos, no solo en la ruta" ─────────
+  describe('expandSearchScope (C2)', () => {
+    it('default isWideSearch=false', () => {
+      const { vm } = build();
+      expect(vm.isWideSearch).toBe(false);
+    });
+
+    it('expandSearchScope activa isWideSearch + dispara nueva busqueda', async () => {
+      const { vm, search } = build();
+      vm.initialize('food');
+      await Promise.resolve();
+      await Promise.resolve();
+      search.run.mockClear();
+
+      vm.expandSearchScope();
+      expect(vm.isWideSearch).toBe(true);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(search.run).toHaveBeenCalled();
+    });
+
+    it('expandSearchScope segundo tap es no-op', async () => {
+      const { vm, search } = build();
+      vm.initialize('food');
+      await Promise.resolve();
+      await Promise.resolve();
+      vm.expandSearchScope();
+      await Promise.resolve();
+      await Promise.resolve();
+      search.run.mockClear();
+
+      vm.expandSearchScope(); // segundo tap
+      expect(search.run).not.toHaveBeenCalled();
+    });
+
+    it('setCategory resetea isWideSearch=false', async () => {
+      const { vm } = build();
+      vm.initialize('food');
+      await Promise.resolve();
+      await Promise.resolve();
+      vm.expandSearchScope();
+      expect(vm.isWideSearch).toBe(true);
+
+      vm.setCategory('fuel');
+      expect(vm.isWideSearch).toBe(false);
+    });
+
+    it('en modo wide, el alongRoute pasado al use case esta expandido', async () => {
+      const { vm, search, planner } = build({
+        planner: buildPlanner({
+          geometry: [
+            { latitude: 5.0, longitude: -74.0 },
+            { latitude: 5.0, longitude: -73.0 },
+          ],
+        }),
+      });
+      vm.initialize('food');
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const normalCall = search.run.mock.calls[0][0];
+      const normalSpan =
+        Math.max(...normalCall.alongRoute.map((p: any) => p.longitude)) -
+        Math.min(...normalCall.alongRoute.map((p: any) => p.longitude));
+
+      search.run.mockClear();
+      vm.expandSearchScope();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const wideCall = search.run.mock.calls[0][0];
+      const wideSpan =
+        Math.max(...wideCall.alongRoute.map((p: any) => p.longitude)) -
+        Math.min(...wideCall.alongRoute.map((p: any) => p.longitude));
+
+      // El bbox expandido cubre ~4x el area del bbox normal.
+      expect(wideSpan).toBeGreaterThan(normalSpan * 3);
+      // Sanity: el planner mock no cambio.
+      expect(planner.geometry).toHaveLength(2);
+    });
+  });
 });

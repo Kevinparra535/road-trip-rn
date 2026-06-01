@@ -99,6 +99,32 @@ const DestinationPreviewScreen = observer(() => {
     navigation.goBack();
   };
 
+  /**
+   * Acción A2 del flow brief: en vez de trazar la ruta directo en el Home,
+   * abrir el RoutePlanner con este destino preseteado. El Planner mostrará
+   * el bloque "Falta arranque" con los 3 botones para elegir el inicio.
+   *
+   * Cast `as never` porque `RoutePlanner` vive en RoutesStackParamList y
+   * estamos navegando desde el Home stack — el AppDrawer es flat asi que
+   * resuelve en runtime aunque TS no lo sepa.
+   */
+  const handleOpenInPlanner = () => {
+    if (!place) return;
+    viewModel.cancel(); // limpia el preview state del Home
+    // Cast `as any` porque el RoutePlanner vive en RoutesStackParamList
+    // pero estamos navegando desde el Home stack — el AppDrawer flat lo
+    // resuelve en runtime.
+    (navigation as any).navigate('RoutePlanner', {
+      destinationPlace: {
+        latitude: place.latitude,
+        longitude: place.longitude,
+        name: place.name,
+        mapboxCategory: place.category,
+        placeType: place.placeType,
+      },
+    });
+  };
+
   const typeLabel = viewModel.typeLabel;
   const contextLine = viewModel.contextLine;
   const summary = viewModel.isPlaceSummaryResponse;
@@ -196,6 +222,26 @@ const DestinationPreviewScreen = observer(() => {
             variant="compact"
           />
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Planear con paradas"
+          onPress={handleOpenInPlanner}
+          style={({ pressed }) => [
+            styles.planButton,
+            pressed && styles.planButtonPressed,
+          ]}
+          testID="destination-preview-plan-btn"
+        >
+          <Ionicons
+            name="git-branch"
+            size={16}
+            color={Colors.base.textPrimary}
+          />
+          <Text style={styles.planButtonText}>
+            Planear con paradas
+          </Text>
+        </Pressable>
 
         <View style={styles.actions}>
           <Pressable
@@ -346,6 +392,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacings.md,
     marginTop: Spacings.sm,
+  },
+  // Acción secundaria A2 flow brief: navega al Planner con el destino
+  // preseteado. Pildora ghost para no robar protagonismo al CTA principal.
+  planButton: {
+    marginTop: Spacings.sm,
+    paddingVertical: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...iOSCornerStyle,
+  },
+  planButtonPressed: {
+    opacity: 0.85,
+  },
+  planButtonText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
   },
   cancelButton: {
     flex: 1,

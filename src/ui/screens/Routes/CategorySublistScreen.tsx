@@ -133,16 +133,18 @@ const CategorySublistScreen = observer(() => {
 
       <ScrollView contentContainerStyle={styles.list}>
         {viewModel.isLoading ? (
-          <ActivityIndicator color={Colors.base.accent} />
+          <SearchingState />
         ) : null}
         {viewModel.isError ? (
           <Text style={styles.error}>{viewModel.isError}</Text>
         ) : null}
 
         {!viewModel.isLoading && viewModel.rows.length === 0 ? (
-          <Text style={styles.emptyText}>
-            Sin resultados cerca de tu ruta. Probemos otra categoria?
-          </Text>
+          <EmptyState
+            meta={activeMeta}
+            isWide={viewModel.isWideSearch}
+            onExpand={() => viewModel.expandSearchScope()}
+          />
         ) : null}
 
         {viewModel.rows.map((row) => (
@@ -189,6 +191,90 @@ const CategorySublistScreen = observer(() => {
     </SafeAreaView>
   );
 });
+
+// ── Sub-componentes locales (Lote 3a flow brief) ─────────────────────────
+
+/**
+ * Estado "Buscando sobre tu ruta..." (C1 del flow brief). Spinner pequeno
+ * con label + 3 skeleton rows que dan forma a la espera — en vez del
+ * ActivityIndicator desnudo que no comunica nada sobre lo que viene.
+ */
+const SearchingState = () => (
+  <>
+    <View style={styles.searchingHeader}>
+      <ActivityIndicator size="small" color={Colors.base.accent} />
+      <Text style={styles.searchingText}>Buscando sobre tu ruta...</Text>
+    </View>
+    {[0, 1, 2].map((idx) => (
+      <View key={idx} style={styles.skeletonRow}>
+        <View style={styles.skeletonIcon} />
+        <View style={styles.skeletonBody}>
+          <View style={[styles.skeletonBar, { width: '65%' }]} />
+          <View style={[styles.skeletonBar, { width: '85%', marginTop: 6 }]} />
+        </View>
+      </View>
+    ))}
+  </>
+);
+
+/**
+ * Empty state rico (C2 del flow brief). Reemplaza "Sin resultados." por:
+ * icono grande de la categoria + titulo dinamico ("Nada de {label}") + sub
+ * explicativo + CTA "Ver todos, no solo en la ruta" que activa modo wide.
+ * Cuando ya esta en modo wide y aun no hay POIs, el CTA desaparece y el
+ * mensaje cambia para reflejar que no hay nada ni con bbox expandido.
+ */
+const EmptyState = ({
+  meta,
+  isWide,
+  onExpand,
+}: {
+  meta: { color: string; icon: keyof typeof Ionicons.glyphMap; label: string };
+  isWide: boolean;
+  onExpand: () => void;
+}) => {
+  const labelLower = meta.label.toLowerCase();
+  const title = isWide
+    ? `Nada de ${labelLower} en la zona`
+    : `Nada de ${labelLower} en la ruta`;
+  const sub = isWide
+    ? `Ampliamos la búsqueda y aún así no encontramos lugares de ${labelLower}. Prueba otra categoría.`
+    : `No encontramos lugares de ${labelLower} cerca de tu trazado actual. Prueba otra categoría o amplía la búsqueda.`;
+  return (
+    <View style={styles.emptyBlock}>
+      <View
+        style={[
+          styles.emptyIcon,
+          {
+            backgroundColor: hexToRgba(meta.color, 0.12),
+            borderColor: hexToRgba(meta.color, 0.4),
+          },
+        ]}
+      >
+        <Ionicons name={meta.icon} size={28} color={meta.color} />
+      </View>
+      <Text style={styles.emptyTitle}>{title}</Text>
+      <Text style={styles.emptySub}>{sub}</Text>
+      {!isWide ? (
+        <TouchableOpacity
+          style={styles.expandBtn}
+          onPress={onExpand}
+          activeOpacity={0.85}
+          testID="category-sublist-expand-btn"
+        >
+          <Ionicons
+            name="globe-outline"
+            size={16}
+            color={Colors.base.textPrimary}
+          />
+          <Text style={styles.expandBtnText}>
+            Ver todos, no solo en la ruta
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -250,6 +336,85 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
     textAlign: 'center',
+  },
+  // ── SearchingState (C1 del flow brief) ────────────────────────────────
+  searchingHeader: {
+    paddingVertical: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+  },
+  searchingText: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  skeletonRow: {
+    padding: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.md,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  skeletonIcon: {
+    width: 18,
+    height: 18,
+    backgroundColor: Colors.base.hairline,
+    borderRadius: BorderRadius.pill,
+  },
+  skeletonBody: {
+    flex: 1,
+  },
+  skeletonBar: {
+    height: 11,
+    backgroundColor: Colors.base.hairline,
+    borderRadius: BorderRadius.xs,
+  },
+  // ── EmptyState (C2 del flow brief) ────────────────────────────────────
+  emptyBlock: {
+    marginVertical: Spacings.xl,
+    paddingHorizontal: Spacings.md,
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  emptyIcon: {
+    marginBottom: Spacings.sm,
+    width: 64,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+  },
+  emptyTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+    textAlign: 'center',
+  },
+  emptySub: {
+    marginBottom: Spacings.sm,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  expandBtn: {
+    paddingHorizontal: Spacings.lg,
+    paddingVertical: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  expandBtnText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
   },
   poiRow: {
     padding: Spacings.md,

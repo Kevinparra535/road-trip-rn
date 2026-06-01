@@ -42,6 +42,7 @@ import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCate
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
 import { RecentDestinationRepositoryImpl } from '@/data/repositories/RecentDestinationRepositoryImpl';
+import { RouteDraftRepositoryImpl } from '@/data/repositories/RouteDraftRepositoryImpl';
 import { RouteRepositoryImpl } from '@/data/repositories/RouteRepositoryImpl';
 import { RouteShareRepositoryImpl } from '@/data/repositories/RouteShareRepositoryImpl';
 import { TripPartyRepositoryImpl } from '@/data/repositories/TripPartyRepositoryImpl';
@@ -57,6 +58,7 @@ import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceC
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
 import type { PlaceSummaryRepository } from '@/domain/repositories/PlaceSummaryRepository';
 import type { RecentDestinationRepository } from '@/domain/repositories/RecentDestinationRepository';
+import type { RouteDraftRepository } from '@/domain/repositories/RouteDraftRepository';
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
 import type { RouteShareRepository } from '@/domain/repositories/RouteShareRepository';
 import type { TripPartyRepository } from '@/domain/repositories/TripPartyRepository';
@@ -64,6 +66,7 @@ import type { TripPartyRepository } from '@/domain/repositories/TripPartyReposit
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
+import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
@@ -82,6 +85,7 @@ import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
+import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
@@ -92,6 +96,7 @@ import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCa
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
+import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
@@ -234,6 +239,10 @@ container
   .to(RecentDestinationRepositoryImpl)
   .inSingletonScope();
 container
+  .bind<RouteDraftRepository>(TYPES.RouteDraftRepository)
+  .to(RouteDraftRepositoryImpl)
+  .inSingletonScope();
+container
   .bind<ElevationRepository>(TYPES.ElevationRepository)
   .to(ElevationRepositoryImpl)
   .inSingletonScope();
@@ -344,6 +353,15 @@ container
 container
   .bind<ClearRecentDestinationsUseCase>(TYPES.ClearRecentDestinationsUseCase)
   .to(ClearRecentDestinationsUseCase);
+container
+  .bind<GetRouteDraftUseCase>(TYPES.GetRouteDraftUseCase)
+  .to(GetRouteDraftUseCase);
+container
+  .bind<SaveRouteDraftUseCase>(TYPES.SaveRouteDraftUseCase)
+  .to(SaveRouteDraftUseCase);
+container
+  .bind<ClearRouteDraftUseCase>(TYPES.ClearRouteDraftUseCase)
+  .to(ClearRouteDraftUseCase);
 container
   .bind<GetRouteElevationUseCase>(TYPES.GetRouteElevationUseCase)
   .to(GetRouteElevationUseCase);
