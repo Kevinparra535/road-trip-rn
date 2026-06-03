@@ -8,6 +8,8 @@ import { RouteRepository } from '@/domain/repositories/RouteRepository';
 
 import type { RouteService } from '@/data/services/RouteService';
 
+import { RouteModel } from '@/data/models/routeModel';
+
 @injectable()
 export class RouteRepositoryImpl implements RouteRepository {
   constructor(
@@ -39,25 +41,20 @@ export class RouteRepositoryImpl implements RouteRepository {
     await this.service.delete(id);
   }
 
+  /**
+   * Convierte la entidad de dominio al shape de Firestore via `RouteModel.
+   * fromDomain` + `toJson`. Antes esta funcion armaba el payload a mano y
+   * pasaba `geometry` como array de objetos `{lat, lng}` — Firestore indexaba
+   * cada lat/lng por separado y rutas largas excedian las 20k entradas de
+   * indice por documento ("too many index entries"). El model codifica la
+   * geometria como Google Polyline string → 1 sola entrada de indice.
+   */
   private toPayload(route: Route): Record<string, unknown> {
-    return {
-      rider_id: route.riderId,
-      name: route.name,
-      ride_type: route.rideType,
-      waypoints: route.waypoints.map((w) => ({
-        id: w.id,
-        name: w.name,
-        latitude: w.latitude,
-        longitude: w.longitude,
-        kind: w.kind,
-        order: w.order,
-      })),
-      geometry: route.geometry.map((g) => ({
-        latitude: g.latitude,
-        longitude: g.longitude,
-      })),
-      distance_km: route.distanceKm,
-      estimated_duration_min: route.estimatedDurationMin,
-    };
+    const json = RouteModel.fromDomain(route).toJson();
+    // Excluimos `id` (Firestore lo asigna al documento) y `created_at`
+    // (mantenemos lo que ya estaba si update; create lo setea desde fromDomain
+    // con la fecha actual igual).
+    const { id: _id, ...payload } = json;
+    return payload;
   }
 }

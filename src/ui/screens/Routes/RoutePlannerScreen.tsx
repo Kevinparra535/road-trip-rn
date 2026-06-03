@@ -14,7 +14,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  NavigationAction,
+  RouteProp,
+  useNavigation,
+  usePreventRemove,
+  useRoute,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { container } from '@/config/di';
@@ -34,6 +40,8 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 
@@ -71,6 +79,12 @@ const RoutePlannerScreen = observer(() => {
     () => container.get<TripPartyStore>(TYPES.TripPartyStore),
     [],
   );
+  // HomeViewModel: lo usamos para arrancar navegacion live desde aca con
+  // los datos del Planner (FEAT.11).
+  const homeViewModel = useMemo(
+    () => container.get<HomeViewModel>(TYPES.HomeViewModel),
+    [],
+  );
 
   // Waypoint cuya re-categorizacion esta abierta en el modal. `null` = cerrado.
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
@@ -101,20 +115,17 @@ const RoutePlannerScreen = observer(() => {
     };
   }, [viewModel, routeId, destinationParam]);
 
-  // Guard del back gesto / chevron / X: intercepta cualquier salida si el
-  // rider tiene cambios sin guardar. Se desactiva con un ref cuando el
-  // descartar/guardar confirma la intencion (sino el guard se dispara en
-  // loop e impide salir).
-  const allowExitRef = useRef(false);
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (allowExitRef.current) return;
-      if (!viewModel.hasUnsavedChanges) return;
-      e.preventDefault();
-      viewModel.requestExit();
-    });
-    return unsubscribe;
-  }, [navigation, viewModel]);
+  // Guard del back gesto / chevron / X: intercepta cualquier salida con
+  // cambios sin guardar via `usePreventRemove` (la API recomendada para
+  // native-stack v7; `beforeRemove` mostraba un warning de "didn't get
+  // removed from JS state"). El callback guarda `data.action` en un ref —
+  // al confirmar descartar, hacemos navigation.dispatch(action) y React Nav
+  // permite el pase via VISITED_ROUTE_KEYS internal flag.
+  const pendingActionRef = useRef<NavigationAction | null>(null);
+  usePreventRemove(viewModel.hasUnsavedChanges, ({ data }) => {
+    pendingActionRef.current = data.action;
+    viewModel.requestExit();
+  });
 
   // Tras guardado exitoso, el VM abre `isSavedSheetOpen`. El effect anterior
   // hacia goBack() mudo — ahora el sheet se encarga del cierre cuando el
@@ -136,22 +147,54 @@ const RoutePlannerScreen = observer(() => {
   };
 
   /**
-   * Tap "Iniciar" del footer: la navegacion live arrancando desde una Route
-   * planeada no esta conectada al HomeViewModel todavia (requiere bridge
-   * Planner → Home + entrypoint nav real). Por ahora avisamos con honestidad.
+   * Limpia el planner y navega — usado por handlers que NO pasan por el
+   * sheet de discard (son acciones intencionales: iniciar nav, ver detalle,
+   * cerrar saved sheet). Hacemos confirmDiscard para que hasUnsavedChanges
+   * pase a false; setTimeout(0) deja que el effect de usePreventRemove
+   * actualice el contexto antes de dispatchar la nueva navegacion.
    */
-  const handleStartPress = () => {
-    Alert.alert(
-      'Próximamente',
-      'La navegación live desde una ruta planeada llega en una próxima versión. Guarda la ruta y arrancala desde el detalle cuando este disponible.',
-    );
+  const exitAfterStateClear = (doNavigate: () => void) => {
+    viewModel.confirmDiscard();
+    setTimeout(doNavigate, 0);
+  };
+
+  /**
+   * Tap "Iniciar" del footer: arranca navegacion live con los datos del
+   * Planner. Si faltan directions (auto-recalc aun corriendo), las
+   * calcula y reintenta.
+   */
+  const handleStartPress = async () => {
+    if (!viewModel.canCalculate) return;
+    if (!viewModel.directions) {
+      await viewModel.calculateDirections();
+      if (!viewModel.directions) return; // hubo error — el error card lo muestra
+    }
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    if (!ok) {
+      Alert.alert(
+        'No pudimos iniciar',
+        'Faltan datos del trazado. Reintenta el cálculo.',
+      );
+      return;
+    }
+    exitAfterStateClear(() => (navigation as any).navigate('HomeTab'));
   };
 
   /** Acciones del sheet "¿Descartar ruta?" */
   const handleConfirmDiscard = () => {
     viewModel.confirmDiscard();
-    allowExitRef.current = true;
-    navigation.goBack();
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    // Re-dispatch del action capturado: React Navigation lo marca con
+    // VISITED_ROUTE_KEYS al haber sido prevenido la primera vez; el re-
+    // dispatch pasa sin interceptar de nuevo (bypass interno del framework).
+    if (action) {
+      navigation.dispatch(action);
+    } else {
+      // Fallback defensivo: no había un action capturado (rider tappeó
+      // descartar sin haber intentado salir). Usamos goBack normal.
+      exitAfterStateClear(() => navigation.goBack());
+    }
   };
   const handleSaveAndExit = async () => {
     viewModel.cancelExit();
@@ -160,27 +203,33 @@ const RoutePlannerScreen = observer(() => {
 
   /** Acciones del sheet "Ruta guardada ✓" */
   const handleStartFromSaved = () => {
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    if (!ok) {
+      viewModel.closeSavedSheet();
+      Alert.alert(
+        'No pudimos iniciar',
+        'La ruta quedó guardada. Abrila desde el detalle para arrancar.',
+      );
+      return;
+    }
     viewModel.closeSavedSheet();
-    Alert.alert(
-      'Próximamente',
-      'La navegación live llega en una próxima versión. Tu ruta ya quedó guardada.',
-    );
+    exitAfterStateClear(() => (navigation as any).navigate('HomeTab'));
   };
   const handleViewDetailFromSaved = () => {
     const id = viewModel.savedRouteId;
     viewModel.closeSavedSheet();
-    allowExitRef.current = true;
-    if (id) {
-      // Reemplaza el Planner por el RouteDetail (no hay back al Planner).
-      navigation.replace('RouteDetail', { routeId: id });
-    } else {
-      navigation.goBack();
-    }
+    exitAfterStateClear(() => {
+      if (id) {
+        // Reemplaza el Planner por el RouteDetail (no hay back al Planner).
+        navigation.replace('RouteDetail', { routeId: id });
+      } else {
+        navigation.goBack();
+      }
+    });
   };
   const handleCloseFromSaved = () => {
     viewModel.closeSavedSheet();
-    allowExitRef.current = true;
-    navigation.goBack();
+    exitAfterStateClear(() => navigation.goBack());
   };
 
   const handleKindPick = (kind: StopKind) => {

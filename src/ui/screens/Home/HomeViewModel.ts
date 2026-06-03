@@ -1406,6 +1406,62 @@ export class HomeViewModel {
   }
 
   /**
+   * Arranca navegacion live usando el state del `RoutePlannerViewModel`
+   * (cuando el rider tappea "Iniciar" en el footer del Planner o
+   * "Iniciar navegacion ahora" en el sheet "Ruta guardada"). Cierra el
+   * loop end-to-end: planear → guardar → iniciar.
+   *
+   * Reusa las `directions` ya calculadas del Planner — NO re-llama Mapbox.
+   * Convierte waypoints intermedios y destino a `Place[]` para alimentar
+   * `intermediateStops` y `destination` que el HomeScreen consume para
+   * pintar marcadores y la card de autonomia.
+   *
+   * Devuelve `true` si arranco; `false` si faltan precondiciones (sin
+   * directions, sin destino claro). El caller decide que hacer con el
+   * fallo — tipicamente Alert "Calcula la ruta primero".
+   */
+  startNavigationFromPlanner(planner: RoutePlannerViewModel): boolean {
+    const directions = planner.directions;
+    if (!directions) return false;
+    if (planner.waypoints.length < 2) return false;
+
+    const last = planner.waypoints[planner.waypoints.length - 1];
+    const middle = planner.waypoints.slice(1, -1);
+    // Waypoint → Place — sintetizamos los campos minimos que el HomeScreen
+    // necesita. fullName cae al name por defecto.
+    const toPlace = (w: Waypoint): Place =>
+      new Place({
+        id: w.id,
+        name: w.name,
+        fullName: w.mapboxCategory ?? w.name,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        category: w.mapboxCategory,
+      });
+
+    runInAction(() => {
+      this.destination = toPlace(last);
+      this.intermediateStops = middle.map(toPlace);
+      this.rideType = planner.rideType;
+      // Directions YA calculadas: pegamos directo, evitamos roundtrip a
+      // Mapbox + skeleton inutil.
+      this.isRouteResponse = directions;
+      this.previewPlace = null;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+      this.isFuelStopResponse = null;
+      this.fuelStops = [];
+    });
+    // Background: elevation profile + autonomia. No bloquean el arranque
+    // — la nav puede empezar mientras estos cargan.
+    void this.computeElevation();
+    void this.computeFuelEstimate();
+    this.startNavigation();
+    return true;
+  }
+
+  /**
    * Previsualiza un lugar elegido del buscador. La pantalla navega al
    * formSheet "DestinationPreview" y la cámara del mapa se enfoca sobre el
    * punto. El destino real (y la ruta) se aplican solo al confirmar.

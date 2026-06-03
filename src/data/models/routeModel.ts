@@ -2,6 +2,8 @@ import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { isStopKind, StopKind } from '@/domain/entities/StopKind';
 import { Waypoint, WaypointKind } from '@/domain/entities/Waypoint';
 
+import { decodePolyline, encodePolyline } from '@/domain/geo/polyline';
+
 type WaypointJson = {
   id: string;
   name: string;
@@ -13,15 +15,20 @@ type WaypointJson = {
   user_override_kind?: boolean;
 };
 
-type GeoPointJson = { latitude: number; longitude: number };
-
 export type RouteModelConstructorParams = {
   id: string;
   rider_id: string;
   name: string;
   ride_type: string;
   waypoints: WaypointJson[];
-  geometry: GeoPointJson[];
+  /**
+   * Geometría serializada como string de Google Polyline. Antes era
+   * `GeoPointJson[]` pero rutas largas generaban miles de entradas de
+   * índice en Firestore (límite 20k por documento) y rompían el save.
+   * Como string cuenta como 1 sola entrada de índice, escala sin tope.
+   * Backward compat: `fromJson` acepta ambos formatos.
+   */
+  geometry: string;
   distance_km: number;
   estimated_duration_min: number;
   notes?: string;
@@ -77,13 +84,35 @@ function wasLegacyMigrated(value: unknown): boolean {
   return value === 'stop';
 }
 
+/**
+ * Lee la geometría de Firestore en cualquiera de los 2 formatos posibles:
+ * - String: nuevo formato Google Polyline (encodePolyline). Se decodifica.
+ * - Array de `{latitude, longitude}`: formato legacy. Se usa directo.
+ *
+ * Cualquier otra cosa (undefined, null, shape inesperado) → polyline vacío.
+ */
+function readGeometry(raw: unknown): string {
+  if (typeof raw === 'string') return raw;
+  if (Array.isArray(raw)) {
+    // Formato legacy: array de objetos. Lo re-codificamos como string para
+    // que el modelo interno siempre maneje string, sin condicionales.
+    const points = raw.map((g: any) => ({
+      latitude: Number(g.latitude ?? 0),
+      longitude: Number(g.longitude ?? 0),
+    }));
+    return encodePolyline(points);
+  }
+  return '';
+}
+
 export class RouteModel {
   id: string;
   rider_id: string;
   name: string;
   ride_type: string;
   waypoints: WaypointJson[];
-  geometry: GeoPointJson[];
+  /** String Google Polyline. Decodificada via `decodePolyline` en `toDomain`. */
+  geometry: string;
   distance_km: number;
   estimated_duration_min: number;
   notes?: string;
@@ -126,16 +155,40 @@ export class RouteModel {
                 : undefined,
           }))
         : [],
-      geometry: Array.isArray(json.geometry)
-        ? json.geometry.map((g: any) => ({
-            latitude: Number(g.latitude ?? 0),
-            longitude: Number(g.longitude ?? 0),
-          }))
-        : [],
+      geometry: readGeometry(json.geometry),
       distance_km: Number(json.distance_km ?? 0),
       estimated_duration_min: Number(json.estimated_duration_min ?? 0),
       notes: typeof json.notes === 'string' ? json.notes : undefined,
       created_at: json.created_at ?? new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Construye un model desde la entidad de dominio. Codifica la geometría
+   * como string Google Polyline para que Firestore la indexe como 1 sola
+   * entrada (vs. ~2 por punto del formato legacy).
+   */
+  static fromDomain(route: Route): RouteModel {
+    return new RouteModel({
+      id: route.id,
+      rider_id: route.riderId,
+      name: route.name,
+      ride_type: route.rideType,
+      waypoints: route.waypoints.map((w) => ({
+        id: w.id,
+        name: w.name,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        kind: w.kind,
+        order: w.order,
+        mapbox_category: w.mapboxCategory,
+        user_override_kind: w.userOverrideKind,
+      })),
+      geometry: encodePolyline(route.geometry),
+      distance_km: route.distanceKm,
+      estimated_duration_min: route.estimatedDurationMin,
+      notes: route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
+      created_at: route.createdAt.toISOString(),
     });
   }
 
@@ -180,10 +233,7 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
     })
     .sort((a, b) => a.order - b.order);
 
-  const geometry: GeoPoint[] = this.geometry.map((g) => ({
-    latitude: g.latitude,
-    longitude: g.longitude,
-  }));
+  const geometry: GeoPoint[] = decodePolyline(this.geometry);
 
   return new Route({
     id: this.id,

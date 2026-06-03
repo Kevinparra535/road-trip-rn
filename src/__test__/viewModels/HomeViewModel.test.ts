@@ -973,3 +973,76 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
     expect(vm.plannerBounds).toBeNull();
   });
 });
+
+describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
+  const wp = (
+    id: string,
+    kind: string,
+    lat: number,
+    lng: number,
+    name = id,
+  ) => ({
+    id,
+    kind,
+    latitude: lat,
+    longitude: lng,
+    name,
+    order: 0,
+    mapboxCategory: undefined,
+    userOverrideKind: false,
+  });
+
+  const buildPlanner = (overrides: Partial<{
+    waypoints: any[];
+    directions: any;
+    rideType: string;
+  }> = {}) => ({
+    waypoints: overrides.waypoints ?? [],
+    directions: overrides.directions ?? null,
+    rideType: overrides.rideType ?? 'highway',
+  });
+
+  it('sin directions devuelve false y no muta state', () => {
+    const planner = buildPlanner({
+      waypoints: [wp('w1', 'start', 4.6, -74.08), wp('w2', 'destination', 4.8, -74.2)],
+      directions: null,
+    });
+    const vm = makeVM();
+    const ok = vm.startNavigationFromPlanner(planner as any);
+    expect(ok).toBe(false);
+    expect(vm.isNavigating).toBe(false);
+    expect(vm.destination).toBeNull();
+  });
+
+  it('con menos de 2 waypoints devuelve false', () => {
+    const planner = buildPlanner({
+      waypoints: [wp('w1', 'destination', 4.6, -74.08)],
+      directions: makeRouteDirections(),
+    });
+    const vm = makeVM();
+    expect(vm.startNavigationFromPlanner(planner as any)).toBe(false);
+    expect(vm.isNavigating).toBe(false);
+  });
+
+  it('con directions arranca nav, setea destination + intermedios + ride', () => {
+    const planner = buildPlanner({
+      waypoints: [
+        wp('w1', 'start', 4.6, -74.08, 'Bogota'),
+        wp('w2', 'food', 4.7, -74.1, 'La Marquesa'),
+        wp('w3', 'destination', 4.8, -74.2, 'Valle de Bravo'),
+      ],
+      directions: makeRouteDirections(),
+      rideType: 'offroad',
+    });
+    const vm = makeVM();
+    const ok = vm.startNavigationFromPlanner(planner as any);
+    expect(ok).toBe(true);
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.destination?.name).toBe('Valle de Bravo');
+    expect(vm.intermediateStops).toHaveLength(1);
+    expect(vm.intermediateStops[0].name).toBe('La Marquesa');
+    expect(vm.rideType).toBe('offroad');
+    // Reusa las directions del planner sin recomputar.
+    expect(vm.isRouteResponse).not.toBeNull();
+  });
+});
