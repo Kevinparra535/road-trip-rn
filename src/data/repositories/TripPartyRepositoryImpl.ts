@@ -7,6 +7,7 @@ import { TripParty } from '@/domain/entities/TripParty';
 
 import {
   TripPartyObserver,
+  TripPartyObserverError,
   TripPartyRepository,
   TripPartyUnsubscribe,
 } from '@/domain/repositories/TripPartyRepository';
@@ -42,10 +43,18 @@ export class TripPartyRepositoryImpl implements TripPartyRepository {
     return model ? model.toDomain() : null;
   }
 
-  observe(partyId: string, onChange: TripPartyObserver): TripPartyUnsubscribe {
-    return this.service.observe(partyId, (model) => {
-      onChange(model ? model.toDomain() : null);
-    });
+  observe(
+    partyId: string,
+    onChange: TripPartyObserver,
+    onError?: TripPartyObserverError,
+  ): TripPartyUnsubscribe {
+    return this.service.observe(
+      partyId,
+      (model) => {
+        onChange(model ? model.toDomain() : null);
+      },
+      onError,
+    );
   }
 
   async addMember(partyId: string, member: PartyMember): Promise<void> {

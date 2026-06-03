@@ -11,6 +11,7 @@ import {
 import { Route } from '@/domain/entities/Route';
 import { TripParty } from '@/domain/entities/TripParty';
 
+import { SAFETY_RESERVE_FRACTION } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { UseCase } from '@/domain/useCases/UseCase';
 
@@ -28,12 +29,16 @@ export type EstimatePartyFuelPlanInput = {
 };
 
 /**
- * Umbral de tanqueo: cuando la moto mas debil llega a este % de su range
- * efectivo (medido desde el ultimo tanqueo), sugerimos parar a tanquear.
- * 70% queda con 30% de reserva — alineado con la heuristica del autonomy
- * estimator del Detail de rutas individuales.
+ * Umbral de tanqueo: la moto mas debil consume hasta esta fraccion de su range
+ * efectivo (desde el ultimo tanqueo) antes de que sugiramos parar. Se DERIVA de
+ * `SAFETY_RESERVE_FRACTION` para dejar exactamente la misma reserva (12%) que el
+ * estimador individual (`EstimateAutonomyUseCase`); asi el plan grupal y el
+ * individual coinciden en cuanto margen de seguridad reservan.
  */
-const REFUEL_THRESHOLD_RATIO = 0.7;
+const REFUEL_THRESHOLD_RATIO = 1 - SAFETY_RESERVE_FRACTION;
+
+/** Tope defensivo de paradas (ver mismo razonamiento en EstimateAutonomyUseCase). */
+const MAX_FUEL_STOPS = 50;
 
 /**
  * Genera el plan de tanqueo grupal de un party para una ruta dada.
@@ -125,10 +130,29 @@ export class EstimatePartyFuelPlanUseCase implements UseCase<
     const stops: PartyFuelStop[] = [];
     const usableRange = weakest.effectiveRangeKm * REFUEL_THRESHOLD_RATIO;
     const marginKm = weakest.effectiveRangeKm * (1 - REFUEL_THRESHOLD_RATIO);
+
+    // Defensa: sin range usable (> 0) el while nunca avanzaria. No deberia
+    // ocurrir — EstimateRouteFuelUseCase exige tanque/consumo > 0 y clampa el
+    // factor a >= 0.55 — pero evita un loop infinito ante specs degenerados.
+    if (usableRange <= 0) {
+      return new PartyFuelPlan({
+        routeId: route.id,
+        partyId: party.id,
+        weakestMotoId: weakest.motorcycleId,
+        strongestMotoId: strongest.motorcycleId,
+        perMotoRanges: sorted,
+        stops: [],
+        reachesWithoutRefuel: false,
+      });
+    }
+
     let traveledKm = 0;
     let stopIndex = 0;
 
-    while (traveledKm + usableRange < route.distanceKm) {
+    while (
+      traveledKm + usableRange < route.distanceKm &&
+      stops.length < MAX_FUEL_STOPS
+    ) {
       const nextStopKm = traveledKm + usableRange;
       const location =
         pointAtDistanceAlong(route.geometry, nextStopKm) ??

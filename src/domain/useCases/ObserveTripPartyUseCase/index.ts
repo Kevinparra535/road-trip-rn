@@ -4,25 +4,32 @@ import { TYPES } from '@/config/types';
 
 import {
   TripPartyObserver,
+  TripPartyObserverError,
   TripPartyRepository,
   TripPartyUnsubscribe,
 } from '@/domain/repositories/TripPartyRepository';
 
+import { SubscriptionUseCase } from '@/domain/useCases/UseCase';
+
 export type ObserveTripPartyInput = {
   partyId: string;
   onChange: TripPartyObserver;
+  /** Opcional: se invoca si el stream falla (permiso/timeout/red). */
+  onError?: TripPartyObserverError;
 };
 
 /**
  * Suscribe un observer al party. Devuelve la funcion de desuscripcion
  * inmediatamente (no es async — es un wrapper sincrono sobre el repo).
  *
- * Razon de no implementar `UseCase<I, O>`: la interfaz pide `run(): Promise`
- * pero observe es inherentemente sincrono + side-effect. Mantenemos el
- * mismo nombre/lugar para consistencia pero exponemos `subscribe()`.
+ * Implementa `SubscriptionUseCase` (no `UseCase`): observe es sincrono +
+ * side-effect (registra un listener y retorna el unsubscribe), no encaja en la
+ * firma `run(): Promise` del contrato base.
  */
 @injectable()
-export class ObserveTripPartyUseCase {
+export class ObserveTripPartyUseCase
+  implements SubscriptionUseCase<ObserveTripPartyInput, TripPartyUnsubscribe>
+{
   constructor(
     @inject(TYPES.TripPartyRepository)
     private readonly repository: TripPartyRepository,
@@ -33,6 +40,10 @@ export class ObserveTripPartyUseCase {
       // Devuelve un unsubscribe no-op para que el caller no diferencie.
       return () => undefined;
     }
-    return this.repository.observe(input.partyId, input.onChange);
+    return this.repository.observe(
+      input.partyId,
+      input.onChange,
+      input.onError,
+    );
   }
 }

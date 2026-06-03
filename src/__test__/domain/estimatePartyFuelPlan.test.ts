@@ -137,6 +137,94 @@ describe('EstimatePartyFuelPlanUseCase', () => {
     expect(plan.stops[0].reasonLabel).toContain('Moto m-weak');
   });
 
+  it('el primer stop cae al ~88% del range (reserva 12%, no 70%)', async () => {
+    const useCase = buildUseCase();
+    // Moto debil: 10L * 10km/L = 100km. Con avgSpeed = 70 km/h (sin penalizacion
+    // de velocidad), ascent 0 y loadKg = BASE_LOAD_KG (80, factor de carga 1),
+    // el factor combinado es 1 -> effectiveRange = 100km exactos.
+    // Tras la correccion, el umbral de tanqueo es 0.88 (reserva 12%), por lo que
+    // el primer stop cae a ~88km, NO a 70km (el viejo 0.7).
+    const party = makeParty([
+      makeMember(
+        'r-strong',
+        'm-strong',
+        { tankCapacityLiters: 30, fuelConsumptionKmPerLiter: 20, loadKg: 80 },
+        true,
+      ),
+      makeMember('r-weak', 'm-weak', {
+        tankCapacityLiters: 10,
+        fuelConsumptionKmPerLiter: 10,
+        loadKg: 80,
+      }),
+    ]);
+    const route = makeRoute({
+      distanceKm: 200,
+      // 200 km / (171.4286 min / 60) = 70 km/h -> speedFactor 1.
+      estimatedDurationMin: (200 / 70) * 60,
+      geometry: [
+        { latitude: 4.6, longitude: -74.08 },
+        { latitude: 5.0, longitude: -74.0 },
+        { latitude: 5.5, longitude: -73.5 },
+        { latitude: 6.0, longitude: -73.0 },
+      ],
+    });
+
+    const plan = await useCase.run({ route, party });
+
+    expect(plan.weakestMotoId).toBe('m-weak');
+    expect(plan.reachesWithoutRefuel).toBe(false);
+    // Primer stop a 0.88 * 100 = 88 km (no 70).
+    expect(plan.stops[0].distanceFromStartKm).toBeCloseTo(88, 5);
+    // El margen reservado es el 12% del range.
+    expect(plan.stops[0].marginKm).toBeCloseTo(12, 5);
+  });
+
+  it('geometria vacia: usa el ultimo punto como location fallback sin crashear', async () => {
+    const useCase = buildUseCase();
+    const party = makeParty([
+      makeMember('r-weak', 'm-weak', {
+        tankCapacityLiters: 10,
+        fuelConsumptionKmPerLiter: 10,
+        loadKg: 80,
+      }),
+    ]);
+    const route = makeRoute({
+      distanceKm: 200,
+      estimatedDurationMin: (200 / 70) * 60,
+      geometry: [],
+    });
+
+    const plan = await useCase.run({ route, party });
+
+    expect(plan.reachesWithoutRefuel).toBe(false);
+    expect(plan.stops.length).toBeGreaterThan(0);
+    // pointAtDistanceAlong([]) es null -> fallback a geometry[last] (undefined
+    // en geometry vacia). No debe lanzar.
+    expect(plan.stops[0]).toHaveProperty('location');
+  });
+
+  it('happy path: la moto debil llega sin tanquear', async () => {
+    const useCase = buildUseCase();
+    // weak: 20L * 20 = 400km de range. Ruta corta de 120km -> llega sin parar.
+    const party = makeParty([
+      makeMember(
+        'r-weak',
+        'm-weak',
+        { tankCapacityLiters: 20, fuelConsumptionKmPerLiter: 20, loadKg: 80 },
+        true,
+      ),
+    ]);
+    const route = makeRoute({
+      distanceKm: 120,
+      estimatedDurationMin: (120 / 70) * 60,
+    });
+
+    const plan = await useCase.run({ route, party });
+
+    expect(plan.reachesWithoutRefuel).toBe(true);
+    expect(plan.stops).toEqual([]);
+  });
+
   it('perMotoRanges queda ordenado del mas debil al mas fuerte', async () => {
     const useCase = buildUseCase();
     const party = makeParty([

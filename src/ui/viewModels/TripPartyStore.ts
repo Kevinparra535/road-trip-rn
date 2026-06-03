@@ -79,12 +79,23 @@ export class TripPartyStore {
       onChange: (party) => {
         runInAction(() => {
           this.activeParty = party;
+          // Un emit exitoso limpia cualquier error previo del stream.
+          this.observerError = null;
           // Si el party fue borrado remotamente, limpiamos el id local.
           if (party === null) {
             this.activePartyId = null;
             this.unsubscribe?.();
             this.unsubscribe = null;
           }
+        });
+      },
+      onError: (error) => {
+        // El stream fallo (permiso/timeout/red). Exponemos el error para que
+        // las pantallas suscritas puedan mostrar un estado degradado en vez de
+        // quedarse con datos stale silenciosamente.
+        this.logger.warn(`Observe party fallo: ${error.message}`);
+        runInAction(() => {
+          this.observerError = error.message;
         });
       },
     });

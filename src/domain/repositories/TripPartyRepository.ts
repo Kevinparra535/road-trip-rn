@@ -13,6 +13,12 @@ export type TripPartyObserver = (party: TripParty | null) => void;
  */
 export type TripPartyUnsubscribe = () => void;
 
+/**
+ * Callback invocado cuando la suscripcion realtime falla (permiso denegado,
+ * timeout, perdida de red). El observer de exito deja de emitir tras un error.
+ */
+export type TripPartyObserverError = (error: Error) => void;
+
 export interface TripPartyRepository {
   /** Crea un party con `owner` como primer miembro. */
   create(input: { routeId: string; owner: PartyMember }): Promise<TripParty>;
@@ -21,9 +27,14 @@ export interface TripPartyRepository {
 
   /**
    * Suscribe un callback al estado del party (realtime via Firestore
-   * onSnapshot). Retorna la funcion para desuscribir.
+   * onSnapshot). Retorna la funcion para desuscribir. `onError` (opcional)
+   * recibe los fallos del stream (permiso/timeout/red).
    */
-  observe(partyId: string, onChange: TripPartyObserver): TripPartyUnsubscribe;
+  observe(
+    partyId: string,
+    onChange: TripPartyObserver,
+    onError?: TripPartyObserverError,
+  ): TripPartyUnsubscribe;
 
   addMember(partyId: string, member: PartyMember): Promise<void>;
 

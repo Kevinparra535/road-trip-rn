@@ -14,6 +14,8 @@ import Logger from '@/ui/utils/Logger';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 
+type ICalls = 'recents';
+
 /**
  * Items del grid de categorias del AddStopScreen (frame DiJJK).
  * Cada categoria viene con su `kind` (mapeado a StopKind) e icono.
@@ -99,25 +101,15 @@ export class AddStopViewModel {
   }
 
   async initialize(): Promise<void> {
-    runInAction(() => {
-      this.isLoading = true;
-      this.isError = null;
-    });
+    this.updateLoadingState(true, null, 'recents');
     try {
       const recents = await this.getRecentDestinationsUseCase.run();
       runInAction(() => {
         this.recents = recents;
-        this.isLoading = false;
       });
+      this.updateLoadingState(false, null, 'recents');
     } catch (error) {
-      const msg = `Error cargando recientes: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
-      runInAction(() => {
-        this.isError = msg;
-        this.isLoading = false;
-      });
+      this.handleError(error, 'recents');
     }
   }
 
@@ -153,5 +145,28 @@ export class AddStopViewModel {
       this.isLoading = false;
       this.isError = null;
     });
+  }
+
+  private updateLoadingState(
+    isLoading: boolean,
+    error: string | null,
+    type: ICalls,
+  ) {
+    runInAction(() => {
+      switch (type) {
+        case 'recents':
+          this.isLoading = isLoading;
+          this.isError = error;
+          break;
+      }
+    });
+  }
+
+  private handleError(error: unknown, type: ICalls) {
+    const errorMessage = `Error in ${type}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    this.logger.error(errorMessage);
+    this.updateLoadingState(false, errorMessage, type);
   }
 }

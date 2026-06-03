@@ -32437,6 +32437,2173 @@
           "fontWeight": "500"
         }
       ]
+    },
+    {
+      "type": "frame",
+      "id": "u3P3Kv",
+      "x": -440,
+      "y": 12301,
+      "name": "User Flow Map",
+      "width": 2200,
+      "height": 1200,
+      "fill": "$bgPrimary",
+      "cornerRadius": 14,
+      "stroke": {
+        "align": "inside",
+        "thickness": 1,
+        "fill": "$cardBorder"
+      },
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "KEokS",
+          "x": 32,
+          "y": 24,
+          "name": "TitleWrap",
+          "layout": "vertical",
+          "gap": 6,
+          "children": [
+            {
+              "type": "text",
+              "id": "zSfxB",
+              "fill": "$accent",
+              "content": "USER FLOW MAP",
+              "fontFamily": "Inter",
+              "fontSize": 11,
+              "fontWeight": "700",
+              "letterSpacing": 2
+            },
+            {
+              "type": "text",
+              "id": "c4VTH7",
+              "fill": "$textPrimary",
+              "content": "Road Trip - Apple Maps inspired",
+              "fontFamily": "Geist",
+              "fontSize": 24,
+              "fontWeight": "700"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Bzlg8",
+          "x": 40,
+          "y": 120,
+          "name": "Node Home Idle",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "lxJCs",
+              "name": "nHomeI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "NLubb",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "house",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "uWT4S",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Home Idle",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Pb14T",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Pantalla base",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "L39gh",
+          "x": 240,
+          "y": 20,
+          "name": "Node Buscar",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "bHF7E",
+              "name": "nSearchI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "CAxDL",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "search",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "ek2VV",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Buscar destino",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "p2MRB",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Tipea o voz",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "lNXdK",
+          "x": 240,
+          "y": 140,
+          "name": "Node Resultados",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Uccvy",
+              "name": "nResultsI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "jTgtV",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "list",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "DHycx",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Resultados",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "uxzGv",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Lista de matches",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "yqngJ",
+          "x": 240,
+          "y": 260,
+          "name": "Node Destination Preview",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "H7rpA",
+              "name": "nPreviewI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Sv2a6",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "map-pin",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "IaszS",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Destination Preview",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "pbttw",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Tarjeta de destino",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "McFOc",
+          "x": 440,
+          "y": 20,
+          "name": "Node Cargando ruta",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "fa0f2",
+              "name": "nLoadingI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "q3qcXx",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "loader-circle",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "vu2CQ",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Cargando ruta",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "lymm4",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Calculando",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "L6l2XE",
+          "x": 440,
+          "y": 140,
+          "name": "Node Ruta Asomado",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rTfsF",
+              "name": "nPeekI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "G2zGz",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "route",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "U4mYIK",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Ruta Asomado",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "wgDux",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Peek con CTA",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "i1TlA",
+          "x": 440,
+          "y": 260,
+          "name": "Node Planear ruta full",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "sMS7v",
+              "name": "nFullI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "ieFdG",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "map",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "WkItn",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Planear ruta full",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "f2slk",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Waypoints",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "mO13B",
+          "x": 440,
+          "y": 380,
+          "name": "Node Agregar parada",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "cb8Jb",
+              "name": "nAddI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "mqLNM",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "circle-plus",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "tSwRW",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Agregar parada",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "Ql8vq",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Quick + Voice",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "NNu5L",
+          "x": 640,
+          "y": 140,
+          "name": "Node Navegacion 6a",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Vrkvg",
+              "name": "nNavI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "j80iR6",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "navigation",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "d4EU8",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Navegacion 6a",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "boScp",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Standard nav",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "DadGi",
+          "x": 640,
+          "y": 260,
+          "name": "Node Nav Elevacion 6b",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "YtQ51",
+              "name": "nNavEI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "GbIfC",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "mountain",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "EzrBk",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Nav + Elevacion 6b",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "LYyRq",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Con altimetro",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "hACs2",
+          "x": 640,
+          "y": 380,
+          "name": "Node Recalculando",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Z5bdch",
+              "name": "nRerouteI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "k0Jlu",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "rotate-ccw",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "gzt9y",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Recalculando",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "uKoQV",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Fuera de ruta",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "SToj8",
+          "x": 840,
+          "y": 140,
+          "name": "Node Llegada",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$check"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "e8P4sg",
+              "name": "nArrI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "n14uH",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "check",
+                  "iconFontFamily": "lucide",
+                  "fill": "$check"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "OiR1S",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Llegada",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "gWGtS",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Trip done",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LAhxk",
+          "x": 840,
+          "y": 260,
+          "name": "Node Sin permiso",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$error"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "rpqpf",
+              "name": "nLockI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "SZNZL",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "lock",
+                  "iconFontFamily": "lucide",
+                  "fill": "$error"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "OcmdD",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sin permiso",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "rIYm1",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Bloqueo GPS",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "GfVXT",
+          "x": 840,
+          "y": 380,
+          "name": "Node Sin moto",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$accent"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "kRqpp",
+              "name": "nBikeI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "ZhTeF",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "bike",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "o3oXUE",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Sin moto",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "LIyt1",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Empty state",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "UuSD2",
+          "x": 1040,
+          "y": 20,
+          "name": "Node Rutas",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZbBoJ",
+              "name": "nRoutesI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "nGOdX",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "route",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "zqZVU",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Rutas",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "X2pAg0",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Tab sheet",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "BJmRQ",
+          "x": 1040,
+          "y": 140,
+          "name": "Node Detalle ruta",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "E0gsoJ",
+              "name": "nDetailI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "Q3X6k1",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "list",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "UV14c",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Detalle ruta",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "eZAZN",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Ver ruta guardada",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LkJvx",
+          "x": 1040,
+          "y": 260,
+          "name": "Node Mi Garaje",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "PPtBm",
+              "name": "nGarI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "yUep9",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "warehouse",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "yo0BF",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Mi Garaje",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "fMjgy",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Tab sheet",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "P1ts3J",
+          "x": 1040,
+          "y": 380,
+          "name": "Node Registrar moto",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "XvZOM",
+              "name": "nRegI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "AcP76",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "plus",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "Ii5Jj",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Registrar moto",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "ixuI3",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Full screen push",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "qq8gm",
+          "x": 1040,
+          "y": 500,
+          "name": "Node Perfil",
+          "width": 160,
+          "height": 100,
+          "fill": "$bgCard",
+          "cornerRadius": 14,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 6,
+          "padding": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "ZD59E",
+              "name": "nProfI",
+              "width": 36,
+              "height": 36,
+              "fill": "$accentDim",
+              "cornerRadius": 18,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "B0eLFb",
+                  "width": 18,
+                  "height": 18,
+                  "iconFontName": "user",
+                  "iconFontFamily": "lucide",
+                  "fill": "$accent"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "SvNSL",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Perfil",
+              "fontFamily": "Inter",
+              "fontSize": 13,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "aGLj4",
+              "fill": "$textMuted",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Tab sheet",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "path",
+          "id": "F1LJc",
+          "x": 600,
+          "y": 190,
+          "name": "a-recalc-loop",
+          "geometry": "M40 240c-40 0-40-240 0-240m-8 2l8-2-4 8",
+          "viewBox": [
+            0,
+            0,
+            40,
+            240
+          ],
+          "width": 40,
+          "height": 240,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "VBfCB",
+          "x": 800,
+          "y": 185,
+          "name": "a-nav6a-llegada",
+          "geometry": "M0 5l40 0m-7-4l7 4-7 4",
+          "viewBox": [
+            0,
+            0,
+            40,
+            10
+          ],
+          "width": 40,
+          "height": 10,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "xZbCq",
+          "x": 200,
+          "y": 70,
+          "name": "a-home-rutas",
+          "geometry": "M0 100c400 0 400-100 840-100m-8 2l8-2-4 8",
+          "viewBox": [
+            0,
+            0,
+            840,
+            100
+          ],
+          "width": 840,
+          "height": 100,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "lRH5c",
+          "x": 200,
+          "y": 170,
+          "name": "a-home-garaje",
+          "geometry": "M0 0c400 0 400 140 840 140m-8-8l8 8-8 0",
+          "viewBox": [
+            0,
+            0,
+            840,
+            140
+          ],
+          "width": 840,
+          "height": 140,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "Ru8nG",
+          "x": 200,
+          "y": 170,
+          "name": "a-home-perfil",
+          "geometry": "M0 0c400 0 400 380 840 380m-8-8l8 8-8 0",
+          "viewBox": [
+            0,
+            0,
+            840,
+            380
+          ],
+          "width": 840,
+          "height": 380,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "tV7R8",
+          "x": 1115,
+          "y": 360,
+          "name": "a-garaje-registrar",
+          "geometry": "M5 0l0 20m-4-5l4 5 4-5",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "ut4Go",
+          "x": 1115,
+          "y": 120,
+          "name": "a-rutas-detalle",
+          "geometry": "M5 0l0 20m-4-5l4 5 4-5",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "GHM5C",
+          "x": 800,
+          "y": 185,
+          "name": "a-detalle-nav6a",
+          "geometry": "M240 5l-240 0m8-4l-8 4 8 4",
+          "viewBox": [
+            0,
+            0,
+            240,
+            10
+          ],
+          "width": 240,
+          "height": 10,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "bNBho",
+          "x": 1400,
+          "y": 600,
+          "name": "Legend",
+          "width": 220,
+          "fill": "$bgGradientEnd",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "CYs2o",
+              "fill": "$accent",
+              "content": "LEYENDA",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "frame",
+              "id": "h6bED",
+              "name": "row-happy",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "RpF3s",
+                  "fill": "$accent",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "zYn6v",
+                  "fill": "$textPrimary",
+                  "content": "Happy path",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y5M04p",
+              "name": "row-nav",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "a2n2B4",
+                  "geometry": "M0 1l24 0",
+                  "viewBox": [
+                    0,
+                    0,
+                    24,
+                    2
+                  ],
+                  "width": 24,
+                  "height": 2,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 2,
+                    "cap": "round",
+                    "fill": "$textMuted"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "woK8q",
+                  "fill": "$textMuted",
+                  "content": "Navegacion regular",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "EI0yc",
+              "name": "row-error",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "DMpbG",
+                  "fill": "$error",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "fP1Nn",
+                  "fill": "$error",
+                  "content": "Estado de error",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y2DIlu",
+              "name": "row-end",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "XZyoS",
+                  "fill": "$check",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "c22QRO",
+                  "fill": "$check",
+                  "content": "End state",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "path",
+          "id": "HqhIC",
+          "x": 200,
+          "y": 70,
+          "name": "arrow Home->Buscar",
+          "geometry": "M0 100c20 0 20-100 40-100",
+          "viewBox": [
+            0,
+            0,
+            40,
+            100
+          ],
+          "width": 40,
+          "height": 100,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "lsB7n",
+          "x": 315,
+          "y": 120,
+          "name": "arrow Buscar->Resultados",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "uO7SO",
+          "x": 315,
+          "y": 240,
+          "name": "arrow Resultados->Preview",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "e4Kt6h",
+          "x": 400,
+          "y": 70,
+          "name": "arrow Preview->Cargando",
+          "geometry": "M0 240c20 0 40-120 40-240",
+          "viewBox": [
+            0,
+            0,
+            40,
+            290
+          ],
+          "width": 40,
+          "height": 290,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "EVuqg",
+          "x": 515,
+          "y": 120,
+          "name": "arrow Cargando->Asomado",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "FVHoj",
+          "x": 515,
+          "y": 240,
+          "name": "arrow Asomado->Full",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "cP6Df",
+          "x": 515,
+          "y": 360,
+          "name": "arrow Full->Agregar",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "m4DWOk",
+          "x": 600,
+          "y": 184,
+          "name": "arrow HAPPY Asomado->Nav6a",
+          "geometry": "M0 6l40 0",
+          "viewBox": [
+            0,
+            0,
+            40,
+            12
+          ],
+          "width": 40,
+          "height": 12,
+          "stroke": {
+            "align": "center",
+            "thickness": 3,
+            "cap": "round",
+            "fill": "$accent"
+          }
+        },
+        {
+          "type": "path",
+          "id": "D29C0",
+          "x": 632,
+          "y": 182,
+          "name": "arrow HAPPY arrowhead",
+          "geometry": "M0 0l14 8-14 8z",
+          "viewBox": [
+            0,
+            0,
+            14,
+            16
+          ],
+          "fill": "$accent",
+          "width": 14,
+          "height": 16
+        },
+        {
+          "type": "path",
+          "id": "hJsL8",
+          "x": 715,
+          "y": 240,
+          "name": "arrow Nav6a->NavElev",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "FFcjM",
+          "x": 715,
+          "y": 360,
+          "name": "arrow NavElev->Recalc",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "kfeWj",
+          "x": 600,
+          "y": 190,
+          "name": "loop Recalc->Nav6a",
+          "geometry": "M40 240c-40 0-40-240 0-240",
+          "viewBox": [
+            0,
+            0,
+            40,
+            250
+          ],
+          "width": 40,
+          "height": 250,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "vRVdo",
+          "x": 800,
+          "y": 184,
+          "name": "arrow Nav6a->Llegada",
+          "geometry": "M0 6l40 0",
+          "viewBox": [
+            0,
+            0,
+            40,
+            12
+          ],
+          "width": 40,
+          "height": 12,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "AYD5y",
+          "x": 200,
+          "y": 70,
+          "name": "arrow Home->Rutas",
+          "geometry": "M0 100c250 0 600-100 840-100",
+          "viewBox": [
+            0,
+            0,
+            840,
+            100
+          ],
+          "width": 840,
+          "height": 100,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "ZHvky",
+          "x": 200,
+          "y": 170,
+          "name": "arrow Home->Garaje",
+          "geometry": "M0 0c300 0 540 140 840 140",
+          "viewBox": [
+            0,
+            0,
+            840,
+            140
+          ],
+          "width": 840,
+          "height": 140,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "i3eByd",
+          "x": 200,
+          "y": 170,
+          "name": "arrow Home->Perfil",
+          "geometry": "M0 0c300 0 540 380 840 380",
+          "viewBox": [
+            0,
+            0,
+            840,
+            380
+          ],
+          "width": 840,
+          "height": 380,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "qXgjO",
+          "x": 1115,
+          "y": 360,
+          "name": "arrow Garaje->Registrar",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "LXvbi",
+          "x": 1115,
+          "y": 120,
+          "name": "arrow Rutas->Detalle",
+          "geometry": "M5 0l0 20",
+          "viewBox": [
+            0,
+            0,
+            10,
+            20
+          ],
+          "width": 10,
+          "height": 20,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "path",
+          "id": "jjKrt",
+          "x": 800,
+          "y": 184,
+          "name": "arrow Detalle->Nav6a",
+          "geometry": "M240 6l-240 0",
+          "viewBox": [
+            0,
+            0,
+            240,
+            12
+          ],
+          "width": 240,
+          "height": 12,
+          "stroke": {
+            "align": "center",
+            "thickness": 2,
+            "cap": "round",
+            "fill": "$textMuted"
+          }
+        },
+        {
+          "type": "frame",
+          "id": "cnL3n",
+          "x": 1400,
+          "y": 600,
+          "name": "Leyenda",
+          "width": 220,
+          "fill": "$bgGradientEnd",
+          "cornerRadius": 10,
+          "stroke": {
+            "align": "inside",
+            "thickness": 1,
+            "fill": "$cardBorder"
+          },
+          "layout": "vertical",
+          "gap": 12,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "qi6bw",
+              "fill": "$accent",
+              "content": "LEYENDA",
+              "fontFamily": "Inter",
+              "fontSize": 10,
+              "fontWeight": "700",
+              "letterSpacing": 1.5
+            },
+            {
+              "type": "frame",
+              "id": "vymzB",
+              "name": "row happy",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "wXdzp",
+                  "fill": "$accent",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "d50zI6",
+                  "fill": "$textPrimary",
+                  "content": "Happy path",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "y06dBa",
+              "name": "row regular",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "UHXZg",
+                  "geometry": "M0 1l24 0",
+                  "viewBox": [
+                    0,
+                    0,
+                    24,
+                    2
+                  ],
+                  "width": 24,
+                  "height": 2,
+                  "stroke": {
+                    "align": "center",
+                    "thickness": 2,
+                    "cap": "round",
+                    "fill": "$textMuted"
+                  }
+                },
+                {
+                  "type": "text",
+                  "id": "BVRJj",
+                  "fill": "$textMuted",
+                  "content": "Navegacion regular",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "KzpIR",
+              "name": "row error",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "z6KIji",
+                  "fill": "$error",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "aIFN0",
+                  "fill": "$error",
+                  "content": "Estado de error",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "G3rfM",
+              "name": "row end",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 1,
+                  "id": "UNhXA",
+                  "fill": "$check",
+                  "width": 24,
+                  "height": 2
+                },
+                {
+                  "type": "text",
+                  "id": "lYpnf",
+                  "fill": "$check",
+                  "content": "End state",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ],
   "variables": {

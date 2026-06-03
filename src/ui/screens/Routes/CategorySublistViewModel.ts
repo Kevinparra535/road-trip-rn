@@ -18,6 +18,8 @@ import Logger from '@/ui/utils/Logger';
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
 
+type ICalls = 'search';
+
 /**
  * Item de la lista de POIs (frame `rc0EQ`). Incluye la distancia al primer
  * waypoint y el flag `isOnRoute` para mostrar el badge "EN LA RUTA".
@@ -224,10 +226,7 @@ export class CategorySublistViewModel {
       });
       return;
     }
-    runInAction(() => {
-      this.isLoading = true;
-      this.isError = null;
-    });
+    this.updateLoadingState(true, null, 'search');
     try {
       const places = await this.searchPlacesByCategoryUseCase.run({
         category: this.activeCategory,
@@ -235,17 +234,10 @@ export class CategorySublistViewModel {
       });
       runInAction(() => {
         this.results = places;
-        this.isLoading = false;
       });
+      this.updateLoadingState(false, null, 'search');
     } catch (error) {
-      const msg = `Error buscando: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
-      runInAction(() => {
-        this.isError = msg;
-        this.isLoading = false;
-      });
+      this.handleError(error, 'search');
     }
   }
 
@@ -299,6 +291,29 @@ export class CategorySublistViewModel {
       this.isError = null;
       this.isWideSearch = false;
     });
+  }
+
+  private updateLoadingState(
+    isLoading: boolean,
+    error: string | null,
+    type: ICalls,
+  ) {
+    runInAction(() => {
+      switch (type) {
+        case 'search':
+          this.isLoading = isLoading;
+          this.isError = error;
+          break;
+      }
+    });
+  }
+
+  private handleError(error: unknown, type: ICalls) {
+    const errorMessage = `Error in ${type}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    this.logger.error(errorMessage);
+    this.updateLoadingState(false, errorMessage, type);
   }
 }
 

@@ -16,8 +16,21 @@ export type EstimateAutonomyInput = {
   conditions: RidingConditions;
 };
 
-// Fraccion del tanque que se reserva como margen de seguridad.
-const SAFETY_RESERVE_FRACTION = 0.12;
+// Fraccion del tanque que se reserva como margen de seguridad. Exportada para
+// que el plan grupal (EstimatePartyFuelPlanUseCase) use EXACTAMENTE la misma
+// reserva y ambos estimadores coincidan.
+export const SAFETY_RESERVE_FRACTION = 0.12;
+
+// Limites del factor de condiciones. Acotan combinaciones extremas para que el
+// rango efectivo nunca supere el tanque fisico (lo que volveria negativa la
+// reserva de seguridad). Mismo criterio que EstimateRouteFuelUseCase.
+const MIN_CONDITION_FACTOR = 0.55;
+const MAX_CONDITION_FACTOR = 1.1;
+
+// Tope defensivo de paradas. Una ruta larga con un rango efectivo minusculo
+// (moto pequena + offroad + carga + ritmo) podria generar decenas de paradas
+// inutiles para la UI; a partir de aqui el rider claramente debe replanear.
+const MAX_FUEL_STOPS = 50;
 
 /**
  * Calcula la autonomia de una moto en una ruta concreta y sugiere paradas
@@ -66,7 +79,12 @@ export class EstimateAutonomyUseCase implements UseCase<
     });
   }
 
-  /** Factor combinado (0-1.1) que ajusta el rendimiento segun el viaje. */
+  /**
+   * Factor combinado que ajusta el rendimiento segun el viaje, acotado a
+   * [MIN_CONDITION_FACTOR, MAX_CONDITION_FACTOR] para que ninguna combinacion
+   * de penalizaciones/bonus deje el rango efectivo por encima del tanque fisico
+   * (lo que erosionaria la reserva de seguridad por debajo de cero).
+   */
   private conditionFactor(conditions: RidingConditions, route: Route): number {
     let factor = 1;
     if (conditions.hasPassenger) factor *= 0.92;
@@ -87,7 +105,7 @@ export class EstimateAutonomyUseCase implements UseCase<
       default:
         break;
     }
-    return factor;
+    return Math.min(MAX_CONDITION_FACTOR, Math.max(MIN_CONDITION_FACTOR, factor));
   }
 
   private buildFuelStops(
@@ -100,7 +118,7 @@ export class EstimateAutonomyUseCase implements UseCase<
 
     let order = 1;
     let distance = effectiveRangeKm;
-    while (distance < totalDistanceKm) {
+    while (distance < totalDistanceKm && stops.length < MAX_FUEL_STOPS) {
       const location =
         pointAtDistanceAlong(geometry, distance) ?? geometry[0] ?? null;
       if (location) {

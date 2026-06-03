@@ -35,14 +35,17 @@ const makeParty = (overrides: Partial<TripParty> = {}): TripParty =>
 describe('TripPartyStore', () => {
   const buildObserve = () => {
     let callback: TripPartyObserver | null = null;
+    let errorCallback: ((error: Error) => void) | null = null;
     const unsubscribe = jest.fn();
     const useCase = {
       subscribe: jest.fn(
         (input: {
           partyId: string;
           onChange: TripPartyObserver;
+          onError?: (error: Error) => void;
         }): TripPartyUnsubscribe => {
           callback = input.onChange;
+          errorCallback = input.onError ?? null;
           return unsubscribe;
         },
       ),
@@ -52,6 +55,7 @@ describe('TripPartyStore', () => {
       useCase,
       unsubscribe,
       emit: (party: TripParty | null) => callback?.(party),
+      emitError: (error: Error) => errorCallback?.(error),
     };
   };
 
@@ -107,6 +111,28 @@ describe('TripPartyStore', () => {
     expect(unsubscribe).toHaveBeenCalled();
     expect(store.activeParty).toBeNull();
     expect(store.activePartyId).toBeNull();
+  });
+
+  it('onError del stream puebla observerError y un emit posterior lo limpia', () => {
+    const { store, emit, emitError } = buildObserve();
+    store.setActiveParty('p-1');
+    expect(store.observerError).toBeNull();
+
+    emitError(new Error('permiso denegado'));
+    expect(store.observerError).toBe('permiso denegado');
+
+    // Un emit exitoso posterior limpia el error stale del stream.
+    emit(makeParty());
+    expect(store.observerError).toBeNull();
+  });
+
+  it('clear() resetea observerError', () => {
+    const { store, emitError } = buildObserve();
+    store.setActiveParty('p-1');
+    emitError(new Error('timeout'));
+    expect(store.observerError).toBe('timeout');
+    store.clear();
+    expect(store.observerError).toBeNull();
   });
 
   it('isPartyForRoute compara routeId', () => {

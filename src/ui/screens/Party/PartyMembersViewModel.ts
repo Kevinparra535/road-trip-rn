@@ -14,6 +14,8 @@ import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
 
 import Logger from '@/ui/utils/Logger';
 
+type ICalls = 'load' | 'leave';
+
 /**
  * Item de la lista de miembros con metadata visual (moto resuelta).
  */
@@ -59,10 +61,7 @@ export class PartyMembersViewModel {
   }
 
   async initialize(): Promise<void> {
-    runInAction(() => {
-      this.isLoading = true;
-      this.isError = null;
-    });
+    this.updateLoadingState(true, null, 'load');
     try {
       const rider = await this.getCurrentRiderUseCase.run();
       if (!rider) throw new Error('No hay un rider autenticado.');
@@ -70,17 +69,10 @@ export class PartyMembersViewModel {
       runInAction(() => {
         this.currentRiderId = rider.id;
         this.myMotorcycles = motos;
-        this.isLoading = false;
       });
+      this.updateLoadingState(false, null, 'load');
     } catch (error) {
-      const msg = `Error cargando members: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
-      runInAction(() => {
-        this.isError = msg;
-        this.isLoading = false;
-      });
+      this.handleError(error, 'load');
     }
   }
 
@@ -112,9 +104,7 @@ export class PartyMembersViewModel {
     const party = this.partyStore.activeParty;
     const riderId = this.currentRiderId;
     if (!party || !riderId) return;
-    runInAction(() => {
-      this.isLeaving = true;
-    });
+    this.updateLoadingState(true, null, 'leave');
     try {
       await this.leaveTripPartyUseCase.run({
         partyId: party.id,
@@ -126,17 +116,10 @@ export class PartyMembersViewModel {
       this.partyStore.clear();
       runInAction(() => {
         this.hasLeftSuccessfully = true;
-        this.isLeaving = false;
       });
+      this.updateLoadingState(false, null, 'leave');
     } catch (error) {
-      const msg = `Error saliendo: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
-      runInAction(() => {
-        this.isError = msg;
-        this.isLeaving = false;
-      });
+      this.handleError(error, 'leave');
     }
   }
 
@@ -155,6 +138,33 @@ export class PartyMembersViewModel {
       this.isLeaving = false;
       this.hasLeftSuccessfully = false;
     });
+  }
+
+  private updateLoadingState(
+    isLoading: boolean,
+    error: string | null,
+    type: ICalls,
+  ) {
+    runInAction(() => {
+      switch (type) {
+        case 'load':
+          this.isLoading = isLoading;
+          this.isError = error;
+          break;
+        case 'leave':
+          this.isLeaving = isLoading;
+          this.isError = error;
+          break;
+      }
+    });
+  }
+
+  private handleError(error: unknown, type: ICalls) {
+    const errorMessage = `Error in ${type}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    this.logger.error(errorMessage);
+    this.updateLoadingState(false, errorMessage, type);
   }
 
   private resolveMotorcycleLabel(member: PartyMember): string {

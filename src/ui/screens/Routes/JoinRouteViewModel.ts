@@ -17,6 +17,8 @@ import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
 
 import Logger from '@/ui/utils/Logger';
 
+type ICalls = 'resolve' | 'join';
+
 /**
  * ViewModel del flow "Unirse a una ruta" (C.4). Maneja el input del codigo,
  * el call a `ResolveRouteShareCodeUseCase` y los estados loading/error/found.
@@ -83,9 +85,9 @@ export class JoinRouteViewModel {
       this.code = value;
       // Si el rider cambia el codigo, descartar resultados previos.
       this.resolved = null;
-      this.isError = null;
       this.hasTriedResolve = false;
     });
+    this.updateLoadingState(false, null, 'resolve');
   }
 
   /** Acepta un codigo inicial (ej. desde deep link). */
@@ -98,41 +100,35 @@ export class JoinRouteViewModel {
 
   async resolve(): Promise<void> {
     if (!this.canResolve) return;
+    this.updateLoadingState(true, null, 'resolve');
     runInAction(() => {
-      this.isLoading = true;
-      this.isError = null;
       this.resolved = null;
     });
     try {
       const result = await this.resolveUseCase.run({ code: this.code });
       runInAction(() => {
         this.resolved = result;
-        this.isLoading = false;
         this.hasTriedResolve = true;
       });
+      this.updateLoadingState(false, null, 'resolve');
       // Si el code invita a una rodada, pre-cargamos las motos para que el
       // rider elija la suya — evita un paso extra de loading post-tap.
       if (result?.shareCode.partyId) {
         await this.loadMyMotorcycles();
       }
     } catch (error) {
-      const msg = `Error resolviendo: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
       runInAction(() => {
-        this.isError = msg;
-        this.isLoading = false;
         this.hasTriedResolve = true;
       });
+      this.handleError(error, 'resolve');
     }
   }
 
   selectMotorcycle(id: string): void {
     runInAction(() => {
       this.selectedMotorcycleId = id;
-      this.isJoinPartyError = null;
     });
+    this.updateLoadingState(false, null, 'join');
   }
 
   /**
@@ -145,17 +141,15 @@ export class JoinRouteViewModel {
     if (!resolved?.shareCode.partyId || !motorcycleId) return;
     const motorcycle = this.myMotorcycles.find((m) => m.id === motorcycleId);
     if (!motorcycle) {
-      runInAction(() => {
-        this.isJoinPartyError =
-          'No encontre la moto seleccionada en tu garaje.';
-      });
+      this.updateLoadingState(
+        false,
+        'No encontre la moto seleccionada en tu garaje.',
+        'join',
+      );
       return;
     }
 
-    runInAction(() => {
-      this.isJoiningParty = true;
-      this.isJoinPartyError = null;
-    });
+    this.updateLoadingState(true, null, 'join');
     try {
       const rider = await this.getCurrentRiderUseCase.run();
       if (!rider) throw new Error('Necesitas iniciar sesion para unirte.');
@@ -168,18 +162,11 @@ export class JoinRouteViewModel {
       });
       this.partyStore.setActiveParty(party.id);
       runInAction(() => {
-        this.isJoiningParty = false;
         this.hasJoinedParty = true;
       });
+      this.updateLoadingState(false, null, 'join');
     } catch (error) {
-      const msg = `Error uniendote: ${
-        error instanceof Error ? error.message : String(error)
-      }`;
-      this.logger.error(msg);
-      runInAction(() => {
-        this.isJoinPartyError = msg;
-        this.isJoiningParty = false;
-      });
+      this.handleError(error, 'join');
     }
   }
 
@@ -223,5 +210,32 @@ export class JoinRouteViewModel {
         }`,
       );
     }
+  }
+
+  private updateLoadingState(
+    isLoading: boolean,
+    error: string | null,
+    type: ICalls,
+  ) {
+    runInAction(() => {
+      switch (type) {
+        case 'resolve':
+          this.isLoading = isLoading;
+          this.isError = error;
+          break;
+        case 'join':
+          this.isJoiningParty = isLoading;
+          this.isJoinPartyError = error;
+          break;
+      }
+    });
+  }
+
+  private handleError(error: unknown, type: ICalls) {
+    const errorMessage = `Error in ${type}: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    this.logger.error(errorMessage);
+    this.updateLoadingState(false, errorMessage, type);
   }
 }

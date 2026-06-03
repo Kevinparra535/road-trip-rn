@@ -67,8 +67,14 @@ export class MotoStatsServiceImpl implements MotoStatsService {
 
     for (const entry of MOTO_STATS_DATASET) {
       const entryBrand = this.normalize(entry.brand);
+      // Match de marca: igualdad exacta, o substring SOLO si la query tiene al
+      // menos 3 chars. Sin el minimo, una query de 1-2 letras ("a") haria
+      // substring-match con casi todas las marcas (Bajaj, AKT, Yamaha…) y la
+      // marca quedaria ignorada de facto.
       const brandMatches =
-        entryBrand.includes(queryBrand) || queryBrand.includes(entryBrand);
+        entryBrand === queryBrand ||
+        (queryBrand.length >= 3 &&
+          (entryBrand.includes(queryBrand) || queryBrand.includes(entryBrand)));
       if (!brandMatches || !queryBrand) continue;
 
       const entryModel = this.normalize(entry.model);
@@ -98,6 +104,14 @@ export class MotoStatsServiceImpl implements MotoStatsService {
   }
 
   private normalize(value: string): string {
-    return value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+    // NFD descompone los acentos en base + diacritico combinante; `\p{Diacritic}`
+    // (con flag `u`) elimina esos diacriticos. Usamos la propiedad Unicode en
+    // vez de un rango de caracteres literales para no depender de la
+    // codificacion del archivo fuente.
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .trim();
   }
 }
