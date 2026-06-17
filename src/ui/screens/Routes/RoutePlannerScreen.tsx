@@ -264,7 +264,7 @@ const RoutePlannerScreen = observer(() => {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={['top', 'left', 'right']}
+      edges={['top', 'left', 'right', 'bottom']}
       testID="screen-route-planner"
     >
       <View style={styles.navbar}>
@@ -368,8 +368,10 @@ const RoutePlannerScreen = observer(() => {
         />
       ) : (
         <ScrollView
+          style={styles.scroll}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
           {viewModel.needsStartPoint ? (
             <View
@@ -1706,6 +1708,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
     ...Fonts.links,
     color: Colors.base.textMuted,
+  },
+  scroll: {
+    flex: 1,
   },
   scrollContent: {
     paddingHorizontal: Spacings.spacex2,

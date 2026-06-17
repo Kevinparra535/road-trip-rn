@@ -62,14 +62,12 @@ const AppDrawer = () => (
         sheetAllowedDetents: [0.6, 1],
       }}
     />
-    <Stack.Screen
-      name="RoutePlanner"
-      component={RoutePlannerScreen}
-      options={{
-        presentation: 'formSheet',
-        sheetAllowedDetents: [1],
-      }}
-    />
+    {/*
+     * El Planner es una pantalla full (search + timeline + cards + CTA en un
+     * ScrollView flex:1). Va como card normal — NO formSheet — para que tenga
+     * pantalla completa y el scroll interno funcione sin recortes.
+     */}
+    <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} />
     <Stack.Screen
       name="RouteDetail"
       component={RouteDetailScreen}

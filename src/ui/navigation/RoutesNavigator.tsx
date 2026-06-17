@@ -22,14 +22,13 @@ const RoutesNavigator = () => (
         sheetAllowedDetents: 'fitToContents',
       }}
     />
-    <Stack.Screen
-      name="RoutePlanner"
-      component={RoutePlannerScreen}
-      options={{
-        presentation: 'formSheet',
-        sheetAllowedDetents: 'fitToContents',
-      }}
-    />
+    {/*
+     * El Planner es una pantalla full (search + timeline + cards + CTA en un
+     * ScrollView). Va como card normal — NO formSheet — para que el
+     * SafeAreaView/ScrollView (flex:1) tengan pantalla completa y el scroll
+     * funcione sin recortes.
+     */}
+    <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} />
     <Stack.Screen
       name="RouteDetail"
       component={RouteDetailScreen}
