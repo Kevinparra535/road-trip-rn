@@ -87,7 +87,7 @@ describe('RoutePlannerViewModel', () => {
     const clearDraft = { run: jest.fn().mockResolvedValue(undefined) };
 
     const partyStore =
-      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
         observePartyUseCase as any,
       );
     const locationStore = {
@@ -735,8 +735,22 @@ describe('RoutePlannerViewModel', () => {
         notes: 'Salida temprano',
         rideType: 'highway' as const,
         waypoints: [
-          { id: 'wp-1', name: 'Start', latitude: 4.6, longitude: -74.08, kind: 'start' as const, order: 0 } as any,
-          { id: 'wp-2', name: 'Dest', latitude: 4.8, longitude: -74.2, kind: 'destination' as const, order: 1 } as any,
+          {
+            id: 'wp-1',
+            name: 'Start',
+            latitude: 4.6,
+            longitude: -74.08,
+            kind: 'start' as const,
+            order: 0,
+          } as any,
+          {
+            id: 'wp-2',
+            name: 'Dest',
+            latitude: 4.8,
+            longitude: -74.2,
+            kind: 'destination' as const,
+            order: 1,
+          } as any,
         ],
         updatedAt: new Date(),
       };
@@ -1059,7 +1073,7 @@ describe('RouteDetailViewModel', () => {
       subscribe: jest.fn(() => () => undefined),
     };
     const partyStore =
-      new (require('@/ui/viewModels/TripPartyStore').TripPartyStore)(
+      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
         observePartyUseCase as any,
       );
     const vm = new RouteDetailViewModel(

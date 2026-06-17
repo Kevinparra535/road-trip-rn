@@ -1,6 +1,9 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
+
+import { HttpManager } from '@/domain/services/HttpManager';
 
 import { FuelStationModel } from '@/data/models/fuelStationModel';
 
@@ -17,6 +20,11 @@ export interface FuelStationService {
 
 @injectable()
 export class FuelStationServiceImpl implements FuelStationService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async searchNear(
     longitude: number,
     latitude: number,
@@ -28,7 +36,7 @@ export class FuelStationServiceImpl implements FuelStationService {
       limit: String(limit),
     });
 
-    const response = await fetch(`${MAPBOX_CATEGORY_URL}?${params}`);
+    const response = await this.http.get(`${MAPBOX_CATEGORY_URL}?${params}`);
     if (!response.ok) {
       throw new Error(`Mapbox Search respondio ${response.status}.`);
     }

@@ -1,22 +1,19 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { observer } from 'mobx-react-lite';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
-import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
-
 import Colors from '@/ui/styles/Colors';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
+import { SessionStore } from '@/ui/store/SessionStore';
 
 import AppDrawer from './AppDrawer';
 import AuthNavigator from './AuthNavigator';
 
 const RootNavigator = observer(() => {
-  const session = useMemo(
-    () => container.get<SessionViewModel>(TYPES.SessionViewModel),
-    [],
-  );
+  const session = useViewModel<SessionStore>(TYPES.SessionStore);
 
   useEffect(() => {
     session.initialize();

@@ -1,7 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import GradientView from '@/ui/components/GradientView';
 
@@ -55,9 +54,9 @@ const ArrivalPanel = ({
   <View style={styles.root} pointerEvents="box-none">
     <View style={styles.dim} pointerEvents="auto" />
     <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
-      <LinearGradient
-        colors={PANEL_FADE_COLORS}
-        locations={PANEL_FADE_LOCATIONS}
+      <GradientView
+        colors={[...PANEL_FADE_COLORS]}
+        locations={[...PANEL_FADE_LOCATIONS]}
         style={styles.panel}
       >
         <View style={styles.checkCircle}>
@@ -104,7 +103,7 @@ const ArrivalPanel = ({
             <Text style={styles.finishText}>Finalizar</Text>
           </GradientView>
         </TouchableOpacity>
-      </LinearGradient>
+      </GradientView>
     </SafeAreaView>
   </View>
 );

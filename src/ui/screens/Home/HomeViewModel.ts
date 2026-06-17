@@ -54,12 +54,11 @@ import {
   samplePolyline,
 } from '@/domain/geo/geoMath';
 
-import { LocationStore } from '@/ui/viewModels/LocationStore';
-
 import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
+import { LocationStore } from '@/ui/store/LocationStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.

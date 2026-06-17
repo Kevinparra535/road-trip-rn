@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { RecentDestination } from '@/domain/entities/RecentDestination';
@@ -26,6 +25,8 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import {
   ADD_STOP_CATEGORIES,
@@ -49,10 +50,7 @@ type Nav = NativeStackNavigationProp<RoutesStackParamList, 'AddStop'>;
  */
 const AddStopScreen = observer(() => {
   const navigation = useNavigation<Nav>();
-  const viewModel = useMemo(
-    () => container.get<AddStopViewModel>(TYPES.AddStopViewModel),
-    [],
-  );
+  const viewModel = useViewModel<AddStopViewModel>(TYPES.AddStopViewModel);
 
   useEffect(() => {
     void viewModel.initialize();
@@ -75,7 +73,8 @@ const AddStopScreen = observer(() => {
   const isEditing = viewModel.isEditingWaypoint;
   const editingName = viewModel.editingWaypointName;
   const title = isEditing ? 'Cambiar parada' : 'Agregar parada';
-  const subtitle = isEditing && editingName ? `Reemplazando: ${editingName}` : null;
+  const subtitle =
+    isEditing && editingName ? `Reemplazando: ${editingName}` : null;
 
   const handleMic = () => {
     Alert.alert(

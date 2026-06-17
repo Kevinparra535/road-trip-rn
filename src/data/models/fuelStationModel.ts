@@ -25,6 +25,27 @@ export class FuelStationModel {
     this.latitude = params.latitude;
   }
 
+  /** Round-trip canónico desde un JSON plano con la forma del modelo. */
+  static fromJson(json: any): FuelStationModel {
+    return new FuelStationModel({
+      mapbox_id: String(json?.mapbox_id ?? ''),
+      name: String(json?.name ?? ''),
+      brand: json?.brand != null ? String(json.brand) : null,
+      longitude: Number(json?.longitude ?? 0),
+      latitude: Number(json?.latitude ?? 0),
+    });
+  }
+
+  toJson(): Record<string, unknown> {
+    return {
+      mapbox_id: this.mapbox_id,
+      name: this.name,
+      brand: this.brand,
+      longitude: this.longitude,
+      latitude: this.latitude,
+    };
+  }
+
   /** Parsea una feature de la Mapbox Search Box category API. */
   static fromMapboxFeature(feature: any): FuelStationModel | null {
     const props = feature?.properties ?? {};

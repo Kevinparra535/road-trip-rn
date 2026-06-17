@@ -27,9 +27,10 @@ export type ObserveTripPartyInput = {
  * firma `run(): Promise` del contrato base.
  */
 @injectable()
-export class ObserveTripPartyUseCase
-  implements SubscriptionUseCase<ObserveTripPartyInput, TripPartyUnsubscribe>
-{
+export class ObserveTripPartyUseCase implements SubscriptionUseCase<
+  ObserveTripPartyInput,
+  TripPartyUnsubscribe
+> {
   constructor(
     @inject(TYPES.TripPartyRepository)
     private readonly repository: TripPartyRepository,

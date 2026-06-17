@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { Motorcycle } from '@/domain/entities/Motorcycle';
@@ -28,6 +27,8 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { GarageViewModel } from './GarageViewModel';
 
@@ -60,10 +61,7 @@ const MotorcycleRow = ({
 
 const GarageScreen = observer(() => {
   const navigation = useNavigation<Nav>();
-  const viewModel = useMemo(
-    () => container.get<GarageViewModel>(TYPES.GarageViewModel),
-    [],
-  );
+  const viewModel = useViewModel<GarageViewModel>(TYPES.GarageViewModel);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {

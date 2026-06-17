@@ -17,7 +17,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
@@ -28,6 +27,8 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { RouteDetailViewModel } from './RouteDetailViewModel';
 
@@ -64,9 +65,8 @@ const RouteDetailScreen = observer(() => {
   const navigation = useNavigation<Nav>();
   const params = useRoute<Route>().params;
 
-  const viewModel = useMemo(
-    () => container.get<RouteDetailViewModel>(TYPES.RouteDetailViewModel),
-    [],
+  const viewModel = useViewModel<RouteDetailViewModel>(
+    TYPES.RouteDetailViewModel,
   );
 
   useEffect(() => {

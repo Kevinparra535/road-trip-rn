@@ -1,4 +1,7 @@
 export const TYPES = {
+  // ── Managers (transporte, capa data/network) ──
+  HttpManager: Symbol.for('HttpManager'),
+
   // ── Services (capa data) ──
   AuthService: Symbol.for('AuthService'),
   MotorcycleService: Symbol.for('MotorcycleService'),
@@ -80,7 +83,6 @@ export const TYPES = {
   EstimatePartyFuelPlanUseCase: Symbol.for('EstimatePartyFuelPlanUseCase'),
 
   // ── ViewModels (capa ui) ──
-  SessionViewModel: Symbol.for('SessionViewModel'),
   AuthViewModel: Symbol.for('AuthViewModel'),
   GarageViewModel: Symbol.for('GarageViewModel'),
   MotorcycleFormViewModel: Symbol.for('MotorcycleFormViewModel'),
@@ -93,6 +95,9 @@ export const TYPES = {
   PartyMembersViewModel: Symbol.for('PartyMembersViewModel'),
   AddStopViewModel: Symbol.for('AddStopViewModel'),
   CategorySublistViewModel: Symbol.for('CategorySublistViewModel'),
+
+  // ── Stores globales (singletons, capa ui) ──
+  SessionStore: Symbol.for('SessionStore'),
   LocationStore: Symbol.for('LocationStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
 } as const;

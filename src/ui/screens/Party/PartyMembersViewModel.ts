@@ -10,9 +10,9 @@ import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUse
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { LeaveTripPartyUseCase } from '@/domain/useCases/LeaveTripPartyUseCase';
 
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
-
 import Logger from '@/ui/utils/Logger';
+
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls = 'load' | 'leave';
 

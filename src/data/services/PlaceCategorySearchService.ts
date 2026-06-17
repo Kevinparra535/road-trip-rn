@@ -1,8 +1,10 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
 
 import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRepository';
+import { HttpManager } from '@/domain/services/HttpManager';
 
 import { PlaceModel } from '@/data/models/placeModel';
 
@@ -42,6 +44,11 @@ export interface PlaceCategorySearchService {
 
 @injectable()
 export class PlaceCategorySearchServiceImpl implements PlaceCategorySearchService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async searchByCategory(
     category: SearchableCategory,
     proximity: LngLat,
@@ -54,7 +61,7 @@ export class PlaceCategorySearchServiceImpl implements PlaceCategorySearchServic
       proximity: `${proximity[0]},${proximity[1]}`,
     });
 
-    const response = await fetch(
+    const response = await this.http.get(
       `${MAPBOX_SEARCH_BOX_BASE}/${canonicalId}?${params}`,
     );
     if (!response.ok) {

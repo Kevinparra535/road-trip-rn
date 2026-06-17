@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
@@ -27,6 +26,8 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { CategorySublistViewModel } from './CategorySublistViewModel';
 
@@ -45,10 +46,8 @@ type Route = RouteProp<RoutesStackParamList, 'CategorySublist'>;
 const CategorySublistScreen = observer(() => {
   const navigation = useNavigation<Nav>();
   const params = useRoute<Route>().params;
-  const viewModel = useMemo(
-    () =>
-      container.get<CategorySublistViewModel>(TYPES.CategorySublistViewModel),
-    [],
+  const viewModel = useViewModel<CategorySublistViewModel>(
+    TYPES.CategorySublistViewModel,
   );
 
   useEffect(() => {
@@ -132,9 +131,7 @@ const CategorySublistScreen = observer(() => {
       </ScrollView>
 
       <ScrollView contentContainerStyle={styles.list}>
-        {viewModel.isLoading ? (
-          <SearchingState />
-        ) : null}
+        {viewModel.isLoading ? <SearchingState /> : null}
         {viewModel.isError ? (
           <Text style={styles.error}>{viewModel.isError}</Text>
         ) : null}
@@ -318,8 +315,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   chipText: {
-    ...Fonts.smallBodyText,
-    fontWeight: '700',
+    ...Fonts.smallBodyTextBold,
     letterSpacing: 0.5,
   },
   list: {

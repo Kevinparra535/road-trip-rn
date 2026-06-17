@@ -12,10 +12,11 @@ las copias sincronizadas y la realidad del código no se contradigan.
 </purpose>
 
 <when_to_use>
+
 - Antes de tocar cualquier feature de Road Trip (úsala junto con [[clean-architecture-rn-expo-mvvm]]).
 - Al añadir entidades, UseCases o servicios de dominio motero (autonomía, tanqueo, rutas, stats).
 - Para confirmar dónde vive algo en ESTE proyecto cuando difiere de la convención del stack.
-</when_to_use>
+  </when_to_use>
 
 <rules>
 
@@ -33,27 +34,31 @@ las copias sincronizadas y la realidad del código no se contradigan.
 - Contratos de servicios de datos (los que devuelven Models y hablan con Firebase/HTTP)
   viven en `src/data/services/` junto a su impl — NO en `domain/services/`. El dominio solo
   conoce las interfaces de `domain/repositories/`.
-- El Manager de transporte (Firebase) vive en `src/data/network/firebase.ts`.
+- **Managers de transporte** en `src/data/network/`: `firebase.ts` (SDK de Firebase) y
+  `FetchHttpManager.ts` (implementa `HttpManager` de `domain/services/`, envuelve `fetch`).
+  Los services HTTP (Mapbox, Wikipedia) inyectan `HttpManager`, no llaman `fetch` directo.
 - Servicios de dominio puros (sin infraestructura) pueden vivir como UseCase con lógica real
   (ej. `EstimateAutonomyUseCase`).
 - Cada feature es un slice vertical: entity → repository (domain) → model + service + repoImpl
   (data) → useCases → ViewModel → Screen → DI. Ver [[feature-scaffold-rn]].
 
-### Divergencias intencionales frente a las skills del stack
+### Convenciones de UI alineadas con el stack
 
-Estas son diferencias reales del código frente a las skills sincronizadas. Respétalas al
-trabajar aquí; si vas a cerrarlas, hazlo a propósito y actualiza esta nota.
+- **Stores globales en `src/ui/store/`** (`SessionStore`, `LocationStore`, `TripPartyStore`),
+  bindeados singleton, `@injectable()` + `makeAutoObservable`. Ver [[realtime-and-global-state-rn]].
+- **Hook `useViewModel`** (`src/ui/hooks/useViewModel.ts`): las pantallas obtienen su
+  ViewModel/Store con `useViewModel<T>(TYPES.X)`, no con `container.get` inline.
+- **Zod** para validación de input: `src/config/env.ts` valida la config al boot, y los
+  formularios usan esquemas en `src/ui/schemas/` (auth, motorcycleForm, joinRoute). Las
+  invariantes de negocio siguen en entidades/UseCases, no en los esquemas.
+- **Streams:** `SubscriptionUseCase` (en `src/domain/useCases/UseCase.ts`) y
+  `ObserveTripPartyUseCase` siguen el patrón de [[realtime-and-global-state-rn]].
 
-- **Stores globales en `src/ui/viewModels/`**, no en `src/ui/store/` como pide
-  [[realtime-and-global-state-rn]]. Hoy existen `SessionViewModel`, `LocationStore` y
-  `TripPartyStore` ahí (singletons). Siguen siendo `@injectable()` + `makeAutoObservable`.
-- **Sin hook `useViewModel`.** Las pantallas instancian el ViewModel con
-  `useMemo(() => container.get(...), [])` inline, no con `useViewModel(TYPES.X)`.
-- **Sin Zod.** `src/config/env.ts` lee la config sin validación Zod, y aún no hay
-  `src/ui/schemas/` para formularios. La recomendación de Zod en [[clean-architecture-rn-expo-mvvm]]
-  es objetivo, no estado actual.
-- **Streams ya en uso:** `SubscriptionUseCase` (en `src/domain/useCases/UseCase.ts`) y
-  `ObserveTripPartyUseCase` ya siguen el patrón de [[realtime-and-global-state-rn]].
+### Particularidad del proyecto
+
+- `src/data/services/MotoStatsService.ts` mantiene `MOTO_STATS_API_URL = ''`: la búsqueda web
+  está deshabilitada hasta que exista la Cloud Function, así que degrada al dataset local
+  (`src/data/datasets/motoStatsDataset.ts`). Inyecta `HttpManager` igual, listo para activarse.
 
 ### Entidades de dominio (MVP)
 
@@ -92,11 +97,11 @@ centraliza la lectura de esa configuración.
 </rules>
 
 <see_also>
+
 - [[clean-architecture-rn-expo-mvvm]] — reglas de capas, DI y ViewModel canónico.
 - [[feature-scaffold-rn]] — cómo crear un slice vertical end-to-end.
 - [[design-system-rn]] — tokens y componentes de UI.
-- [[realtime-and-global-state-rn]] — streams, stores globales y sync (ver divergencias arriba).
+- [[realtime-and-global-state-rn]] — streams, stores globales y sync.
 - [[unit-testing-clean-architecture]] — contrato de tests obligatorio por feature.
 - [[pr-checklist-clean-architecture]] — checklist de PR.
 </see_also>
-</content>

@@ -47,6 +47,11 @@ export class PlaceModel {
     Object.assign(this, params);
   }
 
+  /** Round-trip canónico desde un JSON plano con la forma del modelo. */
+  static fromJson(json: any): PlaceModel {
+    return new PlaceModel({ ...json });
+  }
+
   /** Parsea una feature de la Mapbox Geocoding API (v5). */
   static fromMapboxFeature(feature: any): PlaceModel | null {
     const center = feature?.center ?? feature?.geometry?.coordinates;

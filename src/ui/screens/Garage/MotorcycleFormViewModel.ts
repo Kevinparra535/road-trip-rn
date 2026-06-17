@@ -22,6 +22,11 @@ import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCa
 
 import Logger from '@/ui/utils/Logger';
 
+import {
+  motorcycleFormSchema,
+  motorcycleSpecsSearchSchema,
+} from '@/ui/schemas/motorcycleFormSchema';
+
 type ICalls = 'load' | 'specs' | 'submit';
 type Mode = 'create' | 'edit';
 
@@ -101,21 +106,21 @@ export class MotorcycleFormViewModel {
   }
 
   get canSearchSpecs(): boolean {
-    return (
-      this.brand.trim().length > 0 &&
-      this.model.trim().length > 0 &&
-      this.parsedYear > 0
-    );
+    return motorcycleSpecsSearchSchema.safeParse({
+      brand: this.brand,
+      model: this.model,
+      year: this.parsedYear,
+    }).success;
   }
 
   get isValid(): boolean {
-    return (
-      this.brand.trim().length > 0 &&
-      this.model.trim().length > 0 &&
-      this.parsedYear > 0 &&
-      this.parsedTank > 0 &&
-      this.parsedConsumption > 0
-    );
+    return motorcycleFormSchema.safeParse({
+      brand: this.brand,
+      model: this.model,
+      year: this.parsedYear,
+      tankCapacity: this.parsedTank,
+      consumption: this.parsedConsumption,
+    }).success;
   }
 
   /** Autonomia teorica de catalogo (tanque x rendimiento), sin carga. */

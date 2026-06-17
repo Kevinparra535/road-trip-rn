@@ -9,7 +9,10 @@ import { RouteDraftRepository } from '@/domain/repositories/RouteDraftRepository
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()
-export class GetRouteDraftUseCase implements UseCase<string, RouteDraft | null> {
+export class GetRouteDraftUseCase implements UseCase<
+  string,
+  RouteDraft | null
+> {
   constructor(
     @inject(TYPES.RouteDraftRepository)
     private readonly repository: RouteDraftRepository,

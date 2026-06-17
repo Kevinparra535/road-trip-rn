@@ -4,7 +4,6 @@ import {
   Fragment,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
 } from 'react';
 import {
@@ -32,7 +31,6 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
@@ -60,6 +58,9 @@ import Fonts from '@/ui/styles/Fonts';
 import { ms } from '@/ui/styles/FontsScale';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
+import { hexToRgba } from '@/ui/utils/colorUtils';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { HomeViewModel } from './HomeViewModel';
 
@@ -114,10 +115,7 @@ const IDLE_ACTIONS: {
  * deslizable con tarjetas de ruta, autonomia y elevacion.
  */
 const HomeScreen = observer(() => {
-  const viewModel = useMemo(
-    () => container.get<HomeViewModel>(TYPES.HomeViewModel),
-    [],
-  );
+  const viewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
   // HomeScreen vive dentro del HomeNavigator (Stack) que vive dentro del
   // AppDrawer. CompositeNavigationProp permite tipear navigate para ambos:
   // rutas del Stack (DestinationPreview) y del Drawer (ProfileTab, openDrawer).
@@ -1443,11 +1441,15 @@ const RouteDraftRecoveryModal = observer(
 
             <View style={recoveryStyles.previewCard}>
               {wps.map((w) => {
-                const color = Colors.stopKind[w.kind as StopKind] ?? Colors.base.iconMuted;
+                const color =
+                  Colors.stopKind[w.kind as StopKind] ?? Colors.base.iconMuted;
                 return (
                   <View key={w.id} style={recoveryStyles.previewRow}>
                     <View
-                      style={[recoveryStyles.previewDot, { backgroundColor: color }]}
+                      style={[
+                        recoveryStyles.previewDot,
+                        { backgroundColor: color },
+                      ]}
                     />
                     <Text
                       style={[
@@ -1498,7 +1500,7 @@ const RouteDraftRecoveryModal = observer(
 const recoveryStyles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: hexToRgba(Colors.base.shadow, 0.6),
     justifyContent: 'flex-end',
   },
   sheet: {

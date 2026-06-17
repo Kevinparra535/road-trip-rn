@@ -870,9 +870,9 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
     expect(vm.plannerRouteLines).toHaveLength(1);
     const preview = vm.plannerRouteLines[0];
     expect(preview.id).toBe('planner-preview-dashed');
-    expect(
-      (preview.shape.properties as Record<string, unknown>).isDashed,
-    ).toBe(true);
+    expect((preview.shape.properties as Record<string, unknown>).isDashed).toBe(
+      true,
+    );
   });
 
   it('con waypoints + directions: N-1 segmentos coloreados por destino de cada par', () => {
@@ -992,11 +992,13 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     userOverrideKind: false,
   });
 
-  const buildPlanner = (overrides: Partial<{
-    waypoints: any[];
-    directions: any;
-    rideType: string;
-  }> = {}) => ({
+  const buildPlanner = (
+    overrides: Partial<{
+      waypoints: any[];
+      directions: any;
+      rideType: string;
+    }> = {},
+  ) => ({
     waypoints: overrides.waypoints ?? [],
     directions: overrides.directions ?? null,
     rideType: overrides.rideType ?? 'highway',
@@ -1004,7 +1006,10 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
 
   it('sin directions devuelve false y no muta state', () => {
     const planner = buildPlanner({
-      waypoints: [wp('w1', 'start', 4.6, -74.08), wp('w2', 'destination', 4.8, -74.2)],
+      waypoints: [
+        wp('w1', 'start', 4.6, -74.08),
+        wp('w2', 'destination', 4.8, -74.2),
+      ],
       directions: null,
     });
     const vm = makeVM();

@@ -62,6 +62,7 @@ import type { RouteDraftRepository } from '@/domain/repositories/RouteDraftRepos
 import type { RouteRepository } from '@/domain/repositories/RouteRepository';
 import type { RouteShareRepository } from '@/domain/repositories/RouteShareRepository';
 import type { TripPartyRepository } from '@/domain/repositories/TripPartyRepository';
+import type { HttpManager } from '@/domain/services/HttpManager';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
@@ -107,9 +108,6 @@ import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
-import { LocationStore } from '@/ui/viewModels/LocationStore';
-import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
@@ -123,9 +121,20 @@ import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
+import { FetchHttpManager } from '@/data/network/FetchHttpManager';
+import { LocationStore } from '@/ui/store/LocationStore';
+import { SessionStore } from '@/ui/store/SessionStore';
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
+
 import 'reflect-metadata';
 
 export const container = new Container();
+
+// ── Managers: singleton ─────────────────────────────────────────────────────
+container
+  .bind<HttpManager>(TYPES.HttpManager)
+  .to(FetchHttpManager)
+  .inSingletonScope();
 
 // ── Services: singleton ────────────────────────────────────────────────────
 container
@@ -374,8 +383,8 @@ container
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
 container
-  .bind<SessionViewModel>(TYPES.SessionViewModel)
-  .to(SessionViewModel)
+  .bind<SessionStore>(TYPES.SessionStore)
+  .to(SessionStore)
   .inSingletonScope();
 container
   .bind<LocationStore>(TYPES.LocationStore)

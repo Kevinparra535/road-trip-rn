@@ -1,10 +1,10 @@
-import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
+import { SessionStore } from '@/ui/store/SessionStore';
 
 import { makeRider } from '../factories';
 
-describe('SessionViewModel', () => {
+describe('SessionStore', () => {
   it('starts not bootstrapped and unauthenticated', () => {
-    const vm = new SessionViewModel(
+    const vm = new SessionStore(
       { run: jest.fn() } as any,
       { run: jest.fn() } as any,
     );
@@ -20,7 +20,7 @@ describe('SessionViewModel', () => {
         return unsubscribe;
       }),
     };
-    const vm = new SessionViewModel(observe as any, { run: jest.fn() } as any);
+    const vm = new SessionStore(observe as any, { run: jest.fn() } as any);
 
     await vm.initialize();
 
@@ -34,14 +34,14 @@ describe('SessionViewModel', () => {
 
   it('records an error when the subscription fails', async () => {
     const observe = { run: jest.fn().mockRejectedValue(new Error('boom')) };
-    const vm = new SessionViewModel(observe as any, { run: jest.fn() } as any);
+    const vm = new SessionStore(observe as any, { run: jest.fn() } as any);
     await vm.initialize();
     expect(vm.isSessionError).toContain('boom');
   });
 
   it('signs out through the use case', async () => {
     const signOut = { run: jest.fn().mockResolvedValue(undefined) };
-    const vm = new SessionViewModel({ run: jest.fn() } as any, signOut as any);
+    const vm = new SessionStore({ run: jest.fn() } as any, signOut as any);
     const ok = await vm.signOut();
     expect(ok).toBe(true);
     expect(signOut.run).toHaveBeenCalled();
@@ -50,7 +50,7 @@ describe('SessionViewModel', () => {
 
   it('surfaces sign-out failures', async () => {
     const signOut = { run: jest.fn().mockRejectedValue(new Error('no net')) };
-    const vm = new SessionViewModel({ run: jest.fn() } as any, signOut as any);
+    const vm = new SessionStore({ run: jest.fn() } as any, signOut as any);
     const ok = await vm.signOut();
     expect(ok).toBe(false);
     expect(vm.isSignOutError).toContain('no net');

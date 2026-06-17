@@ -8,66 +8,66 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 ### 01 — Home Base
 
-| Frame | ID | Estado |
-|---|---|---|
-| `1 - Home Idle` | `o2MXzw` | ✅ existe |
-| `Home Idle - Detent grande` | `xdTuq` | ✅ existe |
-| `Home Idle - Busqueda activa` | `TY9l2` | ✅ existe |
+| Frame                         | ID       | Estado    |
+| ----------------------------- | -------- | --------- |
+| `1 - Home Idle`               | `o2MXzw` | ✅ existe |
+| `Home Idle - Detent grande`   | `xdTuq`  | ✅ existe |
+| `Home Idle - Busqueda activa` | `TY9l2`  | ✅ existe |
 
 ### 02 — Búsqueda
 
-| Frame | ID | Estado |
-|---|---|---|
+| Frame                      | ID      | Estado    |
+| -------------------------- | ------- | --------- |
 | `2 - Home Busqueda Activa` | `HYiOg` | ✅ existe |
 | `2b - Destination Preview` | `BSIFH` | ✅ existe |
 
 ### 03 — Planeación
 
-| Frame | ID | Estado |
-|---|---|---|
-| `3 - Home Ruta Asomado` | `pEMZA` | ✅ existe |
-| `3b - Agregar parada (Quick + Voice)` | `OzTvZ` | ✅ existe (4 categorías) |
-| `3b v2 - Agregar parada (Turismo + Mirador)` | `DiJJK` | ✅ **nuevo** (6 categorías) |
-| `11 - Planear ruta (formSheet full)` | `kYA7r` | ✅ viejo (sin StopKind) |
-| `11 - Planear ruta v2 (StopKind)` | `ydBys` | ✅ **nuevo** (timeline coloreado) |
-| `12 - Detalle de ruta (formSheet)` | `ufCBn` | ✅ viejo (sin party) |
-| `12 v2 - Detalle de ruta (con party)` | `m5eDAS` | ✅ **nuevo** (party banner) |
-| `Selector tipo de viaje (sheet)` | `S8LXf` | ✅ **nuevo** |
-| `Compartir ruta (sheet)` | `LbG7X` | ✅ **nuevo** |
-| `Party - Miembros (sheet)` | `gYdbc` | ✅ **nuevo** |
-| `Unirse a party (sheet)` | `DKTgF` | ✅ **nuevo** |
-| `Plan tanqueo party (sheet)` | `E4EXLu` | ✅ **nuevo** |
+| Frame                                        | ID       | Estado                            |
+| -------------------------------------------- | -------- | --------------------------------- |
+| `3 - Home Ruta Asomado`                      | `pEMZA`  | ✅ existe                         |
+| `3b - Agregar parada (Quick + Voice)`        | `OzTvZ`  | ✅ existe (4 categorías)          |
+| `3b v2 - Agregar parada (Turismo + Mirador)` | `DiJJK`  | ✅ **nuevo** (6 categorías)       |
+| `11 - Planear ruta (formSheet full)`         | `kYA7r`  | ✅ viejo (sin StopKind)           |
+| `11 - Planear ruta v2 (StopKind)`            | `ydBys`  | ✅ **nuevo** (timeline coloreado) |
+| `12 - Detalle de ruta (formSheet)`           | `ufCBn`  | ✅ viejo (sin party)              |
+| `12 v2 - Detalle de ruta (con party)`        | `m5eDAS` | ✅ **nuevo** (party banner)       |
+| `Selector tipo de viaje (sheet)`             | `S8LXf`  | ✅ **nuevo**                      |
+| `Compartir ruta (sheet)`                     | `LbG7X`  | ✅ **nuevo**                      |
+| `Party - Miembros (sheet)`                   | `gYdbc`  | ✅ **nuevo**                      |
+| `Unirse a party (sheet)`                     | `DKTgF`  | ✅ **nuevo**                      |
+| `Plan tanqueo party (sheet)`                 | `E4EXLu` | ✅ **nuevo**                      |
 
 ### 04 — Navegación
 
-| Frame | ID | Estado |
-|---|---|---|
-| `6a - Home Navegacion` | `O3a2f` | ✅ existe |
+| Frame                                  | ID      | Estado    |
+| -------------------------------------- | ------- | --------- |
+| `6a - Home Navegacion`                 | `O3a2f` | ✅ existe |
 | `6a - Home Nav Activa · Sin Elevacion` | `NWLDE` | ✅ existe |
-| `6b - Home Nav Activa + Elevacion` | `MR9RX` | ✅ existe |
-| `7 - Home Recalculando` | `meRZm` | ✅ existe |
+| `6b - Home Nav Activa + Elevacion`     | `MR9RX` | ✅ existe |
+| `7 - Home Recalculando`                | `meRZm` | ✅ existe |
 
 ### 05 — Estados
 
-| Frame | ID | Estado |
-|---|---|---|
-| `8 - Llegada` | `FPmDk` | ✅ existe |
+| Frame                         | ID      | Estado    |
+| ----------------------------- | ------- | --------- |
+| `8 - Llegada`                 | `FPmDk` | ✅ existe |
 | `9 - Sin permiso` (ubicación) | `evY1L` | ✅ existe |
-| `9 - Cargando ruta` | `n02Ew` | ✅ existe |
-| `11 - Home Sin Moto` | `dYsls` | ✅ existe |
+| `9 - Cargando ruta`           | `n02Ew` | ✅ existe |
+| `11 - Home Sin Moto`          | `dYsls` | ✅ existe |
 
 ### 06 — Tabs / form sheets
 
-| Frame | ID | Estado |
-|---|---|---|
-| `10 - Rutas (formSheet)` | `eIwmB` | ✅ existe (lista de rutas guardadas) |
-| `13 - Mi Garaje (formSheet)` | `l1bPuR` | ✅ existe |
-| `15 - Perfil (formSheet)` | `Q1bWZ1` | ✅ existe |
+| Frame                        | ID       | Estado                               |
+| ---------------------------- | -------- | ------------------------------------ |
+| `10 - Rutas (formSheet)`     | `eIwmB`  | ✅ existe (lista de rutas guardadas) |
+| `13 - Mi Garaje (formSheet)` | `l1bPuR` | ✅ existe                            |
+| `15 - Perfil (formSheet)`    | `Q1bWZ1` | ✅ existe                            |
 
 ### 07 — Forms
 
-| Frame | ID | Estado |
-|---|---|---|
+| Frame                        | ID      | Estado    |
+| ---------------------------- | ------- | --------- |
 | `14 - Registrar moto (full)` | `Dk7MA` | ✅ existe |
 
 ---
@@ -84,6 +84,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: `11 - Home Sin Moto` (estado), `14 - Registrar moto`.
 **Gaps**:
+
 - 🔴 **Falta pantalla de Sign In / Sign Up** — el código tiene `AuthViewModel` y `AuthScreen` pero NO HAY frames Pencil de esto. Decidir si el flow lo necesita o si arrancamos con un sign-in mínimo de Firebase.
 - 🟡 **Onboarding tipo welcome** (3 slides explicativas del valor del producto): probablemente innecesario para MVP, valida si hace falta.
 
@@ -117,6 +118,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: TODAS las del flow.
 **Gaps**:
+
 - 🟡 **Transición Selector → Búsqueda**: el frame Selector termina con "Continuar". ¿A dónde lleva? Asumimos que abre el SearchBar del Home idle pre-expandido. Falta clarificar en el Pencil con una flecha o nota.
 - 🟡 **Frame 3b después de elegir categoría** (ej. "Comida"): muestra una lista de restaurantes cercanos. El frame actual muestra el GRID de categorías pero no el SUB-listado de resultados por categoría. Falta esa pantalla intermedia: `3b-2 - Resultados por categoría`.
 
@@ -151,6 +153,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: todas las del flow.
 **Gaps**:
+
 - 🟡 **Estado "esperando party members"**: no hay frame que muestre claramente "1/3 unido" o "esperando 2 riders más". El chip "Party (1)" del frame 11 v2 podría comunicarlo, pero falta el estado de "owner espera a que el code sea usado".
 - 🟡 **Transición de chip "Party (N)" a `Party - Miembros`**: el frame 11 v2 NO TIENE el chip "Party (N)" todavía (lo dibujé conceptualmente). **Falta agregarlo** al frame 11 v2 cuando la ruta es grupal.
 - 🟢 Toda la sección de Plan de tanqueo está bien cubierta.
@@ -177,6 +180,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: `Unirse a party`, `Party - Miembros`.
 **Gaps**:
+
 - 🔴 **Entry point del Flow D faltante**: ¿cómo entra el rider invitado a `Unirse a party`? Opciones:
   - Deep link `roadtrip://join/r-XXXX-YYYY` → directo a `Unirse a party` con código pre-llenado
   - Botón "Unirse a party" en algún lado del Home idle (ej. chip o menú)
@@ -202,6 +206,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: todas.
 **Gaps**:
+
 - 🟡 **Banner durante navegación de "próxima parada de tanqueo a 45km"** (sobre todo en modo party): el cálculo del Plan de tanqueo está en sheet aparte. Pero durante la navegación activa, el rider debería ver un banner sutil "Próximo tanqueo: 45 km". Falta ese elemento en el frame 6a/6b.
 - 🟡 **Vista del party durante navegación**: ¿el frame 6a/6b muestra los avatares de los party members en el mapa? Para una rodada grupal sería clave ver dónde está cada uno. Falta diseño del componente "mini-avatars en el mapa" + sheet "Party en ruta".
 
@@ -220,6 +225,7 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 **Pantallas que tenemos**: `8 - Llegada`, `10 - Rutas`.
 **Gaps**:
+
 - 🔴 **Frame "Guardar como ruta"** (nombre + tipo + opciones): no existe. Es donde se mueve la decisión de nombrar/guardar la ruta. Sin este frame, las rutas ad-hoc del Flow B no quedan registradas en "Mis rutas".
 - 🟡 **Resumen post-viaje** (km recorridos, combustible usado, paradas hechas, fotos sugeridas?): el `8 - Llegada` muestra solo "Llegaste". Pencil podría tener un sub-frame con el resumen del viaje.
 - 🟡 **Sharing post-viaje** ("compartí tu rodada por X"): nice-to-have, post-MVP.
@@ -230,24 +236,24 @@ Agrupados por sección (label del Pencil) + estado vs requerido por el MVP.
 
 ### 🔴 Bloqueantes para MVP funcional (3)
 
-| # | Gap | Donde encaja | Esfuerzo |
-|---|---|---|---|
-| 1 | Pantalla **Sign In / Sign Up** (Flow A) | inicio, primer entry | Frame nuevo + uso de `AuthScreen` existente |
-| 2 | Entry point para **Unirse a party** desde Home (Flow D) | Home Idle | Chip nuevo en idle o FAB |
-| 3 | Frame **"Guardar como ruta"** (nombre + rideType) (Flow F) | post-llegada o desde frame 11 v2 | Frame nuevo (modal/sheet) |
+| #   | Gap                                                        | Donde encaja                     | Esfuerzo                                    |
+| --- | ---------------------------------------------------------- | -------------------------------- | ------------------------------------------- |
+| 1   | Pantalla **Sign In / Sign Up** (Flow A)                    | inicio, primer entry             | Frame nuevo + uso de `AuthScreen` existente |
+| 2   | Entry point para **Unirse a party** desde Home (Flow D)    | Home Idle                        | Chip nuevo en idle o FAB                    |
+| 3   | Frame **"Guardar como ruta"** (nombre + rideType) (Flow F) | post-llegada o desde frame 11 v2 | Frame nuevo (modal/sheet)                   |
 
 ### 🟡 Smells de UX (8)
 
-| # | Gap | Donde encaja |
-|---|---|---|
-| 4 | Transición "Selector tipo de viaje → Búsqueda" sin flecha clara en el Pencil | post-Selector |
-| 5 | Sub-listado de resultados por categoría dentro de `3b v2` (tap "Comida" → muestra restaurantes cercanos) | Add stop flow |
-| 6 | Chip "Party (N)" en el header del frame 11 v2 (no lo dibujé) | frame 11 v2 |
-| 7 | Estado "esperando party members" del owner | frame 11 v2 + Compartir |
-| 8 | Confirmation post-join "te uniste exitosamente" | post-Unirse |
-| 9 | Variante read-only del frame 11 v2 para party viewers | frame 11 v2 |
-| 10 | Banner "Próximo tanqueo: 45 km" durante navegación | frame 6a/6b |
-| 11 | Mini-avatares de party members en el mapa de navegación | frame 6a/6b |
+| #   | Gap                                                                                                      | Donde encaja            |
+| --- | -------------------------------------------------------------------------------------------------------- | ----------------------- |
+| 4   | Transición "Selector tipo de viaje → Búsqueda" sin flecha clara en el Pencil                             | post-Selector           |
+| 5   | Sub-listado de resultados por categoría dentro de `3b v2` (tap "Comida" → muestra restaurantes cercanos) | Add stop flow           |
+| 6   | Chip "Party (N)" en el header del frame 11 v2 (no lo dibujé)                                             | frame 11 v2             |
+| 7   | Estado "esperando party members" del owner                                                               | frame 11 v2 + Compartir |
+| 8   | Confirmation post-join "te uniste exitosamente"                                                          | post-Unirse             |
+| 9   | Variante read-only del frame 11 v2 para party viewers                                                    | frame 11 v2             |
+| 10  | Banner "Próximo tanqueo: 45 km" durante navegación                                                       | frame 6a/6b             |
+| 11  | Mini-avatares de party members en el mapa de navegación                                                  | frame 6a/6b             |
 
 ### 🟢 Cubierto adecuadamente
 

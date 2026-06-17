@@ -11,11 +11,12 @@ testing — other skills (feature-scaffold, pr-checklist) defer here for detail.
 </purpose>
 
 <when_to_use>
+
 - Create or refactor a UseCase, ViewModel, model, service, or repository implementation.
 - Add validation schemas, debounce/retry logic, or sync/offline behavior.
 - Review test quality or coverage in a PR.
 - Decide what to test, how to mock, and what coverage is acceptable.
-</when_to_use>
+  </when_to_use>
 
 <rules>
 
@@ -141,7 +142,8 @@ expect(viewModel.isItemsResponse).toEqual([sampleClient]);
 
 // ❌ Wrong — pulling the real graph from the container
 const viewModel = container.get<ClientsViewModel>(TYPES.ClientsViewModel);
-```
+
+````
 </example>
 
 <example name="global-setup">
@@ -157,7 +159,8 @@ beforeAll(() => {
 afterAll(() => {
   jest.restoreAllMocks();
 });
-```
+````
+
 </example>
 
 <example name="jest-config">
@@ -178,13 +181,14 @@ module.exports = {
 import { Client } from '@/domain/entities/Client';
 
 export const makeClient = (overrides: Partial<ClientConstructorParams> = {}): Client =>
-  new Client({
-    id: 'c1',
-    name: 'Ada Lovelace',
-    email: 'ada@corp.com',
-    ...overrides,
-  });
-```
+new Client({
+id: 'c1',
+name: 'Ada Lovelace',
+email: 'ada@corp.com',
+...overrides,
+});
+
+````
 </example>
 
 <example name="usecase-test">
@@ -207,7 +211,8 @@ describe('GetAllClientUseCase', () => {
     await expect(uc.run()).rejects.toThrow('boom');
   });
 });
-```
+````
+
 </example>
 
 <example name="viewmodel-test">
@@ -219,28 +224,31 @@ describe('ClientsViewModel.loadAll', () => {
     return { viewModel, getAll };
   };
 
-  it('sets response on success and clears loading', async () => {
-    const { viewModel, getAll } = build();
-    getAll.run.mockResolvedValue([makeClient()]);
+it('sets response on success and clears loading', async () => {
+const { viewModel, getAll } = build();
+getAll.run.mockResolvedValue([makeClient()]);
 
     await viewModel.loadAll();
 
     expect(viewModel.isItemsLoading).toBe(false);
     expect(viewModel.isItemsResponse).toHaveLength(1);
     expect(viewModel.isLoaded).toBe(true);
-  });
 
-  it('records a normalized error on failure', async () => {
-    const { viewModel, getAll } = build();
-    getAll.run.mockRejectedValue('plain string failure');
+});
+
+it('records a normalized error on failure', async () => {
+const { viewModel, getAll } = build();
+getAll.run.mockRejectedValue('plain string failure');
 
     await viewModel.loadAll();
 
     expect(viewModel.isItemsLoading).toBe(false);
     expect(viewModel.isItemsError).toContain('plain string failure');
-  });
+
 });
-```
+});
+
+````
 </example>
 
 <example name="optimistic-rollback">
@@ -254,7 +262,8 @@ it('reverts optimistic toggle when the use case fails', async () => {
 
   expect(viewModel.tasks.find((t) => t.id === 't1')?.completed).toBe(false); // rolled back
 });
-```
+````
+
 </example>
 
 </examples>
@@ -271,11 +280,12 @@ Definition of done for every feature:
 6. Repository mapping + sync invariants (when offline/sync exists).
 7. `npm run test` green, `npm run test:coverage` ≥ 70% global.
 8. No `container.get` in tests; no real network/Firebase/timers (unless fake timers).
-</output_format>
+   </output_format>
 
 <see_also>
+
 - [[realtime-and-global-state-rn]] — subscription/observable lifecycle and global-state testing.
 - [[feature-scaffold-rn]] — generates the feature whose tests this skill governs.
 - [[pr-checklist-clean-architecture]] — review gate enforcing this testing requirement.
 - [[clean-architecture-rn-expo-mvvm]] — the architecture these tests verify.
-</see_also>
+  </see_also>

@@ -17,7 +17,7 @@ type ICalls = 'session' | 'signOut';
  * entre el stack de autenticacion y el stack principal de la app.
  */
 @injectable()
-export class SessionViewModel {
+export class SessionStore {
   currentRider: Rider | null = null;
   isSessionLoading: boolean = true;
   isSessionError: string | null = null;
@@ -26,7 +26,7 @@ export class SessionViewModel {
   isSignOutError: string | null = null;
 
   private unsubscribe: (() => void) | null = null;
-  private logger = new Logger('SessionViewModel');
+  private logger = new Logger('SessionStore');
 
   constructor(
     @inject(TYPES.ObserveAuthStateUseCase)

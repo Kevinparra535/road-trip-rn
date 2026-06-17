@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -23,6 +22,8 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { PartyMemberRow, PartyMembersViewModel } from './PartyMembersViewModel';
 
@@ -40,9 +41,8 @@ type Nav = NativeStackNavigationProp<RoutesStackParamList, 'PartyMembers'>;
 const PartyMembersScreen = observer(() => {
   const navigation = useNavigation<Nav>();
 
-  const viewModel = useMemo(
-    () => container.get<PartyMembersViewModel>(TYPES.PartyMembersViewModel),
-    [],
+  const viewModel = useViewModel<PartyMembersViewModel>(
+    TYPES.PartyMembersViewModel,
   );
 
   useEffect(() => {

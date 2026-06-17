@@ -11,10 +11,11 @@ is what keeps the architecture inspectable and the layers swappable.
 </purpose>
 
 <when_to_use>
+
 - Creating a new feature end-to-end (e.g. "Clients", "Measurements", "Sessions").
 - Adding a screen that needs its own UseCases, repository contract, repo impl, and service.
 - Wiring a new feature into Inversify DI with its tests.
-</when_to_use>
+  </when_to_use>
 
 <rules>
 
@@ -371,14 +372,14 @@ const <Feature>Screen = observer(() => {
 
 Screen/ViewModel rules at a glance:
 
-| Rule                 | Correct                                 | Wrong                                            |
-| -------------------- | --------------------------------------- | ------------------------------------------------ |
-| Instantiate ViewModel       | `useViewModel(TYPES.X)`                  | `new ViewModel()` in component body              |
-| Name the instance    | `const viewModel = ...`                 | `const vm = ...`                                 |
-| Trigger side effects | `useEffect(() => { viewModel.load() }, [viewModel])`  | `useMemo(() => { viewModel.load() }, [...])`            |
-| Mutate after `await` | `runInAction(() => { this.x = val })`   | `this.x = val` directly after await              |
-| Log + set error      | `handleError(e, type)`                  | Inline `this.error = e.message`                  |
-| Set loading/error    | `updateLoadingState(bool, msg, type)`   | Direct field assignment scattered through action |
+| Rule                  | Correct                                              | Wrong                                            |
+| --------------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| Instantiate ViewModel | `useViewModel(TYPES.X)`                              | `new ViewModel()` in component body              |
+| Name the instance     | `const viewModel = ...`                              | `const vm = ...`                                 |
+| Trigger side effects  | `useEffect(() => { viewModel.load() }, [viewModel])` | `useMemo(() => { viewModel.load() }, [...])`     |
+| Mutate after `await`  | `runInAction(() => { this.x = val })`                | `this.x = val` directly after await              |
+| Log + set error       | `handleError(e, type)`                               | Inline `this.error = e.message`                  |
+| Set loading/error     | `updateLoadingState(bool, msg, type)`                | Direct field assignment scattered through action |
 
 </example>
 
@@ -392,10 +393,11 @@ Return:
 3. DI changes explicitly shown
 4. Unit test files + test cases added
 5. "How to test" steps (`npm test` and the targeted test command)
-</output_format>
+   </output_format>
 
 <see_also>
+
 - [[clean-architecture-rn-expo-mvvm]] — the general architecture rules this scaffold follows.
 - [[unit-testing-clean-architecture]] — the full testing stack, factories, and coverage policy.
 - [[design-system-rn]] — UI/component conventions for the screen layer.
-</see_also>
+  </see_also>

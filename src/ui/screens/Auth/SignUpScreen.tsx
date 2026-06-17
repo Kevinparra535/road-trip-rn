@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -14,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import AppTextInput from '@/ui/components/AppTextInput';
@@ -28,16 +26,15 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
+import { useViewModel } from '@/ui/hooks/useViewModel';
+
 import { AuthViewModel } from './AuthViewModel';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 
 const SignUpScreen = observer(() => {
   const navigation = useNavigation<Nav>();
-  const viewModel = useMemo(
-    () => container.get<AuthViewModel>(TYPES.AuthViewModel),
-    [],
-  );
+  const viewModel = useViewModel<AuthViewModel>(TYPES.AuthViewModel);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>

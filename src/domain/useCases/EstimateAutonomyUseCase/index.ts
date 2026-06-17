@@ -105,7 +105,10 @@ export class EstimateAutonomyUseCase implements UseCase<
       default:
         break;
     }
-    return Math.min(MAX_CONDITION_FACTOR, Math.max(MIN_CONDITION_FACTOR, factor));
+    return Math.min(
+      MAX_CONDITION_FACTOR,
+      Math.max(MIN_CONDITION_FACTOR, factor),
+    );
   }
 
   private buildFuelStops(

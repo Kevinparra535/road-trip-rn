@@ -11,10 +11,11 @@ the PR is safe to merge without eroding the architecture.
 </purpose>
 
 <when_to_use>
+
 - Reviewing a PR or changeset for architecture compliance.
 - Self-checking a branch before opening or merging a PR.
 - Gating any change that touches UseCases, ViewModels, models, services, or repositories.
-</when_to_use>
+  </when_to_use>
 
 <checklist>
 
@@ -91,7 +92,8 @@ the PR is safe to merge without eroding the architecture.
 </checklist>
 
 <see_also>
+
 - [[unit-testing-clean-architecture]] — the full testing contract this gate enforces.
 - [[clean-architecture-rn-expo-mvvm]] — the architecture rules this checklist verifies.
 - [[realtime-and-global-state-rn]] — subscription teardown and global `Store` conventions.
-</see_also>
+  </see_also>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -16,7 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { FuelType, LuggagePosition } from '@/domain/entities/Motorcycle';
@@ -31,6 +30,8 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import {
   MAX_LUGGAGE_KG,
@@ -57,9 +58,8 @@ const MotorcycleFormScreen = observer(() => {
   const route = useRoute<Route>();
   const motorcycleId = route.params?.motorcycleId;
 
-  const viewModel = useMemo(
-    () => container.get<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel),
-    [],
+  const viewModel = useViewModel<MotorcycleFormViewModel>(
+    TYPES.MotorcycleFormViewModel,
   );
 
   useEffect(() => {

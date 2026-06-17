@@ -6,7 +6,7 @@ import {
   TripPartyUnsubscribe,
 } from '@/domain/repositories/TripPartyRepository';
 
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 const makeParty = (overrides: Partial<TripParty> = {}): TripParty =>
   new TripParty({

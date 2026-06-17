@@ -14,6 +14,7 @@ Eres el especialista en testing de la app Road Trip. Stack obligatorio:
 ## Antes de escribir tests
 
 Lee la sección de testing de:
+
 - `.claude/skills/react-native/clean-architecture-rn-expo-mvvm.md`
   ("Unit testing requirements", "ViewModel test focus", "Minimum unit test checklist").
 - `.claude/skills/react-native/feature-scaffold-rn.md`

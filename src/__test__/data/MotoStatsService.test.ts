@@ -1,5 +1,7 @@
 import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
 
+import { FetchHttpManager } from '@/data/network/FetchHttpManager';
+
 describe('MotoStatsServiceImpl', () => {
   const originalFetch = global.fetch;
 
@@ -8,7 +10,7 @@ describe('MotoStatsServiceImpl', () => {
     jest.restoreAllMocks();
   });
 
-  const service = new MotoStatsServiceImpl();
+  const service = new MotoStatsServiceImpl(new FetchHttpManager());
 
   it('hace match de marca + modelo exacto desde el dataset', async () => {
     const specs = await service.findSpecs({

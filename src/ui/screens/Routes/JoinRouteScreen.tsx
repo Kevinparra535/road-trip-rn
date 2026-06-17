@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -23,6 +22,8 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { JoinRouteViewModel } from './JoinRouteViewModel';
 
@@ -38,10 +39,7 @@ const JoinRouteScreen = observer(() => {
   const navigation = useNavigation<Nav>();
   const params = useRoute<Route>().params;
 
-  const viewModel = useMemo(
-    () => container.get<JoinRouteViewModel>(TYPES.JoinRouteViewModel),
-    [],
-  );
+  const viewModel = useViewModel<JoinRouteViewModel>(TYPES.JoinRouteViewModel);
 
   useEffect(() => {
     viewModel.initialize(params?.initialCode);

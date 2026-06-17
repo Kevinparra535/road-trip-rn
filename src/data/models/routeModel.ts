@@ -187,7 +187,8 @@ export class RouteModel {
       geometry: encodePolyline(route.geometry),
       distance_km: route.distanceKm,
       estimated_duration_min: route.estimatedDurationMin,
-      notes: route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
+      notes:
+        route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
       created_at: route.createdAt.toISOString(),
     });
   }

@@ -1,26 +1,22 @@
-import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import GradientView from '@/ui/components/GradientView';
 import PrimaryButton from '@/ui/components/PrimaryButton';
-
-import { SessionViewModel } from '@/ui/viewModels/SessionViewModel';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
+import { useViewModel } from '@/ui/hooks/useViewModel';
+import { SessionStore } from '@/ui/store/SessionStore';
+
 const ProfileScreen = observer(() => {
-  const session = useMemo(
-    () => container.get<SessionViewModel>(TYPES.SessionViewModel),
-    [],
-  );
+  const session = useViewModel<SessionStore>(TYPES.SessionStore);
   const rider = session.currentRider;
 
   return (

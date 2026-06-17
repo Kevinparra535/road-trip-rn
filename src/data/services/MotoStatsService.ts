@@ -1,6 +1,9 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+
+import { TYPES } from '@/config/types';
 
 import { MotoStatsQuery } from '@/domain/repositories/MotoStatsRepository';
+import { HttpManager } from '@/domain/services/HttpManager';
 
 import { MotorcycleSpecsModel } from '@/data/models/motorcycleSpecsModel';
 
@@ -22,6 +25,11 @@ export interface MotoStatsService {
 
 @injectable()
 export class MotoStatsServiceImpl implements MotoStatsService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async findSpecs(query: MotoStatsQuery): Promise<MotorcycleSpecsModel | null> {
     const fromWeb = await this.fetchFromWeb(query);
     if (fromWeb) return fromWeb;
@@ -43,7 +51,7 @@ export class MotoStatsServiceImpl implements MotoStatsService {
         model: query.model,
         year: String(query.year),
       });
-      const response = await fetch(`${MOTO_STATS_API_URL}?${params}`);
+      const response = await this.http.get(`${MOTO_STATS_API_URL}?${params}`);
       if (!response.ok) return null;
       const json = await response.json();
       return MotorcycleSpecsModel.fromJson({

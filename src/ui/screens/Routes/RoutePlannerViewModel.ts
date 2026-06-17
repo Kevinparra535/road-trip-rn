@@ -35,10 +35,10 @@ import {
 } from '@/domain/useCases/SearchPlacesUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 
-import { LocationStore } from '@/ui/viewModels/LocationStore';
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
-
 import Logger from '@/ui/utils/Logger';
+
+import { LocationStore } from '@/ui/store/LocationStore';
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls =
   | 'load'
@@ -1008,7 +1008,9 @@ export class RoutePlannerViewModel {
       // Avanzar el sequence para no chocar con ids de los waypoints cargados.
       this.waypointSeq = Math.max(
         this.waypointSeq,
-        ...draft.waypoints.map((w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0),
+        ...draft.waypoints.map(
+          (w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0,
+        ),
       );
       this.directions = null;
     });

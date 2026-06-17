@@ -20,9 +20,9 @@ import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
-
 import Logger from '@/ui/utils/Logger';
+
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share' | 'party';
 

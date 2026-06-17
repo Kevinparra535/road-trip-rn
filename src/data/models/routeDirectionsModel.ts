@@ -45,6 +45,31 @@ export class RouteDirectionsModel {
     this.steps = params.steps ?? [];
   }
 
+  /** Round-trip canónico desde un JSON plano con la forma del modelo. */
+  static fromJson(json: any): RouteDirectionsModel {
+    return new RouteDirectionsModel({
+      distance_meters: Number(json?.distance_meters ?? 0),
+      duration_seconds: Number(json?.duration_seconds ?? 0),
+      coordinates: Array.isArray(json?.coordinates) ? json.coordinates : [],
+      alternatives: Array.isArray(json?.alternatives)
+        ? json.alternatives.map((alt: any) =>
+            RouteDirectionsModel.fromJson(alt),
+          )
+        : [],
+      steps: Array.isArray(json?.steps) ? json.steps : [],
+    });
+  }
+
+  toJson(): Record<string, unknown> {
+    return {
+      distance_meters: this.distance_meters,
+      duration_seconds: this.duration_seconds,
+      coordinates: this.coordinates,
+      alternatives: this.alternatives.map((alt) => alt.toJson()),
+      steps: this.steps,
+    };
+  }
+
   /** Aplana las maniobras turn-by-turn de todos los `legs` en una sola lista. */
   private static extractSteps(route: any): NavigationStepModelParams[] {
     const legs: any[] = Array.isArray(route?.legs) ? route.legs : [];

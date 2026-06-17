@@ -1,5 +1,7 @@
 import { FuelStationServiceImpl } from '@/data/services/FuelStationService';
 
+import { FetchHttpManager } from '@/data/network/FetchHttpManager';
+
 // El servicio lee `ENV.mapboxPublicToken` para construir la URL. Forzamos un
 // token predecible para que los asserts sobre la query no dependan del entorno.
 jest.mock('@/config/env', () => ({
@@ -16,7 +18,7 @@ describe('FuelStationServiceImpl', () => {
     jest.restoreAllMocks();
   });
 
-  const service = new FuelStationServiceImpl();
+  const service = new FuelStationServiceImpl(new FetchHttpManager());
 
   it('mapea features validas y pasa el token + proximity en la URL', async () => {
     global.fetch = jest.fn().mockResolvedValue({

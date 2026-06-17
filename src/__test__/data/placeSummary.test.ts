@@ -5,6 +5,8 @@ import {
 
 import { PlaceSummaryRepositoryImpl } from '@/data/repositories/PlaceSummaryRepositoryImpl';
 
+import { FetchHttpManager } from '@/data/network/FetchHttpManager';
+
 // El servicio lee `ENV.placeSummaryBaseUrl`. Forzamos un valor predecible
 // para que los asserts sobre URL no dependan del entorno real.
 jest.mock('@/config/env', () => ({
@@ -34,7 +36,7 @@ describe('WikipediaSummaryService', () => {
       }),
     });
 
-    const service = new WikipediaSummaryService();
+    const service = new WikipediaSummaryService(new FetchHttpManager());
     const result = await service.fetch('Villa de Leyva');
 
     expect(global.fetch).toHaveBeenCalledWith(
@@ -52,7 +54,9 @@ describe('WikipediaSummaryService', () => {
   it('devuelve null cuando la respuesta no es ok (404)', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false });
 
-    const result = await new WikipediaSummaryService().fetch('Inexistente');
+    const result = await new WikipediaSummaryService(
+      new FetchHttpManager(),
+    ).fetch('Inexistente');
 
     expect(result).toBeNull();
   });
@@ -67,7 +71,9 @@ describe('WikipediaSummaryService', () => {
       }),
     });
 
-    const result = await new WikipediaSummaryService().fetch('Cali');
+    const result = await new WikipediaSummaryService(
+      new FetchHttpManager(),
+    ).fetch('Cali');
 
     expect(result).toBeNull();
   });
@@ -83,7 +89,9 @@ describe('WikipediaSummaryService', () => {
       }),
     });
 
-    const result = await new WikipediaSummaryService().fetch('Solo titulo');
+    const result = await new WikipediaSummaryService(
+      new FetchHttpManager(),
+    ).fetch('Solo titulo');
 
     expect(result).not.toBeNull();
     expect(result!.title).toBe('Solo titulo');
@@ -95,7 +103,9 @@ describe('WikipediaSummaryService', () => {
   it('captura errores de red y devuelve null (no rompe la UX)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('network'));
 
-    const result = await new WikipediaSummaryService().fetch('Bogota');
+    const result = await new WikipediaSummaryService(
+      new FetchHttpManager(),
+    ).fetch('Bogota');
 
     expect(result).toBeNull();
   });

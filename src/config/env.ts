@@ -1,48 +1,52 @@
 import Constants from 'expo-constants';
-
-type FirebaseEnv = {
-  apiKey: string;
-  authDomain: string;
-  projectId: string;
-  storageBucket: string;
-  messagingSenderId: string;
-  appId: string;
-  measurementId?: string;
-};
-
-type AppEnv = {
-  mapboxPublicToken: string;
-  MAP_STYLE_URL: string;
-  /** Base URL del endpoint REST de Wikipedia (idioma configurable por env). */
-  placeSummaryBaseUrl: string;
-  firebase: FirebaseEnv;
-};
-
-const extra = (Constants.expoConfig?.extra ?? {}) as Partial<AppEnv>;
+import { z } from 'zod';
 
 /**
- * Configuracion sensible leida desde `app.json > expo.extra`.
- * Reemplazar los placeholders `SET_*` por valores reales antes de buildear.
+ * Esquema y validación de la configuración sensible leída desde
+ * `app.json > expo.extra`. Zod valida la forma y los tipos al boot y, si algo
+ * está malformado (tipo incorrecto, URL inválida), lanza con la lista exacta
+ * de problemas en vez de fallar silenciosamente en runtime.
+ *
+ * Los placeholders `SET_*` se mantienen como `default` para que el dev build
+ * arranque sin secretos reales; reemplázalos por valores reales antes de
+ * buildear producción.
  */
-export const ENV: AppEnv = {
-  mapboxPublicToken: extra.mapboxPublicToken ?? 'SET_MAPBOX_PUBLIC_TOKEN',
-  // Fallback al estilo de navegacion nocturna oficial de Mapbox: sin esto
-  // (cuando MAP_STYLE_URL no se configura via env) el MapView recibia un
-  // styleURL invalido, el mapa quedaba en negro y nuestros LineLayer /
-  // FillLayer rendereaban sin color.
-  MAP_STYLE_URL: 'mapbox://styles/mapbox/navigation-night-v1',
-  placeSummaryBaseUrl:
-    extra.placeSummaryBaseUrl ??
-    'https://es.wikipedia.org/api/rest_v1/page/summary',
-  firebase: {
-    apiKey: extra.firebase?.apiKey ?? 'SET_FIREBASE_API_KEY',
-    authDomain: extra.firebase?.authDomain ?? 'SET_FIREBASE_AUTH_DOMAIN',
-    projectId: extra.firebase?.projectId ?? 'SET_FIREBASE_PROJECT_ID',
-    storageBucket:
-      extra.firebase?.storageBucket ?? 'SET_FIREBASE_STORAGE_BUCKET',
-    messagingSenderId:
-      extra.firebase?.messagingSenderId ?? 'SET_FIREBASE_MESSAGING_SENDER_ID',
-    appId: extra.firebase?.appId ?? 'SET_FIREBASE_APP_ID',
-    measurementId: extra.firebase?.measurementId,
-  },
-};
+const firebaseSchema = z.object({
+  apiKey: z.string().min(1).default('SET_FIREBASE_API_KEY'),
+  authDomain: z.string().min(1).default('SET_FIREBASE_AUTH_DOMAIN'),
+  projectId: z.string().min(1).default('SET_FIREBASE_PROJECT_ID'),
+  storageBucket: z.string().min(1).default('SET_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: z
+    .string()
+    .min(1)
+    .default('SET_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: z.string().min(1).default('SET_FIREBASE_APP_ID'),
+  measurementId: z.string().optional(),
+});
+
+const envSchema = z.object({
+  mapboxPublicToken: z.string().min(1).default('SET_MAPBOX_PUBLIC_TOKEN'),
+  // Fallback al estilo de navegación nocturna oficial de Mapbox: sin esto el
+  // MapView recibía un styleURL inválido y el mapa quedaba en negro.
+  MAP_STYLE_URL: z.url().default('mapbox://styles/mapbox/navigation-night-v1'),
+  /** Base URL del endpoint REST de Wikipedia (idioma configurable por env). */
+  placeSummaryBaseUrl: z
+    .url()
+    .default('https://es.wikipedia.org/api/rest_v1/page/summary'),
+  firebase: firebaseSchema.default({}),
+});
+
+export type AppEnv = z.infer<typeof envSchema>;
+
+const parsed = envSchema.safeParse(Constants.expoConfig?.extra ?? {});
+
+if (!parsed.success) {
+  const issues = parsed.error.issues
+    .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    .join('\n');
+  throw new Error(
+    `[config/env] Configuración inválida en app.json > expo.extra:\n${issues}`,
+  );
+}
+
+export const ENV: AppEnv = parsed.data;

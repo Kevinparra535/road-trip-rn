@@ -1,8 +1,11 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
 
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+
+import { HttpManager } from '@/domain/services/HttpManager';
 
 export interface PlaceSummaryService {
   fetch(name: string): Promise<PlaceSummary | null>;
@@ -17,10 +20,15 @@ export interface PlaceSummaryService {
  */
 @injectable()
 export class WikipediaSummaryService implements PlaceSummaryService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async fetch(name: string): Promise<PlaceSummary | null> {
     try {
       const url = `${ENV.placeSummaryBaseUrl}/${encodeURIComponent(name)}`;
-      const response = await fetch(url);
+      const response = await this.http.get(url);
       if (!response.ok) return null;
       const json = await response.json();
       if (json?.type === 'disambiguation') return null;

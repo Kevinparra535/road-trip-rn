@@ -6,7 +6,7 @@
 
 ## Prompt (copiar desde aquí ↓)
 
-````
+```
 Necesito que reorganices los frames del archivo `designs/home-v2.pen` para que sigan el orden del user flow real del MVP de Road Trip. Hoy los frames están dispersos en el canvas; quiero que queden en **swimlanes horizontales** (una fila por etapa del flow), con los frames de cada etapa ordenados de izquierda a derecha en la secuencia que el rider los recorre.
 
 ## Reglas de organización
@@ -166,7 +166,7 @@ Al terminar:
 - Si un ID listado en este prompt NO EXISTE en el documento (puede pasar si el archivo cambió), reportalo y omite esa operación. No abortes el resto.
 
 ¿Listo? Ejecuta el reordenamiento.
-````
+```
 
 ---
 

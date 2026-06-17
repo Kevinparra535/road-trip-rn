@@ -8,6 +8,8 @@ import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
 
 import Logger from '@/ui/utils/Logger';
 
+import { signInSchema, signUpSchema } from '@/ui/schemas/authSchema';
+
 type ICalls = 'signIn' | 'signUp';
 
 @injectable()
@@ -36,11 +38,18 @@ export class AuthViewModel {
   // ── Computed ────────────────────────────────────────────────────────────
 
   get isSignInValid(): boolean {
-    return this.email.trim().length > 0 && this.password.length > 0;
+    return signInSchema.safeParse({
+      email: this.email,
+      password: this.password,
+    }).success;
   }
 
   get isSignUpValid(): boolean {
-    return this.isSignInValid && this.displayName.trim().length > 0;
+    return signUpSchema.safeParse({
+      email: this.email,
+      password: this.password,
+      displayName: this.displayName,
+    }).success;
   }
 
   // ── Field setters ───────────────────────────────────────────────────────

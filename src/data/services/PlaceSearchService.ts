@@ -1,6 +1,9 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
+
+import { HttpManager } from '@/domain/services/HttpManager';
 
 import { PlaceModel } from '@/data/models/placeModel';
 
@@ -16,6 +19,11 @@ export interface PlaceSearchService {
 
 @injectable()
 export class PlaceSearchServiceImpl implements PlaceSearchService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async search(query: string, proximity?: LngLat): Promise<PlaceModel[]> {
     const params = new URLSearchParams({
       access_token: ENV.mapboxPublicToken,
@@ -26,7 +34,7 @@ export class PlaceSearchServiceImpl implements PlaceSearchService {
       params.set('proximity', `${proximity[0]},${proximity[1]}`);
     }
 
-    const response = await fetch(
+    const response = await this.http.get(
       `${MAPBOX_GEOCODING_URL}/${encodeURIComponent(query)}.json?${params}`,
     );
     if (!response.ok) {

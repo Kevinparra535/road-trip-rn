@@ -13,9 +13,10 @@ import {
   ResolveRouteShareCodeUseCase,
 } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
-
 import Logger from '@/ui/utils/Logger';
+
+import { joinRouteCodeSchema } from '@/ui/schemas/joinRouteSchema';
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls = 'resolve' | 'join';
 
@@ -64,7 +65,10 @@ export class JoinRouteViewModel {
   }
 
   get canResolve(): boolean {
-    return this.code.trim().length >= 4 && !this.isLoading;
+    return (
+      joinRouteCodeSchema.safeParse({ code: this.code }).success &&
+      !this.isLoading
+    );
   }
 
   /** `true` cuando el codigo resuelto trae partyId — invita a una rodada. */

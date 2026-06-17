@@ -1,6 +1,9 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
+
+import { HttpManager } from '@/domain/services/HttpManager';
 
 const TILEQUERY_URL =
   'https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery';
@@ -18,6 +21,11 @@ export interface ElevationService {
 
 @injectable()
 export class ElevationServiceImpl implements ElevationService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async fetchElevations(points: LngLat[]): Promise<number[]> {
     return Promise.all(points.map((point) => this.fetchOne(point)));
   }
@@ -28,7 +36,7 @@ export class ElevationServiceImpl implements ElevationService {
       limit: '50',
       access_token: ENV.mapboxPublicToken,
     });
-    const response = await fetch(
+    const response = await this.http.get(
       `${TILEQUERY_URL}/${lng},${lat}.json?${params}`,
     );
     if (!response.ok) {

@@ -1,4 +1,4 @@
-import { LocationStore } from '@/ui/viewModels/LocationStore';
+import { LocationStore } from '@/ui/store/LocationStore';
 
 import { makeDeviceHeading, makeGeoLocation } from '../factories';
 

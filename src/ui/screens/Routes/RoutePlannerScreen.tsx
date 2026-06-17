@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -23,7 +23,6 @@ import {
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
@@ -33,15 +32,15 @@ import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRep
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
 
-import { TripPartyStore } from '@/ui/viewModels/TripPartyStore';
-
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
+import { useViewModel } from '@/ui/hooks/useViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 
@@ -71,20 +70,13 @@ const RoutePlannerScreen = observer(() => {
   const route = useRoute<Route>();
   const routeId = route.params?.routeId;
 
-  const viewModel = useMemo(
-    () => container.get<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel),
-    [],
+  const viewModel = useViewModel<RoutePlannerViewModel>(
+    TYPES.RoutePlannerViewModel,
   );
-  const partyStore = useMemo(
-    () => container.get<TripPartyStore>(TYPES.TripPartyStore),
-    [],
-  );
+  const partyStore = useViewModel<TripPartyStore>(TYPES.TripPartyStore);
   // HomeViewModel: lo usamos para arrancar navegacion live desde aca con
   // los datos del Planner (FEAT.11).
-  const homeViewModel = useMemo(
-    () => container.get<HomeViewModel>(TYPES.HomeViewModel),
-    [],
-  );
+  const homeViewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
 
   // Waypoint cuya re-categorizacion esta abierta en el modal. `null` = cerrado.
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
@@ -394,9 +386,7 @@ const RoutePlannerScreen = observer(() => {
           {viewModel.needsStartPoint ? (
             // Placeholder dashed para el start ausente — visual del Pencil A2.
             <View style={styles.stopRow}>
-              <View
-                style={[styles.dot, styles.startPlaceholderDot]}
-              />
+              <View style={[styles.dot, styles.startPlaceholderDot]} />
               <View style={styles.stopBody}>
                 <Text style={styles.startPlaceholderName}>
                   Punto de arranque
@@ -873,13 +863,9 @@ const DirectionsErrorCard = observer(
       >
         <View style={styles.errorCardHeader}>
           <Ionicons name="alert-circle" size={22} color={errorColor} />
-          <Text style={styles.errorCardTitle}>
-            No pudimos trazar la ruta
-          </Text>
+          <Text style={styles.errorCardTitle}>No pudimos trazar la ruta</Text>
         </View>
-        <Text style={styles.errorCardSub}>
-          {viewModel.isDirectionsError}
-        </Text>
+        <Text style={styles.errorCardSub}>{viewModel.isDirectionsError}</Text>
         <View style={styles.errorCardActions}>
           <TouchableOpacity
             style={styles.errorCardCtaPrimary}
@@ -1376,7 +1362,10 @@ const DiscardConfirmSheet = observer(
             >
               <Ionicons name="trash" size={18} color={errorColor} />
               <Text
-                style={[styles.discardCtaDestructiveText, { color: errorColor }]}
+                style={[
+                  styles.discardCtaDestructiveText,
+                  { color: errorColor },
+                ]}
               >
                 Descartar ruta
               </Text>
@@ -1388,11 +1377,7 @@ const DiscardConfirmSheet = observer(
               activeOpacity={0.85}
               testID="route-planner-save-and-exit-btn"
             >
-              <Ionicons
-                name="bookmark"
-                size={18}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="bookmark" size={18} color={Colors.base.accent} />
               <Text style={styles.discardCtaPrimaryText}>Guardar y salir</Text>
             </TouchableOpacity>
 
@@ -1824,8 +1809,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   fuelStopBulletText: {
-    ...Fonts.links,
-    fontWeight: '700',
+    ...Fonts.linksBold,
   },
   fuelStopBody: {
     flex: 1,
@@ -2278,8 +2262,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.accentDimBorder,
   },
   errorCardCtaPrimaryText: {
-    ...Fonts.links,
-    fontWeight: '600',
+    ...Fonts.linksBold,
     color: Colors.base.accent,
   },
   errorCardCtaGhost: {

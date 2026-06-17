@@ -11,11 +11,12 @@ framework leakage. It is the architectural baseline every other RN skill builds 
 </purpose>
 
 <when_to_use>
+
 - Adding a new screen/feature module.
 - Creating or refactoring ViewModels, UseCases, repositories, or services.
 - Touching DI (`src/config/di.ts`, `src/config/types.ts`).
 - Needing folder placement conventions or dependency-direction rules.
-</when_to_use>
+  </when_to_use>
 
 <rules>
 
@@ -178,15 +179,16 @@ done — lives in [[unit-testing-clean-architecture]]. Apply it for every featur
 export type XxxConstructorParams = { id: string; [key: string]: any };
 
 export class Xxx {
-  [key: string]: any;
-  id: string;
+[key: string]: any;
+id: string;
 
-  constructor(params: XxxConstructorParams) {
-    this.id = params.id;
-    Object.assign(this, params);
-  }
+constructor(params: XxxConstructorParams) {
+this.id = params.id;
+Object.assign(this, params);
 }
-```
+}
+
+````
 
 ```ts
 export class XxxModel {
@@ -208,7 +210,8 @@ declare module './xxxModel' {
 XxxModel.prototype.toDomain = function toDomain(): Xxx {
    return new Xxx({ ... });
 };
-```
+````
+
 </example>
 
 <example name="Env config + validation (Zod)">
@@ -217,15 +220,16 @@ XxxModel.prototype.toDomain = function toDomain(): Xxx {
 import { z } from 'zod';
 
 const schema = z.object({
-  EXPO_PUBLIC_API_BASE_URL: z.string().url(),
-  EXPO_PUBLIC_API_KEY: z.string().min(1),
+EXPO_PUBLIC_API_BASE_URL: z.string().url(),
+EXPO_PUBLIC_API_KEY: z.string().min(1),
 });
 
 export const env = schema.parse({
-  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
-  EXPO_PUBLIC_API_KEY: process.env.EXPO_PUBLIC_API_KEY,
+EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+EXPO_PUBLIC_API_KEY: process.env.EXPO_PUBLIC_API_KEY,
 });
-```
+
+````
 </example>
 
 <example name="useViewModel hook + screen wiring">
@@ -239,15 +243,18 @@ export function useViewModel<T>(type: symbol): T {
   // empty deps: transient ViewModel instantiated once per screen mount
   return useMemo(() => container.get<T>(type), [type]);
 }
-```
+````
 
 ```tsx
 const ClientsScreen = observer(() => {
   const viewModel = useViewModel<ClientsViewModel>(TYPES.ClientsViewModel);
-  useEffect(() => { viewModel.loadAll(); }, [viewModel]);
+  useEffect(() => {
+    viewModel.loadAll();
+  }, [viewModel]);
   // …
 });
 ```
+
 </example>
 
 </examples>
@@ -260,7 +267,7 @@ When implementing a request:
 - Provide minimal diffs or clear code blocks per file.
 - Update DI bindings if new classes are added.
 - Include the unit test files/cases added and how to run them (`npm test` or a targeted jest command).
-</output_format>
+  </output_format>
 
 <see_also>
 This project's reference stack: React Native (Expo) + MVVM, MobX for state, Inversify for DI, a
@@ -271,4 +278,4 @@ UseCases layer per action, and a data layer (RepositoryImpl → Service → Mana
 - [[design-system-rn]] — UI/component conventions.
 - [[feature-scaffold-rn]] — scaffolding a new feature module end to end.
 - [[pr-checklist-clean-architecture]] — review gate enforcing these conventions.
-</see_also>
+  </see_also>

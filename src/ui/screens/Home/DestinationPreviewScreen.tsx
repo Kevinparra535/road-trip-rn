@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -14,7 +14,6 @@ import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
-import { container } from '@/config/di';
 import { TYPES } from '@/config/types';
 
 import PrimaryButton from '@/ui/components/PrimaryButton';
@@ -24,6 +23,8 @@ import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { DestinationPreviewViewModel } from './DestinationPreviewViewModel';
 
@@ -57,12 +58,8 @@ const formatDuration = (minutes: number): string => {
 const DestinationPreviewScreen = observer(() => {
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
-  const viewModel = useMemo(
-    () =>
-      container.get<DestinationPreviewViewModel>(
-        TYPES.DestinationPreviewViewModel,
-      ),
-    [],
+  const viewModel = useViewModel<DestinationPreviewViewModel>(
+    TYPES.DestinationPreviewViewModel,
   );
 
   // El ancho del thumbnail estatico depende del viewport; lo registramos en
@@ -238,9 +235,7 @@ const DestinationPreviewScreen = observer(() => {
             size={16}
             color={Colors.base.textPrimary}
           />
-          <Text style={styles.planButtonText}>
-            Planear con paradas
-          </Text>
+          <Text style={styles.planButtonText}>Planear con paradas</Text>
         </Pressable>
 
         <View style={styles.actions}>

@@ -13,6 +13,7 @@ core.
 </purpose>
 
 <when_to_use>
+
 - A screen must react to a **live stream** (Firestore listener, WebSocket feed, DB observable).
 - State must be **shared across screens** (auth/session, network status, current location).
 - The app must **re-sync on reconnection** or work **offline-first**.
@@ -45,12 +46,12 @@ A `ViewModel` is screen-scoped (transient). When state must outlive a single scr
 use a **Store**: same implementation as a ViewModel (`@injectable()` + `makeAutoObservable`), but bound
 as a **singleton** in DI.
 
-| Aspect            | ViewModel                          | Store                                   |
-| ----------------- | ---------------------------------- | --------------------------------------- |
-| Scope             | One screen                         | App-global                              |
-| DI lifetime       | `transient`                        | `inSingletonScope()`                    |
-| Location          | `src/ui/screens/<F>/<F>ViewModel.ts` | `src/ui/store/<Name>Store.ts`         |
-| Examples          | `ClientsViewModel`                 | `SessionStore`, `NetworkStore`, `LocationStore` |
+| Aspect      | ViewModel                            | Store                                           |
+| ----------- | ------------------------------------ | ----------------------------------------------- |
+| Scope       | One screen                           | App-global                                      |
+| DI lifetime | `transient`                          | `inSingletonScope()`                            |
+| Location    | `src/ui/screens/<F>/<F>ViewModel.ts` | `src/ui/store/<Name>Store.ts`                   |
+| Examples    | `ClientsViewModel`                   | `SessionStore`, `NetworkStore`, `LocationStore` |
 
 - Stores are `@injectable()`, registered with `.inSingletonScope()`, and named `XxxStore`; place
   them all under `src/ui/store/` (do not scatter them in `src/stores/`).
@@ -123,13 +124,14 @@ export interface UseCase<Input, Output> {
 export type Unsubscribe = () => void;
 
 export interface SubscriptionUseCase<Input, Output> {
-  subscribe(
-    input: Input,
-    onNext: (value: Output) => void,
-    onError?: (error: unknown) => void,
-  ): Unsubscribe;
+subscribe(
+input: Input,
+onNext: (value: Output) => void,
+onError?: (error: unknown) => void,
+): Unsubscribe;
 }
-```
+
+````
 </example>
 
 <example name="Streaming use case implementation">
@@ -147,7 +149,8 @@ export class ObserveTripPartyUseCase
     return this.repo.observeParty(partyId, onNext, onError);
   }
 }
-```
+````
+
 </example>
 
 <example name="Global store (NetworkStore)">
@@ -156,19 +159,20 @@ export class ObserveTripPartyUseCase
 export class NetworkStore {
   isOffline = false;
 
-  constructor() {
-    makeAutoObservable(this);
-  }
-
-  start() {
-    return NetInfo.addEventListener((state) =>
-      runInAction(() => {
-        this.isOffline = !state.isConnected;
-      }),
-    );
-  }
+constructor() {
+makeAutoObservable(this);
 }
-```
+
+start() {
+return NetInfo.addEventListener((state) =>
+runInAction(() => {
+this.isOffline = !state.isConnected;
+}),
+);
+}
+}
+
+````
 </example>
 
 <example name="Reconnection sync coordinator">
@@ -195,7 +199,8 @@ export class SyncCoordinator {
     this.disposeReaction?.();
   }
 }
-```
+````
+
 </example>
 
 <example name="Non-destructive offline merge">
@@ -229,13 +234,14 @@ async toggleTaskStatus(id: string) {
 const HomeScreen = observer(() => {
   const viewModel = useViewModel(TYPES.HomeViewModel);
 
-  useEffect(() => {
-    viewModel.initialize(); // sets up subscriptions
-    return () => viewModel.dispose(); // tears them down
-  }, [viewModel]);
-  // …
+useEffect(() => {
+viewModel.initialize(); // sets up subscriptions
+return () => viewModel.dispose(); // tears them down
+}, [viewModel]);
+// …
 });
-```
+
+````
 </example>
 
 <example name="ViewModel subscribe/dispose handle">
@@ -254,7 +260,8 @@ dispose() {
   this.unsubscribe?.();
   this.unsubscribe = undefined;
 }
-```
+````
+
 </example>
 
 <example name="Serialized DTO through navigation">
@@ -268,6 +275,7 @@ export type SerializedPlace = { latitude: number; longitude: number; name: strin
 </examples>
 
 <see_also>
+
 - [[unit-testing-clean-architecture]] — the test patterns that cover subscriptions, reconnection sync, and optimistic rollback.
 - [[clean-architecture-rn-expo-mvvm]] — the base MVVM + MobX + Inversify architecture this skill extends.
-</see_also>
+  </see_also>

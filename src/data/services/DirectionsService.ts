@@ -1,8 +1,11 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { ENV } from '@/config/env';
+import { TYPES } from '@/config/types';
 
 import { RideType } from '@/domain/entities/Route';
+
+import { HttpManager } from '@/domain/services/HttpManager';
 
 import { RouteDirectionsModel } from '@/data/models/routeDirectionsModel';
 
@@ -19,6 +22,11 @@ export interface DirectionsService {
 
 @injectable()
 export class DirectionsServiceImpl implements DirectionsService {
+  constructor(
+    @inject(TYPES.HttpManager)
+    private readonly http: HttpManager,
+  ) {}
+
   async fetchDirections(
     coordinates: LngLat[],
     rideType: RideType,
@@ -44,7 +52,7 @@ export class DirectionsServiceImpl implements DirectionsService {
       access_token: ENV.mapboxPublicToken,
     });
 
-    const response = await fetch(
+    const response = await this.http.get(
       `${MAPBOX_DIRECTIONS_URL}/${profile}/${path}?${params}`,
     );
     if (!response.ok) {

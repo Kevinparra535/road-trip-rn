@@ -11,6 +11,8 @@ type GradientViewProps = {
   children?: ReactNode;
   preset?: Preset;
   colors?: string[];
+  /** Posiciones [0..1] de cada color; útil para fundidos (fade) personalizados. */
+  locations?: number[];
   direction?: Direction;
   style?: StyleProp<ViewStyle>;
 };
@@ -29,6 +31,7 @@ const GradientView = ({
   children,
   preset = 'header',
   colors,
+  locations,
   direction = 'vertical',
   style,
 }: GradientViewProps) => {
@@ -38,6 +41,7 @@ const GradientView = ({
   return (
     <LinearGradient
       colors={resolved}
+      locations={locations as [number, number, ...number[]] | undefined}
       start={{ x: start[0], y: start[1] }}
       end={{ x: end[0], y: end[1] }}
       style={style}
