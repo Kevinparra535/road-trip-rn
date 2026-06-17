@@ -3,14 +3,15 @@ import { TextStyle } from 'react-native';
 import { ms } from '@/ui/styles/FontsScale';
 
 /**
- * Familias Inter cargadas desde `@expo-google-fonts/inter`.
+ * Familias Poppins cargadas desde los TTF locales (`@/ui/assets/fonts/Poppins`)
+ * vía `useAppFonts` en `@/ui/utils/fontsLoader`.
  * El peso va horneado en la familia — nunca se setea `fontWeight` inline.
  */
 const Family = {
-  bold: 'Inter_700Bold',
-  semiBold: 'Inter_600SemiBold',
-  medium: 'Inter_500Medium',
-  regular: 'Inter_400Regular',
+  bold: 'Poppins-Bold',
+  semiBold: 'Poppins-SemiBold',
+  medium: 'Poppins-Medium',
+  regular: 'Poppins-Regular',
 } as const;
 
 const Fonts = {

@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '@/config/types';
 
 import { RideType } from '@/domain/entities/Route';
+import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
@@ -13,6 +14,7 @@ import { UseCase } from '@/domain/useCases/UseCase';
 export type CalculateDirectionsInput = {
   waypoints: Waypoint[];
   rideType: RideType;
+  avoid?: RouteAvoidPreferences;
 };
 
 @injectable()
@@ -31,6 +33,10 @@ export class CalculateDirectionsUseCase implements UseCase<
         'Agrega al menos un origen y un destino para calcular la ruta.',
       );
     }
-    return this.repository.getDirections(input.waypoints, input.rideType);
+    return this.repository.getDirections(
+      input.waypoints,
+      input.rideType,
+      input.avoid,
+    );
   }
 }

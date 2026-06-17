@@ -1,13 +1,24 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
+import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
+import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
+import { RouteTemplate } from '@/domain/entities/RouteTemplate';
 
 import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
+import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
+import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 
-import { makeMotorcycle, makeRider, makeRoute } from '../factories';
+import {
+  makeElevationProfile,
+  makeMotorcycle,
+  makeRider,
+  makeRoute,
+  makeRouteFuelEstimate,
+} from '../factories';
 
 describe('RoutesViewModel', () => {
   const build = (routes: any = [makeRoute()]) => {
@@ -80,11 +91,60 @@ describe('RoutePlannerViewModel', () => {
     // "Sin moto registrada" no necesitan tocar nada; los que quieran moto
     // registrada sobreescriben `getAllMotorcycles.run`.
     const getAllMotorcycles = {
-      run: jest.fn(async () => []),
+      run: jest.fn(async (): Promise<Motorcycle[]> => []),
     };
     // E3 draft mocks. Por defecto el draft repo es no-op.
     const saveDraft = { run: jest.fn().mockResolvedValue(undefined) };
     const clearDraft = { run: jest.fn().mockResolvedValue(undefined) };
+    const optimize = { run: jest.fn() };
+
+    // Store de insights real (use cases mockeados) — así el conditionsKey es
+    // observable y la reaction del VM dispara al togglear o cambiar directions.
+    const insightsAutonomy = {
+      run: jest.fn().mockResolvedValue(
+        new AutonomyEstimate({
+          totalDistanceKm: 100,
+          fullTankRangeKm: 300,
+          effectiveRangeKm: 250,
+          safetyReserveKm: 30,
+          totalFuelLiters: 5,
+          reachesWithoutRefuel: true,
+          fuelStops: [],
+          conditionsSummary: 'solo',
+        }),
+      ),
+    };
+    const insightsFuel = {
+      run: jest.fn().mockResolvedValue(makeRouteFuelEstimate()),
+    };
+    const insightsElevation = {
+      run: jest.fn().mockResolvedValue(makeElevationProfile()),
+    };
+    const insightsSummary = { run: jest.fn().mockResolvedValue(null) };
+    const insights = new PlannerInsightsStore(
+      insightsAutonomy as any,
+      insightsFuel as any,
+      insightsElevation as any,
+      insightsSummary as any,
+    );
+
+    // Controller de plantillas real con un catálogo mockeado de 1 template.
+    const getTemplates = {
+      run: jest.fn().mockResolvedValue([
+        new RouteTemplate({
+          id: 'dominical',
+          name: 'Dominical',
+          description: 'test',
+          iconName: 'sunny-outline',
+          rideType: 'group',
+          suggestedStopKinds: ['food', 'rest'],
+          avoid: new RouteAvoidPreferences({ highways: true }),
+          isRoundTrip: true,
+          suggestedStopDurationMin: 30,
+        }),
+      ]),
+    };
+    const templates = new PlannerTemplateController(getTemplates as any);
 
     const partyStore =
       new (require('@/ui/store/TripPartyStore').TripPartyStore)(
@@ -106,8 +166,11 @@ describe('RoutePlannerViewModel', () => {
       getAllMotorcycles as any,
       saveDraft as any,
       clearDraft as any,
+      optimize as any,
       partyStore as any,
       locationStore as any,
+      insights as any,
+      templates as any,
     );
     return {
       vm,
@@ -119,7 +182,13 @@ describe('RoutePlannerViewModel', () => {
       getAllMotorcycles,
       saveDraft,
       clearDraft,
+      optimize,
       partyStore,
+      insights,
+      insightsAutonomy,
+      insightsElevation,
+      templates,
+      getTemplates,
     };
   };
 
@@ -1033,6 +1102,454 @@ describe('RoutePlannerViewModel', () => {
     // sub cae a coord cuando no hay mapboxCategory
     expect(items[2].sub).toMatch(/^\d+\.\d+, -?\d+\.\d+$/);
   });
+
+  describe('route options: avoid / alternatives / optimize / reverse / round-trip (F5)', () => {
+    beforeEach(() => jest.useFakeTimers());
+
+    const flush800 = async () => {
+      jest.advanceTimersByTime(850);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    it('setAvoidTolls dispara auto-recalc pasando avoid al use case', async () => {
+      const { vm, calculate } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+      calculate.run.mockClear();
+
+      vm.setAvoidTolls(true);
+      expect(vm.avoid.tolls).toBe(true);
+      await flush800();
+
+      expect(calculate.run).toHaveBeenCalled();
+      const lastArg =
+        calculate.run.mock.calls[calculate.run.mock.calls.length - 1][0];
+      expect(lastArg.avoid.tolls).toBe(true);
+    });
+
+    it('selectAlternative cambia activeDirections sin recalcular', async () => {
+      const { vm, calculate } = build();
+      const alt = new RouteDirections({
+        distanceKm: 150,
+        durationMin: 70,
+        geometry: [{ latitude: 5, longitude: -73 }],
+      });
+      const main = new RouteDirections({
+        distanceKm: 100,
+        durationMin: 90,
+        geometry: [{ latitude: 4, longitude: -74 }],
+        alternatives: [alt],
+      });
+      calculate.run.mockResolvedValue(main);
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+
+      expect(vm.availableAlternatives).toHaveLength(2);
+      expect(vm.distanceKm).toBe(100);
+      calculate.run.mockClear();
+
+      vm.selectAlternative(1);
+      expect(vm.distanceKm).toBe(150);
+      expect(calculate.run).not.toHaveBeenCalled();
+
+      // Índice fuera de rango: no-op (se queda en la alternativa actual).
+      vm.selectAlternative(9);
+      expect(vm.distanceKm).toBe(150);
+    });
+
+    it('optimizeOrder con menos de 3 waypoints es no-op', async () => {
+      const { vm, optimize } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      expect(vm.canOptimize).toBe(false);
+      await vm.optimizeOrder();
+      expect(optimize.run).not.toHaveBeenCalled();
+    });
+
+    it('optimizeOrder reordena conservando metadata del waypoint', async () => {
+      const { vm, optimize } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.7, -74.1, 'B');
+      vm.addWaypoint(4.75, -74.15, 'C');
+      vm.addWaypoint(4.8, -74.2, 'D');
+      const ids = vm.waypoints.map((w) => w.id);
+      vm.setStopKind(ids[1], 'food'); // B = food
+      // Orden óptimo: intercambia B y C → [A, C, B, D].
+      const reordered = [ids[0], ids[2], ids[1], ids[3]];
+      optimize.run.mockResolvedValue({
+        waypointIds: reordered,
+        directions: new RouteDirections({
+          distanceKm: 50,
+          durationMin: 40,
+          geometry: [],
+        }),
+      });
+
+      expect(vm.canOptimize).toBe(true);
+      await vm.optimizeOrder();
+
+      expect(optimize.run).toHaveBeenCalled();
+      expect(vm.waypoints.map((w) => w.id)).toEqual(reordered);
+      // Metadata preservada: B sigue siendo 'food' tras re-permutar.
+      expect(vm.waypoints.find((w) => w.id === ids[1])?.kind).toBe('food');
+      expect(vm.distanceKm).toBe(50);
+    });
+
+    it('reverseRoute invierte y recategoriza start/destination', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.7, -74.1, 'B');
+      vm.addWaypoint(4.8, -74.2, 'D');
+      const before = vm.waypoints.map((w) => w.id);
+
+      vm.reverseRoute();
+
+      expect(vm.waypoints.map((w) => w.id)).toEqual([
+        before[2],
+        before[1],
+        before[0],
+      ]);
+      expect(vm.waypoints[0].kind).toBe('start');
+      expect(vm.waypoints[2].kind).toBe('destination');
+    });
+
+    it('toggleRoundTrip agrega y quita el clon de retorno', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'D');
+      expect(vm.waypoints).toHaveLength(2);
+
+      vm.toggleRoundTrip();
+      expect(vm.isRoundTrip).toBe(true);
+      expect(vm.waypoints).toHaveLength(3);
+      expect(vm.waypoints[1].kind).toBe('other'); // ex-destino degradado
+      expect(vm.waypoints[2].kind).toBe('destination');
+      expect(vm.waypoints[2].isReturnClone).toBe(true);
+
+      vm.toggleRoundTrip();
+      expect(vm.isRoundTrip).toBe(false);
+      expect(vm.waypoints).toHaveLength(2);
+      expect(vm.waypoints[1].kind).toBe('destination');
+    });
+  });
+
+  describe('waypoint notes + stopDuration + ETA real (F6)', () => {
+    beforeEach(() => jest.useFakeTimers());
+
+    const flush800 = async () => {
+      jest.advanceTimersByTime(850);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    const planFour = async (vm: any) => {
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.7, -74.1, 'B');
+      vm.addWaypoint(4.75, -74.15, 'C');
+      vm.addWaypoint(4.8, -74.2, 'D');
+    };
+
+    it('setWaypointNotes actualiza la nota sin invalidar ni recalcular directions', async () => {
+      const { vm, calculate } = build();
+      await planFour(vm);
+      // Drena el auto-recalc pendiente (debounced) de los addWaypoint para que
+      // no contamine la aserción de "no recalc" tras cambiar la nota.
+      await flush800();
+      const bId = vm.waypoints[1].id;
+      expect(vm.directions).not.toBeNull();
+      calculate.run.mockClear();
+
+      vm.setWaypointNotes(bId, 'tanquear y almorzar');
+
+      expect(vm.waypoints[1].notes).toBe('tanquear y almorzar');
+      expect(vm.directions).not.toBeNull();
+      await flush800();
+      expect(calculate.run).not.toHaveBeenCalled();
+    });
+
+    it('setWaypointStopDuration setea y limpia la duración', async () => {
+      const { vm } = build();
+      await planFour(vm);
+      const bId = vm.waypoints[1].id;
+      vm.setWaypointStopDuration(bId, 30);
+      expect(vm.waypoints[1].stopDurationMin).toBe(30);
+      vm.setWaypointStopDuration(bId, 0);
+      expect(vm.waypoints[1].stopDurationMin).toBeUndefined();
+    });
+
+    it('totalStopDurationMin y etaWithStopsMin suman solo intermedios', async () => {
+      const { vm } = build();
+      await planFour(vm);
+      await vm.calculateDirections(); // mock: durationMin = 90
+      const ids = vm.waypoints.map((w: any) => w.id);
+      vm.setWaypointStopDuration(ids[1], 30); // B intermedio
+      vm.setWaypointStopDuration(ids[2], 15); // C intermedio
+      expect(vm.totalStopDurationMin).toBe(45);
+      expect(vm.etaWithStopsMin).toBe(135);
+    });
+
+    it('timelineItems exponen notes y stopDurationMin', async () => {
+      const { vm } = build();
+      await planFour(vm);
+      const bId = vm.waypoints[1].id;
+      vm.setWaypointNotes(bId, 'café');
+      vm.setWaypointStopDuration(bId, 20);
+      const item = vm.timelineItems.find((i: any) => i.id === bId);
+      expect(item?.notes).toBe('café');
+      expect(item?.stopDurationMin).toBe(20);
+    });
+
+    it('preserva notes/duración al reordenar (moveStop)', async () => {
+      const { vm } = build();
+      await planFour(vm);
+      const bId = vm.waypoints[1].id;
+      vm.setWaypointNotes(bId, 'parada B');
+      vm.setWaypointStopDuration(bId, 25);
+      vm.moveStop(bId, 'down');
+      const b = vm.waypoints.find((w: any) => w.id === bId);
+      expect(b?.notes).toBe('parada B');
+      expect(b?.stopDurationMin).toBe(25);
+    });
+  });
+
+  describe('insights: autonomy/elevation/fuel reaction (F7)', () => {
+    beforeEach(() => jest.useFakeTimers());
+
+    // Insights usa 600ms; avanzamos 700 (sin llegar a los 800 del auto-recalc,
+    // que no debe contaminar) y drenamos microtasks de la cadena del store.
+    const flushInsights = async () => {
+      jest.advanceTimersByTime(700);
+      for (let i = 0; i < 6; i++) await Promise.resolve();
+    };
+
+    it('recomputes insights tras calcular directions (con moto)', async () => {
+      const { vm, getAllMotorcycles, insightsElevation, insightsAutonomy } =
+        build();
+      getAllMotorcycles.run.mockResolvedValue([makeMotorcycle()]);
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+      await flushInsights();
+
+      expect(insightsElevation.run).toHaveBeenCalled();
+      expect(insightsAutonomy.run).toHaveBeenCalled();
+      expect(vm.insights.autonomyEstimate).not.toBeNull();
+    });
+
+    it('togglear una condición recomputa los insights', async () => {
+      const { vm, getAllMotorcycles, insightsAutonomy } = build();
+      getAllMotorcycles.run.mockResolvedValue([makeMotorcycle()]);
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+      await flushInsights();
+      insightsAutonomy.run.mockClear();
+
+      vm.insights.togglePassenger(true);
+      await flushInsights();
+
+      expect(insightsAutonomy.run).toHaveBeenCalled();
+    });
+
+    it('sin moto registrada no recomputa (limpia estimados)', async () => {
+      // build() por defecto: getAllMotorcycles → [] (rider sin motos).
+      const { vm, insightsElevation } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+      await flushInsights();
+
+      expect(insightsElevation.run).not.toHaveBeenCalled();
+      expect(vm.insights.autonomyEstimate).toBeNull();
+    });
+
+    it('reset limpia los insights', async () => {
+      const { vm, getAllMotorcycles } = build();
+      getAllMotorcycles.run.mockResolvedValue([makeMotorcycle()]);
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08);
+      vm.addWaypoint(4.8, -74.2);
+      await vm.calculateDirections();
+      await flushInsights();
+      expect(vm.insights.autonomyEstimate).not.toBeNull();
+
+      vm.reset();
+      expect(vm.insights.autonomyEstimate).toBeNull();
+    });
+  });
+
+  describe('templates + duplicate + multi-día (F8)', () => {
+    beforeEach(() => jest.useFakeTimers());
+
+    it('applyTemplate aplica rideType/avoid/duración y round-trip', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      await vm.templates.loadTemplates();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.7, -74.1, 'B');
+      vm.addWaypoint(4.8, -74.2, 'D');
+
+      vm.applyTemplate('dominical');
+
+      expect(vm.rideType).toBe('group');
+      expect(vm.avoid.highways).toBe(true);
+      // round-trip activado (≥2 waypoints) → clon de retorno agregado.
+      expect(vm.isRoundTrip).toBe(true);
+      expect(vm.waypoints.some((w) => w.isReturnClone)).toBe(true);
+      // duración sugerida aplicada al intermedio sin duración previa.
+      expect(vm.waypoints.find((w) => w.name === 'B')?.stopDurationMin).toBe(
+        30,
+      );
+      expect(vm.templates.isTemplateSheetOpen).toBe(false);
+    });
+
+    it('applyTemplate es no-op si el id no existe', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      await vm.templates.loadTemplates();
+      vm.applyTemplate('inexistente');
+      expect(vm.rideType).toBe('highway'); // default sin cambios
+    });
+
+    it('duplicateRoute hidrata con ids nuevos, "(copia)" y metadata', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.duplicateRoute({
+        name: 'Ruta Test',
+        rideType: 'offroad',
+        waypoints: [
+          {
+            name: 'A',
+            latitude: 4.6,
+            longitude: -74.08,
+            kind: 'start',
+            order: 0,
+          },
+          {
+            name: 'B',
+            latitude: 4.7,
+            longitude: -74.1,
+            kind: 'food',
+            order: 1,
+            notes: 'almuerzo',
+            stopDurationMin: 25,
+          },
+          {
+            name: 'D',
+            latitude: 4.8,
+            longitude: -74.2,
+            kind: 'destination',
+            order: 2,
+          },
+        ],
+        avoid: { tolls: true, highways: false, ferries: false, unpaved: false },
+        roundTrip: false,
+      });
+
+      expect(vm.name).toBe('Ruta Test (copia)');
+      expect(vm.rideType).toBe('offroad');
+      expect(vm.avoid.tolls).toBe(true);
+      expect(vm.waypoints).toHaveLength(3);
+      expect(vm.waypoints.every((w) => w.id.startsWith('wp-'))).toBe(true);
+      const b = vm.waypoints.find((w) => w.name === 'B');
+      expect(b?.notes).toBe('almuerzo');
+      expect(b?.stopDurationMin).toBe(25);
+    });
+
+    it('toggleMultiDay activa y desactiva la segmentación', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+
+      vm.toggleMultiDay();
+      expect(vm.isMultiDay).toBe(true);
+      expect(vm.days).toHaveLength(1);
+      expect([vm.days![0].startIdx, vm.days![0].endIdx]).toEqual([0, 5]);
+
+      vm.toggleMultiDay();
+      expect(vm.isMultiDay).toBe(false);
+      expect(vm.days).toBeNull();
+    });
+
+    it('markEndOfDay / unmarkEndOfDay / setOvernightName segmentan como se espera', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+      vm.toggleMultiDay();
+
+      vm.markEndOfDay(2);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 2],
+        [3, 5],
+      ]);
+
+      vm.markEndOfDay(4);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 2],
+        [3, 4],
+        [5, 5],
+      ]);
+
+      vm.unmarkEndOfDay(0); // quita el corte que cierra el día 0 (boundary 2)
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 4],
+        [5, 5],
+      ]);
+
+      vm.setOvernightName(0, 'Villa de Leyva');
+      expect(vm.days![0].overnightName).toBe('Villa de Leyva');
+    });
+
+    it('resincroniza la segmentación multi-día al cambiar los waypoints', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+      vm.toggleMultiDay();
+      vm.markEndOfDay(4); // boundaries [4] → días [0..4],[5..5]
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 4],
+        [5, 5],
+      ]);
+
+      // Quita un waypoint → 5 wp (lastIdx 4); el boundary 4 cae fuera de rango
+      // y se descarta. Multi-día sigue activo, sin índices stale.
+      vm.removeStop(vm.waypoints[2].id);
+
+      expect(vm.days).not.toBeNull();
+      expect(vm.waypoints).toHaveLength(5);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([[0, 4]]);
+    });
+
+    it('apaga multi-día si los waypoints bajan de 2', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.7, -74.1, 'B');
+      vm.addWaypoint(4.8, -74.2, 'D');
+      vm.toggleMultiDay();
+      expect(vm.isMultiDay).toBe(true);
+
+      vm.removeStop(vm.waypoints[1].id); // 2 wp
+      expect(vm.isMultiDay).toBe(true); // 2 sigue siendo válido
+      vm.removeStop(vm.waypoints[1].id); // 1 wp
+      expect(vm.isMultiDay).toBe(false); // <2 → multi-día apagado
+    });
+  });
 });
 
 describe('RouteDetailViewModel', () => {
@@ -1104,6 +1621,28 @@ describe('RouteDetailViewModel', () => {
     expect(vm.isRouteResponse).not.toBeNull();
     expect(vm.selectedMotorcycle?.id).toBe('moto-1');
     expect(vm.canEstimate).toBe(true);
+  });
+
+  it('getDuplicationPayload es null sin ruta cargada', () => {
+    const { vm } = build();
+    expect(vm.getDuplicationPayload()).toBeNull();
+  });
+
+  it('getDuplicationPayload arma el DTO serializable desde la ruta cargada', async () => {
+    const { vm } = build();
+    await vm.initialize('route-1');
+    const payload = vm.getDuplicationPayload();
+    expect(payload).not.toBeNull();
+    expect(payload!.name).toBe(makeRoute().name);
+    expect(payload!.waypoints).toHaveLength(makeRoute().waypoints.length);
+    expect(['group', 'offroad', 'highway', 'longtrip']).toContain(
+      payload!.rideType,
+    );
+    // Waypoints planos (sin métodos) para que el navigation param sea serializable.
+    payload!.waypoints.forEach((w) => {
+      expect(typeof w.latitude).toBe('number');
+      expect(typeof w.kind).toBe('string');
+    });
   });
 
   it('estimates autonomy with the selected motorcycle', async () => {

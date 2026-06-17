@@ -85,28 +85,28 @@ using one.
 ### Typography
 
 Spread a `Fonts` token, then override only `color` (and `fontSize` if strictly needed). `fontWeight`
-is baked into each `fontFamily` name (`Inter-Bold`, `Inter-SemiBold`, `Inter-Medium`,
-`Inter-Regular`), so spreading a token sets weight automatically and it is never written inline.
+is baked into each `fontFamily` name (`Poppins-Bold`, `Poppins-SemiBold`, `Poppins-Medium`,
+`Poppins-Regular`), so spreading a token sets weight automatically and it is never written inline.
 `fontSize` always comes from `ms()` scaling.
 
-| Token                   | fontFamily     | fontSize    | Use case                           |
-| ----------------------- | -------------- | ----------- | ---------------------------------- |
-| `Fonts.bigHeader`       | Inter-Bold     | ms(25, 0.2) | Hero numbers                       |
-| `Fonts.header1`         | Inter-Bold     | ms(30)      | Page titles                        |
-| `Fonts.header2`         | Inter-Bold     | ms(26)      | Section titles                     |
-| `Fonts.header3`         | Inter-SemiBold | ms(22)      | Card headers, logo text            |
-| `Fonts.header4`         | Inter-Medium   | ms(22)      | Secondary headers                  |
-| `Fonts.header5`         | Inter-Medium   | ms(18)      | Empty state titles, labels         |
-| `Fonts.bodyText`        | Inter-Regular  | ms(15)      | Body copy                          |
-| `Fonts.bodyTextBold`    | Inter-SemiBold | ms(15)      | Emphasized body, card names        |
-| `Fonts.smallBodyText`   | Inter-Regular  | ms(13)      | Descriptions, subtitles            |
-| `Fonts.inputsBold`      | Inter-SemiBold | ms(17)      | Nav titles                         |
-| `Fonts.inputsNormal`    | Inter-Regular  | ms(15)      | Text inputs                        |
-| `Fonts.callToActions`   | Inter-SemiBold | ms(18)      | Button labels (large)              |
-| `Fonts.links`           | Inter-Medium   | ms(12)      | Badges, small labels, links        |
-| `Fonts.bigNumbers`      | Inter-Bold     | ms(50, 0.2) | Stats, amounts                     |
-| `Fonts.bigNumbersLight` | Inter-Regular  | ms(50, 0.2) | Light stats                        |
-| `Fonts.labelInputError` | Inter-Regular  | ms(12)      | Error messages (color already set) |
+| Token                   | fontFamily       | fontSize    | Use case                           |
+| ----------------------- | ---------------- | ----------- | ---------------------------------- |
+| `Fonts.bigHeader`       | Poppins-Bold     | ms(25, 0.2) | Hero numbers                       |
+| `Fonts.header1`         | Poppins-Bold     | ms(30)      | Page titles                        |
+| `Fonts.header2`         | Poppins-Bold     | ms(26)      | Section titles                     |
+| `Fonts.header3`         | Poppins-SemiBold | ms(22)      | Card headers, logo text            |
+| `Fonts.header4`         | Poppins-Medium   | ms(22)      | Secondary headers                  |
+| `Fonts.header5`         | Poppins-Medium   | ms(18)      | Empty state titles, labels         |
+| `Fonts.bodyText`        | Poppins-Regular  | ms(15)      | Body copy                          |
+| `Fonts.bodyTextBold`    | Poppins-SemiBold | ms(15)      | Emphasized body, card names        |
+| `Fonts.smallBodyText`   | Poppins-Regular  | ms(13)      | Descriptions, subtitles            |
+| `Fonts.inputsBold`      | Poppins-SemiBold | ms(17)      | Nav titles                         |
+| `Fonts.inputsNormal`    | Poppins-Regular  | ms(15)      | Text inputs                        |
+| `Fonts.callToActions`   | Poppins-SemiBold | ms(18)      | Button labels (large)              |
+| `Fonts.links`           | Poppins-Medium   | ms(12)      | Badges, small labels, links        |
+| `Fonts.bigNumbers`      | Poppins-Bold     | ms(50, 0.2) | Stats, amounts                     |
+| `Fonts.bigNumbersLight` | Poppins-Regular  | ms(50, 0.2) | Light stats                        |
+| `Fonts.labelInputError` | Poppins-Regular  | ms(12)      | Error messages (color already set) |
 
 ### Spacing
 
@@ -226,7 +226,7 @@ color: Colors.base.textPrimary,
 // ❌ Wrong — raw fontFamily/fontWeight inline
 label: {
 fontSize: 22,
-fontFamily: 'Inter-SemiBold',
+fontFamily: 'Poppins-SemiBold',
 fontWeight: '600',
 color: '#FFFFFF',
 },

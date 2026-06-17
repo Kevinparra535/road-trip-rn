@@ -33,7 +33,9 @@ const envSchema = z.object({
   placeSummaryBaseUrl: z
     .url()
     .default('https://es.wikipedia.org/api/rest_v1/page/summary'),
-  firebase: firebaseSchema.default({}),
+  // El default se computa parseando `{}` (todos los campos tienen su propio
+  // default); zod 4 tipa el arg de `.default()` con el output completo.
+  firebase: firebaseSchema.default(() => firebaseSchema.parse({})),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

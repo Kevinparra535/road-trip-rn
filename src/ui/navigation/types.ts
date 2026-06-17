@@ -19,15 +19,51 @@ export type SerializedPlace = {
   placeType?: string;
 };
 
+/** Waypoint serializado para duplicar una ruta (params de navegación planos). */
+export type SerializedDuplicateWaypoint = {
+  name: string;
+  latitude: number;
+  longitude: number;
+  kind: string;
+  order: number;
+  mapboxCategory?: string;
+  notes?: string;
+  stopDurationMin?: number;
+  isReturnClone?: boolean;
+};
+
+/**
+ * Forma serializable de una ruta para duplicarla. El RouteDetail la arma con
+ * `getDuplicationPayload()` y el RoutePlanner la rehidrata con
+ * `duplicateRoute(...)` (waypoints con ids nuevos, nombre con "(copia)").
+ */
+export type SerializedDuplicateRoute = {
+  name: string;
+  rideType: string;
+  waypoints: SerializedDuplicateWaypoint[];
+  avoid?: {
+    tolls: boolean;
+    highways: boolean;
+    ferries: boolean;
+    unpaved: boolean;
+  };
+  roundTrip?: boolean;
+};
+
 export type RoutesStackParamList = {
   RoutesList: undefined;
   /**
    * `routeId` carga una ruta existente (modo edit). `destinationPlace` viene
    * del DestinationPreview del Home (A2 del flow brief) — abre el Planner
    * con un destino preseteado y el bloque "Falta arranque" arriba.
+   * `duplicateFrom` rehidrata el Planner como copia de una ruta existente.
    */
   RoutePlanner:
-    | { routeId?: string; destinationPlace?: SerializedPlace }
+    | {
+        routeId?: string;
+        destinationPlace?: SerializedPlace;
+        duplicateFrom?: SerializedDuplicateRoute;
+      }
     | undefined;
   RouteDetail: { routeId: string };
   /**

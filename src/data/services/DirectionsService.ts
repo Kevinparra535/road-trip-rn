@@ -13,10 +13,18 @@ const MAPBOX_DIRECTIONS_URL = 'https://api.mapbox.com/directions/v5/mapbox';
 
 type LngLat = [number, number];
 
+/** Opciones de ruteo del Directions API. `exclude` es la cadena Mapbox ya
+ * traducida (ej. `'toll,motorway'`) — la traducción desde el dominio vive en
+ * `DirectionsRepositoryImpl`, el service solo la anexa al query. */
+export type FetchDirectionsOptions = {
+  exclude?: string;
+};
+
 export interface DirectionsService {
   fetchDirections(
     coordinates: LngLat[],
     rideType: RideType,
+    options?: FetchDirectionsOptions,
   ): Promise<RouteDirectionsModel>;
 }
 
@@ -30,6 +38,7 @@ export class DirectionsServiceImpl implements DirectionsService {
   async fetchDirections(
     coordinates: LngLat[],
     rideType: RideType,
+    options?: FetchDirectionsOptions,
   ): Promise<RouteDirectionsModel> {
     if (coordinates.length < 2) {
       throw new Error('Se necesitan al menos un origen y un destino.');
@@ -51,6 +60,9 @@ export class DirectionsServiceImpl implements DirectionsService {
       language: 'es',
       access_token: ENV.mapboxPublicToken,
     });
+    if (options?.exclude) {
+      params.set('exclude', options.exclude);
+    }
 
     const response = await this.http.get(
       `${MAPBOX_DIRECTIONS_URL}/${profile}/${path}?${params}`,

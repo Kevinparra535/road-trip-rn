@@ -12,6 +12,8 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { PartyFuelPlan } from '@/domain/entities/PartyFuelPlan';
 import { Place } from '@/domain/entities/Place';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
+import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
+import { RouteDay } from '@/domain/entities/RouteDay';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { StopKind } from '@/domain/entities/StopKind';
@@ -27,6 +29,7 @@ import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUse
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { inferStopKindFromInput } from '@/domain/useCases/InferStopKindUseCase';
+import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import {
@@ -35,9 +38,19 @@ import {
 } from '@/domain/useCases/SearchPlacesUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 
+import {
+  appendReturnToOrigin,
+  removeReturnClone,
+  reverseWaypoints,
+  splitIntoDays,
+} from '@/domain/geo/routeOps';
+
 import Logger from '@/ui/utils/Logger';
 
+import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
+import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls =
@@ -46,7 +59,8 @@ type ICalls =
   | 'submit'
   | 'search'
   | 'category'
-  | 'partyFuel';
+  | 'partyFuel'
+  | 'optimize';
 type Mode = 'create' | 'edit';
 
 /** Debounce de la busqueda del Planner — coincide con el del Home (400ms). */
@@ -58,6 +72,13 @@ const SEARCH_DEBOUNCE_MS = 400;
  * spamear Mapbox si el rider agrega 3 paradas en sucesion rapida.
  */
 const AUTO_RECALC_DEBOUNCE_MS = 800;
+
+/**
+ * Debounce del recálculo de insights (autonomía/elevación/combustible). Algo
+ * más corto que el auto-recalc porque no llama al motor de directions; reacciona
+ * a directions ya calculadas, cambio de moto o toggles de condiciones.
+ */
+const INSIGHTS_DEBOUNCE_MS = 600;
 
 /**
  * Item del timeline visual del Planner (`RoutePlannerScreen` frame `ydBys`).
@@ -82,6 +103,10 @@ export type PlannerTimelineItem = {
   canMoveUp: boolean;
   /** `true` si hay otra parada intermedia abajo para hacer swap. */
   canMoveDown: boolean;
+  /** Nota libre del rider para esta parada (si la hay). */
+  notes?: string;
+  /** Duración planeada de la parada, en minutos (si la hay). */
+  stopDurationMin?: number;
 };
 
 @injectable()
@@ -93,6 +118,17 @@ export class RoutePlannerViewModel {
   rideType: RideType = 'highway';
   waypoints: Waypoint[] = [];
   directions: RouteDirections | null = null;
+  /** Preferencias de ruteo (evitar peajes/autopistas/ferries/destapado). */
+  avoid: RouteAvoidPreferences = new RouteAvoidPreferences();
+  /** Índice de la alternativa seleccionada dentro de `availableAlternatives`. */
+  selectedAlternativeIndex: number = 0;
+  /** `true` si la ruta vuelve al origen (último waypoint = clon del primero). */
+  isRoundTrip: boolean = false;
+  /**
+   * Segmentación multi-día (metadata de presentación). `null` = un solo día.
+   * v1: se calcula UNA sola ruta; los `RouteDay` agrupan waypoints por día.
+   */
+  days: RouteDay[] | null = null;
   /** Controla la visibilidad del sheet "Guardar ruta" (frame `S85Zfj`). */
   isSaveSheetOpen: boolean = false;
   /**
@@ -123,6 +159,9 @@ export class RoutePlannerViewModel {
   isSubmitting: boolean = false;
   isSubmitError: string | null = null;
   hasSubmitSuccess: boolean = false;
+
+  isOptimizeLoading: boolean = false;
+  isOptimizeError: string | null = null;
 
   // ── Search state (busqueda dentro del Planner) ─────────────────────────
   searchQuery: string = '';
@@ -166,11 +205,17 @@ export class RoutePlannerViewModel {
   private editingId: string | null = null;
   private riderId: string | null = null;
   private waypointSeq: number = 0;
+  /** Índices de waypoint que cierran cada día (sin el último). Interno. */
+  private dayBoundaries: number[] = [];
   private logger = new Logger('RoutePlannerViewModel');
   private searchDisposer: IReactionDisposer | null = null;
   private autoRecalcDisposer: IReactionDisposer | null = null;
   /** Disposer del auto-save del draft (E3 flow brief). */
   private draftAutoSaveDisposer: IReactionDisposer | null = null;
+  /** Disposer del recálculo de insights (autonomía/elevación/combustible). */
+  private insightsDisposer: IReactionDisposer | null = null;
+  /** Disposer de la resincronización de la segmentación multi-día. */
+  private multiDayResyncDisposer: IReactionDisposer | null = null;
 
   constructor(
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -195,10 +240,16 @@ export class RoutePlannerViewModel {
     private readonly saveRouteDraftUseCase: SaveRouteDraftUseCase,
     @inject(TYPES.ClearRouteDraftUseCase)
     private readonly clearRouteDraftUseCase: ClearRouteDraftUseCase,
+    @inject(TYPES.OptimizeRouteOrderUseCase)
+    private readonly optimizeRouteOrderUseCase: OptimizeRouteOrderUseCase,
     @inject(TYPES.TripPartyStore)
     public readonly partyStore: TripPartyStore,
     @inject(TYPES.LocationStore)
     public readonly locationStore: LocationStore,
+    @inject(TYPES.PlannerInsightsStore)
+    public readonly insights: PlannerInsightsStore,
+    @inject(TYPES.PlannerTemplateController)
+    public readonly templates: PlannerTemplateController,
   ) {
     makeAutoObservable(this);
     // Debounce de search: dispara la consulta 400ms tras la ultima tecla.
@@ -240,6 +291,37 @@ export class RoutePlannerViewModel {
       },
       { delay: AUTO_RECALC_DEBOUNCE_MS },
     );
+    // Recalcula insights (autonomía/elevación/combustible) cuando cambian las
+    // directions activas, la moto o las condiciones. Delegado al store; el VM
+    // solo arma el input y dispara (el store no conoce al VM).
+    this.insightsDisposer = reaction(
+      () => this.insightsFingerprint,
+      () => {
+        this.recomputeInsights();
+      },
+      { delay: INSIGHTS_DEBOUNCE_MS },
+    );
+    // Resincroniza la segmentación multi-día cuando cambia el conjunto de
+    // waypoints (agregar/quitar/reordenar). Sin esto, los `dayBoundaries`
+    // quedarían apuntando a índices stale/fuera de rango. Re-segmenta con los
+    // boundaries vigentes (descarta los inválidos). Sincrónica (sin delay).
+    this.multiDayResyncDisposer = reaction(
+      () => this.waypointsFingerprint,
+      () => {
+        if (this.days === null) return;
+        runInAction(() => {
+          if (this.waypoints.length < 2) {
+            this.days = null;
+            this.dayBoundaries = [];
+            return;
+          }
+          this.dayBoundaries = this.dayBoundaries.filter(
+            (b) => b >= 0 && b < this.waypoints.length - 1,
+          );
+          this.days = splitIntoDays(this.waypoints, this.dayBoundaries);
+        });
+      },
+    );
   }
 
   /** Limpia las reacciones MobX. Llamar al desmontar el screen. */
@@ -250,6 +332,13 @@ export class RoutePlannerViewModel {
     this.autoRecalcDisposer = null;
     this.draftAutoSaveDisposer?.();
     this.draftAutoSaveDisposer = null;
+    this.insightsDisposer?.();
+    this.insightsDisposer = null;
+    this.multiDayResyncDisposer?.();
+    this.multiDayResyncDisposer = null;
+    // El store de insights es singleton: invalida cualquier recompute en vuelo
+    // para que su resolución no mute el store tras desmontar el Planner.
+    this.insights.cancelInFlight();
   }
 
   /**
@@ -258,9 +347,13 @@ export class RoutePlannerViewModel {
    * string y dispara el efecto.
    */
   private get waypointsFingerprint(): string {
-    return this.waypoints
+    const wpPart = this.waypoints
       .map((w) => `${w.order}:${w.latitude},${w.longitude}`)
       .join('|');
+    // Cambiar `avoid` invalida el trazado igual que mover un waypoint, así que
+    // entra al fingerprint para disparar el auto-recalc (la reaction existente).
+    const avoidPart = `${this.avoid.tolls}${this.avoid.highways}${this.avoid.ferries}${this.avoid.unpaved}`;
+    return `${wpPart}::${avoidPart}`;
   }
 
   /**
@@ -268,11 +361,18 @@ export class RoutePlannerViewModel {
    * del waypointsFingerprint — cualquier cambio dispara el auto-save.
    */
   private get draftFingerprint(): string {
+    // `wpExtras` va SEPARADO de `waypointsFingerprint`: cambiar notas/duración
+    // de una parada dispara el auto-save del draft pero NO el recalc de
+    // directions (no afectan el trazado).
+    const wpExtras = this.waypoints
+      .map((w) => `${w.id}:${w.notes ?? ''}:${w.stopDurationMin ?? 0}`)
+      .join('|');
     return [
       this.name,
       this.notes,
       this.rideType,
       this.waypointsFingerprint,
+      wpExtras,
     ].join('::');
   }
 
@@ -284,6 +384,19 @@ export class RoutePlannerViewModel {
     if (this.mode !== 'create') return false;
     if (!this.riderId) return false;
     return this.waypoints.length > 0;
+  }
+
+  /**
+   * Fingerprint que dispara el recálculo de insights: directions activas
+   * (distancia + nº de puntos), la moto seleccionada y las condiciones del
+   * store. Cambiar la alternativa, la moto o un toggle recomputa.
+   */
+  private get insightsFingerprint(): string {
+    const active = this.activeDirections;
+    const dist = active ? Math.round(active.distanceKm) : 0;
+    const points = active?.geometry.length ?? 0;
+    const moto = this.selectedMotorcycle?.id ?? '';
+    return `${dist}:${points}:${moto}:${this.insights.conditionsKey}`;
   }
 
   // ── Computed ────────────────────────────────────────────────────────────
@@ -330,6 +443,14 @@ export class RoutePlannerViewModel {
     return this.motorcycles.length > 0;
   }
 
+  /**
+   * Moto activa para los insights del Planner. Decisión F7: usamos la primera
+   * moto del rider (el picker multi-moto vive en RouteDetail; aquí simple).
+   */
+  get selectedMotorcycle(): Motorcycle | null {
+    return this.motorcycles?.[0] ?? null;
+  }
+
   get canSave(): boolean {
     return (
       this.name.trim().length > 0 &&
@@ -338,16 +459,62 @@ export class RoutePlannerViewModel {
     );
   }
 
+  /**
+   * Ruta principal + sus alternativas (Mapbox devuelve hasta 3). El rider
+   * elige cuál ver con `selectAlternative`. Vacío si aún no hay directions.
+   */
+  get availableAlternatives(): RouteDirections[] {
+    if (!this.directions) return [];
+    return [this.directions, ...(this.directions.alternatives ?? [])];
+  }
+
+  /**
+   * La ruta actualmente activa (principal o la alternativa seleccionada).
+   * Es la fuente de stats/geometría — `distanceKm`, `geometry`, el fuel plan
+   * y el submit leen de aquí, no de `directions`, para que elegir "Ruta 2"
+   * se refleje en todo.
+   */
+  get activeDirections(): RouteDirections | null {
+    const alts = this.availableAlternatives;
+    if (alts.length === 0) return null;
+    return alts[this.selectedAlternativeIndex] ?? this.directions;
+  }
+
+  /** `true` cuando hay paradas intermedias y el conteo cabe en la API (3..12). */
+  get canOptimize(): boolean {
+    return (
+      this.waypoints.length >= 3 &&
+      this.waypoints.length <= 12 &&
+      !this.isOptimizeLoading
+    );
+  }
+
   get distanceKm(): number {
-    return this.directions ? Math.round(this.directions.distanceKm) : 0;
+    return this.activeDirections
+      ? Math.round(this.activeDirections.distanceKm)
+      : 0;
   }
 
   get durationMin(): number {
-    return this.directions ? Math.round(this.directions.durationMin) : 0;
+    return this.activeDirections
+      ? Math.round(this.activeDirections.durationMin)
+      : 0;
   }
 
   get geometry(): GeoPoint[] {
-    return this.directions?.geometry ?? [];
+    return this.activeDirections?.geometry ?? [];
+  }
+
+  /** Suma de duraciones de parada de los waypoints intermedios, en minutos. */
+  get totalStopDurationMin(): number {
+    return this.waypoints
+      .filter((w) => w.isIntermediate())
+      .reduce((sum, w) => sum + (w.stopDurationMin ?? 0), 0);
+  }
+
+  /** ETA total incluyendo paradas: conducción + duraciones de parada (min). */
+  get etaWithStopsMin(): number {
+    return this.durationMin + this.totalStopDurationMin;
   }
 
   /**
@@ -375,6 +542,8 @@ export class RoutePlannerViewModel {
         isIntermediate,
         canMoveUp,
         canMoveDown,
+        notes: w.notes,
+        stopDurationMin: w.stopDurationMin,
       };
     });
   }
@@ -507,8 +676,9 @@ export class RoutePlannerViewModel {
    * extremos).
    */
   private get alongRouteGeometry(): GeoPoint[] {
-    if (this.directions && this.directions.geometry.length > 0) {
-      return this.directions.geometry;
+    const active = this.activeDirections;
+    if (active && active.geometry.length > 0) {
+      return active.geometry;
     }
     return this.waypoints.map((w) => ({
       latitude: w.latitude,
@@ -619,7 +789,14 @@ export class RoutePlannerViewModel {
       this.notes = '';
       this.isExitConfirmOpen = false;
       this.editingWaypointId = null;
+      this.days = null;
+      this.dayBoundaries = [];
     });
+    // Los stores son singleton: al descartar la ruta hay que limpiar también
+    // sus condiciones/estimados y el sheet de plantillas para no contaminar la
+    // próxima sesión.
+    this.insights.reset();
+    this.templates.reset();
     void this.clearDraft();
   }
 
@@ -645,6 +822,245 @@ export class RoutePlannerViewModel {
     runInAction(() => {
       this.rideType = value;
       this.directions = null;
+      this.selectedAlternativeIndex = 0;
+    });
+  }
+
+  // ── Route options: avoid / alternatives / optimize / reverse / round-trip ──
+
+  /** Recompone `avoid` con un flag cambiado. Dispara auto-recalc vía fingerprint. */
+  private updateAvoid(patch: Partial<RouteAvoidPreferences>): void {
+    runInAction(() => {
+      this.avoid = new RouteAvoidPreferences({
+        tolls: this.avoid.tolls,
+        highways: this.avoid.highways,
+        ferries: this.avoid.ferries,
+        unpaved: this.avoid.unpaved,
+        ...patch,
+      });
+    });
+  }
+
+  setAvoidTolls(value: boolean): void {
+    this.updateAvoid({ tolls: value });
+  }
+
+  setAvoidHighways(value: boolean): void {
+    this.updateAvoid({ highways: value });
+  }
+
+  setAvoidFerries(value: boolean): void {
+    this.updateAvoid({ ferries: value });
+  }
+
+  setAvoidUnpaved(value: boolean): void {
+    this.updateAvoid({ unpaved: value });
+  }
+
+  /** Cambia la alternativa visible. No recalcula: solo re-lee `activeDirections`. */
+  selectAlternative(index: number): void {
+    runInAction(() => {
+      if (index < 0 || index >= this.availableAlternatives.length) return;
+      this.selectedAlternativeIndex = index;
+    });
+  }
+
+  /**
+   * Optimiza el orden de las paradas (TSP). Re-permuta los waypoints
+   * conservando su metadata (id/name/notes/duración/kind/override) vía un
+   * `Map<id, Waypoint>`, fija el trazado óptimo y resetea la alternativa.
+   */
+  async optimizeOrder(): Promise<void> {
+    if (!this.canOptimize) return;
+    this.updateLoadingState(true, null, 'optimize');
+    try {
+      const trip = await this.optimizeRouteOrderUseCase.run({
+        waypoints: this.waypoints,
+        rideType: this.rideType,
+      });
+      runInAction(() => {
+        const byId = new Map(this.waypoints.map((w) => [w.id, w]));
+        const reordered = trip.waypointIds
+          .map((id) => byId.get(id))
+          .filter((w): w is Waypoint => w !== undefined);
+        this.waypoints = this.normalizeWaypoints(reordered);
+        this.directions = trip.directions;
+        this.selectedAlternativeIndex = 0;
+      });
+      this.updateLoadingState(false, null, 'optimize');
+      void this.computePartyFuelPlan();
+    } catch (error) {
+      this.handleError(error, 'optimize');
+    }
+  }
+
+  /** Invierte la ruta (D→A). Recalcula vía auto-recalc al limpiar directions. */
+  reverseRoute(): void {
+    if (this.waypoints.length < 2) return;
+    runInAction(() => {
+      this.waypoints = reverseWaypoints(this.waypoints);
+      this.directions = null;
+      this.selectedAlternativeIndex = 0;
+    });
+  }
+
+  /**
+   * Activa/desactiva "volver al origen". Al activar clona el origen como
+   * destino (`appendReturnToOrigin`); al desactivar lo quita por identidad
+   * (`removeReturnClone`). Requiere ≥2 waypoints para activar.
+   */
+  toggleRoundTrip(): void {
+    runInAction(() => {
+      if (this.isRoundTrip) {
+        this.waypoints = removeReturnClone(this.waypoints);
+        this.isRoundTrip = false;
+      } else {
+        if (this.waypoints.length < 2) return;
+        this.waypoints = appendReturnToOrigin(this.waypoints);
+        this.isRoundTrip = true;
+      }
+      this.directions = null;
+      this.selectedAlternativeIndex = 0;
+    });
+  }
+
+  // ── Templates / duplicate / multi-día (F8) ─────────────────────────────────
+
+  /** `true` si la ruta está segmentada en días. */
+  get isMultiDay(): boolean {
+    return this.days !== null;
+  }
+
+  /**
+   * Aplica una plantilla: setea rideType + avoid + duración sugerida (a los
+   * intermedios sin duración explícita). NO agrega waypoints — el rider los
+   * agrega. El round-trip de la plantilla solo se activa si ya hay ≥2 paradas
+   * (necesita ruta para clonar el origen). Cierra el sheet de plantillas.
+   */
+  applyTemplate(templateId: string): void {
+    const template = this.templates.findTemplate(templateId);
+    if (!template) return;
+    runInAction(() => {
+      this.rideType = template.rideType;
+      this.avoid = template.avoid ?? new RouteAvoidPreferences();
+      const min = template.suggestedStopDurationMin;
+      if (min) {
+        this.waypoints = this.waypoints.map((w) =>
+          w.isIntermediate() && (w.stopDurationMin ?? 0) === 0
+            ? new Waypoint({ ...w, stopDurationMin: min })
+            : w,
+        );
+      }
+      if (
+        template.isRoundTrip &&
+        !this.isRoundTrip &&
+        this.waypoints.length >= 2
+      ) {
+        this.waypoints = appendReturnToOrigin(this.waypoints);
+        this.isRoundTrip = true;
+      }
+      this.directions = null;
+      this.selectedAlternativeIndex = 0;
+    });
+    this.templates.closeTemplateSheet();
+  }
+
+  /**
+   * Rehidrata el Planner como copia de una ruta existente (modo create). Los
+   * waypoints se clonan con ids NUEVOS; el nombre lleva sufijo "(copia)". Se
+   * preservan avoid/roundTrip/notas/duración y el flag `isReturnClone`.
+   */
+  duplicateRoute(source: SerializedDuplicateRoute): void {
+    runInAction(() => {
+      this.mode = 'create';
+      this.editingId = null;
+      this.name = `${source.name} (copia)`;
+      this.rideType = source.rideType as RideType;
+      this.avoid = new RouteAvoidPreferences(source.avoid ?? {});
+      this.isRoundTrip = source.roundTrip ?? false;
+      this.waypoints = this.normalizeWaypoints(
+        source.waypoints.map((w) => {
+          this.waypointSeq += 1;
+          return new Waypoint({
+            id: `wp-${this.waypointSeq}`,
+            name: w.name,
+            latitude: w.latitude,
+            longitude: w.longitude,
+            kind: w.kind as WaypointKind,
+            order: w.order,
+            mapboxCategory: w.mapboxCategory,
+            notes: w.notes,
+            stopDurationMin: w.stopDurationMin,
+            isReturnClone: w.isReturnClone,
+          });
+        }),
+      );
+      this.directions = null;
+      this.selectedAlternativeIndex = 0;
+      this.days = null;
+      this.dayBoundaries = [];
+    });
+  }
+
+  /**
+   * Activa/desactiva el modo multi-día. Al activar arranca con un único día que
+   * abarca toda la ruta; requiere ≥2 waypoints. Al desactivar limpia la
+   * segmentación. v1: NO recalcula directions (los días son presentación).
+   */
+  toggleMultiDay(): void {
+    runInAction(() => {
+      if (this.days !== null) {
+        this.days = null;
+        this.dayBoundaries = [];
+        return;
+      }
+      if (this.waypoints.length < 2) return;
+      this.dayBoundaries = [];
+      this.days = splitIntoDays(this.waypoints, this.dayBoundaries);
+    });
+  }
+
+  /** Marca que el día termina en `waypointIdx` (abre un día nuevo después). */
+  markEndOfDay(waypointIdx: number): void {
+    runInAction(() => {
+      if (this.days === null) return;
+      if (this.dayBoundaries.includes(waypointIdx)) return;
+      this.dayBoundaries = [...this.dayBoundaries, waypointIdx];
+      this.days = splitIntoDays(this.waypoints, this.dayBoundaries);
+    });
+  }
+
+  /**
+   * Deshace el corte que cierra el día `dayIdx` (lo fusiona con el siguiente).
+   * El último día NO tiene corte de fin (termina en el destino), así que
+   * `unmarkEndOfDay(últimoDía)` es un no-op seguro: hay N-1 boundaries para N
+   * días, y `sorted[dayIdx]` es `undefined` para el último.
+   */
+  unmarkEndOfDay(dayIdx: number): void {
+    runInAction(() => {
+      if (this.days === null) return;
+      const sorted = [...this.dayBoundaries].sort((a, b) => a - b);
+      const boundary = sorted[dayIdx];
+      if (boundary === undefined) return; // último día / índice fuera de rango
+      this.dayBoundaries = this.dayBoundaries.filter((b) => b !== boundary);
+      this.days = splitIntoDays(this.waypoints, this.dayBoundaries);
+    });
+  }
+
+  /**
+   * Nombre del lugar de pernocte al final del día `dayIdx`.
+   *
+   * Limitación v1: re-segmentar (mark/unmark) o cambiar los waypoints
+   * reconstruye los `RouteDay` desde cero, así que los nombres de pernocte se
+   * pierden. La UI (F9) debe avisar al rider antes de re-segmentar.
+   */
+  setOvernightName(dayIdx: number, name: string): void {
+    runInAction(() => {
+      if (this.days === null) return;
+      if (!this.days[dayIdx]) return;
+      this.days = this.days.map((d, index) =>
+        index === dayIdx ? new RouteDay({ ...d, overnightName: name }) : d,
+      );
     });
   }
 
@@ -727,7 +1143,9 @@ export class RoutePlannerViewModel {
         this.waypoints.map((w) =>
           w.id === id
             ? new Waypoint({
-                id: w.id,
+                // Spread preserva notes/stopDurationMin/id/order de la parada
+                // editada; solo cambian lugar/nombre/kind/category.
+                ...w,
                 name: args.name,
                 latitude: args.latitude,
                 longitude: args.longitude,
@@ -735,7 +1153,6 @@ export class RoutePlannerViewModel {
                 // normalizacion va a forzar 'start'/'destination' segun
                 // posicion (esperado: cambiar el destino sigue siendo destino).
                 kind: args.kind ?? w.kind,
-                order: w.order,
                 mapboxCategory: args.mapboxCategory ?? w.mapboxCategory,
                 userOverrideKind: args.kind !== undefined,
               })
@@ -878,20 +1295,41 @@ export class RoutePlannerViewModel {
 
       this.waypoints = this.waypoints.map((w) =>
         w.id === waypointId
-          ? new Waypoint({
-              id: w.id,
-              name: w.name,
-              latitude: w.latitude,
-              longitude: w.longitude,
-              kind,
-              order: w.order,
-              mapboxCategory: w.mapboxCategory,
-              userOverrideKind: true,
-            })
+          ? new Waypoint({ ...w, kind, userOverrideKind: true })
           : w,
       );
       // El kind no afecta la geometria pero si los colores del trazado.
       // No invalidamos directions: el rider ya pago el calculo.
+    });
+  }
+
+  /**
+   * Setea la nota libre de una parada. No invalida directions (no afecta el
+   * trazado); el cambio de `draftFingerprint` dispara el auto-save del draft.
+   */
+  setWaypointNotes(waypointId: string, notes: string): void {
+    runInAction(() => {
+      const target = this.waypoints.find((w) => w.id === waypointId);
+      if (!target) return;
+      this.waypoints = this.waypoints.map((w) =>
+        w.id === waypointId ? new Waypoint({ ...w, notes }) : w,
+      );
+    });
+  }
+
+  /**
+   * Setea la duración planeada de una parada en minutos (0 o negativo la
+   * limpia). No invalida directions; alimenta `etaWithStopsMin` y auto-save.
+   */
+  setWaypointStopDuration(waypointId: string, minutes: number): void {
+    runInAction(() => {
+      const target = this.waypoints.find((w) => w.id === waypointId);
+      if (!target) return;
+      const stopDurationMin =
+        Number.isFinite(minutes) && minutes > 0 ? minutes : undefined;
+      this.waypoints = this.waypoints.map((w) =>
+        w.id === waypointId ? new Waypoint({ ...w, stopDurationMin }) : w,
+      );
     });
   }
 
@@ -1005,6 +1443,9 @@ export class RoutePlannerViewModel {
       this.notes = draft.notes;
       this.rideType = draft.rideType;
       this.waypoints = this.normalizeWaypoints(draft.waypoints);
+      this.avoid = draft.avoid;
+      this.isRoundTrip = draft.roundTrip;
+      this.selectedAlternativeIndex = 0;
       // Avanzar el sequence para no chocar con ids de los waypoints cargados.
       this.waypointSeq = Math.max(
         this.waypointSeq,
@@ -1065,6 +1506,8 @@ export class RoutePlannerViewModel {
         notes: this.notes,
         rideType: this.rideType,
         waypoints: [...this.waypoints],
+        avoid: this.avoid,
+        roundTrip: this.isRoundTrip,
         updatedAt: new Date(),
       });
       await this.saveRouteDraftUseCase.run(draft);
@@ -1123,9 +1566,12 @@ export class RoutePlannerViewModel {
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints: this.waypoints,
         rideType: this.rideType,
+        avoid: this.avoid,
       });
       runInAction(() => {
         this.directions = directions;
+        // Alternativas viejas no aplican al nuevo trazado.
+        this.selectedAlternativeIndex = 0;
       });
       this.updateLoadingState(false, null, 'directions');
       // C.6: si hay party activa para esta ruta, computar el fuel plan.
@@ -1140,9 +1586,34 @@ export class RoutePlannerViewModel {
    * calculadas. Si no se cumplen las precondiciones, no-op silencioso —
    * el screen solo renderiza la card cuando `partyFuelPlan` no es null.
    */
+  /**
+   * Arma la Route actual desde las directions activas y delega al
+   * `PlannerInsightsStore` el recálculo de autonomía/elevación/combustible.
+   * Sin moto o sin trazado, limpia los estimados. Lo dispara la reaction.
+   */
+  private recomputeInsights(): void {
+    const motorcycle = this.selectedMotorcycle;
+    const active = this.activeDirections;
+    if (!motorcycle || !active) {
+      this.insights.clearEstimates();
+      return;
+    }
+    const route = new Route({
+      id: this.editingId ?? 'planner-insights',
+      riderId: this.riderId ?? 'unknown',
+      name: this.name || 'Ruta',
+      rideType: this.rideType,
+      waypoints: this.waypoints,
+      geometry: active.geometry,
+      distanceKm: active.distanceKm,
+      estimatedDurationMin: active.durationMin,
+    });
+    void this.insights.recompute({ motorcycle, route });
+  }
+
   async computePartyFuelPlan(): Promise<void> {
     const party = this.partyStore.activeParty;
-    const directions = this.directions;
+    const directions = this.activeDirections;
     if (!party || !directions) {
       runInAction(() => {
         this.partyFuelPlan = null;
@@ -1182,7 +1653,8 @@ export class RoutePlannerViewModel {
       if (!this.riderId) {
         throw new Error('No hay un rider autenticado.');
       }
-      if (!this.directions) {
+      const active = this.activeDirections;
+      if (!active) {
         throw new Error('Calcula la ruta antes de guardarla.');
       }
       const route = new Route({
@@ -1191,10 +1663,12 @@ export class RoutePlannerViewModel {
         name: this.name.trim(),
         rideType: this.rideType,
         waypoints: this.waypoints,
-        geometry: this.directions.geometry,
-        distanceKm: this.directions.distanceKm,
-        estimatedDurationMin: this.directions.durationMin,
+        geometry: active.geometry,
+        distanceKm: active.distanceKm,
+        estimatedDurationMin: active.durationMin,
         notes: this.notes.trim() || undefined,
+        avoid: this.avoid,
+        roundTrip: this.isRoundTrip,
       });
 
       let persistedId: string;
@@ -1240,6 +1714,11 @@ export class RoutePlannerViewModel {
       this.rideType = 'highway';
       this.waypoints = [];
       this.directions = null;
+      this.avoid = new RouteAvoidPreferences();
+      this.isRoundTrip = false;
+      this.selectedAlternativeIndex = 0;
+      this.isOptimizeLoading = false;
+      this.isOptimizeError = null;
       this.mode = 'create';
       this.editingId = null;
       this.waypointSeq = 0;
@@ -1262,7 +1741,11 @@ export class RoutePlannerViewModel {
       this.isSavedSheetOpen = false;
       this.savedRouteId = null;
       this.motorcycles = null;
+      this.days = null;
+      this.dayBoundaries = [];
     });
+    this.insights.reset();
+    this.templates.reset();
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────
@@ -1300,16 +1783,9 @@ export class RoutePlannerViewModel {
       } else {
         kind = w.kind;
       }
-      return new Waypoint({
-        id: w.id,
-        name: w.name,
-        latitude: w.latitude,
-        longitude: w.longitude,
-        kind,
-        order: index,
-        mapboxCategory: w.mapboxCategory,
-        userOverrideKind: w.userOverrideKind,
-      });
+      // Spread `...w` para preservar TODA la metadata (notes, stopDurationMin,
+      // isReturnClone, etc.) al re-normalizar; solo cambian kind/order.
+      return new Waypoint({ ...w, kind, order: index });
     });
   }
 
@@ -1322,6 +1798,9 @@ export class RoutePlannerViewModel {
       this.rideType = route.rideType;
       this.waypoints = this.normalizeWaypoints(route.waypoints);
       this.waypointSeq = route.waypoints.length;
+      this.avoid = route.avoid;
+      this.isRoundTrip = route.roundTrip;
+      this.selectedAlternativeIndex = 0;
       this.directions = new RouteDirections({
         distanceKm: route.distanceKm,
         durationMin: route.estimatedDurationMin,
@@ -1360,6 +1839,10 @@ export class RoutePlannerViewModel {
         case 'partyFuel':
           this.isPartyFuelLoading = isLoading;
           this.isPartyFuelError = error;
+          break;
+        case 'optimize':
+          this.isOptimizeLoading = isLoading;
+          this.isOptimizeError = error;
           break;
       }
     });

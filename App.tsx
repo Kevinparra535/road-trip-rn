@@ -1,13 +1,6 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
-  useFonts,
-} from '@expo-google-fonts/inter';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +9,7 @@ import { initMapbox } from '@/ui/map/mapbox';
 import RootNavigator from '@/ui/navigation/RootNavigator';
 
 import Colors from '@/ui/styles/Colors';
+import useAppFonts from '@/ui/utils/fontsLoader';
 
 initMapbox();
 
@@ -32,12 +26,7 @@ const navTheme = {
 };
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+  const [fontsLoaded] = useAppFonts();
 
   if (!fontsLoaded) {
     return (

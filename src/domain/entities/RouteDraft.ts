@@ -1,4 +1,6 @@
 import { RideType } from '@/domain/entities/Route';
+import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
+import { RouteDay } from '@/domain/entities/RouteDay';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 /**
@@ -16,6 +18,12 @@ export type RouteDraftConstructorParams = {
   notes: string;
   rideType: RideType;
   waypoints: Waypoint[];
+  /** Preferencias de ruteo en curso (se restauran al retomar el draft). */
+  avoid?: RouteAvoidPreferences;
+  /** `true` si el draft tiene activado "volver al origen". */
+  roundTrip?: boolean;
+  /** Segmentación multi-día en curso. */
+  days?: RouteDay[];
   updatedAt: Date;
   [key: string]: any;
 };
@@ -29,6 +37,9 @@ export class RouteDraft {
   notes: string;
   rideType: RideType;
   waypoints: Waypoint[];
+  avoid: RouteAvoidPreferences;
+  roundTrip: boolean;
+  days: RouteDay[];
   updatedAt: Date;
 
   constructor(params: RouteDraftConstructorParams) {
@@ -38,6 +49,9 @@ export class RouteDraft {
     this.notes = params.notes;
     this.rideType = params.rideType;
     this.waypoints = params.waypoints;
+    this.avoid = params.avoid ?? new RouteAvoidPreferences();
+    this.roundTrip = params.roundTrip ?? false;
+    this.days = params.days ?? [];
     this.updatedAt = params.updatedAt;
 
     Object.assign(this, params);

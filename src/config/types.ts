@@ -14,6 +14,7 @@ export const TYPES = {
   PlaceCategorySearchService: Symbol.for('PlaceCategorySearchService'),
   PlaceSummaryService: Symbol.for('PlaceSummaryService'),
   ElevationService: Symbol.for('ElevationService'),
+  OptimizationService: Symbol.for('OptimizationService'),
   RouteShareService: Symbol.for('RouteShareService'),
   ShareCodeGeneratorService: Symbol.for('ShareCodeGeneratorService'),
   TripPartyService: Symbol.for('TripPartyService'),
@@ -32,6 +33,8 @@ export const TYPES = {
   RecentDestinationRepository: Symbol.for('RecentDestinationRepository'),
   RouteDraftRepository: Symbol.for('RouteDraftRepository'),
   ElevationRepository: Symbol.for('ElevationRepository'),
+  OptimizationRepository: Symbol.for('OptimizationRepository'),
+  RouteTemplateRepository: Symbol.for('RouteTemplateRepository'),
   RouteShareRepository: Symbol.for('RouteShareRepository'),
   TripPartyRepository: Symbol.for('TripPartyRepository'),
 
@@ -73,6 +76,8 @@ export const TYPES = {
   GetRouteElevationUseCase: Symbol.for('GetRouteElevationUseCase'),
   EstimateRouteFuelUseCase: Symbol.for('EstimateRouteFuelUseCase'),
   InferStopKindUseCase: Symbol.for('InferStopKindUseCase'),
+  OptimizeRouteOrderUseCase: Symbol.for('OptimizeRouteOrderUseCase'),
+  GetRouteTemplatesUseCase: Symbol.for('GetRouteTemplatesUseCase'),
   GenerateRouteShareCodeUseCase: Symbol.for('GenerateRouteShareCodeUseCase'),
   ResolveRouteShareCodeUseCase: Symbol.for('ResolveRouteShareCodeUseCase'),
   RevokeRouteShareCodeUseCase: Symbol.for('RevokeRouteShareCodeUseCase'),
@@ -100,4 +105,6 @@ export const TYPES = {
   SessionStore: Symbol.for('SessionStore'),
   LocationStore: Symbol.for('LocationStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
+  PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
+  PlannerTemplateController: Symbol.for('PlannerTemplateController'),
 } as const;

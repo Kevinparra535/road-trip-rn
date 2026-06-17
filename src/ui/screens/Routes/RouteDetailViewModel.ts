@@ -22,6 +22,7 @@ import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareC
 
 import Logger from '@/ui/utils/Logger';
 
+import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share' | 'party';
@@ -106,6 +107,40 @@ export class RouteDetailViewModel {
 
   get canEstimate(): boolean {
     return this.isRouteResponse !== null && this.selectedMotorcycle !== null;
+  }
+
+  /**
+   * Arma el payload serializable para duplicar esta ruta en el Planner. `null`
+   * si la ruta aún no cargó. La navegación es del screen; este método solo
+   * produce el DTO plano (los waypoints viajan sin métodos).
+   */
+  getDuplicationPayload(): SerializedDuplicateRoute | null {
+    const route = this.isRouteResponse;
+    if (!route) return null;
+    return {
+      name: route.name,
+      rideType: route.rideType,
+      waypoints: route.waypoints.map((w) => ({
+        name: w.name,
+        latitude: w.latitude,
+        longitude: w.longitude,
+        kind: w.kind,
+        order: w.order,
+        mapboxCategory: w.mapboxCategory,
+        notes: w.notes,
+        stopDurationMin: w.stopDurationMin,
+        isReturnClone: w.isReturnClone,
+      })),
+      avoid: route.avoid.isEmpty
+        ? undefined
+        : {
+            tolls: route.avoid.tolls,
+            highways: route.avoid.highways,
+            ferries: route.avoid.ferries,
+            unpaved: route.avoid.unpaved,
+          },
+      roundTrip: route.roundTrip || undefined,
+    };
   }
 
   // ── Entrypoints ─────────────────────────────────────────────────────────

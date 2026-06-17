@@ -25,6 +25,10 @@ export type WaypointConstructorParams = {
    * que la inferencia automatica NO sobrescriba elecciones explicitas.
    */
   userOverrideKind?: boolean;
+  /** Nota libre del rider para esta parada (ej. "tanquear y almorzar"). */
+  notes?: string;
+  /** Duracion planeada de la parada, en minutos. Alimenta el ETA con paradas. */
+  stopDurationMin?: number;
   [key: string]: any;
 };
 
@@ -40,6 +44,8 @@ export class Waypoint {
   order: number;
   mapboxCategory?: string;
   userOverrideKind?: boolean;
+  notes?: string;
+  stopDurationMin?: number;
 
   constructor(params: WaypointConstructorParams) {
     this.id = params.id;
@@ -50,6 +56,8 @@ export class Waypoint {
     this.order = params.order;
     this.mapboxCategory = params.mapboxCategory;
     this.userOverrideKind = params.userOverrideKind;
+    this.notes = params.notes;
+    this.stopDurationMin = params.stopDurationMin;
 
     Object.assign(this, params);
   }
@@ -62,5 +70,25 @@ export class Waypoint {
   /** `true` si es una parada intermedia (no start ni destination). */
   isIntermediate(): boolean {
     return this.kind !== 'start' && this.kind !== 'destination';
+  }
+
+  /** `true` si el rider dejo una nota con contenido para esta parada. */
+  hasNotes(): boolean {
+    return typeof this.notes === 'string' && this.notes.trim().length > 0;
+  }
+
+  /**
+   * Etiqueta legible de la duracion de parada (ej. "30 min", "1 h", "1 h 15 min").
+   * Cadena vacia si no hay duracion configurada. Mismo formato que
+   * `Route.durationLabel()`.
+   */
+  stopDurationLabel(): string {
+    const min = this.stopDurationMin ?? 0;
+    if (min <= 0) return '';
+    const hours = Math.floor(min / 60);
+    const minutes = Math.round(min % 60);
+    if (hours <= 0) return `${minutes} min`;
+    if (minutes <= 0) return `${hours} h`;
+    return `${hours} h ${minutes} min`;
   }
 }

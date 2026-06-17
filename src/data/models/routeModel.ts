@@ -1,4 +1,11 @@
-import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
+import {
+  GeoPoint,
+  RideType,
+  Route,
+  RouteConstructorParams,
+} from '@/domain/entities/Route';
+import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
+import { RouteDay } from '@/domain/entities/RouteDay';
 import { isStopKind, StopKind } from '@/domain/entities/StopKind';
 import { Waypoint, WaypointKind } from '@/domain/entities/Waypoint';
 
@@ -13,6 +20,23 @@ type WaypointJson = {
   order: number;
   mapbox_category?: string;
   user_override_kind?: boolean;
+  notes?: string;
+  stop_duration_min?: number;
+  is_return_clone?: boolean;
+};
+
+type RouteAvoidJson = {
+  tolls?: boolean;
+  highways?: boolean;
+  ferries?: boolean;
+  unpaved?: boolean;
+};
+
+type RouteDayJson = {
+  index: number;
+  start_idx: number;
+  end_idx: number;
+  overnight_name?: string;
 };
 
 export type RouteModelConstructorParams = {
@@ -32,6 +56,12 @@ export type RouteModelConstructorParams = {
   distance_km: number;
   estimated_duration_min: number;
   notes?: string;
+  /** Preferencias de ruteo (opcional, back-compat: ausente en docs viejos). */
+  avoid?: RouteAvoidJson;
+  /** `true` si la ruta vuelve al origen (opcional). */
+  round_trip?: boolean;
+  /** Segmentación multi-día (opcional). */
+  days?: RouteDayJson[];
   created_at: unknown;
 };
 
@@ -105,6 +135,29 @@ function readGeometry(raw: unknown): string {
   return '';
 }
 
+/** Lee el objeto `avoid` del doc; `undefined` si no existe (back-compat). */
+function readAvoid(raw: any): RouteAvoidJson | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  return {
+    tolls: Boolean(raw.tolls),
+    highways: Boolean(raw.highways),
+    ferries: Boolean(raw.ferries),
+    unpaved: Boolean(raw.unpaved),
+  };
+}
+
+/** Lee el array `days`; `undefined` si no existe (back-compat). */
+function readDays(raw: any): RouteDayJson[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  return raw.map((d: any, index: number) => ({
+    index: Number(d.index ?? index),
+    start_idx: Number(d.start_idx ?? 0),
+    end_idx: Number(d.end_idx ?? 0),
+    overnight_name:
+      typeof d.overnight_name === 'string' ? d.overnight_name : undefined,
+  }));
+}
+
 export class RouteModel {
   id: string;
   rider_id: string;
@@ -116,6 +169,9 @@ export class RouteModel {
   distance_km: number;
   estimated_duration_min: number;
   notes?: string;
+  avoid?: RouteAvoidJson;
+  round_trip?: boolean;
+  days?: RouteDayJson[];
   created_at: unknown;
 
   constructor(params: RouteModelConstructorParams) {
@@ -128,6 +184,9 @@ export class RouteModel {
     this.distance_km = params.distance_km;
     this.estimated_duration_min = params.estimated_duration_min;
     this.notes = params.notes;
+    this.avoid = params.avoid;
+    this.round_trip = params.round_trip;
+    this.days = params.days;
     this.created_at = params.created_at;
   }
 
@@ -153,12 +212,25 @@ export class RouteModel {
               typeof w.user_override_kind === 'boolean'
                 ? w.user_override_kind
                 : undefined,
+            notes: typeof w.notes === 'string' ? w.notes : undefined,
+            stop_duration_min:
+              typeof w.stop_duration_min === 'number'
+                ? w.stop_duration_min
+                : undefined,
+            is_return_clone:
+              typeof w.is_return_clone === 'boolean'
+                ? w.is_return_clone
+                : undefined,
           }))
         : [],
       geometry: readGeometry(json.geometry),
       distance_km: Number(json.distance_km ?? 0),
       estimated_duration_min: Number(json.estimated_duration_min ?? 0),
       notes: typeof json.notes === 'string' ? json.notes : undefined,
+      avoid: readAvoid(json.avoid),
+      round_trip:
+        typeof json.round_trip === 'boolean' ? json.round_trip : undefined,
+      days: readDays(json.days),
       created_at: json.created_at ?? new Date().toISOString(),
     });
   }
@@ -183,12 +255,37 @@ export class RouteModel {
         order: w.order,
         mapbox_category: w.mapboxCategory,
         user_override_kind: w.userOverrideKind,
+        notes: w.hasNotes() ? w.notes : undefined,
+        stop_duration_min:
+          w.stopDurationMin && w.stopDurationMin > 0
+            ? w.stopDurationMin
+            : undefined,
+        is_return_clone: w.isReturnClone ? true : undefined,
       })),
       geometry: encodePolyline(route.geometry),
       distance_km: route.distanceKm,
       estimated_duration_min: route.estimatedDurationMin,
       notes:
         route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
+      // Solo serializar cuando hay algo que guardar (no inflar el doc).
+      avoid: route.avoid.isEmpty
+        ? undefined
+        : {
+            tolls: route.avoid.tolls,
+            highways: route.avoid.highways,
+            ferries: route.avoid.ferries,
+            unpaved: route.avoid.unpaved,
+          },
+      round_trip: route.roundTrip ? true : undefined,
+      days:
+        route.days.length > 0
+          ? route.days.map((d) => ({
+              index: d.index,
+              start_idx: d.startIdx,
+              end_idx: d.endIdx,
+              overnight_name: d.overnightName,
+            }))
+          : undefined,
       created_at: route.createdAt.toISOString(),
     });
   }
@@ -204,6 +301,9 @@ export class RouteModel {
       distance_km: this.distance_km,
       estimated_duration_min: this.estimated_duration_min,
       notes: this.notes,
+      avoid: this.avoid,
+      round_trip: this.round_trip,
+      days: this.days,
       created_at: this.created_at,
     };
   }
@@ -230,13 +330,19 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
         // Si fue migrado de 'stop' legacy, marcamos que NO fue eleccion del
         // rider para que la UI permita re-categorizar sin friccion.
         userOverrideKind: migrated ? false : w.user_override_kind,
+        notes: w.notes,
+        stopDurationMin: w.stop_duration_min,
+        isReturnClone: w.is_return_clone,
       });
     })
     .sort((a, b) => a.order - b.order);
 
   const geometry: GeoPoint[] = decodePolyline(this.geometry);
 
-  return new Route({
+  // Construimos los params condicionalmente: pasar `avoid`/`days`/`roundTrip`
+  // como `undefined` pisaría los defaults del constructor de Route (por el
+  // `Object.assign(this, params)` final). Solo se incluyen si el doc los trae.
+  const params: RouteConstructorParams = {
     id: this.id,
     riderId: this.rider_id,
     name: this.name,
@@ -247,5 +353,30 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
     estimatedDurationMin: this.estimated_duration_min,
     notes: this.notes,
     createdAt: toDate(this.created_at),
-  });
+  };
+
+  if (this.avoid) {
+    params.avoid = new RouteAvoidPreferences({
+      tolls: this.avoid.tolls,
+      highways: this.avoid.highways,
+      ferries: this.avoid.ferries,
+      unpaved: this.avoid.unpaved,
+    });
+  }
+  if (typeof this.round_trip === 'boolean') {
+    params.roundTrip = this.round_trip;
+  }
+  if (this.days) {
+    params.days = this.days.map(
+      (d) =>
+        new RouteDay({
+          index: d.index,
+          startIdx: d.start_idx,
+          endIdx: d.end_idx,
+          overnightName: d.overnight_name,
+        }),
+    );
+  }
+
+  return new Route(params);
 };

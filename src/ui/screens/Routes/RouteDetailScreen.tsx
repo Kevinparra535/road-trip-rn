@@ -147,6 +147,22 @@ const RouteDetailScreen = observer(() => {
               color={Colors.base.accent}
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              const payload = viewModel.getDuplicationPayload();
+              if (payload) {
+                navigation.navigate('RoutePlanner', { duplicateFrom: payload });
+              }
+            }}
+            hitSlop={8}
+            testID="route-detail-duplicate-btn"
+          >
+            <Ionicons
+              name="copy-outline"
+              size={22}
+              color={Colors.base.textSecondary}
+            />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => viewModel.deleteRoute()} hitSlop={8}>
             <Ionicons
               name="trash-outline"

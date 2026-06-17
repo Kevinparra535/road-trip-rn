@@ -44,6 +44,13 @@ import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 
+import AlternativesChips from './_planner/AlternativesChips';
+import { AutonomyCard } from './_planner/AutonomyCard';
+import { ElevationProfileCard } from './_planner/ElevationProfileCard';
+import { EtaBreakdownCard } from './_planner/EtaBreakdownCard';
+import RouteOptionsRow from './_planner/RouteOptionsRow';
+import TemplateSheet from './_planner/TemplateSheet';
+import WaypointEditSheet from './_planner/WaypointEditSheet';
 import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
@@ -80,6 +87,8 @@ const RoutePlannerScreen = observer(() => {
 
   // Waypoint cuya re-categorizacion esta abierta en el modal. `null` = cerrado.
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
+  // Waypoint cuyo sheet de notas/duracion (F6) esta abierto. `null` = cerrado.
+  const [editingDetailFor, setEditingDetailFor] = useState<string | null>(null);
   // Modal "Activa tu ubicación" (A1 del flow brief) — visible cuando el rider
   // tappea "Usar mi ubicación" pero el permiso fue denegado previamente.
   const [showLocationPermissionDialog, setShowLocationPermissionDialog] =
@@ -88,16 +97,21 @@ const RoutePlannerScreen = observer(() => {
   const searchInputRef = useRef<TextInput>(null);
 
   const destinationParam = route.params?.destinationPlace;
+  const duplicateParam = route.params?.duplicateFrom;
   useEffect(() => {
     let cancelled = false;
     (async () => {
       await viewModel.initialize(routeId);
+      if (cancelled) return;
       // Si vino un destino preseteado desde DestinationPreview (A2), lo
       // hidratamos despues del initialize. No coexiste con `routeId` — si
       // ambos vienen, gana el routeId (edit mode).
-      if (cancelled) return;
       if (destinationParam && !routeId) {
         viewModel.initializeWithDestination(destinationParam);
+      }
+      // Duplicar (F8): rehidrata como copia create-mode con waypoints nuevos.
+      if (duplicateParam && !routeId) {
+        viewModel.duplicateRoute(duplicateParam);
       }
     })();
     return () => {
@@ -105,7 +119,7 @@ const RoutePlannerScreen = observer(() => {
       // Limpia la reaccion del debounce al desmontar el screen.
       viewModel.dispose();
     };
-  }, [viewModel, routeId, destinationParam]);
+  }, [viewModel, routeId, destinationParam, duplicateParam]);
 
   // Guard del back gesto / chevron / X: intercepta cualquier salida con
   // cambios sin guardar via `usePreventRemove` (la API recomendada para
@@ -440,6 +454,24 @@ const RoutePlannerScreen = observer(() => {
                   </Text>
                 </View>
                 <View style={styles.stopActions}>
+                  {!viewModel.isReadOnly && item.isIntermediate ? (
+                    <TouchableOpacity
+                      onPress={() => setEditingDetailFor(item.id)}
+                      hitSlop={6}
+                      style={styles.editBtn}
+                      testID={`waypoint-${item.id}-details`}
+                    >
+                      <Ionicons
+                        name="create-outline"
+                        size={16}
+                        color={
+                          item.notes || item.stopDurationMin
+                            ? Colors.base.accent
+                            : Colors.base.iconMuted
+                        }
+                      />
+                    </TouchableOpacity>
+                  ) : null}
                   {!viewModel.isReadOnly ? (
                     <TouchableOpacity
                       onPress={() => {
@@ -534,6 +566,27 @@ const RoutePlannerScreen = observer(() => {
             );
           })}
 
+          <RouteOptionsRow viewModel={viewModel} />
+          <AlternativesChips viewModel={viewModel} />
+
+          {viewModel.timelineItems.length === 0 && !viewModel.isEditMode ? (
+            <TouchableOpacity
+              style={styles.templateBtn}
+              onPress={() => viewModel.templates.openTemplateSheet()}
+              activeOpacity={0.85}
+              testID="route-planner-templates-btn"
+            >
+              <Ionicons
+                name="albums-outline"
+                size={18}
+                color={Colors.base.accent}
+              />
+              <Text style={styles.templateBtnText}>
+                Empieza desde una plantilla
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+
           {viewModel.needsStartPoint || viewModel.timelineItems.length === 0 ? (
             <StartPointPicker
               viewModel={viewModel}
@@ -573,6 +626,10 @@ const RoutePlannerScreen = observer(() => {
           />
 
           <PartyFuelPlanCard viewModel={viewModel} />
+
+          <AutonomyCard viewModel={viewModel} />
+          <ElevationProfileCard viewModel={viewModel} />
+          <EtaBreakdownCard viewModel={viewModel} />
 
           <View style={styles.statsRow}>
             <Stat
@@ -684,6 +741,14 @@ const RoutePlannerScreen = observer(() => {
             'Elegir el arranque tocando el mapa llega en una próxima versión.',
           );
         }}
+      />
+
+      <TemplateSheet viewModel={viewModel} />
+
+      <WaypointEditSheet
+        viewModel={viewModel}
+        waypointId={editingDetailFor}
+        onClose={() => setEditingDetailFor(null)}
       />
     </SafeAreaView>
   );
@@ -1756,6 +1821,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacings.md,
   },
+  // Boton "Empieza desde una plantilla" (F8) — visible en create-mode vacio.
+  templateBtn: {
+    marginTop: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    paddingVertical: Spacings.md,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  templateBtnText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
+  },
   // Party fuel plan card (C.6)
   fuelCard: {
     marginTop: Spacings.lg,
@@ -2278,8 +2360,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.cardBorder,
   },
   errorCardCtaGhostText: {
-    ...Fonts.links,
-    fontWeight: '600',
+    ...Fonts.linksBold,
     color: Colors.base.textPrimary,
   },
   // ── NoMotorcycleNotice (B3 del flow brief) ───────────────────────────
