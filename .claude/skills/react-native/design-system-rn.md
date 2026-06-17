@@ -1,26 +1,25 @@
 ---
 name: design-system-rn
-description: Apply the project's design system when building or editing UI components and screens in RN (Expo). Use when creating new screens, components, or styles — ensures colors, typography, spacing, shadows, gradients, and reusable components are always used consistently from their token files.
+description: Apply the project's design system when building or editing UI components and screens in RN (Expo). Use when creating new screens, components, or styles — ensures colors, typography, spacing, shadows, gradients, and reusable components are always pulled from their token files instead of raw values.
 ---
 
-# Design System — RN (Expo) Banco Premium
+<purpose>
+Every UI file in this project references **tokens** (Colors, Fonts, Spacings, BorderRadius, Shadows)
+and **shared components** (GradientView, PrimaryButton, AppTextInput) instead of raw values. This
+skill is the complete token inventory, the component library, and the rules for using them — so the
+UI stays visually consistent and a value change in one token file propagates everywhere.
+</purpose>
 
-## Goal
+<when_to_use>
+- Creating a new screen, component, or `StyleSheet` in the RN (Expo) app.
+- Editing existing UI styles (colors, typography, spacing, radii, shadows, gradients).
+- Adding a button, text input, or gradient surface.
+- Reviewing UI work before delivery for token/component compliance.
+</when_to_use>
 
-Every UI file in this project must reference **tokens** (Colors, Fonts, Spacings, BorderRadius, Shadows) and **shared components** (GradientView, PrimaryButton, AppTextInput) instead of raw values. This skill describes the complete token inventory, the available component library, and the rules for using them.
+<rules>
 
-## Lint + Prettier compliance (mandatory)
-
-- Respect existing formatting config: `.prettierrc` + `.prettierignore`.
-- Respect existing lint config: `eslint.config.js` with `eslint-config-prettier` enabled.
-- Before delivering UI work, run:
-  - `npm run lint`
-  - `npm run format:check`
-- Do not introduce style rules that conflict with Prettier output.
-
----
-
-## Token files (source of truth)
+### Token files (source of truth)
 
 | File                            | Export                   | Usage                          |
 | ------------------------------- | ------------------------ | ------------------------------ |
@@ -32,11 +31,10 @@ Every UI file in this project must reference **tokens** (Colors, Fonts, Spacings
 | `src/ui/styles/FontsScale.ts`   | `ms` (named)             | Scaled font sizes              |
 | `src/ui/utils/colorUtils.ts`    | `hexToRgba` (named)      | Hex → rgba strings             |
 
----
+### Colors
 
-## Colors
-
-**Namespace:** `Colors.base` (aliased as `Colors.bank` for backwards compatibility — always prefer `Colors.base` in new code).
+Namespace: `Colors.base` (aliased as `Colors.bank` for backwards compatibility — prefer
+`Colors.base` in new code). The full palette:
 
 ```ts
 import Colors from '@/ui/styles/Colors';
@@ -78,45 +76,17 @@ Colors.semantic.text.primaryDark; // '#1C1C1E' — light theme text
 Colors.semantic.text.primaryLight; // '#FFFFFF'
 ```
 
-### Rule: never write raw `rgba()` strings
+Translucent colors come from the `hexToRgba` helper, not raw `rgba()` strings — so opacity stays
+derived from a single source hex. If the result is reused across components, add it to
+`Colors.base` in `Colors.ts` first. Hex colors live only in `Colors.ts`; add to the palette before
+using one.
 
-Use the `hexToRgba` helper when a new translucent color is needed:
+### Typography
 
-```ts
-import { hexToRgba } from '@/ui/utils/colorUtils';
-
-hexToRgba('#2D7EF8', 0.2); // 'rgba(45,126,248,0.2)'
-hexToRgba('#FFFFFF', 0.08); // 'rgba(255,255,255,0.08)'
-```
-
-If the result is reused in multiple components, add it to `Colors.base` in `Colors.ts` first.
-
----
-
-## Typography
-
-**Always spread a `Fonts` token, then override only `color` (and `fontSize` if strictly needed).**
-
-```ts
-import Fonts from '@/ui/styles/Fonts';
-import Colors from '@/ui/styles/Colors';
-
-// ✅ Correct
-label: {
-  ...Fonts.header3,
-  color: Colors.base.textPrimary,
-},
-
-// ❌ Wrong — raw fontFamily/fontWeight inline
-label: {
-  fontSize: 22,
-  fontFamily: 'Inter-SemiBold',
-  fontWeight: '600',
-  color: '#FFFFFF',
-},
-```
-
-### Token → spec table
+Spread a `Fonts` token, then override only `color` (and `fontSize` if strictly needed). `fontWeight`
+is baked into each `fontFamily` name (`Inter-Bold`, `Inter-SemiBold`, `Inter-Medium`,
+`Inter-Regular`), so spreading a token sets weight automatically and it is never written inline.
+`fontSize` always comes from `ms()` scaling.
 
 | Token                   | fontFamily     | fontSize    | Use case                           |
 | ----------------------- | -------------- | ----------- | ---------------------------------- |
@@ -137,13 +107,7 @@ label: {
 | `Fonts.bigNumbersLight` | Inter-Regular  | ms(50, 0.2) | Light stats                        |
 | `Fonts.labelInputError` | Inter-Regular  | ms(12)      | Error messages (color already set) |
 
-### Rule: `fontWeight` is never set inline
-
-All `fontWeight` is baked into the `fontFamily` name (`Inter-Bold`, `Inter-SemiBold`, `Inter-Medium`, `Inter-Regular`). Spreading a `Fonts` token handles it automatically.
-
----
-
-## Spacing
+### Spacing
 
 ```ts
 import Spacings from '@/ui/styles/Spacings';
@@ -159,11 +123,10 @@ Spacings.spacex6; // 48
 Spacings.spacex7; // 64
 ```
 
-Use arithmetic only for minor tweaks (`Spacings.sm + 2`). For new recurring values ask yourself: should this be added to `Spacings.ts`?
+Arithmetic is for minor tweaks only (`Spacings.sm + 2`). For a new recurring value, add it to
+`Spacings.ts`.
 
----
-
-## Border Radius
+### Border radius
 
 ```ts
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -177,9 +140,7 @@ BorderRadius.xxl; // 30
 BorderRadius.pill; // 100 — buttons, avatars
 ```
 
----
-
-## Shadows
+### Shadows
 
 ```ts
 import Shadows from '@/ui/styles/Shadows';
@@ -190,14 +151,87 @@ Shadows.bankButton; // for primary buttons (blue glow)
 
 Spread directly into a `StyleSheet` object: `...Shadows.bankCard`.
 
----
+### Reusable components
 
-## Reusable components
+- `GradientView` (`@/ui/components/GradientView`) wraps every gradient surface — use it instead of
+  `<LinearGradient>` directly, so presets stay centralized.
+- `PrimaryButton` (`@/ui/components/PrimaryButton`) is the only gradient CTA button — use it instead
+  of a custom `TouchableOpacity + LinearGradient`.
+- `AppTextInput` (`@/ui/components/AppTextInput`) backs every text field — use it instead of
+  `<TextInput>` directly. All `TextInputProps` are forwarded via spread; the `style` prop is
+  intentionally omitted because the variant controls layout.
 
-### `GradientView`
+See the `<examples>` for each component's usage and props.
 
-**Path:** `@/ui/components/GradientView`
+### Screen layout conventions
 
+- `SafeAreaView` (from `react-native-safe-area-context`) wraps screens with
+  `edges={['top', 'left', 'right']}`; `safeArea.backgroundColor` always = `Colors.base.bgPrimary`.
+- Header / nav bar is a `<GradientView preset="header">`. Height: 96 (add form) or 120 (list
+  screens). Top padding: `Spacings.spacex6` (48) to clear the status bar.
+- Card containers use `Colors.base.bgCard`, `BorderRadius.md` (12 for small, `BorderRadius.lg` for
+  form cards), a 1px `Colors.base.cardBorder` border, and `...Shadows.bankCard`.
+
+See the `<examples>` for the canonical layout snippets.
+
+### Style property ordering
+
+Order properties in every `StyleSheet` object as:
+
+1. `padding` / `margin`
+2. `position` / `display` / `flex` / layout props
+3. `width` / `height`
+4. `fontWeight` ← only via `...Fonts.token`
+5. `color`
+6. `backgroundColor`
+7. `fontSize` ← only `ms()` values
+8. `fontFamily` ← only via spread, never inline
+9. `borderRadius` / `borderWidth` / `borderColor`
+
+### Lint + Prettier compliance
+
+- Respect existing formatting config: `.prettierrc` + `.prettierignore`.
+- Respect existing lint config: `eslint.config.js` with `eslint-config-prettier` enabled.
+- Before delivering UI work, run `npm run lint` and `npm run format:check`.
+- Do not introduce style rules that conflict with Prettier output.
+
+</rules>
+
+<examples>
+
+<example name="hexToRgba helper">
+Use the helper when a new translucent color is needed:
+
+```ts
+import { hexToRgba } from '@/ui/utils/colorUtils';
+
+hexToRgba('#2D7EF8', 0.2); // 'rgba(45,126,248,0.2)'
+hexToRgba('#FFFFFF', 0.08); // 'rgba(255,255,255,0.08)'
+```
+</example>
+
+<example name="Typography token spread">
+```ts
+import Fonts from '@/ui/styles/Fonts';
+import Colors from '@/ui/styles/Colors';
+
+// ✅ Correct
+label: {
+  ...Fonts.header3,
+  color: Colors.base.textPrimary,
+},
+
+// ❌ Wrong — raw fontFamily/fontWeight inline
+label: {
+  fontSize: 22,
+  fontFamily: 'Inter-SemiBold',
+  fontWeight: '600',
+  color: '#FFFFFF',
+},
+```
+</example>
+
+<example name="GradientView">
 A `LinearGradient` wrapper with design-system presets.
 
 ```tsx
@@ -215,37 +249,24 @@ import GradientView from '@/ui/components/GradientView';
 // Horizontal direction
 <GradientView preset="accent" direction="horizontal" style={styles.bar} />
 ```
+</example>
 
-**Rule:** Never use `<LinearGradient>` directly. Always use `<GradientView>`.
-
----
-
-### `PrimaryButton`
-
-**Path:** `@/ui/components/PrimaryButton`
-
-The only gradient CTA button in the app.
+<example name="PrimaryButton">
+The only gradient CTA button in the app. Props: `label`, `onPress`, `iconName?` (Ionicons key),
+`loading?`, `disabled?`, `style?` (wrapper override).
 
 ```tsx
 import PrimaryButton from '@/ui/components/PrimaryButton';
 
 <PrimaryButton label="Agregar" iconName="add" onPress={handleAdd} />
-<PrimaryButton label="Guardar" onPress={handleSave} loading={vm.saving} />
-<PrimaryButton label="Confirmar" onPress={handleConfirm} disabled={!vm.isValid} />
+<PrimaryButton label="Guardar" onPress={handleSave} loading={viewModel.saving} />
+<PrimaryButton label="Confirmar" onPress={handleConfirm} disabled={!viewModel.isValid} />
 <PrimaryButton label="Registrar" onPress={handleRegister} style={{ marginTop: 16 }} />
 ```
+</example>
 
-Props: `label`, `onPress`, `iconName?` (Ionicons key), `loading?`, `disabled?`, `style?` (wrapper override).
-
-**Rule:** Never build a custom `TouchableOpacity + LinearGradient` button. Use `PrimaryButton`.
-
----
-
-### `AppTextInput`
-
-**Path:** `@/ui/components/AppTextInput`
-
-All text inputs in the app. Two variants:
+<example name="AppTextInput">
+All text inputs in the app. Two variants (default and search) plus a custom leading icon:
 
 ```tsx
 import AppTextInput from '@/ui/components/AppTextInput';
@@ -254,39 +275,31 @@ import AppTextInput from '@/ui/components/AppTextInput';
 <AppTextInput
   label="Nombre del producto"
   placeholder="ej. Cuenta de Ahorros"
-  value={vm.name}
-  onChangeText={vm.setName}
-  error={vm.nameError}
+  value={viewModel.name}
+  onChangeText={viewModel.setName}
+  error={viewModel.nameError}
 />
 
 // Search — pill shape, auto leading search icon
 <AppTextInput
   variant="search"
   placeholder="Buscar producto..."
-  value={vm.query}
-  onChangeText={vm.setQuery}
+  value={viewModel.query}
+  onChangeText={viewModel.setQuery}
 />
 
 // Custom leading icon
 <AppTextInput
   label="Correo"
   leadingIcon="mail-outline"
-  value={vm.email}
-  onChangeText={vm.setEmail}
+  value={viewModel.email}
+  onChangeText={viewModel.setEmail}
   keyboardType="email-address"
 />
 ```
+</example>
 
-All `TextInputProps` are forwarded via spread. The `style` prop is intentionally omitted (variant controls layout).
-
-**Rule:** Never use `<TextInput>` directly inside screens or components. Always use `<AppTextInput>`.
-
----
-
-## Screen layout conventions
-
-### SafeAreaView
-
+<example name="Screen layout">
 ```tsx
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -295,9 +308,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 </SafeAreaView>;
 ```
 
-`safeArea.backgroundColor` always = `Colors.base.bgPrimary`.
-
-### Header / Nav bar
+Header / nav bar:
 
 ```tsx
 <GradientView preset="header" style={styles.header}>
@@ -305,9 +316,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 </GradientView>
 ```
 
-`header` height: 96 (add form) or 120 (list screens). Top padding: `Spacings.spacex6` (48) to clear status bar.
-
-### Card containers
+Card container:
 
 ```ts
 cardContainer: {
@@ -319,22 +328,13 @@ cardContainer: {
   ...Shadows.bankCard,
 },
 ```
+</example>
 
-### Style property ordering (enforce in all StyleSheet objects)
+</examples>
 
-1. `padding` / `margin`
-2. `position` / `display` / `flex` / layout props
-3. `width` / `height`
-4. `fontWeight` ← only via `...Fonts.token`
-5. `color`
-6. `backgroundColor`
-7. `fontSize` ← only `ms()` values
-8. `fontFamily` ← only via spread, never inline
-9. `borderRadius` / `borderWidth` / `borderColor`
-
----
-
-## Rules checklist (apply to every new file)
+<output_format>
+<checklist>
+Apply to every new or edited UI file before delivery:
 
 - [ ] No raw `rgba()` strings — use `hexToRgba` or `Colors.base.*`
 - [ ] No raw hex colors outside `Colors.ts` — add to palette first
@@ -345,4 +345,12 @@ cardContainer: {
 - [ ] No direct `TextInput` — use `AppTextInput`
 - [ ] Spacing values from `Spacings.*`, radii from `BorderRadius.*`
 - [ ] Shadows from `Shadows.*` spread into StyleSheet
-- [ ] Style property order matches the block above
+- [ ] Style property order matches the ordering rule
+- [ ] `npm run lint` and `npm run format:check` pass
+</checklist>
+</output_format>
+
+<see_also>
+- [[clean-architecture-rn-expo-mvvm]] — the architecture rules these UI conventions sit inside.
+- [[feature-scaffold-rn]] — generates the screens/components this design system styles.
+</see_also>

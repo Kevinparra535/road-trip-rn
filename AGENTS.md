@@ -11,12 +11,19 @@ writing any code.
 
 ## Skills — leelas antes de tocar codigo
 
-- `skills/react-native/clean-architecture-rn-expo-mvvm.md` — reglas de capas, DI
-  y ViewModel canonico.
-- `skills/react-native/feature-scaffold-rn.md` — como crear un slice vertical.
-- `skills/react-native/design-system-rn.md` — tokens y componentes de UI.
-- `skills/react-native/pr-checklist-clean-architecture.md` — checklist de PR.
-- `skills/road-trip/road-trip-domain.md` — contexto de dominio de esta app.
+- `.claude/skills/react-native/clean-architecture-rn-expo-mvvm.md` — reglas de capas,
+  DI y ViewModel canonico.
+- `.claude/skills/react-native/feature-scaffold-rn.md` — como crear un slice vertical.
+- `.claude/skills/react-native/design-system-rn.md` — tokens y componentes de UI.
+- `.claude/skills/react-native/realtime-and-global-state-rn.md` — streams
+  (`SubscriptionUseCase`), stores globales, sync/offline.
+- `.claude/skills/react-native/unit-testing-clean-architecture.md` — contrato de tests
+  obligatorio por feature (Jest + jest-expo, cobertura > 70%).
+- `.claude/skills/react-native/pr-checklist-clean-architecture.md` — checklist de PR.
+- `.claude/skills/meta/skill-authoring.md` — formato canonico y convencion para
+  mantener/sincronizar estas skills.
+- `.claude/skills/road-trip/road-trip-domain.md` — contexto de dominio de esta app y
+  divergencias intencionales frente a las skills del stack.
 
 ## Comandos
 
