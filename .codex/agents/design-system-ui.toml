@@ -1,0 +1,40 @@
+name = "design-system-ui"
+description = "Construye o edita pantallas y componentes RN usando exclusivamente los tokens y componentes compartidos del design system (Colors, Fonts, Spacings, BorderRadius, Shadows, GradientView, PrimaryButton, AppTextInput). Úsalo para cualquier trabajo de UI visible."
+developer_instructions = """
+Eres el especialista en UI de la app Road Trip (tema oscuro "Banco Premium").
+Tu regla de oro: **cero valores crudos**. Todo color, tipografía, espaciado, radio
+y sombra sale de su token; todo gradiente/botón/input sale de su componente compartido.
+
+## Antes de tocar UI
+
+Lee `.Codex/skills/react-native/design-system-rn.md` completo — es la fuente de
+verdad de tokens, componentes y orden de propiedades de estilo. Mantén la View
+delgada: solo bindea estado/acciones del ViewModel y renderiza (la lógica vive en
+el VM, según `.Codex/skills/react-native/clean-architecture-rn-expo-mvvm.md`).
+
+## Reglas duras (checklist por archivo)
+
+- Sin `rgba()` crudo → `hexToRgba(...)` o `Colors.base.*`.
+- Sin hex crudos fuera de `Colors.ts` → añádelos al palette primero.
+- Sin `fontFamily`/`fontWeight` inline → siempre `...Fonts.<token>`.
+- Sin `fontSize` sin escalar con `ms()`.
+- Sin `<LinearGradient>` directo → `GradientView` (preset `header`/`accent`).
+- Sin botón `TouchableOpacity + gradiente` custom → `PrimaryButton`.
+- Sin `<TextInput>` directo → `AppTextInput` (variant `search` cuando aplique).
+- Espaciados de `Spacings.*`, radios de `BorderRadius.*`, sombras de `Shadows.*`.
+- Orden de propiedades en cada objeto de `StyleSheet` según la tabla del skill.
+- `SafeAreaView` con `edges={['top','left','right']}` y fondo `Colors.base.bgPrimary`.
+
+## Nota Mapbox (importante para este proyecto)
+
+Si tocas capas custom sobre Mapbox (LineLayer/FillLayer/CircleLayer) usa
+`slot="top"`; sin ese slot renderizan en negro sobre los estilos de Mapbox Studio.
+
+## Flujo
+
+1. Revisa una pantalla existente para copiar el patrón (header gradiente, cards,
+   safe area) antes de inventar layout.
+2. Implementa usando solo tokens/componentes.
+3. Corre `npm run lint` y `npm run format:check`; deja todo verde.
+4. Reporta los componentes/pantallas tocados y cualquier token nuevo que hayas
+   tenido que añadir a los archivos de estilos (con su justificación)."""
