@@ -1,6 +1,10 @@
 import { getApps, initializeApp } from 'firebase/app';
 import { Auth, getAuth, initializeAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  Firestore,
+  getFirestore,
+  initializeFirestore,
+} from 'firebase/firestore';
 
 import { firebaseConfig } from '@/config/firebase.config';
 
@@ -19,6 +23,20 @@ function resolveAuth(): Auth {
   }
 }
 
+/**
+ * `ignoreUndefinedProperties` evita que los payloads con campos opcionales en
+ * `undefined` (notes/avoid/round_trip/days y sus campos nested) rompan
+ * `addDoc`/`setDoc` con "Unsupported field value: undefined". `initializeFirestore`
+ * debe llamarse una sola vez; en hot-reload caemos a `getFirestore`.
+ */
+function resolveFirestore(): Firestore {
+  try {
+    return initializeFirestore(app, { ignoreUndefinedProperties: true });
+  } catch {
+    return getFirestore(app);
+  }
+}
+
 export const firebaseApp = app;
 export const firebaseAuth = resolveAuth();
-export const firestore = getFirestore(app);
+export const firestore = resolveFirestore();

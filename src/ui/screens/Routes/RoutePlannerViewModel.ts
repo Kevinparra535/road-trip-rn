@@ -354,10 +354,11 @@ export class RoutePlannerViewModel {
     const wpPart = this.waypoints
       .map((w) => `${w.order}:${w.latitude},${w.longitude}`)
       .join('|');
-    // Cambiar `avoid` invalida el trazado igual que mover un waypoint, así que
-    // entra al fingerprint para disparar el auto-recalc (la reaction existente).
+    // Cambiar `avoid` o el `rideType` invalida el trazado igual que mover un
+    // waypoint (ambos van al request de directions), así que entran al
+    // fingerprint para disparar el auto-recalc (la reaction existente).
     const avoidPart = `${this.avoid.tolls}${this.avoid.highways}${this.avoid.ferries}${this.avoid.unpaved}`;
-    return `${wpPart}::${avoidPart}`;
+    return `${wpPart}::${avoidPart}::${this.rideType}`;
   }
 
   /**
