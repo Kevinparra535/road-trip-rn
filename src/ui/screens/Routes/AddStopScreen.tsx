@@ -16,7 +16,11 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
+import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
+
+import AppTextInput from '@/ui/components/AppTextInput';
+import Skeleton from '@/ui/components/Skeleton';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
 
@@ -70,6 +74,11 @@ const AddStopScreen = observer(() => {
     navigation.goBack();
   };
 
+  const handleSearchResultTap = (place: Place) => {
+    viewModel.selectSearchResult(place);
+    navigation.goBack();
+  };
+
   const isEditing = viewModel.isEditingWaypoint;
   const editingName = viewModel.editingWaypointName;
   const title = isEditing ? 'Cambiar parada' : 'Agregar parada';
@@ -113,79 +122,149 @@ const AddStopScreen = observer(() => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <View style={styles.grid}>
-          {ADD_STOP_CATEGORIES.map((tile, index) => {
-            const meta = stopKindMeta(tile.kind);
-            return (
-              <TouchableOpacity
-                key={`${tile.category}-${index}`}
-                style={[
-                  styles.tile,
-                  { borderColor: hexToRgba(meta.color, 0.4) },
-                ]}
-                onPress={() => handleCategoryTap(tile)}
-                activeOpacity={0.85}
-              >
-                <View
-                  style={[
-                    styles.tileIconBox,
-                    { backgroundColor: hexToRgba(meta.color, 0.15) },
-                  ]}
-                >
-                  <Ionicons
-                    name={tile.iconName as any}
-                    size={28}
-                    color={meta.color}
-                  />
-                </View>
-                <Text style={styles.tileLabel} numberOfLines={1}>
-                  {tile.label}
+      <View style={styles.searchBarWrapper}>
+        <AppTextInput
+          variant="search"
+          testID="add-stop-search-input"
+          placeholder="Buscar dirección o lugar…"
+          value={viewModel.searchQuery}
+          onChangeText={(t) => viewModel.setSearchQuery(t)}
+          onClear={() => viewModel.clearSearch()}
+          returnKeyType="search"
+          autoCorrect={false}
+        />
+      </View>
+
+      {viewModel.isSearching ? (
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          {viewModel.isSearchLoading ? (
+            <>
+              <Skeleton height={56} radius={BorderRadius.md} />
+              <Skeleton height={56} radius={BorderRadius.md} />
+              <Skeleton height={56} radius={BorderRadius.md} />
+            </>
+          ) : null}
+
+          {viewModel.isSearchError ? (
+            <Text style={styles.error}>{viewModel.isSearchError}</Text>
+          ) : null}
+
+          {!viewModel.isSearchLoading &&
+          viewModel.searchResults !== null &&
+          viewModel.searchResults.length === 0 ? (
+            <Text style={styles.searchStatus}>Sin resultados.</Text>
+          ) : null}
+
+          {(viewModel.searchResults ?? []).map((place) => (
+            <TouchableOpacity
+              key={place.id}
+              style={styles.recentRow}
+              onPress={() => handleSearchResultTap(place)}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="location"
+                size={20}
+                color={Colors.base.iconMuted}
+              />
+              <View style={styles.recentBody}>
+                <Text style={styles.recentName} numberOfLines={1}>
+                  {place.name}
                 </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                <Text style={styles.recentSub} numberOfLines={1}>
+                  {place.fullName}
+                </Text>
+              </View>
+              <Ionicons
+                name="add-circle"
+                size={22}
+                color={Colors.base.accent}
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <View style={styles.grid}>
+            {ADD_STOP_CATEGORIES.map((tile, index) => {
+              const meta = stopKindMeta(tile.kind);
+              return (
+                <TouchableOpacity
+                  key={`${tile.category}-${index}`}
+                  style={[
+                    styles.tile,
+                    { borderColor: hexToRgba(meta.color, 0.4) },
+                  ]}
+                  onPress={() => handleCategoryTap(tile)}
+                  activeOpacity={0.85}
+                >
+                  <View
+                    style={[
+                      styles.tileIconBox,
+                      { backgroundColor: hexToRgba(meta.color, 0.15) },
+                    ]}
+                  >
+                    <Ionicons
+                      name={tile.iconName as any}
+                      size={28}
+                      color={meta.color}
+                    />
+                  </View>
+                  <Text style={styles.tileLabel} numberOfLines={1}>
+                    {tile.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-        <Text style={styles.sectionLabel}>Recientes y favoritos</Text>
+          <Text style={styles.sectionLabel}>Recientes y favoritos</Text>
 
-        {viewModel.isLoading ? (
-          <ActivityIndicator color={Colors.base.accent} />
-        ) : null}
-        {viewModel.isError ? (
-          <Text style={styles.error}>{viewModel.isError}</Text>
-        ) : null}
+          {viewModel.isLoading ? (
+            <ActivityIndicator color={Colors.base.accent} />
+          ) : null}
+          {viewModel.isError ? (
+            <Text style={styles.error}>{viewModel.isError}</Text>
+          ) : null}
 
-        {!viewModel.isLoading && viewModel.recents.length === 0 ? (
-          <Text style={styles.emptyText}>
-            Cuando confirmes destinos apareceran aca para agregarlos rapido.
-          </Text>
-        ) : null}
+          {!viewModel.isLoading && viewModel.recents.length === 0 ? (
+            <Text style={styles.emptyText}>
+              Cuando confirmes destinos apareceran aca para agregarlos rapido.
+            </Text>
+          ) : null}
 
-        {viewModel.recents.map((recent) => (
-          <TouchableOpacity
-            key={recent.id}
-            style={styles.recentRow}
-            onPress={() => handleRecentTap(recent)}
-            activeOpacity={0.85}
-          >
-            <Ionicons
-              name="time-outline"
-              size={20}
-              color={Colors.base.iconMuted}
-            />
-            <View style={styles.recentBody}>
-              <Text style={styles.recentName} numberOfLines={1}>
-                {recent.name}
-              </Text>
-              <Text style={styles.recentSub} numberOfLines={1}>
-                {recent.fullName}
-              </Text>
-            </View>
-            <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          {viewModel.recents.map((recent) => (
+            <TouchableOpacity
+              key={recent.id}
+              style={styles.recentRow}
+              onPress={() => handleRecentTap(recent)}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="time-outline"
+                size={20}
+                color={Colors.base.iconMuted}
+              />
+              <View style={styles.recentBody}>
+                <Text style={styles.recentName} numberOfLines={1}>
+                  {recent.name}
+                </Text>
+                <Text style={styles.recentSub} numberOfLines={1}>
+                  {recent.fullName}
+                </Text>
+              </View>
+              <Ionicons
+                name="add-circle"
+                size={22}
+                color={Colors.base.accent}
+              />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 });
@@ -227,6 +306,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.accentDimBorder,
     backgroundColor: Colors.base.accentDim,
+  },
+  searchBarWrapper: {
+    marginHorizontal: Spacings.spacex2,
+    marginBottom: Spacings.sm,
+  },
+  searchStatus: {
+    paddingVertical: Spacings.lg,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+    textAlign: 'center',
   },
   scroll: {
     padding: Spacings.spacex2,

@@ -11,20 +11,22 @@ import { observer } from 'mobx-react-lite';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
+import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
+import { formatDuration } from '@/ui/utils/formatDuration';
 
 import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
 
 /**
- * Fila de chips para elegir entre las rutas alternativas que devuelve
+ * Cards comparativas para elegir entre las rutas alternativas que devuelve
  * Mapbox. Solo se renderiza cuando hay más de 1 alternativa disponible.
  *
- * - Chip activo: fondo `accentDim` + borde `accentDimBorder` + texto accent.
- * - Chip inactivo: fondo `bgCard` + borde `cardBorder` + texto secundario.
- * - Label: "Ruta {i+1}" con sub "X km" derivado de `distanceKm`.
+ * - Card activa: borde `accentDimBorder` + fondo `accentDim` + textos accent.
+ * - Card inactiva: borde `cardBorder` + fondo `bgCard` + textos secundarios.
+ * - Cada card muestra: label "Ruta N", distancia en km y duración formateada.
  * - onPress → `viewModel.selectAlternative(index)`.
  *
- * Puramente presentational: toda la lógica vive en `RoutePlannerViewModel`.
+ * Puramente presentacional: toda la lógica vive en `RoutePlannerViewModel`.
  */
 const AlternativesChips = observer(
   ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
@@ -50,35 +52,75 @@ const AlternativesChips = observer(
         >
           {alternatives.map((alt, index) => {
             const isActive = index === viewModel.selectedAlternativeIndex;
+            const durationLabel = formatDuration(Math.round(alt.durationMin));
+
             return (
               <TouchableOpacity
                 key={index}
                 style={[
-                  styles.chip,
-                  isActive ? styles.chipActive : styles.chipInactive,
+                  styles.card,
+                  isActive ? styles.cardActive : styles.cardInactive,
                 ]}
                 onPress={() => viewModel.selectAlternative(index)}
                 activeOpacity={0.75}
                 testID={`route-alternatives-chip-${index}`}
               >
-                <Text
-                  style={[
-                    styles.chipLabel,
-                    isActive
-                      ? styles.chipLabelActive
-                      : styles.chipLabelInactive,
-                  ]}
-                >
-                  Ruta {index + 1}
-                </Text>
-                <Text
-                  style={[
-                    styles.chipSub,
-                    isActive ? styles.chipSubActive : styles.chipSubInactive,
-                  ]}
-                >
-                  {Math.round(alt.distanceKm)} km
-                </Text>
+                {/* Card header: label + selection indicator */}
+                <View style={styles.cardHeader}>
+                  <Text
+                    style={[
+                      styles.cardLabel,
+                      isActive ? styles.textAccent : styles.textSecondary,
+                    ]}
+                  >
+                    Ruta {index + 1}
+                  </Text>
+                  <Ionicons
+                    name={isActive ? 'checkmark-circle' : 'radio-button-off'}
+                    size={16}
+                    color={
+                      isActive ? Colors.base.accent : Colors.base.iconMuted
+                    }
+                  />
+                </View>
+
+                {/* Distance row */}
+                <View style={styles.statRow}>
+                  <Ionicons
+                    name="navigate-outline"
+                    size={12}
+                    color={
+                      isActive ? Colors.base.accent : Colors.base.iconMuted
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.statValue,
+                      isActive ? styles.textAccent : styles.textPrimary,
+                    ]}
+                  >
+                    {Math.round(alt.distanceKm)} km
+                  </Text>
+                </View>
+
+                {/* Duration row */}
+                <View style={styles.statRow}>
+                  <Ionicons
+                    name="time-outline"
+                    size={12}
+                    color={
+                      isActive ? Colors.base.accent : Colors.base.iconMuted
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.statValue,
+                      isActive ? styles.textAccent : styles.textPrimary,
+                    ]}
+                  >
+                    {durationLabel}
+                  </Text>
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -108,41 +150,49 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   scrollContent: {
-    gap: Spacings.xs,
+    gap: Spacings.sm,
     paddingBottom: Spacings.xs,
   },
-  chip: {
-    paddingHorizontal: Spacings.md,
-    paddingVertical: Spacings.sm,
-    alignItems: 'center',
-    borderRadius: BorderRadius.md,
+  card: {
+    padding: Spacings.md,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
+    gap: Spacings.xs,
+    minWidth: 112,
+    ...Shadows.bankCard,
   },
-  chipActive: {
+  cardActive: {
     backgroundColor: Colors.base.accentDim,
     borderColor: Colors.base.accentDimBorder,
   },
-  chipInactive: {
+  cardInactive: {
     backgroundColor: Colors.base.bgCard,
     borderColor: Colors.base.cardBorder,
   },
-  chipLabel: {
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacings.xs,
+  },
+  cardLabel: {
     ...Fonts.linksBold,
   },
-  chipLabelActive: {
-    color: Colors.base.accent,
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
   },
-  chipLabelInactive: {
-    color: Colors.base.textSecondary,
-  },
-  chipSub: {
-    marginTop: 2,
+  statValue: {
     ...Fonts.links,
   },
-  chipSubActive: {
+  textAccent: {
     color: Colors.base.accent,
   },
-  chipSubInactive: {
-    color: Colors.base.textMuted,
+  textSecondary: {
+    color: Colors.base.textSecondary,
+  },
+  textPrimary: {
+    color: Colors.base.textPrimary,
   },
 });

@@ -3,6 +3,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
 
+import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { StopKind } from '@/domain/entities/StopKind';
 
@@ -100,6 +101,62 @@ export class AddStopViewModel {
     return this.planner.editingWaypoint?.name ?? null;
   }
 
+  // ── Search (delegada al RoutePlannerViewModel singleton) ────────────────
+  // La busqueda real vive en el planner; el AddStop solo la expone para que
+  // el rider busque direcciones/lugares desde esta pantalla.
+
+  get searchQuery(): string {
+    return this.planner.searchQuery;
+  }
+
+  get searchResults(): Place[] | null {
+    return this.planner.searchResults;
+  }
+
+  get isSearchLoading(): boolean {
+    return this.planner.isSearchLoading;
+  }
+
+  get isSearchError(): string | null {
+    return this.planner.isSearchError;
+  }
+
+  /** `true` cuando hay una query activa — la UI muestra resultados en vez del grid. */
+  get isSearching(): boolean {
+    return this.planner.searchQuery.trim().length > 0;
+  }
+
+  /** Actualiza el texto del buscador; el debounce del planner dispara la consulta. */
+  setSearchQuery(query: string): void {
+    this.planner.setSearchQuery(query);
+  }
+
+  /** Resetea la busqueda (input + resultados + error). */
+  clearSearch(): void {
+    this.planner.clearSearch();
+  }
+
+  /**
+   * Convierte un resultado del buscador en waypoint. Replica la logica de
+   * `selectRecent` pero con un `Place`:
+   *
+   * - Modo edit: reemplaza el waypoint en edicion sin tocar su posicion.
+   * - Modo normal: delega a `planner.selectSearchResult` (infiere kind +
+   *   agrega como intermedio).
+   */
+  selectSearchResult(place: Place): void {
+    if (this.planner.isEditingWaypoint) {
+      this.planner.replaceEditingWaypoint({
+        latitude: place.latitude,
+        longitude: place.longitude,
+        name: place.name,
+        mapboxCategory: place.category,
+      });
+      return;
+    }
+    this.planner.selectSearchResult(place);
+  }
+
   async initialize(): Promise<void> {
     this.updateLoadingState(true, null, 'recents');
     try {
@@ -140,6 +197,8 @@ export class AddStopViewModel {
     // del planner para que el proximo AddStop no arranque en modo editar.
     // No-op si ya fue limpiado por `replaceEditingWaypoint` (el flow happy).
     this.planner.cancelEditingWaypoint();
+    // Al salir de AddStop se limpia la query del buscador delegado.
+    this.planner.clearSearch();
     runInAction(() => {
       this.recents = [];
       this.isLoading = false;

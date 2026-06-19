@@ -421,6 +421,20 @@ export class RoutePlannerViewModel {
     return party.routeId === this.editingId && !party.isOwnedBy(this.riderId);
   }
 
+  /**
+   * `true` cuando el party activo pertenece a la ruta que se está planeando
+   * (la que se edita o la recién guardada), NO a otra ruta abierta antes. El
+   * `TripPartyStore` es singleton, así que sin esta cota un party de otra ruta
+   * se "filtraría" como chip en un planner nuevo/vacío.
+   */
+  get hasPartyForRoute(): boolean {
+    const party = this.partyStore.activeParty;
+    if (!party) return false;
+    return (
+      party.routeId === this.editingId || party.routeId === this.savedRouteId
+    );
+  }
+
   /** Nombre del owner del party activo (para el banner "Esperando a..."). */
   get partyOwnerName(): string | null {
     const party = this.partyStore.activeParty;
@@ -1206,6 +1220,36 @@ export class RoutePlannerViewModel {
       });
       // Conserva todos los waypoints existentes excepto el start anterior
       // (si lo habia). Si solo hay un destino (A2), queda intacto.
+      const existingWithoutStart = this.waypoints.filter(
+        (w) => w.kind !== 'start',
+      );
+      this.waypoints = this.normalizeWaypoints([
+        startWp,
+        ...existingWithoutStart,
+      ]);
+      this.directions = null;
+    });
+  }
+
+  /**
+   * Fija el punto de arranque desde una coordenada tocada en el mapa (Fase 9:
+   * "Elegir en el mapa"). Mismo patron que `useCurrentLocationAsStart`: crea un
+   * Waypoint kind 'start' con esas coords, conserva los waypoints existentes
+   * excepto el start anterior (si lo habia) y normaliza. Si solo hay un destino
+   * (caso A2), queda intacto y el start se prepend.
+   */
+  setStartFromMap(latitude: number, longitude: number): void {
+    runInAction(() => {
+      this.waypointSeq += 1;
+      const startWp = new Waypoint({
+        id: `wp-${this.waypointSeq}`,
+        name: 'Punto en el mapa',
+        latitude,
+        longitude,
+        kind: 'start',
+        order: 0,
+      });
+      // Conserva todos los waypoints existentes excepto el start anterior.
       const existingWithoutStart = this.waypoints.filter(
         (w) => w.kind !== 'start',
       );

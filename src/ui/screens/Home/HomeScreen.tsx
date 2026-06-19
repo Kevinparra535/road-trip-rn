@@ -26,6 +26,7 @@ import { DrawerNavigationProp } from '@react-navigation/drawer';
 import {
   CompositeNavigationProp,
   useFocusEffect,
+  useIsFocused,
   useNavigation,
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -225,6 +226,10 @@ const HomeScreen = observer(() => {
 
   // Durante la navegacion la camara sigue al conductor en cada actualizacion
   // de su posicion: viene del simulador (ruta de prueba) o del GPS real.
+  // El sheet de Home es un BottomSheetModal (portal en la raíz). Si Home pierde
+  // foco (p.ej. al ir a Planear ruta) hay que cerrarlo: si no, su modal queda
+  // presentado en el host compartido y se superpone al sheet del otro screen.
+  const isFocused = useIsFocused();
   const isNavigating = viewModel.isNavigating;
   const navProgress = viewModel.navProgressKm;
   useEffect(() => {
@@ -711,7 +716,7 @@ const HomeScreen = observer(() => {
 
       <BottomSheet
         ref={sheetRef}
-        visible={!isNavigating && !viewModel.isArrived}
+        visible={isFocused && !isNavigating && !viewModel.isArrived}
         header={
           <View style={styles.searchBar}>
             <View style={styles.searchLeadingIcon}>

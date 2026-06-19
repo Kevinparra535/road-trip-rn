@@ -1,51 +1,32 @@
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { observer } from 'mobx-react-lite';
+
+import Badge from '@/ui/components/Badge';
+import Chip from '@/ui/components/Chip';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
-import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
 
-type ToggleChipProps = {
-  label: string;
-  active: boolean;
-  onPress: (next: boolean) => void;
-};
-
-const ToggleChip = ({ label, active, onPress }: ToggleChipProps) => (
-  <TouchableOpacity
-    onPress={() => onPress(!active)}
-    style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
-    activeOpacity={0.7}
-  >
-    <Text
-      style={[
-        styles.chipText,
-        active ? styles.chipTextActive : styles.chipTextInactive,
-      ]}
-    >
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
+import FuelGaugeBar from './FuelGaugeBar';
+import MotorcycleSummaryCard from './MotorcycleSummaryCard';
 
 /**
- * Card "Autonomía" — muestra el estimado de rango efectivo, combustible y
- * paradas de tanqueo necesarias para la ruta planificada, junto a los toggles
- * de condiciones del viaje (acompañante, maletas, ritmo).
+ * Card "Autonomía" — diseño D3.
+ *
+ * Estructura:
+ *  1. MotorcycleSummaryCard — moto activa.
+ *  2. Número grande: rango efectivo (Fonts.bigNumbers).
+ *  3. FuelGaugeBar — distancia de la ruta vs rango efectivo.
+ *  4. Badge de estado (llega sin tanquear / N tanqueo(s) necesario(s)).
+ *  5. Separador + Condiciones del viaje (3 Chips: Acompañante / Maletas / Ritmo agresivo).
  *
  * Render condicional:
- *  - `!viewModel.hasMotorcycleRegistered` → null (el aviso lo da NoMotorcycleNotice).
+ *  - `!viewModel.hasMotorcycleRegistered` → null.
  *  - `autonomyEstimate === null && isAutonomyLoading` → spinner.
  *  - `autonomyEstimate === null && !isAutonomyLoading` → null.
  */
@@ -56,6 +37,7 @@ export const AutonomyCard = observer(
     const { insights } = viewModel;
     const estimate = insights.autonomyEstimate;
 
+    // ── Loading state ──────────────────────────────────────────────────────
     if (!estimate && insights.isAutonomyLoading) {
       return (
         <View style={styles.card}>
@@ -75,71 +57,77 @@ export const AutonomyCard = observer(
     if (!estimate) return null;
 
     const reaches = estimate.reachesWithoutRefuel;
+    const fuelStopsNeeded = estimate.fuelStopsNeeded;
+    // Distancia activa de la ruta como "km consumidos" contra el rango efectivo.
+    const usedKm = viewModel.distanceKm;
+    const rangeKm = Math.round(estimate.effectiveRangeKm);
 
     return (
       <View style={styles.card}>
-        {/* Header */}
+        {/* ── Moto activa ──────────────────────────────────────────────── */}
+        <MotorcycleSummaryCard motorcycle={viewModel.selectedMotorcycle} />
+
+        {/* ── Header ───────────────────────────────────────────────────── */}
         <View style={styles.header}>
           <View style={[styles.dot, styles.dotAccent]} />
           <Text style={styles.title}>Autonomía</Text>
         </View>
 
-        {/* Métricas principales */}
-        <View style={styles.metricsRow}>
-          <View style={styles.metric}>
-            <Text style={styles.metricValue}>
-              {Math.round(estimate.effectiveRangeKm)} km
-            </Text>
-            <Text style={styles.metricLabel}>Rango efectivo</Text>
-          </View>
-          <View style={styles.metricSeparator} />
-          <View style={styles.metric}>
-            <Text style={styles.metricValue}>
-              {estimate.totalFuelLiters.toFixed(1)} L
-            </Text>
-            <Text style={styles.metricLabel}>Combustible</Text>
+        {/* ── Número grande: rango efectivo ────────────────────────────── */}
+        <View style={styles.bigNumberRow}>
+          <Text style={styles.bigNumber}>{rangeKm}</Text>
+          <View style={styles.bigNumberUnit}>
+            <Text style={styles.unitLabel}>km</Text>
+            <Text style={styles.unitSub}>rango efectivo</Text>
           </View>
         </View>
 
-        {/* Badge de alcance */}
-        <View
-          style={[
-            styles.badge,
-            reaches ? styles.badgeCheck : styles.badgeWarning,
-          ]}
-        >
-          <Text
-            style={[
-              styles.badgeText,
-              reaches ? styles.badgeTextCheck : styles.badgeTextWarning,
-            ]}
-          >
-            {reaches
-              ? 'Alcanza sin tanquear'
-              : `${estimate.fuelStopsNeeded} parada(s) de tanqueo`}
-          </Text>
-        </View>
+        {/* ── Barra de combustible ─────────────────────────────────────── */}
+        <FuelGaugeBar usedKm={usedKm} rangeKm={rangeKm} reservePct={12} />
 
-        {/* Separador */}
+        {/* ── Badge de estado de alcance ────────────────────────────────── */}
+        {reaches ? (
+          <Badge
+            tone="check"
+            label="Llegas sin tanquear"
+            iconName="checkmark-circle"
+          />
+        ) : (
+          <Badge
+            tone="warning"
+            label={`${fuelStopsNeeded} tanqueo(s) necesario(s)`}
+            iconName="warning"
+          />
+        )}
+
+        {/* ── Separador ────────────────────────────────────────────────── */}
         <View style={styles.separator} />
 
-        {/* Condiciones del viaje */}
+        {/* ── Condiciones del viaje ─────────────────────────────────────── */}
         <Text style={styles.sectionLabel}>Condiciones del viaje</Text>
         <View style={styles.chipsRow}>
-          <ToggleChip
+          <Chip
             label="Acompañante"
+            iconName="person-add-outline"
             active={insights.hasPassenger}
-            onPress={(v) => insights.togglePassenger(v)}
+            onPress={() => insights.togglePassenger(!insights.hasPassenger)}
+            tone={insights.hasPassenger ? 'accent' : 'neutral'}
           />
-          <ToggleChip
+          <Chip
             label="Maletas"
+            iconName="briefcase-outline"
             active={insights.hasLuggage}
-            onPress={(v) => insights.toggleLuggage(v)}
+            onPress={() => insights.toggleLuggage(!insights.hasLuggage)}
+            tone={insights.hasLuggage ? 'accent' : 'neutral'}
           />
-          <ToggleChip
+          <Chip
             label="Ritmo agresivo"
+            iconName="flash-outline"
             active={insights.aggressiveRiding}
-            onPress={(v) => insights.toggleAggressiveRiding(v)}
+            onPress={() =>
+              insights.toggleAggressiveRiding(!insights.aggressiveRiding)
+            }
+            tone={insights.aggressiveRiding ? 'accent' : 'neutral'}
           />
         </View>
       </View>
@@ -179,58 +167,36 @@ const styles = StyleSheet.create({
     marginVertical: Spacings.sm,
     alignSelf: 'center',
   },
-  metricsRow: {
+  // ── Número grande ───────────────────────────────────────────────────────
+  bigNumberRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacings.xs,
+    alignItems: 'flex-end',
+    gap: Spacings.sm,
+    marginVertical: Spacings.xs,
   },
-  metric: {
-    flex: 1,
-    alignItems: 'center',
-    gap: Spacings.xs,
-  },
-  metricValue: {
-    ...Fonts.bodyTextBold,
+  bigNumber: {
+    ...Fonts.bigNumbers,
     color: Colors.base.textPrimary,
   },
-  metricLabel: {
+  bigNumberUnit: {
+    gap: Spacings.xs,
+    paddingBottom: Spacings.sm,
+  },
+  unitLabel: {
+    ...Fonts.header4,
+    color: Colors.base.textSecondary,
+  },
+  unitSub: {
     ...Fonts.links,
     color: Colors.base.textMuted,
   },
-  metricSeparator: {
-    width: 1,
-    height: Spacings.xl,
-    backgroundColor: Colors.base.separator,
-  },
-  badge: {
-    paddingVertical: Spacings.xs,
-    paddingHorizontal: Spacings.sm,
-    alignSelf: 'flex-start',
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-  },
-  badgeCheck: {
-    backgroundColor: hexToRgba(Colors.alerts.check, 0.12),
-    borderColor: hexToRgba(Colors.alerts.check, 0.31),
-  },
-  badgeWarning: {
-    backgroundColor: hexToRgba(Colors.alerts.warning, 0.12),
-    borderColor: hexToRgba(Colors.alerts.warning, 0.31),
-  },
-  badgeText: {
-    ...Fonts.linksBold,
-  },
-  badgeTextCheck: {
-    color: Colors.alerts.check,
-  },
-  badgeTextWarning: {
-    color: Colors.alerts.warning,
-  },
+  // ── Separador ───────────────────────────────────────────────────────────
   separator: {
     height: 1,
     backgroundColor: Colors.base.separator,
     marginVertical: Spacings.xs,
   },
+  // ── Condiciones del viaje ────────────────────────────────────────────────
   sectionLabel: {
     ...Fonts.links,
     color: Colors.base.textSecondary,
@@ -239,28 +205,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacings.sm,
-  },
-  chip: {
-    paddingVertical: Spacings.xs,
-    paddingHorizontal: Spacings.sm,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-  },
-  chipActive: {
-    backgroundColor: Colors.base.accentDim,
-    borderColor: Colors.base.accentDimBorder,
-  },
-  chipInactive: {
-    backgroundColor: Colors.base.bgCard,
-    borderColor: Colors.base.cardBorder,
-  },
-  chipText: {
-    ...Fonts.links,
-  },
-  chipTextActive: {
-    color: Colors.base.accent,
-  },
-  chipTextInactive: {
-    color: Colors.base.textSecondary,
   },
 });

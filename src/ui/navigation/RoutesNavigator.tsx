@@ -5,7 +5,7 @@ import AddStopScreen from '@/ui/screens/Routes/AddStopScreen';
 import CategorySublistScreen from '@/ui/screens/Routes/CategorySublistScreen';
 import JoinRouteScreen from '@/ui/screens/Routes/JoinRouteScreen';
 import RouteDetailScreen from '@/ui/screens/Routes/RouteDetailScreen';
-import RoutePlannerScreen from '@/ui/screens/Routes/RoutePlannerScreen';
+import RoutePlannerMapScreen from '@/ui/screens/Routes/RoutePlannerMapScreen';
 import RoutesScreen from '@/ui/screens/Routes/RoutesScreen';
 
 import { RoutesStackParamList } from './types';
@@ -23,12 +23,15 @@ const RoutesNavigator = () => (
       }}
     />
     {/*
-     * El Planner es una pantalla full (search + timeline + cards + CTA en un
-     * ScrollView). Va como card normal — NO formSheet — para que el
-     * SafeAreaView/ScrollView (flex:1) tengan pantalla completa y el scroll
-     * funcione sin recortes.
+     * Planner V2: mapa dedicado a pantalla completa + bottom sheet con detents.
+     * Va como card normal — NO formSheet — para que el mapa ocupe toda la
+     * pantalla y el BottomSheet (gorhom) flote encima sin recortes.
      */}
-    <Stack.Screen name="RoutePlanner" component={RoutePlannerScreen} />
+    <Stack.Screen
+      name="RoutePlanner"
+      component={RoutePlannerMapScreen}
+      options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+    />
     <Stack.Screen
       name="RouteDetail"
       component={RouteDetailScreen}

@@ -4,14 +4,15 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
 import AppTextInput from '@/ui/components/AppTextInput';
+import Chip from '@/ui/components/Chip';
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import Stepper from '@/ui/components/Stepper';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -21,11 +22,7 @@ import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-/** Opciones de duración rápida (min). */
-const DURATION_CHIPS: number[] = [0, 15, 30, 45, 60];
+import { SELECTABLE_STOP_KINDS, stopKindMeta } from '../stopKindMeta';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -33,18 +30,24 @@ type Props = {
   viewModel: RoutePlannerViewModel;
   waypointId: string | null;
   onClose: () => void;
+  /** Opcional. El screen lo cablea a startEditingWaypoint + navigate AddStop. */
+  onChangePlace?: (waypointId: string) => void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Sheet "Editar parada". Permite al rider añadir notas y configurar la duración
- * planeada de una parada del timeline. Visible cuando `waypointId !== null`.
- * Las mutaciones se delegan directamente al VM: `setWaypointNotes` y
- * `setWaypointStopDuration`. El cierre es responsabilidad del caller (onClose).
+ * Sheet "Editar parada". Permite al rider configurar la parada del timeline:
+ * - tipo de parada via chips de SELECTABLE_STOP_KINDS (setStopKind)
+ * - duración con Stepper (setWaypointStopDuration)
+ * - notas libres (setWaypointNotes)
+ * - link "Cambiar lugar" (onChangePlace, opcional)
+ *
+ * Las mutaciones se delegan directamente al VM. El cierre es responsabilidad
+ * del caller (onClose).
  */
 const WaypointEditSheet = observer(
-  ({ viewModel, waypointId, onClose }: Props) => {
+  ({ viewModel, waypointId, onClose, onChangePlace }: Props) => {
     // Resolver waypoint antes de renderizar. Si no existe, silencio total.
     const waypoint =
       waypointId !== null
@@ -54,6 +57,7 @@ const WaypointEditSheet = observer(
     if (waypoint === null) return null;
 
     const activeDuration = waypoint.stopDurationMin ?? 0;
+    const activeKind = waypoint.kind;
 
     return (
       <Modal
@@ -78,6 +82,22 @@ const WaypointEditSheet = observer(
                   {waypoint.name}
                 </Text>
               </View>
+              {/* Link "Cambiar lugar" */}
+              {onChangePlace ? (
+                <Pressable
+                  onPress={() => onChangePlace(waypoint.id)}
+                  style={styles.changePlaceBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cambiar lugar"
+                >
+                  <Ionicons
+                    name="swap-horizontal"
+                    size={14}
+                    color={Colors.base.accent}
+                  />
+                  <Text style={styles.changePlaceText}>Cambiar lugar</Text>
+                </Pressable>
+              ) : null}
             </View>
 
             <ScrollView
@@ -85,6 +105,42 @@ const WaypointEditSheet = observer(
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
             >
+              {/* Selector de tipo de parada */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>Tipo de parada</Text>
+                <View style={styles.chipRow}>
+                  {SELECTABLE_STOP_KINDS.map((kind) => {
+                    const meta = stopKindMeta(kind);
+                    return (
+                      <Chip
+                        key={kind}
+                        label={meta.label}
+                        iconName={meta.icon}
+                        active={activeKind === kind}
+                        onPress={() => viewModel.setStopKind(waypoint.id, kind)}
+                        testID={`kind-chip-${kind}`}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Campo Duración con Stepper */}
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>Duración de la parada</Text>
+                <Stepper
+                  value={activeDuration}
+                  step={15}
+                  min={0}
+                  max={240}
+                  onChange={(v) =>
+                    viewModel.setWaypointStopDuration(waypoint.id, v)
+                  }
+                  formatValue={(v) => (v === 0 ? 'Sin pausa' : `${v} min`)}
+                  testID="waypoint-duration-stepper"
+                />
+              </View>
+
               {/* Campo Notas */}
               <AppTextInput
                 label="Notas"
@@ -92,41 +148,6 @@ const WaypointEditSheet = observer(
                 onChangeText={(t) => viewModel.setWaypointNotes(waypoint.id, t)}
                 placeholder="ej. tanquear y almorzar"
               />
-
-              {/* Campo Duración */}
-              <View style={styles.durationBlock}>
-                <Text style={styles.durationLabel}>Duración de la parada</Text>
-                <View style={styles.chipRow}>
-                  {DURATION_CHIPS.map((min) => {
-                    const isActive = activeDuration === min;
-                    return (
-                      <TouchableOpacity
-                        key={min}
-                        style={[
-                          styles.chip,
-                          isActive ? styles.chipActive : styles.chipInactive,
-                        ]}
-                        activeOpacity={0.75}
-                        onPress={() =>
-                          viewModel.setWaypointStopDuration(waypoint.id, min)
-                        }
-                        testID={`duration-chip-${min}`}
-                      >
-                        <Text
-                          style={[
-                            styles.chipText,
-                            isActive
-                              ? styles.chipTextActive
-                              : styles.chipTextInactive,
-                          ]}
-                        >
-                          {min === 0 ? 'Sin pausa' : `${min} min`}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </View>
 
               {/* CTA Listo */}
               <PrimaryButton
@@ -174,7 +195,7 @@ const styles = StyleSheet.create({
     backgroundColor: hexToRgba(Colors.base.textPrimary, 0.15),
     borderRadius: BorderRadius.pill,
   },
-  // Encabezado: ícono + textos
+  // Encabezado: ícono + textos + link cambiar
   header: {
     marginBottom: Spacings.xl,
     flexDirection: 'row',
@@ -194,45 +215,39 @@ const styles = StyleSheet.create({
     ...Fonts.header3,
     color: Colors.base.textPrimary,
   },
+  // Link "Cambiar lugar"
+  changePlaceBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+    paddingVertical: Spacings.xs,
+    paddingHorizontal: Spacings.sm,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+    backgroundColor: hexToRgba(Colors.base.accent, 0.08),
+  },
+  changePlaceText: {
+    ...Fonts.links,
+    color: Colors.base.accent,
+  },
   // ScrollView padding
   scrollContent: {
     gap: Spacings.xl,
     paddingBottom: Spacings.md,
   },
-  // Bloque duración
-  durationBlock: {
+  // Bloque genérico de sección con label
+  sectionBlock: {
     gap: Spacings.sm,
   },
-  durationLabel: {
+  sectionLabel: {
     ...Fonts.header5,
     color: Colors.base.textSecondary,
   },
+  // Fila de chips de tipo de parada
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacings.sm,
-  },
-  chip: {
-    paddingHorizontal: Spacings.md,
-    paddingVertical: Spacings.sm,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-  },
-  chipActive: {
-    backgroundColor: Colors.base.accentDim,
-    borderColor: Colors.base.accentDimBorder,
-  },
-  chipInactive: {
-    backgroundColor: Colors.base.bgCard,
-    borderColor: Colors.base.cardBorder,
-  },
-  chipText: {
-    ...Fonts.smallBodyTextBold,
-  },
-  chipTextActive: {
-    color: Colors.base.accent,
-  },
-  chipTextInactive: {
-    color: Colors.base.textSecondary,
   },
 });

@@ -370,6 +370,31 @@ describe('RoutePlannerViewModel', () => {
     expect(vm.isReadOnly).toBe(true);
   });
 
+  it('hasPartyForRoute solo true cuando el party activo es de esta ruta', async () => {
+    const { vm, partyStore } = build();
+    await vm.initialize();
+    // Sin party activa.
+    expect(vm.hasPartyForRoute).toBe(false);
+
+    const makeParty = (routeId: string) =>
+      new (require('@/domain/entities/TripParty').TripParty)({
+        id: 'p-1',
+        routeId,
+        ownerId: 'rider-1',
+        members: [],
+        createdAt: new Date(),
+      });
+
+    // Party de OTRA ruta (estado filtrado del store singleton) -> false.
+    (vm as any).editingId = 'route-1';
+    partyStore.activeParty = makeParty('route-otra');
+    expect(vm.hasPartyForRoute).toBe(false);
+
+    // Party de ESTA ruta (matchea editingId) -> true.
+    partyStore.activeParty = makeParty('route-1');
+    expect(vm.hasPartyForRoute).toBe(true);
+  });
+
   it('addWaypoint usa kind=other por default (no food)', async () => {
     const { vm } = build();
     await vm.initialize();
@@ -737,6 +762,52 @@ describe('RoutePlannerViewModel', () => {
       expect(vm.waypoints[1].kind).toBe('destination');
       expect(vm.waypoints[1].name).toBe('Valle de Bravo');
       expect(vm.needsStartPoint).toBe(false);
+    });
+
+    it('setStartFromMap prepende el start a un destino existente (Fase 9)', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.initializeWithDestination({
+        latitude: 5.0,
+        longitude: -73.5,
+        name: 'Valle de Bravo',
+      });
+      expect(vm.needsStartPoint).toBe(true);
+
+      vm.setStartFromMap(4.6, -74.08);
+
+      expect(vm.waypoints).toHaveLength(2);
+      expect(vm.waypoints[0].kind).toBe('start');
+      expect(vm.waypoints[0].name).toBe('Punto en el mapa');
+      expect(vm.waypoints[0].latitude).toBe(4.6);
+      expect(vm.waypoints[0].longitude).toBe(-74.08);
+      expect(vm.waypoints[1].kind).toBe('destination');
+      expect(vm.waypoints[1].name).toBe('Valle de Bravo');
+      expect(vm.needsStartPoint).toBe(false);
+      expect(vm.directions).toBeNull();
+    });
+
+    it('setStartFromMap reemplaza el start previo sin perder el resto', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      // Ruta con start + intermedio + destino.
+      vm.addWaypoint(4.6, -74.08, 'Origen');
+      vm.addWaypoint(4.7, -74.1, 'Parada');
+      vm.addWaypoint(4.8, -74.2, 'Destino');
+      expect(vm.waypoints).toHaveLength(3);
+
+      vm.setStartFromMap(3.5, -76.5);
+
+      expect(vm.waypoints).toHaveLength(3);
+      expect(vm.waypoints[0].kind).toBe('start');
+      expect(vm.waypoints[0].name).toBe('Punto en el mapa');
+      expect(vm.waypoints[0].latitude).toBe(3.5);
+      expect(vm.waypoints[0].longitude).toBe(-76.5);
+      // El intermedio y el destino se conservan.
+      expect(vm.waypoints[1].name).toBe('Parada');
+      expect(vm.waypoints[2].kind).toBe('destination');
+      expect(vm.waypoints[2].name).toBe('Destino');
+      expect(vm.directions).toBeNull();
     });
   });
 

@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TextInputProps,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,7 @@ type AppTextInputProps = Omit<TextInputProps, 'style'> & {
   error?: string | null;
   variant?: Variant;
   leadingIcon?: keyof typeof Ionicons.glyphMap;
+  onClear?: () => void;
 };
 
 const AppTextInput = ({
@@ -27,11 +29,14 @@ const AppTextInput = ({
   error,
   variant = 'default',
   leadingIcon,
+  onClear,
   ...rest
 }: AppTextInputProps) => {
   const [focused, setFocused] = useState(false);
   const isSearch = variant === 'search';
+  const isMultiline = !!rest.multiline;
   const icon = leadingIcon ?? (isSearch ? 'search' : undefined);
+  const showClear = !!onClear && !!rest.value;
 
   return (
     <View>
@@ -41,6 +46,7 @@ const AppTextInput = ({
         style={[
           styles.field,
           isSearch ? styles.fieldSearch : styles.fieldDefault,
+          isMultiline && styles.fieldMultiline,
           focused && styles.fieldFocused,
           !!error && styles.fieldError,
         ]}
@@ -65,8 +71,18 @@ const AppTextInput = ({
             setFocused(false);
             rest.onBlur?.(e);
           }}
-          style={styles.input}
+          style={[styles.input, isMultiline && styles.inputMultiline]}
         />
+
+        {showClear ? (
+          <TouchableOpacity onPress={onClear} hitSlop={8}>
+            <Ionicons
+              name="close-circle"
+              size={18}
+              color={Colors.base.iconMuted}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -97,6 +113,11 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: BorderRadius.pill,
   },
+  fieldMultiline: {
+    minHeight: 96,
+    alignItems: 'flex-start',
+    paddingVertical: Spacings.md,
+  },
   fieldFocused: {
     borderColor: Colors.base.accentDimBorder,
   },
@@ -110,6 +131,9 @@ const styles = StyleSheet.create({
     flex: 1,
     ...Fonts.inputsNormal,
     color: Colors.base.textPrimary,
+  },
+  inputMultiline: {
+    textAlignVertical: 'top',
   },
   errorText: {
     marginTop: Spacings.xs,

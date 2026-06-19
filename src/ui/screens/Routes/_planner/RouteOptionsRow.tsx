@@ -8,6 +8,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
+import Switch from '@/ui/components/Switch';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
@@ -16,54 +18,48 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-type AvoidChipProps = {
+type SwitchRowProps = {
   label: string;
-  active: boolean;
   icon: keyof typeof Ionicons.glyphMap;
-  onPress: () => void;
+  value: boolean;
+  onValueChange: (v: boolean) => void;
   testID?: string;
 };
 
-// ── Sub-component: toggle chip ────────────────────────────────────────────────
-
-const AvoidChip = ({
+const SwitchRow = ({
   label,
-  active,
   icon,
-  onPress,
+  value,
+  onValueChange,
   testID,
-}: AvoidChipProps) => (
-  <TouchableOpacity
-    style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
-    onPress={onPress}
-    activeOpacity={0.75}
-    testID={testID}
-  >
-    <Ionicons
-      name={icon}
-      size={13}
-      color={active ? Colors.base.accent : Colors.base.textSecondary}
-    />
-    <Text
-      style={[
-        styles.chipText,
-        active ? styles.chipTextActive : styles.chipTextInactive,
-      ]}
-    >
-      {label}
-    </Text>
-  </TouchableOpacity>
+}: SwitchRowProps) => (
+  <View style={styles.switchRow}>
+    <View style={styles.switchRowLeft}>
+      <Ionicons
+        name={icon}
+        size={16}
+        color={value ? Colors.base.accent : Colors.base.iconMuted}
+      />
+      <Text
+        style={[styles.switchRowLabel, value && styles.switchRowLabelActive]}
+      >
+        {label}
+      </Text>
+    </View>
+    <Switch value={value} onValueChange={onValueChange} testID={testID} />
+  </View>
 );
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 /**
- * Barra de opciones de ruteo del Planner. Se renderiza solo cuando hay
+ * Panel de opciones de ruteo del Planner. Se renderiza solo cuando hay
  * al menos 2 waypoints. Expone:
- *   - Chips "Evitar": Peajes, Autopistas, Ferries, Destapado.
- *   - Botones de acción: Invertir, Optimizar (con spinner), Ida y vuelta.
+ *   - Fila "Ida y vuelta" con Switch.
+ *   - Filas "Evitar": Peajes, Autopistas, Ferries, Destapado — cada una con Switch.
+ *   - Botones de acción: Invertir y Optimizar (con spinner).
  *   - Mensaje de error de optimización cuando aplica.
  *
  * Puramente presentational: toda la lógica vive en `RoutePlannerViewModel`.
@@ -74,51 +70,54 @@ const RouteOptionsRow = observer(
 
     return (
       <View style={styles.container}>
-        {/* ── Sección "Evitar" ─────────────────────────────────────────── */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Evitar</Text>
-          <View style={styles.chipRow}>
-            <AvoidChip
-              label="Peajes"
-              icon="card-outline"
-              active={viewModel.avoid.tolls}
-              onPress={() => viewModel.setAvoidTolls(!viewModel.avoid.tolls)}
-              testID="route-options-avoid-tolls"
-            />
-            <AvoidChip
-              label="Autopistas"
-              icon="speedometer-outline"
-              active={viewModel.avoid.highways}
-              onPress={() =>
-                viewModel.setAvoidHighways(!viewModel.avoid.highways)
-              }
-              testID="route-options-avoid-highways"
-            />
-            <AvoidChip
-              label="Ferries"
-              icon="boat-outline"
-              active={viewModel.avoid.ferries}
-              onPress={() =>
-                viewModel.setAvoidFerries(!viewModel.avoid.ferries)
-              }
-              testID="route-options-avoid-ferries"
-            />
-            <AvoidChip
-              label="Destapado"
-              icon="trail-sign-outline"
-              active={viewModel.avoid.unpaved}
-              onPress={() =>
-                viewModel.setAvoidUnpaved(!viewModel.avoid.unpaved)
-              }
-              testID="route-options-avoid-unpaved"
-            />
-          </View>
-        </View>
+        {/* ── Ida y vuelta ─────────────────────────────────────────────── */}
+        <SwitchRow
+          label="Ida y vuelta"
+          icon="repeat"
+          value={viewModel.isRoundTrip}
+          onValueChange={() => viewModel.toggleRoundTrip()}
+          testID="route-options-round-trip"
+        />
 
         {/* ── Separador ────────────────────────────────────────────────── */}
         <View style={styles.separator} />
 
-        {/* ── Sección de acciones ──────────────────────────────────────── */}
+        {/* ── Sección "Evitar" ─────────────────────────────────────────── */}
+        <Text style={styles.sectionLabel}>Evitar</Text>
+
+        <SwitchRow
+          label="Peajes"
+          icon="card-outline"
+          value={viewModel.avoid.tolls}
+          onValueChange={(v) => viewModel.setAvoidTolls(v)}
+          testID="route-options-avoid-tolls"
+        />
+        <SwitchRow
+          label="Autopistas"
+          icon="speedometer-outline"
+          value={viewModel.avoid.highways}
+          onValueChange={(v) => viewModel.setAvoidHighways(v)}
+          testID="route-options-avoid-highways"
+        />
+        <SwitchRow
+          label="Ferries"
+          icon="boat-outline"
+          value={viewModel.avoid.ferries}
+          onValueChange={(v) => viewModel.setAvoidFerries(v)}
+          testID="route-options-avoid-ferries"
+        />
+        <SwitchRow
+          label="Destapado"
+          icon="trail-sign-outline"
+          value={viewModel.avoid.unpaved}
+          onValueChange={(v) => viewModel.setAvoidUnpaved(v)}
+          testID="route-options-avoid-unpaved"
+        />
+
+        {/* ── Separador ────────────────────────────────────────────────── */}
+        <View style={styles.separator} />
+
+        {/* ── Botones de acción ────────────────────────────────────────── */}
         <View style={styles.actionsRow}>
           {/* Invertir */}
           <TouchableOpacity
@@ -139,6 +138,7 @@ const RouteOptionsRow = observer(
           <TouchableOpacity
             style={[
               styles.actionBtn,
+              styles.actionBtnAccent,
               !viewModel.canOptimize && styles.actionBtnDisabled,
             ]}
             onPress={() => void viewModel.optimizeOrder()}
@@ -170,35 +170,6 @@ const RouteOptionsRow = observer(
               Optimizar
             </Text>
           </TouchableOpacity>
-
-          {/* Ida y vuelta */}
-          <TouchableOpacity
-            style={[
-              styles.actionBtn,
-              viewModel.isRoundTrip && styles.actionBtnRoundTripActive,
-            ]}
-            onPress={() => viewModel.toggleRoundTrip()}
-            activeOpacity={0.75}
-            testID="route-options-round-trip"
-          >
-            <Ionicons
-              name="repeat"
-              size={16}
-              color={
-                viewModel.isRoundTrip
-                  ? Colors.base.accent
-                  : Colors.base.textPrimary
-              }
-            />
-            <Text
-              style={[
-                styles.actionBtnText,
-                viewModel.isRoundTrip && styles.actionBtnTextAccent,
-              ]}
-            >
-              Ida y vuelta
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* ── Error de optimización ─────────────────────────────────────── */}
@@ -217,60 +188,47 @@ export default RouteOptionsRow;
 const styles = StyleSheet.create({
   container: {
     marginTop: Spacings.md,
-    paddingHorizontal: Spacings.md,
-    paddingVertical: Spacings.md,
-    gap: Spacings.sm,
+    paddingHorizontal: Spacings.lg,
+    paddingVertical: Spacings.lg,
+    gap: Spacings.xs,
     backgroundColor: Colors.base.bgCard,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
   },
-  section: {
-    gap: Spacings.xs,
-  },
   sectionLabel: {
+    paddingTop: Spacings.xs,
     ...Fonts.links,
     color: Colors.base.textMuted,
     letterSpacing: 0.4,
   },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacings.xs,
-  },
-  chip: {
-    paddingHorizontal: Spacings.sm,
-    paddingVertical: Spacings.xs,
+  switchRow: {
+    paddingVertical: Spacings.sm,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacings.xs,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
+    justifyContent: 'space-between',
   },
-  chipActive: {
-    backgroundColor: Colors.base.accentDim,
-    borderColor: Colors.base.accentDimBorder,
+  switchRowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    flex: 1,
   },
-  chipInactive: {
-    backgroundColor: Colors.base.bgCard,
-    borderColor: Colors.base.cardBorder,
-  },
-  chipText: {
-    ...Fonts.links,
-  },
-  chipTextActive: {
-    color: Colors.base.accent,
-  },
-  chipTextInactive: {
+  switchRowLabel: {
+    ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
+  },
+  switchRowLabelActive: {
+    color: Colors.base.textPrimary,
   },
   separator: {
     height: 1,
     backgroundColor: Colors.base.separator,
   },
   actionsRow: {
+    paddingTop: Spacings.xs,
     flexDirection: 'row',
-    gap: Spacings.xs,
+    gap: Spacings.sm,
   },
   actionBtn: {
     flex: 1,
@@ -284,12 +242,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.base.hairline,
   },
-  actionBtnDisabled: {
-    opacity: 0.4,
-  },
-  actionBtnRoundTripActive: {
+  actionBtnAccent: {
     backgroundColor: Colors.base.accentDim,
     borderColor: Colors.base.accentDimBorder,
+  },
+  actionBtnDisabled: {
+    opacity: 0.4,
   },
   actionBtnText: {
     ...Fonts.links,
