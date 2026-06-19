@@ -89,14 +89,24 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
     [hasRoute, geometry],
   );
 
+  // Puntos a enfocar: la geometría de la ruta si ya hay trazado (≥2 puntos);
+  // si no, los waypoints actuales — así se enfoca el arranque apenas se elige,
+  // y A+B antes de que el motor calcule la ruta.
+  const focusPoints: GeoPoint[] = hasRoute
+    ? geometry
+    : viewModel.waypoints.map((w) => ({
+        latitude: w.latitude,
+        longitude: w.longitude,
+      }));
+
   /**
-   * Encaja la cámara a la ruta (con padding inferior = bottomInset para no
-   * quedar bajo el sheet) o, si no hay ruta, centra en el rider. No-op si no
-   * hay nada que encuadrar.
+   * Enfoca la cámara en el contenido actual (con padding inferior = bottomInset
+   * para no quedar bajo el sheet): encuadra ≥2 puntos (ruta o waypoints), centra
+   * en 1 punto (p.ej. solo el arranque) o cae a la ubicación del rider.
    */
-  const recenter = () => {
-    if (hasRoute) {
-      const bounds = computeBounds(geometry);
+  const focusContent = () => {
+    if (focusPoints.length >= 2) {
+      const bounds = computeBounds(focusPoints);
       if (!bounds) return;
       cameraRef.current?.fitBounds(
         bounds.ne,
@@ -104,6 +114,14 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
         [60, 60, inset + 40, 60],
         600,
       );
+      return;
+    }
+    if (focusPoints.length === 1) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: [focusPoints[0].longitude, focusPoints[0].latitude],
+        zoomLevel: 14,
+        animationDuration: 600,
+      });
       return;
     }
     if (userCoords) {
@@ -115,27 +133,24 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
     }
   };
 
-  // Fingerprint barato de la geometría: longitud + primer/último punto.
-  // Cuando la ruta cambia (nuevo trazado / alternativa), reencuadra.
-  const first = geometry[0];
-  const last = geometry[geometry.length - 1];
-  const geoFingerprint = hasRoute
-    ? `${geometry.length}:${first.latitude},${first.longitude}:${last.latitude},${last.longitude}`
-    : '';
+  // El FAB recentrar reusa el mismo enfoque de contenido.
+  const recenter = focusContent;
+
+  // Fingerprint barato del contenido: longitud + primer/último punto. Reacciona
+  // a cambios de la ruta Y de los waypoints (elegir arranque, agregar B, etc.).
+  const fpFirst = focusPoints[0];
+  const fpLast = focusPoints[focusPoints.length - 1];
+  const focusFingerprint =
+    focusPoints.length > 0
+      ? `${focusPoints.length}:${fpFirst.latitude},${fpFirst.longitude}:${fpLast.latitude},${fpLast.longitude}`
+      : '';
 
   useEffect(() => {
-    if (!geoFingerprint) return;
-    const bounds = computeBounds(geometry);
-    if (!bounds) return;
-    cameraRef.current?.fitBounds(
-      bounds.ne,
-      bounds.sw,
-      [60, 60, inset + 40, 60],
-      600,
-    );
-    // Solo reaccionamos al fingerprint (cambios reales de la ruta) y al inset.
+    if (!focusFingerprint) return;
+    focusContent();
+    // Reaccionamos al contenido (ruta o waypoints) y al inset.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [geoFingerprint, inset]);
+  }, [focusFingerprint, inset]);
 
   return (
     <View style={StyleSheet.absoluteFill}>

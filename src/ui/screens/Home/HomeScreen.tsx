@@ -1801,7 +1801,7 @@ const styles = StyleSheet.create({
   locateButton: {
     position: 'absolute',
     right: Spacings.lg,
-    bottom: Spacings.xxl,
+    top: Spacings.xxl,
     width: 56,
     height: 56,
     alignItems: 'center',
@@ -1815,7 +1815,7 @@ const styles = StyleSheet.create({
   testRouteButton: {
     position: 'absolute',
     right: Spacings.lg,
-    bottom: Spacings.xxl + 64,
+    top: Spacings.xxl + 64,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.xs,

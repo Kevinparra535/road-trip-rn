@@ -439,7 +439,8 @@ const RoutePlannerMapScreen = observer(() => {
                           />
                         </TouchableOpacity>
                       ) : null}
-                      {!viewModel.isReadOnly && item.isIntermediate ? (
+                      {!viewModel.isReadOnly &&
+                      (item.canMoveUp || item.canMoveDown) ? (
                         <View style={styles.reorderColumn}>
                           <TouchableOpacity
                             onPress={() => viewModel.moveStop(item.id, 'up')}

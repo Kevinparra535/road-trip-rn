@@ -278,7 +278,7 @@ export class RouteModel {
           },
       round_trip: route.roundTrip ? true : undefined,
       days:
-        route.days.length > 0
+        route.days && route.days.length > 0
           ? route.days.map((d) => ({
               index: d.index,
               start_idx: d.startIdx,

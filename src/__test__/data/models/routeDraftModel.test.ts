@@ -45,6 +45,25 @@ describe('RouteDraftModel — route_id (identidad del draft)', () => {
     expect(model.route_id).toBeNull();
   });
 
+  it('fromDomain tolera days undefined sin romper (clobber del Object.assign)', () => {
+    const draft = new RouteDraft({
+      id: 'd1',
+      riderId: 'rd',
+      routeId: null,
+      name: 'Sin multi-día',
+      notes: '',
+      rideType: 'highway',
+      waypoints: [makeWaypoint({ id: 'a', kind: 'start', order: 0 })],
+      days: undefined,
+      updatedAt: new Date('2026-06-17T00:00:00.000Z'),
+    });
+    // El `Object.assign(this, params)` del constructor deja `days` undefined
+    // cuando se pasa la clave en undefined; el model debe tolerarlo.
+    expect(draft.days).toBeUndefined();
+    expect(() => RouteDraftModel.fromDomain(draft)).not.toThrow();
+    expect(RouteDraftModel.fromDomain(draft).days).toBeUndefined();
+  });
+
   it('round-trip fromDomain → toJson preserva route_id presente', () => {
     const draft = new RouteDraft({
       id: 'd1',

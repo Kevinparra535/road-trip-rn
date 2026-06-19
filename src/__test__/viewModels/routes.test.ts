@@ -2,6 +2,7 @@ import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
+import { RouteDay } from '@/domain/entities/RouteDay';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
@@ -19,6 +20,7 @@ import {
   makeRider,
   makeRoute,
   makeRouteFuelEstimate,
+  makeWaypoint,
 } from '../factories';
 
 describe('RoutesViewModel', () => {
@@ -32,6 +34,7 @@ describe('RoutesViewModel', () => {
         getAll as any,
         del as any,
       ),
+      del,
     };
   };
 
@@ -47,6 +50,118 @@ describe('RoutesViewModel', () => {
     await vm.initialize();
     await vm.delete('route-1');
     expect(vm.isRoutesResponse).toHaveLength(0);
+  });
+
+  describe('delete optimistic update + rollback (F1)', () => {
+    it('remueve la fila ANTES de resolver el await (optimista)', async () => {
+      const { vm, del } = build([
+        makeRoute({ id: 'route-1' }),
+        makeRoute({ id: 'route-2' }),
+      ]);
+      // El use case queda pendiente: la promesa no resuelve durante el chequeo.
+      let resolveRun: () => void = () => undefined;
+      del.run.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          resolveRun = resolve;
+        }),
+      );
+      await vm.initialize();
+
+      // No await: validamos el estado sincrono inmediatamente tras llamar.
+      const promise = vm.delete('route-1');
+      expect(vm.isRoutesResponse).toHaveLength(1);
+      expect(vm.isRoutesResponse?.[0].id).toBe('route-2');
+
+      // Cerramos la promesa pendiente para no dejar el test colgado.
+      resolveRun();
+      await promise;
+    });
+
+    it('exito: la fila permanece fuera y retorna true', async () => {
+      const { vm } = build([
+        makeRoute({ id: 'route-1' }),
+        makeRoute({ id: 'route-2' }),
+      ]);
+      await vm.initialize();
+
+      const ok = await vm.delete('route-1');
+      expect(ok).toBe(true);
+      expect(vm.isRoutesResponse).toHaveLength(1);
+      expect(vm.isRoutesResponse?.[0].id).toBe('route-2');
+      expect(vm.isDeleteError).toBeNull();
+    });
+
+    it('fallo: rollback exacto al array previo + error + retorna false', async () => {
+      const { vm, del } = build([
+        makeRoute({ id: 'route-1' }),
+        makeRoute({ id: 'route-2' }),
+      ]);
+      del.run.mockRejectedValueOnce(new Error('network down'));
+      await vm.initialize();
+      const before = vm.isRoutesResponse;
+
+      const ok = await vm.delete('route-1');
+      expect(ok).toBe(false);
+      // Rollback exacto: misma referencia/orden que antes del intento.
+      expect(vm.isRoutesResponse).toBe(before);
+      expect(vm.isRoutesResponse).toHaveLength(2);
+      expect(vm.isRoutesResponse?.[0].id).toBe('route-1');
+      expect(vm.isRoutesResponse?.[1].id).toBe('route-2');
+      expect(vm.isDeleteError).toContain('network down');
+    });
+  });
+});
+
+describe('RouteDetailViewModel', () => {
+  const build = () => {
+    const getRoute = { run: jest.fn().mockResolvedValue(makeRoute()) };
+    const getCurrentRider = { run: jest.fn().mockResolvedValue(makeRider()) };
+    const getAllMotorcycles = { run: jest.fn().mockResolvedValue([]) };
+    const estimateAutonomy = { run: jest.fn() };
+    const findFuelStations = { run: jest.fn().mockResolvedValue([]) };
+    const del = { run: jest.fn().mockResolvedValue(undefined) };
+    const generateShareCode = { run: jest.fn() };
+    const revokeShareCode = { run: jest.fn() };
+    const createTripParty = { run: jest.fn() };
+    const partyStore = { setActiveParty: jest.fn() };
+
+    const vm = new RouteDetailViewModel(
+      getRoute as any,
+      getCurrentRider as any,
+      getAllMotorcycles as any,
+      estimateAutonomy as any,
+      findFuelStations as any,
+      del as any,
+      generateShareCode as any,
+      revokeShareCode as any,
+      createTripParty as any,
+      partyStore as any,
+    );
+    return { vm, del };
+  };
+
+  describe('deleteRoute success/failure (F1)', () => {
+    it('exito: hasDeleteSuccess=true y retorna true', async () => {
+      const { vm } = build();
+      await vm.initialize('route-1');
+
+      const ok = await vm.deleteRoute();
+      expect(ok).toBe(true);
+      expect(vm.hasDeleteSuccess).toBe(true);
+      expect(vm.isDeleteError).toBeNull();
+    });
+
+    it('fallo: hasDeleteSuccess=false + error + retorna false', async () => {
+      const { vm, del } = build();
+      del.run.mockRejectedValueOnce(new Error('delete boom'));
+      await vm.initialize('route-1');
+
+      const ok = await vm.deleteRoute();
+      expect(ok).toBe(false);
+      // Defensivo: el screen no debe navegar atras en fallo.
+      expect(vm.hasDeleteSuccess).toBe(false);
+      expect(vm.isDeleteError).toContain('delete boom');
+    });
   });
 });
 
@@ -279,31 +394,34 @@ describe('RoutePlannerViewModel', () => {
     expect(vm.waypoints[1].kind).toBe('fuel');
   });
 
-  it('moveStop reordena paradas intermedias y bloquea start/destination', async () => {
+  it('moveStop sin límite: reasigna inicio y destino (A·B·C → B destino, C inicio)', async () => {
     const { vm } = build();
     await vm.initialize();
-    vm.addWaypoint(4.6, -74.08, 'Start');
-    vm.addWaypoint(4.7, -74.1, 'A');
-    vm.addWaypoint(4.8, -74.2, 'B');
-    vm.addWaypoint(4.9, -74.3, 'End');
+    vm.addWaypoint(4.6, -74.08, 'A'); // start
+    vm.addWaypoint(4.7, -74.1, 'B'); // intermedio
+    vm.addWaypoint(4.8, -74.2, 'C'); // destino
 
-    const aId = vm.waypoints[1].id;
-    const bId = vm.waypoints[2].id;
+    const aId = vm.waypoints[0].id;
+    const bId = vm.waypoints[1].id;
+    const cId = vm.waypoints[2].id;
 
-    // A esta en pos 1, B en pos 2. Movemos B hacia arriba.
-    vm.moveStop(bId, 'up');
-    expect(vm.waypoints[1].id).toBe(bId);
-    expect(vm.waypoints[2].id).toBe(aId);
+    // Hacer que B sea el DESTINO: bajarlo una posición.
+    vm.moveStop(bId, 'down'); // [A, C, B]
+    expect(vm.waypoints.at(-1)!.id).toBe(bId);
+    expect(vm.waypoints.at(-1)!.kind).toBe('destination');
+    expect(vm.waypoints.find((w) => w.id === cId)!.kind).not.toBe(
+      'destination',
+    );
 
-    // Tratamos de mover el destino (pos 3) hacia arriba — no-op.
-    const destId = vm.waypoints[3].id;
-    vm.moveStop(destId, 'up');
-    expect(vm.waypoints[3].id).toBe(destId);
+    // Hacer que C sea el INICIO: subirlo al tope.
+    vm.moveStop(cId, 'up'); // [C, A, B]
+    expect(vm.waypoints[0].id).toBe(cId);
+    expect(vm.waypoints[0].kind).toBe('start');
+    expect(vm.waypoints.find((w) => w.id === aId)!.kind).not.toBe('start');
 
-    // Tratamos de mover A (que ya esta en pos 2 luego del swap) por debajo del
-    // destination — no-op por limite.
-    vm.moveStop(aId, 'down');
-    expect(vm.waypoints[2].id).toBe(aId);
+    // Mover la primera hacia arriba es no-op (ya está en el tope).
+    vm.moveStop(cId, 'up');
+    expect(vm.waypoints[0].id).toBe(cId);
   });
 
   it('timelineItems setea canMoveUp/canMoveDown segun la posicion', async () => {
@@ -315,17 +433,16 @@ describe('RoutePlannerViewModel', () => {
     vm.addWaypoint(4.9, -74.3, 'End');
 
     const items = vm.timelineItems;
-    // start: no es intermedio
+    // start: solo puede bajar (no hay nada arriba).
     expect(items[0].canMoveUp).toBe(false);
-    expect(items[0].canMoveDown).toBe(false);
-    // A (primer intermedio): no puede subir mas (esta justo bajo el start)
-    expect(items[1].canMoveUp).toBe(false);
+    expect(items[0].canMoveDown).toBe(true);
+    // intermedias: ambas direcciones.
+    expect(items[1].canMoveUp).toBe(true);
     expect(items[1].canMoveDown).toBe(true);
-    // B (ultimo intermedio): no puede bajar mas (esta justo sobre destino)
     expect(items[2].canMoveUp).toBe(true);
-    expect(items[2].canMoveDown).toBe(false);
-    // destination
-    expect(items[3].canMoveUp).toBe(false);
+    expect(items[2].canMoveDown).toBe(true);
+    // destination: solo puede subir (no hay nada abajo).
+    expect(items[3].canMoveUp).toBe(true);
     expect(items[3].canMoveDown).toBe(false);
   });
 
@@ -1824,6 +1941,246 @@ describe('RoutePlannerViewModel', () => {
       expect(vm.isMultiDay).toBe(true); // 2 sigue siendo válido
       vm.removeStop(vm.waypoints[1].id); // 1 wp
       expect(vm.isMultiDay).toBe(false); // <2 → multi-día apagado
+    });
+  });
+
+  // ── Fase F2: persistir + restaurar la segmentación multi-día ──────────
+  describe('multi-día persist + restore (F2)', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    const flushDraftDebounce = async () => {
+      jest.advanceTimersByTime(850);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    // Ruta multi-día de 6 waypoints segmentada en 2 días por el corte en 2.
+    const makeMultiDayRoute = () =>
+      makeRoute({
+        id: 'route-1',
+        waypoints: [0, 1, 2, 3, 4, 5].map(
+          (i) =>
+            makeWaypoint({
+              id: `wp-${i + 1}`,
+              kind: i === 0 ? 'start' : i === 5 ? 'destination' : 'other',
+              order: i,
+              latitude: 4.6 + i * 0.1,
+              longitude: -74 + i * 0.1,
+            }) as any,
+        ),
+        days: [
+          new RouteDay({ index: 0, startIdx: 0, endIdx: 2 }),
+          new RouteDay({
+            index: 1,
+            startIdx: 3,
+            endIdx: 5,
+            overnightName: 'Villa de Leyva',
+          }),
+        ],
+      } as any);
+
+    it('submit en edit pasa una Route con days poblado (índices + endIdx)', async () => {
+      const { vm, getRoute, update } = build();
+      getRoute.run.mockResolvedValue(makeRoute()); // id route-1 → modo edit
+      await vm.initialize('route-1');
+      expect(vm.isEditMode).toBe(true);
+
+      // Construir una ruta multi-día: 6 waypoints + 1 corte.
+      for (let i = vm.waypoints.length; i < 6; i++) {
+        vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1, `P${i}`);
+      }
+      vm.toggleMultiDay();
+      vm.markEndOfDay(2); // días [0..2], [3..5]
+      expect(vm.days).toHaveLength(2);
+
+      await vm.calculateDirections();
+      const ok = await vm.submit();
+      expect(ok).toBe(true);
+
+      const routePassed = update.run.mock.calls.at(-1)![0];
+      expect(routePassed.id).toBe('route-1');
+      expect(routePassed.days).toHaveLength(2);
+      expect(routePassed.days.map((d: RouteDay) => d.index)).toEqual([0, 1]);
+      expect(routePassed.days.map((d: RouteDay) => d.endIdx)).toEqual([
+        2,
+        vm.waypoints.length - 1,
+      ]);
+    });
+
+    it('submit sin multi-día deja days en undefined (Route.days = [])', async () => {
+      const { vm, create } = build();
+      await vm.initialize();
+      vm.setName('Single day');
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+
+      await vm.submit();
+      const routePassed = create.run.mock.calls.at(-1)![0];
+      // El VM pasa `days: []` cuando no es multi-día (NUNCA undefined: el
+      // Object.assign del constructor lo dejaría undefined y rompería el model).
+      expect(routePassed.days).toHaveLength(0);
+    });
+
+    it('persistDraft tras segmentar incluye days en el RouteDraft', async () => {
+      const { vm, saveDraft } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+      vm.toggleMultiDay();
+      vm.markEndOfDay(2); // 2 días
+
+      await flushDraftDebounce();
+
+      expect(saveDraft.run).toHaveBeenCalled();
+      const draft = saveDraft.run.mock.calls.at(-1)![0];
+      expect(draft.days).toHaveLength(2);
+      expect(draft.days.map((d: RouteDay) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 2],
+        [3, 5],
+      ]);
+    });
+
+    it('hydrateFrom(route) con days restaura días + dayBoundaries (round-trip)', async () => {
+      const { vm, getRoute } = build();
+      getRoute.run.mockResolvedValue(makeMultiDayRoute());
+
+      await vm.initialize('route-1');
+
+      expect(vm.isMultiDay).toBe(true);
+      expect(vm.days).toHaveLength(2);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 2],
+        [3, 5],
+      ]);
+      // overnightName se conserva al hidratar.
+      expect(vm.days![1].overnightName).toBe('Villa de Leyva');
+      // dayBoundaries reconstruido: endIdx de todos los días menos el último.
+      expect((vm as any).dayBoundaries).toEqual([2]);
+    });
+
+    it('hydrateFrom(route) sin days deja single-day (no rompe rutas viejas)', async () => {
+      const { vm, getRoute } = build();
+      getRoute.run.mockResolvedValue(makeRoute()); // sin days
+      await vm.initialize('route-1');
+      expect(vm.isMultiDay).toBe(false);
+      expect(vm.days).toBeNull();
+      expect((vm as any).dayBoundaries).toEqual([]);
+    });
+
+    it('round-trip multi-día desde draft de edición (hydrateFromDraftEdit)', async () => {
+      const { vm, getRoute, getDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute()); // createdAt 2026-02-01
+      getDraft.run.mockResolvedValue({
+        id: 'route-1',
+        riderId: 'rider-1',
+        routeId: 'route-1',
+        name: 'Draft multi-día',
+        notes: '',
+        rideType: 'highway',
+        avoid: new RouteAvoidPreferences(),
+        roundTrip: false,
+        waypoints: [0, 1, 2, 3, 4, 5].map((i) => ({
+          id: `wp-${i + 1}`,
+          name: `P${i}`,
+          latitude: 4.6 + i * 0.1,
+          longitude: -74 + i * 0.1,
+          kind: i === 0 ? 'start' : i === 5 ? 'destination' : 'other',
+          order: i,
+        })),
+        days: [
+          new RouteDay({ index: 0, startIdx: 0, endIdx: 1 }),
+          new RouteDay({
+            index: 1,
+            startIdx: 2,
+            endIdx: 5,
+            overnightName: 'Honda',
+          }),
+        ],
+        updatedAt: new Date('2026-03-01T00:00:00Z'),
+      } as any);
+
+      await vm.initialize('route-1');
+
+      expect(vm.isEditMode).toBe(true);
+      expect(vm.name).toBe('Draft multi-día');
+      expect(vm.days).toHaveLength(2);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 1],
+        [2, 5],
+      ]);
+      expect(vm.days![1].overnightName).toBe('Honda');
+      expect((vm as any).dayBoundaries).toEqual([1]);
+    });
+
+    it('round-trip multi-día desde initializeFromDraft (recuperar draft)', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      vm.initializeFromDraft({
+        id: 'rider-1',
+        riderId: 'rider-1',
+        name: 'Retomado',
+        notes: '',
+        rideType: 'highway',
+        avoid: new RouteAvoidPreferences(),
+        roundTrip: false,
+        waypoints: [0, 1, 2, 3].map((i) => ({
+          id: `wp-${i + 1}`,
+          name: `P${i}`,
+          latitude: 4.6 + i * 0.1,
+          longitude: -74 + i * 0.1,
+          kind: i === 0 ? 'start' : i === 3 ? 'destination' : 'other',
+          order: i,
+        })),
+        days: [
+          new RouteDay({ index: 0, startIdx: 0, endIdx: 1 }),
+          new RouteDay({ index: 1, startIdx: 2, endIdx: 3 }),
+        ],
+        updatedAt: new Date(),
+      } as any);
+
+      expect(vm.isMultiDay).toBe(true);
+      expect(vm.days!.map((d) => [d.startIdx, d.endIdx])).toEqual([
+        [0, 1],
+        [2, 3],
+      ]);
+      expect((vm as any).dayBoundaries).toEqual([1]);
+    });
+
+    it('preserva overnightName por índice al re-segmentar con misma cantidad de días', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+      vm.toggleMultiDay();
+      vm.markEndOfDay(2); // 2 días: [0..2], [3..5]
+      vm.setOvernightName(0, 'Melgar');
+      vm.setOvernightName(1, 'Ibagué');
+      expect(vm.days).toHaveLength(2);
+
+      // Reordenar una parada intermedia NO cambia la cantidad de días (el corte
+      // 2 sigue válido), así que los nombres deben conservarse por índice.
+      vm.moveStop(vm.waypoints[4].id, 'up');
+
+      expect(vm.days).toHaveLength(2);
+      expect(vm.days![0].overnightName).toBe('Melgar');
+      expect(vm.days![1].overnightName).toBe('Ibagué');
+    });
+
+    it('NO mapea overnightName cuando cambia la cantidad de días', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      for (let i = 0; i < 6; i++) vm.addWaypoint(4.6 + i * 0.1, -74 + i * 0.1);
+      vm.toggleMultiDay();
+      vm.markEndOfDay(4); // 2 días: [0..4], [5..5]
+      vm.setOvernightName(0, 'Melgar');
+
+      // Quitar un waypoint deja lastIdx 4, el corte 4 cae fuera de rango y se
+      // descarta → 1 solo día. El mapeo 1:1 ya no aplica: nombre se descarta.
+      vm.removeStop(vm.waypoints[2].id);
+
+      expect(vm.days).toHaveLength(1);
+      expect(vm.days![0].overnightName).toBeUndefined();
     });
   });
 });

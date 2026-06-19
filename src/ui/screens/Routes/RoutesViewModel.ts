@@ -63,16 +63,22 @@ export class RoutesViewModel {
   }
 
   async delete(id: string): Promise<boolean> {
+    // Optimistic update: capturamos el estado previo y removemos la fila YA,
+    // antes del await, para una UX instantanea. Si el use case falla, hacemos
+    // rollback al array previo exacto (preservando el orden original).
+    const prev = this.isRoutesResponse;
     this.updateLoadingState(true, null, 'delete');
+    runInAction(() => {
+      this.isRoutesResponse = prev?.filter((r) => r.id !== id) ?? null;
+    });
     try {
       await this.deleteRouteUseCase.run(id);
-      runInAction(() => {
-        this.isRoutesResponse =
-          this.isRoutesResponse?.filter((r) => r.id !== id) ?? null;
-      });
       this.updateLoadingState(false, null, 'delete');
       return true;
     } catch (error) {
+      runInAction(() => {
+        this.isRoutesResponse = prev;
+      });
       this.handleError(error, 'delete');
       return false;
     }

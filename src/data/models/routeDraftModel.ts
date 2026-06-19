@@ -224,7 +224,7 @@ export class RouteDraftModel {
           },
       round_trip: entity.roundTrip ? true : undefined,
       days:
-        entity.days.length > 0
+        entity.days && entity.days.length > 0
           ? entity.days.map((d) => ({
               index: d.index,
               start_idx: d.startIdx,

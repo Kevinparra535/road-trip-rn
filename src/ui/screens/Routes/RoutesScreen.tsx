@@ -39,9 +39,11 @@ type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutesList'>;
 const RouteRow = ({
   route,
   onPress,
+  onEdit,
 }: {
   route: Route;
   onPress: () => void;
+  onEdit: () => void;
 }) => {
   const meta = rideTypeMeta(route.rideType);
   return (
@@ -63,6 +65,13 @@ const RouteRow = ({
           {route.waypoints.length} puntos · {route.stops().length} paradas
         </Text>
       </View>
+      <TouchableOpacity
+        onPress={onEdit}
+        hitSlop={8}
+        testID="route-row-edit-btn"
+      >
+        <Ionicons name="create-outline" size={20} color={Colors.base.accent} />
+      </TouchableOpacity>
       <Ionicons
         name="chevron-forward"
         size={20}
@@ -114,6 +123,9 @@ const RoutesScreen = observer(() => {
               route={item}
               onPress={() =>
                 navigation.navigate('RouteDetail', { routeId: item.id })
+              }
+              onEdit={() =>
+                navigation.navigate('RoutePlanner', { routeId: item.id })
               }
             />
           )}

@@ -241,12 +241,20 @@ export class RouteDetailViewModel {
     this.updateLoadingState(true, null, 'delete');
     try {
       await this.deleteRouteUseCase.run(route.id);
+      // hasDeleteSuccess se setea SOLO tras el await OK: el screen hace goBack
+      // por effect cuando este flag pasa a true, asi que nunca debe activarse
+      // si el borrado fallo.
       runInAction(() => {
         this.hasDeleteSuccess = true;
       });
       this.updateLoadingState(false, null, 'delete');
       return true;
     } catch (error) {
+      // Defensivo: ante un fallo aseguramos que el screen NO navegue atras y
+      // dejamos el estado de error (via handleError -> isDeleteError).
+      runInAction(() => {
+        this.hasDeleteSuccess = false;
+      });
       this.handleError(error, 'delete');
       return false;
     }

@@ -312,7 +312,8 @@ export class RoutePlannerViewModel {
     this.multiDayResyncDisposer = reaction(
       () => this.waypointsFingerprint,
       () => {
-        if (this.days === null) return;
+        const previousDays = this.days;
+        if (previousDays === null) return;
         runInAction(() => {
           if (this.waypoints.length < 2) {
             this.days = null;
@@ -322,7 +323,12 @@ export class RoutePlannerViewModel {
           this.dayBoundaries = this.dayBoundaries.filter(
             (b) => b >= 0 && b < this.waypoints.length - 1,
           );
-          this.days = splitIntoDays(this.waypoints, this.dayBoundaries);
+          const resegmented = splitIntoDays(this.waypoints, this.dayBoundaries);
+          // F2: preservar los nombres de pernocte por índice cuando la cantidad
+          // de días no cambia (típico al reordenar/editar una parada sin tocar
+          // los cortes). Si cambia la cantidad de días, los nombres no son
+          // mapeables 1:1 y se reconstruyen desde cero.
+          this.days = this.mergeOvernightNames(previousDays, resegmented);
         });
       },
     );
@@ -547,10 +553,11 @@ export class RoutePlannerViewModel {
       const isFirst = index === 0;
       const isLast = index === ordered.length - 1 && ordered.length > 1;
       const isIntermediate = !isFirst && !isLast;
-      // canMoveUp: hay otra intermedia arriba (index > 1, ya que index 0 es
-      // start). canMoveDown: hay otra intermedia abajo (index < length - 2).
-      const canMoveUp = isIntermediate && index > 1;
-      const canMoveDown = isIntermediate && index < ordered.length - 2;
+      // Flechas ↑/↓ sin límite: cualquier parada puede subir/bajar, incluso
+      // hacia los extremos. Al renormalizar, la que cae en pos 0 pasa a `start`
+      // y la última a `destination` — así el rider reasigna inicio/destino.
+      const canMoveUp = index > 0;
+      const canMoveDown = index < ordered.length - 1;
       return {
         id: w.id,
         name: w.name,
@@ -1385,8 +1392,9 @@ export class RoutePlannerViewModel {
 
   /**
    * Mueve una parada intermedia hacia arriba o abajo en el orden de la
-   * ruta. No mueve `start`/`destination` (sus posiciones son fijas por
-   * definicion). No-op si moverla la sacaria de las posiciones intermedias.
+   * ruta. SIN límite: cualquier parada puede moverse incluso a los extremos;
+   * `normalizeWaypoints` reasigna `start`/`destination` según la nueva
+   * posición (así el rider cambia inicio o destino en cualquier momento).
    */
   moveStop(waypointId: string, direction: 'up' | 'down'): void {
     runInAction(() => {
@@ -1394,13 +1402,10 @@ export class RoutePlannerViewModel {
       const idx = ordered.findIndex((w) => w.id === waypointId);
       if (idx < 0) return;
 
-      const target = ordered[idx];
-      if (!target.isIntermediate()) return;
-
       const newIdx = direction === 'up' ? idx - 1 : idx + 1;
-      // Limites: no se puede mover por encima del start ni por debajo del
-      // destination (mantenemos las puntas fijas).
-      if (newIdx <= 0 || newIdx >= ordered.length - 1) return;
+      // Solo límites del array: permite mover a la posición 0 (start) y a la
+      // última (destination).
+      if (newIdx < 0 || newIdx >= ordered.length) return;
 
       // Swap simple entre posiciones contiguas.
       const swapped = [...ordered];
@@ -1526,6 +1531,8 @@ export class RoutePlannerViewModel {
         ),
       );
       this.directions = null;
+      // F2: restaurar la segmentación multi-día en curso del draft.
+      this.restoreDays(draft.days);
     });
   }
 
@@ -1585,6 +1592,12 @@ export class RoutePlannerViewModel {
         waypoints: [...this.waypoints],
         avoid: this.avoid,
         roundTrip: this.isRoundTrip,
+        // F2: persistir la segmentación multi-día en curso para restaurarla
+        // al retomar el draft. `[]` cuando no es multi-día — NUNCA undefined:
+        // el `Object.assign(this, params)` del constructor de RouteDraft
+        // sobrescribiría el default y dejaría `days = undefined`, rompiendo
+        // `routeDraftModel.fromDomain` (`entity.days.length`).
+        days: this.days ?? [],
         updatedAt: new Date(),
       });
       await this.saveRouteDraftUseCase.run(draft);
@@ -1752,6 +1765,10 @@ export class RoutePlannerViewModel {
         notes: this.notes.trim() || undefined,
         avoid: this.avoid,
         roundTrip: this.isRoundTrip,
+        // F2: persistir la segmentación multi-día (si la hay). `[]` cuando no
+        // es multi-día — NUNCA undefined (el `Object.assign` del constructor de
+        // Route lo dejaría undefined y rompería `routeModel.fromDomain`).
+        days: this.days ?? [],
       });
 
       let persistedId: string;
@@ -1834,6 +1851,51 @@ export class RoutePlannerViewModel {
   // ── Private helpers ─────────────────────────────────────────────────────
 
   /**
+   * Inverso de `splitIntoDays`: reconstruye los `dayBoundaries` (índices que
+   * cierran cada día) a partir de una lista de `RouteDay` ya segmentada. Es el
+   * `endIdx` de cada día EXCEPTO el último (que cierra en el destino y no abre
+   * un día nuevo). Permite el round-trip al hidratar:
+   * `boundariesFromDays(splitIntoDays(wps, b))` reproduce `b` válido.
+   */
+  private boundariesFromDays(days: RouteDay[]): number[] {
+    if (days.length <= 1) return [];
+    return days.slice(0, -1).map((d) => d.endIdx);
+  }
+
+  /**
+   * Fusiona los `overnightName` de la segmentación previa en la nueva,
+   * mapeando por índice de día. Solo aplica cuando la cantidad de días es la
+   * MISMA (al reordenar/editar paradas sin cambiar los cortes): el día `i` de
+   * antes y el día `i` de ahora son el mismo pernocte. Si la cantidad cambia,
+   * el mapeo 1:1 deja de ser válido y devolvemos `next` intacto (nombres se
+   * reconstruyen desde cero). No muta sus inputs.
+   */
+  private mergeOvernightNames(
+    previous: RouteDay[],
+    next: RouteDay[],
+  ): RouteDay[] {
+    if (previous.length !== next.length) return next;
+    return next.map((day, index) => {
+      const overnightName = previous[index]?.overnightName;
+      if (overnightName === undefined) return day;
+      return new RouteDay({ ...day, overnightName });
+    });
+  }
+
+  /**
+   * Restaura la segmentación multi-día al hidratar (F2). Si la fuente trae
+   * `days` poblado, copia los `RouteDay` y reconstruye los `dayBoundaries`
+   * internos; sino deja el default (single-day, `days = null`). Llamar SIEMPRE
+   * después de setear `this.waypoints` (los índices apuntan a ese array).
+   */
+  private restoreDays(days: RouteDay[] | undefined): void {
+    if (days && days.length > 0) {
+      this.days = [...days];
+      this.dayBoundaries = this.boundariesFromDays(days);
+    }
+  }
+
+  /**
    * Texto secundario para una fila del timeline. Prioriza la categoria de
    * Mapbox si existe (mas informativa), sino coord compacta como fallback.
    */
@@ -1899,6 +1961,8 @@ export class RoutePlannerViewModel {
         ),
       );
       this.directions = null;
+      // F2: restaurar la segmentación multi-día en curso del draft.
+      this.restoreDays(draft.days);
     });
   }
 
@@ -1919,6 +1983,8 @@ export class RoutePlannerViewModel {
         durationMin: route.estimatedDurationMin,
         geometry: route.geometry,
       });
+      // F2: restaurar la segmentación multi-día persistida (si la había).
+      this.restoreDays(route.days);
     });
   }
 

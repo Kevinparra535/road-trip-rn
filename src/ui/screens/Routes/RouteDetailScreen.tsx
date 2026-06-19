@@ -148,6 +148,19 @@ const RouteDetailScreen = observer(() => {
             />
           </TouchableOpacity>
           <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('RoutePlanner', { routeId: route.id })
+            }
+            hitSlop={8}
+            testID="route-detail-edit-btn"
+          >
+            <Ionicons
+              name="create-outline"
+              size={22}
+              color={Colors.base.accent}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => {
               const payload = viewModel.getDuplicationPayload();
               if (payload) {
@@ -628,7 +641,7 @@ const styles = StyleSheet.create({
   navActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacings.lg,
+    gap: Spacings.md,
   },
   partyChipNav: {
     paddingHorizontal: Spacings.sm,
