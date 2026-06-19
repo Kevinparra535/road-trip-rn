@@ -27,33 +27,151 @@ export function polylineLengthKm(geometry: GeoPoint[]): number {
   return total;
 }
 
+export type PolylineProjection = {
+  snappedPoint: GeoPoint;
+  distanceFromStartKm: number;
+  distanceToRouteKm: number;
+  segmentIndex: number;
+  segmentHeadingDeg: number | null;
+};
+
+type LocalPoint = { x: number; y: number };
+
+const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+
+const pointToLocalKm = (origin: GeoPoint, point: GeoPoint): LocalPoint => {
+  const latScale = Math.cos(toRad(origin.latitude));
+  return {
+    x: toRad(point.longitude - origin.longitude) * EARTH_RADIUS_KM * latScale,
+    y: toRad(point.latitude - origin.latitude) * EARTH_RADIUS_KM,
+  };
+};
+
+const localKmToPoint = (origin: GeoPoint, point: LocalPoint): GeoPoint => {
+  const latScale = Math.cos(toRad(origin.latitude));
+  const safeLatScale = Math.abs(latScale) < 1e-12 ? 1e-12 : latScale;
+  return {
+    latitude: origin.latitude + toDeg(point.y / EARTH_RADIUS_KM),
+    longitude:
+      origin.longitude + toDeg(point.x / (EARTH_RADIUS_KM * safeLatScale)),
+  };
+};
+
+const bearingBetween = (a: GeoPoint, b: GeoPoint): number | null => {
+  const lat1 = toRad(a.latitude);
+  const lat2 = toRad(b.latitude);
+  const dLon = toRad(b.longitude - a.longitude);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+  if (x === 0 && y === 0) return null;
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+};
+
 /**
- * Distancia acumulada (km) a lo largo de la polilinea hasta el vertice mas
- * cercano a `point`. Aproxima cuanto ha avanzado un punto sobre la ruta.
+ * Proyecta `point` sobre el segmento mas cercano de la polilinea y devuelve
+ * tanto la distancia acumulada como la desviacion lateral. Es la base local y
+ * barata para progreso turn-by-turn, off-route y camara de navegacion.
+ */
+export function projectPointOnPolyline(
+  geometry: GeoPoint[],
+  point: GeoPoint,
+): PolylineProjection {
+  if (geometry.length === 0) {
+    return {
+      snappedPoint: point,
+      distanceFromStartKm: 0,
+      distanceToRouteKm: 0,
+      segmentIndex: -1,
+      segmentHeadingDeg: null,
+    };
+  }
+
+  if (geometry.length === 1) {
+    return {
+      snappedPoint: geometry[0],
+      distanceFromStartKm: 0,
+      distanceToRouteKm: haversineKm(geometry[0], point),
+      segmentIndex: 0,
+      segmentHeadingDeg: null,
+    };
+  }
+
+  let accumulated = 0;
+  let best: PolylineProjection | null = null;
+
+  for (let i = 1; i < geometry.length; i += 1) {
+    const start = geometry[i - 1];
+    const end = geometry[i];
+    const segmentKm = haversineKm(start, end);
+    if (segmentKm === 0) {
+      const distanceToRouteKm = haversineKm(start, point);
+      if (!best || distanceToRouteKm < best.distanceToRouteKm) {
+        best = {
+          snappedPoint: start,
+          distanceFromStartKm: accumulated,
+          distanceToRouteKm,
+          segmentIndex: i - 1,
+          segmentHeadingDeg: null,
+        };
+      }
+      continue;
+    }
+
+    const localEnd = pointToLocalKm(start, end);
+    const localPoint = pointToLocalKm(start, point);
+    const lengthSq = localEnd.x ** 2 + localEnd.y ** 2;
+    const t =
+      lengthSq === 0
+        ? 0
+        : clamp01(
+            (localPoint.x * localEnd.x + localPoint.y * localEnd.y) / lengthSq,
+          );
+    const snappedLocal = {
+      x: localEnd.x * t,
+      y: localEnd.y * t,
+    };
+    const snappedPoint = localKmToPoint(start, snappedLocal);
+    const distanceToRouteKm = haversineKm(snappedPoint, point);
+
+    if (!best || distanceToRouteKm < best.distanceToRouteKm) {
+      best = {
+        snappedPoint,
+        distanceFromStartKm: accumulated + segmentKm * t,
+        distanceToRouteKm,
+        segmentIndex: i - 1,
+        segmentHeadingDeg: bearingBetween(start, end),
+      };
+    }
+
+    accumulated += segmentKm;
+  }
+
+  return (
+    best ?? {
+      snappedPoint: geometry[0],
+      distanceFromStartKm: 0,
+      distanceToRouteKm: haversineKm(geometry[0], point),
+      segmentIndex: 0,
+      segmentHeadingDeg: null,
+    }
+  );
+}
+
+/**
+ * Distancia acumulada (km) a lo largo de la polilinea hasta la proyeccion de
+ * `point` sobre el segmento mas cercano.
  */
 export function distanceAlongNearest(
   geometry: GeoPoint[],
   point: GeoPoint,
 ): number {
-  if (geometry.length === 0) return 0;
-  let accumulated = 0;
-  let bestDistance = Infinity;
-  let bestAlong = 0;
-  for (let i = 0; i < geometry.length; i += 1) {
-    const distance = haversineKm(geometry[i], point);
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestAlong = accumulated;
-    }
-    if (i < geometry.length - 1) {
-      accumulated += haversineKm(geometry[i], geometry[i + 1]);
-    }
-  }
-  return bestAlong;
+  return projectPointOnPolyline(geometry, point).distanceFromStartKm;
 }
 
 /**
- * Distancia minima (km) de `point` a la polilinea (al vertice mas cercano).
+ * Distancia minima (km) de `point` a la polilinea (segmento mas cercano).
  * Sirve para detectar de forma local —sin llamar a la API— si el conductor
  * se salio de la ruta trazada.
  */
@@ -61,12 +179,7 @@ export function distanceToPolylineKm(
   geometry: GeoPoint[],
   point: GeoPoint,
 ): number {
-  let min = Infinity;
-  for (let i = 0; i < geometry.length; i += 1) {
-    const distance = haversineKm(geometry[i], point);
-    if (distance < min) min = distance;
-  }
-  return min === Infinity ? 0 : min;
+  return projectPointOnPolyline(geometry, point).distanceToRouteKm;
 }
 
 /**

@@ -85,6 +85,7 @@ import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
+import { DetectOffRouteUseCase } from '@/domain/useCases/DetectOffRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
@@ -110,6 +111,7 @@ import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCa
 import { ObserveNetworkStatusUseCase } from '@/domain/useCases/ObserveNetworkStatusUseCase';
 import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
+import { ProjectRouteProgressUseCase } from '@/domain/useCases/ProjectRouteProgressUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
@@ -344,6 +346,12 @@ container
 container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
+container
+  .bind<ProjectRouteProgressUseCase>(TYPES.ProjectRouteProgressUseCase)
+  .to(ProjectRouteProgressUseCase);
+container
+  .bind<DetectOffRouteUseCase>(TYPES.DetectOffRouteUseCase)
+  .to(DetectOffRouteUseCase);
 container
   .bind<EstimateAutonomyUseCase>(TYPES.EstimateAutonomyUseCase)
   .to(EstimateAutonomyUseCase);

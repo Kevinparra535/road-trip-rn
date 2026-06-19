@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import * as Speech from 'expo-speech';
 
-import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
+import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
 
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
@@ -27,6 +27,7 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
+import { detectOffRoute } from '@/domain/useCases/DetectOffRouteUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
@@ -46,11 +47,10 @@ import {
 
 import {
   boundingBox,
-  distanceAlongNearest,
-  distanceToPolylineKm,
   haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
+  projectPointOnPolyline,
   samplePolyline,
 } from '@/domain/geo/geoMath';
 
@@ -64,6 +64,7 @@ import { LocationStore } from '@/ui/store/LocationStore';
 // Centro por defecto: Bogota, Colombia.
 const DEFAULT_CENTER: [number, number] = [-74.0817, 4.6097];
 const DEFAULT_ZOOM = 11;
+const ZOOM_UPDATE_EPSILON = 0.02;
 // Zoom al seguir al rider y tope maximo de acercamiento.
 const FOLLOW_ZOOM = 16.5;
 const MAX_ZOOM = 18;
@@ -348,6 +349,7 @@ export class HomeViewModel {
   /** Claves de los anuncios de voz ya reproducidos (no repetir). */
   private spokenVoiceIds: Set<string> = new Set();
   private offRouteTicks: number = 0;
+  private lastRealProgressKm: number = 0;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -524,6 +526,10 @@ export class HomeViewModel {
 
   get destinationCoordinate(): [number, number] | null {
     return this.destination ? this.destination.toLngLat() : null;
+  }
+
+  get routeOriginLabel(): string {
+    return this.isSimulatedNavigation ? DEV_FAKE_ORIGIN.name : 'Mi ubicacion';
   }
 
   /** Gasolineras halladas a lo largo de la ruta, listas para el mapa. */
@@ -958,10 +964,10 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     const location = this.locationStore.isLocationResponse;
     if (!route || !location) return 0;
-    return distanceAlongNearest(route.geometry, {
+    return projectPointOnPolyline(route.geometry, {
       latitude: location.latitude,
       longitude: location.longitude,
-    });
+    }).distanceFromStartKm;
   }
 
   /**
@@ -1033,9 +1039,11 @@ export class HomeViewModel {
    * sobre la polyline.
    */
   get navProgressKm(): number {
-    return this.isSimulatedNavigation
-      ? this.simulatedDistanceKm
-      : this.routeProgressKm;
+    if (this.isSimulatedNavigation) return this.simulatedDistanceKm;
+    const progressKm = this.routeProgressKm;
+    return this.isNavigating
+      ? Math.max(progressKm, this.lastRealProgressKm)
+      : progressKm;
   }
 
   /**
@@ -1071,6 +1079,10 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     const rider = this.navRiderPoint;
     if (!route || !rider) return null;
+    const projection = projectPointOnPolyline(route.geometry, rider);
+    if (projection.segmentHeadingDeg !== null) {
+      return projection.segmentHeadingDeg;
+    }
     const lookAhead = pointAtDistanceAlong(
       route.geometry,
       Math.min(route.distanceKm, this.navProgressKm + 0.05),
@@ -1137,7 +1149,7 @@ export class HomeViewModel {
   get navSpeedKmh(): number | null {
     if (!this.isNavigating) return null;
     if (this.isSimulatedNavigation) return NAV_AVG_SPEED_KMH;
-    return null;
+    return this.currentSpeedKmh;
   }
 
   /**
@@ -1349,6 +1361,7 @@ export class HomeViewModel {
 
   /** Registra el zoom actual de la camara. */
   setZoom(zoom: number): void {
+    if (Math.abs(this.currentZoom - zoom) < ZOOM_UPDATE_EPSILON) return;
     this.currentZoom = zoom;
   }
 
@@ -1358,7 +1371,9 @@ export class HomeViewModel {
    * `null` si no hace falta cambiarlo.
    */
   resolvePitch(zoom: number): number | null {
-    this.currentZoom = zoom;
+    if (Math.abs(this.currentZoom - zoom) >= ZOOM_UPDATE_EPSILON) {
+      this.currentZoom = zoom;
+    }
     const wantsPerspective = zoom >= PERSPECTIVE_ZOOM_THRESHOLD;
     if (wantsPerspective === this.isPerspective) return null;
     this.isPerspective = wantsPerspective;
@@ -1409,6 +1424,66 @@ export class HomeViewModel {
       this.searchMode = 'destination';
     });
     void this.computeRoute();
+  }
+
+  /** Traza una ruta A-B fija de desarrollo y arranca la navegacion simulada. */
+  async startDevRouteSimulation(): Promise<void> {
+    this.clearNavTimer();
+    Speech.stop();
+    this.spokenVoiceIds.clear();
+    void this.locationStore.setNavigationMode(false);
+    runInAction(() => {
+      this.destination = DEV_FAKE_DESTINATION;
+      this.previewPlace = null;
+      this.intermediateStops = [];
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+      this.rideType = DEFAULT_RIDE_TYPE;
+      this.isRouteResponse = null;
+      this.isRouteError = null;
+      this.isArrived = false;
+      this.arrivedAt = null;
+      this.simulatedDistanceKm = 0;
+      this.lastRealProgressKm = 0;
+      this.offRouteTicks = 0;
+      this.isFuelStopResponse = null;
+      this.fuelStops = [];
+    });
+
+    this.updateLoadingState(true, null, 'route');
+    try {
+      const directions = await this.calculateDirectionsUseCase.run({
+        waypoints: [
+          new Waypoint({
+            id: DEV_FAKE_ORIGIN.id,
+            name: DEV_FAKE_ORIGIN.name,
+            latitude: DEV_FAKE_ORIGIN.latitude,
+            longitude: DEV_FAKE_ORIGIN.longitude,
+            kind: 'start',
+            order: 0,
+          }),
+          new Waypoint({
+            id: DEV_FAKE_DESTINATION.id,
+            name: DEV_FAKE_DESTINATION.name,
+            latitude: DEV_FAKE_DESTINATION.latitude,
+            longitude: DEV_FAKE_DESTINATION.longitude,
+            kind: 'destination',
+            order: 1,
+          }),
+        ],
+        rideType: DEFAULT_RIDE_TYPE,
+      });
+      runInAction(() => {
+        this.isRouteResponse = directions;
+      });
+      this.updateLoadingState(false, null, 'route');
+      void this.computeElevation();
+      void this.computeFuelEstimate();
+      this.startNavigation();
+    } catch (error) {
+      this.handleError(error, 'route');
+    }
   }
 
   /**
@@ -1686,18 +1761,27 @@ export class HomeViewModel {
     runInAction(() => {
       this.isNavigating = true;
       this.simulatedDistanceKm = 0;
+      this.lastRealProgressKm = this.isSimulatedNavigation
+        ? 0
+        : this.routeProgressKm;
       this.offRouteTicks = 0;
     });
     this.spokenVoiceIds.clear();
     this.clearNavTimer();
+    void this.locationStore.setNavigationMode(!this.isSimulatedNavigation);
     if (this.isSimulatedNavigation) {
       this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
     } else {
       // GPS real: el avance se deriva de `locationStore.coordinates` via
-      // `navProgressKm`. Reaccionamos a cada lectura nueva para disparar la
-      // voz, vigilar off-route y detectar llegada (mismo "tick" del sim).
+      // `navProgressKm`. Reaccionamos a cada lectura nueva del GPS para
+      // disparar voz, vigilar off-route y detectar llegada.
       this.navReactionDisposer = reaction(
-        () => this.navProgressKm,
+        () => {
+          const location = this.locationStore.isLocationResponse;
+          return location
+            ? `${location.latitude}:${location.longitude}:${location.timestamp.getTime()}`
+            : null;
+        },
         () => this.handleRealNavTick(),
         { fireImmediately: true },
       );
@@ -1722,9 +1806,11 @@ export class HomeViewModel {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
+    void this.locationStore.setNavigationMode(false);
     runInAction(() => {
       this.isNavigating = false;
       this.simulatedDistanceKm = 0;
+      this.lastRealProgressKm = 0;
       this.offRouteTicks = 0;
     });
   }
@@ -1738,11 +1824,13 @@ export class HomeViewModel {
    */
   private markArrived(): void {
     this.clearNavTimer();
+    void this.locationStore.setNavigationMode(false);
     runInAction(() => {
       this.isNavigating = false;
       this.isArrived = true;
       this.arrivedAt = new Date();
       this.offRouteTicks = 0;
+      this.lastRealProgressKm = 0;
     });
   }
 
@@ -1809,8 +1897,14 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     const rider = this.navRiderPoint;
     if (!route || !rider) return;
-    const deviationKm = distanceToPolylineKm(route.geometry, rider);
-    if (deviationKm <= OFF_ROUTE_THRESHOLD_KM) {
+    const projection = projectPointOnPolyline(route.geometry, rider);
+    const decision = detectOffRoute({
+      distanceToRouteKm: projection.distanceToRouteKm,
+      thresholdKm: OFF_ROUTE_THRESHOLD_KM,
+      speedKmh: this.currentSpeedKmh,
+      accuracyM: this.locationStore.isLocationResponse?.accuracy,
+    });
+    if (!decision.isOffRouteCandidate) {
       this.offRouteTicks = 0;
       return;
     }
@@ -1826,6 +1920,28 @@ export class HomeViewModel {
     const place = this.destination;
     if (!place) return;
     try {
+      const remainingPlaces = this.remainingPlacesForReroute(place);
+      const remainingWaypoints = await Promise.all(
+        remainingPlaces.map(async (stop, index) => {
+          const isDestination = index === remainingPlaces.length - 1;
+          const inferredKind = isDestination
+            ? 'destination'
+            : ((await this.inferStopKindUseCase.run({
+                mapboxCategory: stop.category,
+                placeType: stop.placeType,
+              })) ?? 'other');
+          return new Waypoint({
+            id: stop.id,
+            name: stop.name,
+            latitude: stop.latitude,
+            longitude: stop.longitude,
+            kind: inferredKind,
+            order: index + 1,
+            mapboxCategory: stop.category,
+            userOverrideKind: false,
+          });
+        }),
+      );
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints: [
           new Waypoint({
@@ -1836,20 +1952,14 @@ export class HomeViewModel {
             kind: 'start',
             order: 0,
           }),
-          new Waypoint({
-            id: place.id,
-            name: place.name,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            kind: 'destination',
-            order: 1,
-          }),
+          ...remainingWaypoints,
         ],
         rideType: this.rideType,
       });
       runInAction(() => {
         this.isRouteResponse = directions;
         this.simulatedDistanceKm = 0;
+        this.lastRealProgressKm = 0;
       });
     } catch (error) {
       this.logger.error(
@@ -1868,6 +1978,10 @@ export class HomeViewModel {
   private handleRealNavTick(): void {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return;
+    this.lastRealProgressKm = Math.max(
+      this.lastRealProgressKm,
+      this.routeProgressKm,
+    );
     this.maybeSpeak();
     this.monitorOffRoute();
     if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
@@ -1889,11 +2003,13 @@ export class HomeViewModel {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
+    void this.locationStore.setNavigationMode(false);
     runInAction(() => {
       this.isNavigating = false;
       this.isArrived = false;
       this.arrivedAt = null;
       this.simulatedDistanceKm = 0;
+      this.lastRealProgressKm = 0;
       this.offRouteTicks = 0;
       this.destination = null;
       this.previewPlace = null;
@@ -1921,6 +2037,7 @@ export class HomeViewModel {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
+    void this.locationStore.setNavigationMode(false);
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
       this.isMuted = false;
@@ -1930,6 +2047,7 @@ export class HomeViewModel {
       this.isArrived = false;
       this.arrivedAt = null;
       this.simulatedDistanceKm = 0;
+      this.lastRealProgressKm = 0;
       this.offRouteTicks = 0;
       this.isElevationStripOpen = true;
       this.searchQuery = '';
@@ -1967,6 +2085,38 @@ export class HomeViewModel {
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────────
+
+  private get currentSpeedKmh(): number | null {
+    const speedMps = this.locationStore.isLocationResponse?.speed;
+    if (
+      speedMps === undefined ||
+      speedMps === null ||
+      !Number.isFinite(speedMps) ||
+      speedMps < 0
+    ) {
+      return null;
+    }
+    return speedMps * 3.6;
+  }
+
+  private remainingPlacesForReroute(destination: Place): Place[] {
+    const route = this.isRouteResponse;
+    const chain = [...this.intermediateStops, destination];
+    if (!route || chain.length === 0) return chain;
+
+    const progressKm = this.navProgressKm;
+    const keepAfterKm = progressKm + 0.1;
+    const remaining = chain.filter((stop, index) => {
+      if (index === chain.length - 1) return true;
+      const projection = projectPointOnPolyline(route.geometry, {
+        latitude: stop.latitude,
+        longitude: stop.longitude,
+      });
+      return projection.distanceFromStartKm > keepAfterKm;
+    });
+
+    return remaining.length > 0 ? remaining : [destination];
+  }
 
   private get searchProximity(): GeoPoint | undefined {
     const location = this.locationStore.isLocationResponse;

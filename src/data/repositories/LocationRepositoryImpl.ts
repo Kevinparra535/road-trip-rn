@@ -9,6 +9,7 @@ import {
   LocationListener,
   LocationPermissionStatus,
   LocationRepository,
+  LocationWatchMode,
 } from '@/domain/repositories/LocationRepository';
 
 import type { LocationService } from '@/data/services/LocationService';
@@ -33,10 +34,13 @@ export class LocationRepositoryImpl implements LocationRepository {
     return LocationModel.fromJson(position).toDomain();
   }
 
-  async watchLocation(listener: LocationListener): Promise<() => void> {
+  async watchLocation(
+    listener: LocationListener,
+    mode: LocationWatchMode = 'idle',
+  ): Promise<() => void> {
     const subscription = await this.service.watchPosition((position) => {
       listener(LocationModel.fromJson(position).toDomain());
-    });
+    }, mode);
     return () => subscription.remove();
   }
 

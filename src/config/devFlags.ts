@@ -20,6 +20,15 @@ export const DEV_FLAGS = {
   mockDestination: true,
 };
 
+/** Punto A simulado para probar navegacion sin depender del GPS real. */
+export const DEV_FAKE_ORIGIN = new Place({
+  id: 'dev-origin-mock',
+  name: 'Punto A (simulado)',
+  fullName: 'Bogota, Colombia',
+  latitude: 4.711,
+  longitude: -74.0721,
+});
+
 /**
  * Punto B simulado para probar la navegacion: 5°01′29″N 74°00′05″O.
  * Usado por el boton de ruta de prueba cuando `DEV_FLAGS.mockDestination`.

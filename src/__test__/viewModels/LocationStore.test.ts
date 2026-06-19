@@ -38,7 +38,10 @@ describe('LocationStore', () => {
     expect(store.hasPermission).toBe(true);
     expect(store.hasLocation).toBe(true);
     expect(store.coordinates).toEqual([-74.0817, 4.6097]);
-    expect(uc.watchLocation.run).toHaveBeenCalled();
+    expect(uc.watchLocation.run).toHaveBeenCalledWith({
+      mode: 'idle',
+      listener: expect.any(Function),
+    });
 
     store.dispose();
     expect(unsubscribe).toHaveBeenCalled();
@@ -90,8 +93,8 @@ describe('LocationStore', () => {
     uc.requestPermission.run.mockResolvedValue('granted');
     uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
     let watchCb: (location: any) => void = () => undefined;
-    uc.watchLocation.run.mockImplementation(async (cb: any) => {
-      watchCb = cb;
+    uc.watchLocation.run.mockImplementation(async (input: any) => {
+      watchCb = input.listener;
       return jest.fn();
     });
     const store = makeStore(uc);
@@ -112,6 +115,36 @@ describe('LocationStore', () => {
     await store.initialize();
 
     expect(uc.requestPermission.run).toHaveBeenCalledTimes(1);
+  });
+
+  it('restarts the GPS watcher when navigation mode changes', async () => {
+    const uc = makeUseCases();
+    const idleUnsubscribe = jest.fn();
+    const navUnsubscribe = jest.fn();
+    const idleAgainUnsubscribe = jest.fn();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation());
+    uc.watchLocation.run
+      .mockResolvedValueOnce(idleUnsubscribe)
+      .mockResolvedValueOnce(navUnsubscribe)
+      .mockResolvedValueOnce(idleAgainUnsubscribe);
+    const store = makeStore(uc);
+
+    await store.initialize();
+    await store.setNavigationMode(true);
+    await store.setNavigationMode(false);
+
+    expect(idleUnsubscribe).toHaveBeenCalled();
+    expect(navUnsubscribe).toHaveBeenCalled();
+    expect(store.watchMode).toBe('idle');
+    expect(uc.watchLocation.run).toHaveBeenNthCalledWith(2, {
+      mode: 'navigation',
+      listener: expect.any(Function),
+    });
+    expect(uc.watchLocation.run).toHaveBeenNthCalledWith(3, {
+      mode: 'idle',
+      listener: expect.any(Function),
+    });
   });
 
   it('reset clears permission and location state', async () => {

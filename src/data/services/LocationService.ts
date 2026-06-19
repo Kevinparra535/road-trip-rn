@@ -1,6 +1,8 @@
 import * as Location from 'expo-location';
 import { injectable } from 'inversify';
 
+import { LocationWatchMode } from '@/domain/repositories/LocationRepository';
+
 /**
  * Servicio de la capa data: aisla la integracion con `expo-location`.
  * Devuelve las formas crudas de Expo; el repositorio las traduce a dominio.
@@ -13,6 +15,7 @@ export interface LocationService {
   /** Suscripcion a cambios de posicion; resuelve el handle de Expo. */
   watchPosition(
     listener: (position: Location.LocationObject) => void,
+    mode?: LocationWatchMode,
   ): Promise<Location.LocationSubscription>;
   /** Suscripcion a la orientacion (brujula); resuelve el handle de Expo. */
   watchHeading(
@@ -35,15 +38,22 @@ export class LocationServiceImpl implements LocationService {
 
   async watchPosition(
     listener: (position: Location.LocationObject) => void,
+    mode: LocationWatchMode = 'idle',
   ): Promise<Location.LocationSubscription> {
-    return Location.watchPositionAsync(
-      {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 5000,
-        distanceInterval: 15,
-      },
-      listener,
-    );
+    const options =
+      mode === 'navigation'
+        ? {
+            accuracy: Location.Accuracy.High,
+            timeInterval: 1000,
+            distanceInterval: 5,
+          }
+        : {
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 5000,
+            distanceInterval: 15,
+          };
+
+    return Location.watchPositionAsync(options, listener);
   }
 
   async watchHeading(

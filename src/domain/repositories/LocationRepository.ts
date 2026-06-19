@@ -7,6 +7,9 @@ export type LocationPermissionStatus = 'granted' | 'denied' | 'undetermined';
 /** Callback invocado en cada actualizacion del GPS. */
 export type LocationListener = (location: GeoLocation) => void;
 
+/** Perfil de consumo/precision para la suscripcion del GPS. */
+export type LocationWatchMode = 'idle' | 'navigation';
+
 /** Callback invocado en cada actualizacion de la brujula. */
 export type HeadingListener = (heading: DeviceHeading) => void;
 
@@ -16,7 +19,10 @@ export interface LocationRepository {
   /** Obtiene una sola lectura de la ubicacion actual. */
   getCurrentLocation(): Promise<GeoLocation>;
   /** Se suscribe a los cambios de ubicacion; resuelve la funcion para cancelar. */
-  watchLocation(listener: LocationListener): Promise<() => void>;
+  watchLocation(
+    listener: LocationListener,
+    mode?: LocationWatchMode,
+  ): Promise<() => void>;
   /** Se suscribe a la orientacion del dispositivo; resuelve la cancelacion. */
   watchHeading(listener: HeadingListener): Promise<() => void>;
 }

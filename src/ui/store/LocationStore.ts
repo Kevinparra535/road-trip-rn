@@ -6,7 +6,10 @@ import { TYPES } from '@/config/types';
 import { DeviceHeading } from '@/domain/entities/DeviceHeading';
 import { GeoLocation } from '@/domain/entities/GeoLocation';
 
-import { LocationPermissionStatus } from '@/domain/repositories/LocationRepository';
+import {
+  LocationPermissionStatus,
+  LocationWatchMode,
+} from '@/domain/repositories/LocationRepository';
 
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
@@ -33,6 +36,7 @@ export class LocationStore {
   isLocationLoading: boolean = false;
   isLocationError: string | null = null;
   isLocationResponse: GeoLocation | null = null;
+  watchMode: LocationWatchMode = 'idle';
 
   // ── Orientacion (brujula) ───────────────────────────────────────────────────
   isHeadingLoading: boolean = false;
@@ -139,6 +143,24 @@ export class LocationStore {
     this.unsubscribeLocation = null;
     this.unsubscribeHeading?.();
     this.unsubscribeHeading = null;
+    this.watchMode = 'idle';
+  }
+
+  /** Cambia la precision del GPS segun si hay una sesion de navegacion viva. */
+  async setNavigationMode(enabled: boolean): Promise<void> {
+    const nextMode: LocationWatchMode = enabled ? 'navigation' : 'idle';
+    if (this.watchMode === nextMode) return;
+
+    runInAction(() => {
+      this.watchMode = nextMode;
+    });
+
+    if (!this.unsubscribeLocation) return;
+    this.unsubscribeLocation();
+    this.unsubscribeLocation = null;
+    if (this.hasPermission) {
+      await this.startWatchingLocation();
+    }
   }
 
   reset(): void {
@@ -152,6 +174,7 @@ export class LocationStore {
       this.isHeadingLoading = false;
       this.isHeadingError = null;
       this.isHeadingResponse = null;
+      this.watchMode = 'idle';
       this.lastHeadingDegrees = null;
     });
   }
@@ -160,13 +183,14 @@ export class LocationStore {
 
   private async startWatchingLocation(): Promise<void> {
     try {
-      this.unsubscribeLocation = await this.watchLocationUseCase.run(
-        (location) => {
+      this.unsubscribeLocation = await this.watchLocationUseCase.run({
+        mode: this.watchMode,
+        listener: (location) => {
           runInAction(() => {
             this.isLocationResponse = location;
           });
         },
-      );
+      });
     } catch (error) {
       this.handleError(error, 'location');
     }

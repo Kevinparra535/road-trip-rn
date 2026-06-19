@@ -31,7 +31,7 @@ import {
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
+import { DEV_FLAGS } from '@/config/devFlags';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
@@ -78,6 +78,7 @@ const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 64, 320, 64];
 const ROUTE_CORE_WIDTH_NAV = 14;
 const ROUTE_CORE_WIDTH_PLANNING = 6;
 const ROUTE_ALT_WIDTH = 3;
+const NAV_CAMERA_FOLLOW_MS = 500;
 
 // Acciones rapidas del Home idle (Pencil: "1 - Home Idle"). Son atajos a
 // flows principales — NO son selectores de rideType, esos viven en el
@@ -115,7 +116,7 @@ const IDLE_ACTIONS: {
  * de rodada flotando arriba, y el detalle de la ruta en un panel inferior
  * deslizable con tarjetas de ruta, autonomia y elevacion.
  */
-const HomeScreen = observer(() => {
+const HomeScreen = () => {
   const viewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
   // HomeScreen vive dentro del HomeNavigator (Stack) que vive dentro del
   // AppDrawer. CompositeNavigationProp permite tipear navigate para ambos:
@@ -129,6 +130,7 @@ const HomeScreen = observer(() => {
     >();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
   const fittedDestinationRef = useRef<string | null>(null);
+  const lastNavCameraKeyRef = useRef<string | null>(null);
   const sheetRef = useRef<BottomSheetHandle>(null);
   const searchInputRef = useRef<ElementRef<typeof BottomSheetTextInput>>(null);
 
@@ -231,14 +233,32 @@ const HomeScreen = observer(() => {
   // presentado en el host compartido y se superpone al sheet del otro screen.
   const isFocused = useIsFocused();
   const isNavigating = viewModel.isNavigating;
-  const navProgress = viewModel.navProgressKm;
   useEffect(() => {
-    if (!isNavigating) return;
-    const target = viewModel.navCameraTarget;
-    if (target) {
-      cameraRef.current?.setCamera({ ...target, animationDuration: 480 });
+    if (!isNavigating) {
+      lastNavCameraKeyRef.current = null;
+      return;
     }
-  }, [viewModel, isNavigating, navProgress]);
+
+    const syncCamera = () => {
+      const target = viewModel.navCameraTarget;
+      if (!target) return;
+      const [lng, lat] = target.centerCoordinate;
+      const key = [
+        lng.toFixed(6),
+        lat.toFixed(6),
+        target.zoomLevel.toFixed(2),
+        target.pitch.toFixed(0),
+        (target.heading ?? 0).toFixed(1),
+      ].join(':');
+      if (lastNavCameraKeyRef.current === key) return;
+      lastNavCameraKeyRef.current = key;
+      cameraRef.current?.setCamera({ ...target, animationDuration: 360 });
+    };
+
+    syncCamera();
+    const interval = setInterval(syncCamera, NAV_CAMERA_FOLLOW_MS);
+    return () => clearInterval(interval);
+  }, [viewModel, isNavigating]);
 
   // Pantalla siempre encendida mientras se navega — un motero no debe
   // verla apagarse a 100 km/h. Se libera al terminar la navegacion.
@@ -509,19 +529,22 @@ const HomeScreen = observer(() => {
         ) : null}
       </Mapbox.MapView>
 
-      {DEV_FLAGS.mockDestination &&
-      !viewModel.hasDestination &&
-      viewModel.hasLocation ? (
+      {DEV_FLAGS.mockDestination && !viewModel.hasDestination ? (
         <TouchableOpacity
           activeOpacity={0.9}
           style={styles.testRouteButton}
           testID="home-test-route-fab"
           accessibilityRole="button"
-          accessibilityLabel="Trazar ruta de prueba"
-          onPress={() => viewModel.selectDestination(DEV_FAKE_DESTINATION)}
+          accessibilityLabel="Simular ruta de prueba"
+          disabled={viewModel.isRouteLoading}
+          onPress={() => void viewModel.startDevRouteSimulation()}
         >
-          <Ionicons name="flask" size={15} color={Colors.base.accent} />
-          <Text style={styles.testRouteText}>Ruta de prueba</Text>
+          {viewModel.isRouteLoading ? (
+            <ActivityIndicator size="small" color={Colors.base.accent} />
+          ) : (
+            <Ionicons name="flask" size={15} color={Colors.base.accent} />
+          )}
+          <Text style={styles.testRouteText}>Simular A-B</Text>
         </TouchableOpacity>
       ) : null}
 
@@ -948,7 +971,7 @@ const HomeScreen = observer(() => {
                 </View>
                 <View style={styles.routeLabels}>
                   <Text style={styles.routeLabel} numberOfLines={1}>
-                    Mi ubicación
+                    {viewModel.routeOriginLabel}
                   </Text>
                   {viewModel.intermediateStops.map((stop) => (
                     <View key={`lbl-${stop.id}`} style={styles.stopLabelRow}>
@@ -1394,7 +1417,7 @@ const HomeScreen = observer(() => {
       ) : null}
     </View>
   );
-});
+};
 
 /**
  * Modal "Continúa donde quedaste" (E3 del flow brief). Aparece cuando hay
@@ -1801,7 +1824,7 @@ const styles = StyleSheet.create({
   locateButton: {
     position: 'absolute',
     right: Spacings.lg,
-    bottom: Spacings.xxl,
+    top: Spacings.xxl,
     width: 56,
     height: 56,
     alignItems: 'center',
@@ -1815,7 +1838,7 @@ const styles = StyleSheet.create({
   testRouteButton: {
     position: 'absolute',
     right: Spacings.lg,
-    bottom: Spacings.xxl + 64,
+    top: Spacings.xxl + 64,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.xs,
@@ -2471,4 +2494,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default observer(HomeScreen);

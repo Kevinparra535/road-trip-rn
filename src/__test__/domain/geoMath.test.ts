@@ -7,6 +7,7 @@ import {
   headingTriangle,
   pointAtDistanceAlong,
   polylineLengthKm,
+  projectPointOnPolyline,
   samplePolyline,
 } from '@/domain/geo/geoMath';
 
@@ -145,18 +146,50 @@ describe('distanceAlongNearest', () => {
     { latitude: 2, longitude: 0 },
   ];
 
-  it('returns 0 near the start of the route', () => {
-    expect(distanceAlongNearest(line, { latitude: 0.1, longitude: 0 })).toBe(0);
+  it('projects progress inside the first segment', () => {
+    const along = distanceAlongNearest(line, { latitude: 0.1, longitude: 0 });
+    expect(along).toBeGreaterThan(10);
+    expect(along).toBeLessThan(12);
   });
 
-  it('accumulates distance up to the nearest vertex', () => {
+  it('accumulates distance up to the projected point', () => {
     const along = distanceAlongNearest(line, { latitude: 1.1, longitude: 0 });
-    expect(along).toBeGreaterThan(100);
-    expect(along).toBeLessThan(125);
+    expect(along).toBeGreaterThan(120);
+    expect(along).toBeLessThan(123);
   });
 
   it('returns 0 for an empty polyline', () => {
     expect(distanceAlongNearest([], { latitude: 1, longitude: 1 })).toBe(0);
+  });
+});
+
+describe('projectPointOnPolyline', () => {
+  const line = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 0, longitude: 1 },
+    { latitude: 0, longitude: 2 },
+  ];
+
+  it('snaps a nearby point onto the closest segment', () => {
+    const projection = projectPointOnPolyline(line, {
+      latitude: 0.05,
+      longitude: 0.5,
+    });
+    expect(projection.snappedPoint.latitude).toBeCloseTo(0, 4);
+    expect(projection.snappedPoint.longitude).toBeCloseTo(0.5, 4);
+    expect(projection.distanceFromStartKm).toBeGreaterThan(55);
+    expect(projection.distanceFromStartKm).toBeLessThan(57);
+    expect(projection.distanceToRouteKm).toBeGreaterThan(5);
+    expect(projection.distanceToRouteKm).toBeLessThan(6);
+  });
+
+  it('reports the segment heading', () => {
+    const projection = projectPointOnPolyline(line, {
+      latitude: 0,
+      longitude: 0.5,
+    });
+    expect(projection.segmentIndex).toBe(0);
+    expect(projection.segmentHeadingDeg).toBeCloseTo(90, 1);
   });
 });
 

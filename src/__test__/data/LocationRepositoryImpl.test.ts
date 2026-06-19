@@ -101,9 +101,26 @@ describe('LocationRepositoryImpl', () => {
 
     captured(expoPosition);
     expect(listener.mock.calls[0][0].latitude).toBe(4.6);
+    expect(service.watchPosition).toHaveBeenCalledWith(
+      expect.any(Function),
+      'idle',
+    );
 
     unsubscribe();
     expect(remove).toHaveBeenCalled();
+  });
+
+  it('passes navigation watch mode to the service', async () => {
+    const service = makeService();
+    service.watchPosition.mockResolvedValue({ remove: jest.fn() });
+    const repo = new LocationRepositoryImpl(service as any);
+
+    await repo.watchLocation(jest.fn(), 'navigation');
+
+    expect(service.watchPosition).toHaveBeenCalledWith(
+      expect.any(Function),
+      'navigation',
+    );
   });
 
   it('watches heading, maps updates and returns an unsubscribe', async () => {

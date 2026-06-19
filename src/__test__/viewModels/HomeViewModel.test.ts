@@ -1,3 +1,5 @@
+import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
+
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
@@ -18,6 +20,7 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
   isLocationResponse: null as ReturnType<typeof makeGeoLocation> | null,
   heading: null as number | null,
   initialize: jest.fn().mockResolvedValue(undefined),
+  setNavigationMode: jest.fn().mockResolvedValue(undefined),
   dispose: jest.fn(),
   ...overrides,
 });
@@ -304,6 +307,50 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(primary?.color).toBe(Colors.stopKind.destination);
     expect(alternative?.color).toBe(Colors.route.highwayAlternative);
     expect(primary?.shape.geometry.type).toBe('LineString');
+  });
+
+  it('starts a dev A-B route simulation without requiring GPS', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(
+      makeRouteDirections({
+        geometry: [
+          {
+            latitude: DEV_FAKE_ORIGIN.latitude,
+            longitude: DEV_FAKE_ORIGIN.longitude,
+          },
+          {
+            latitude: DEV_FAKE_DESTINATION.latitude,
+            longitude: DEV_FAKE_DESTINATION.longitude,
+          },
+        ],
+      }),
+    );
+    const store = makeLocationStore();
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    await vm.startDevRouteSimulation();
+
+    expect(directions.run).toHaveBeenCalledWith({
+      waypoints: [
+        expect.objectContaining({
+          id: DEV_FAKE_ORIGIN.id,
+          kind: 'start',
+          order: 0,
+        }),
+        expect.objectContaining({
+          id: DEV_FAKE_DESTINATION.id,
+          kind: 'destination',
+          order: 1,
+        }),
+      ],
+      rideType: 'highway',
+    });
+    expect(vm.destination?.id).toBe(DEV_FAKE_DESTINATION.id);
+    expect(vm.routeOriginLabel).toBe(DEV_FAKE_ORIGIN.name);
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.isSimulatedNavigation).toBe(true);
+    expect(store.setNavigationMode).toHaveBeenLastCalledWith(false);
+    vm.stopNavigation();
   });
 
   it('recolors the route lines when the ride type changes to offroad', async () => {
@@ -1030,6 +1077,7 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
   });
 
   it('con directions arranca nav, setea destination + intermedios + ride', () => {
+    const store = makeLocationStore();
     const planner = buildPlanner({
       waypoints: [
         wp('w1', 'start', 4.6, -74.08, 'Bogota'),
@@ -1039,15 +1087,53 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
       directions: makeRouteDirections(),
       rideType: 'offroad',
     });
-    const vm = makeVM();
+    const vm = makeVM(store);
     const ok = vm.startNavigationFromPlanner(planner as any);
     expect(ok).toBe(true);
     expect(vm.isNavigating).toBe(true);
+    expect(store.setNavigationMode).toHaveBeenCalledWith(true);
     expect(vm.destination?.name).toBe('Valle de Bravo');
     expect(vm.intermediateStops).toHaveLength(1);
     expect(vm.intermediateStops[0].name).toBe('La Marquesa');
     expect(vm.rideType).toBe('offroad');
     // Reusa las directions del planner sin recomputar.
     expect(vm.isRouteResponse).not.toBeNull();
+  });
+
+  it('usa progreso proyectado y velocidad GPS durante navegacion real', () => {
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({
+        latitude: 0.1,
+        longitude: 0,
+        speed: 10,
+      }),
+    });
+    const vm = makeVM(store);
+    vm.destination = makePlace({ id: 'real-destination' });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 222,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 1, longitude: 0 },
+        { latitude: 2, longitude: 0 },
+      ],
+    });
+
+    vm.startNavigation();
+
+    expect(vm.routeProgressKm).toBeGreaterThan(10);
+    expect(vm.routeProgressKm).toBeLessThan(12);
+    expect(vm.navSpeedKmh).toBe(36);
+    expect(vm.navHeading).toBeCloseTo(0, 1);
+    expect(store.setNavigationMode).toHaveBeenCalledWith(true);
+
+    (vm as any).locationStore.isLocationResponse = makeGeoLocation({
+      latitude: 0.05,
+      longitude: 0,
+      speed: 8,
+    });
+    expect(vm.routeProgressKm).toBeGreaterThan(5);
+    expect(vm.routeProgressKm).toBeLessThan(6);
+    expect(vm.navProgressKm).toBeGreaterThan(10);
   });
 });

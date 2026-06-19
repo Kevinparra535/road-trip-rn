@@ -60,6 +60,19 @@ describe('WatchLocationUseCase', () => {
     expect(repo.watchLocation).toHaveBeenCalledWith(listener);
     expect(result).toBe(unsubscribe);
   });
+
+  it('subscribes with a navigation watch mode', async () => {
+    const repo = makeRepo();
+    const unsubscribe = jest.fn();
+    repo.watchLocation.mockResolvedValue(unsubscribe);
+    const listener = jest.fn();
+    const result = await new WatchLocationUseCase(repo).run({
+      listener,
+      mode: 'navigation',
+    });
+    expect(repo.watchLocation).toHaveBeenCalledWith(listener, 'navigation');
+    expect(result).toBe(unsubscribe);
+  });
 });
 
 describe('WatchHeadingUseCase', () => {

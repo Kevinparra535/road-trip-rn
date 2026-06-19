@@ -59,6 +59,8 @@ export const TYPES = {
   UpdateRouteUseCase: Symbol.for('UpdateRouteUseCase'),
   DeleteRouteUseCase: Symbol.for('DeleteRouteUseCase'),
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
+  ProjectRouteProgressUseCase: Symbol.for('ProjectRouteProgressUseCase'),
+  DetectOffRouteUseCase: Symbol.for('DetectOffRouteUseCase'),
   EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
   FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
   RequestLocationPermissionUseCase: Symbol.for(
