@@ -16,6 +16,8 @@ import type { MotorcycleService } from '@/data/services/MotorcycleService';
 import { MotorcycleServiceImpl } from '@/data/services/MotorcycleService';
 import type { MotoStatsService } from '@/data/services/MotoStatsService';
 import { MotoStatsServiceImpl } from '@/data/services/MotoStatsService';
+import type { NetworkService } from '@/data/services/NetworkService';
+import { NetworkServiceImpl } from '@/data/services/NetworkService';
 import type { OptimizationService } from '@/data/services/OptimizationService';
 import { OptimizationServiceImpl } from '@/data/services/OptimizationService';
 import type { PlaceCategorySearchService } from '@/data/services/PlaceCategorySearchService';
@@ -24,6 +26,8 @@ import type { PlaceSearchService } from '@/data/services/PlaceSearchService';
 import { PlaceSearchServiceImpl } from '@/data/services/PlaceSearchService';
 import type { PlaceSummaryService } from '@/data/services/PlaceSummaryService';
 import { WikipediaSummaryService } from '@/data/services/PlaceSummaryService';
+import type { RouteDraftService } from '@/data/services/RouteDraftService';
+import { RouteDraftServiceImpl } from '@/data/services/RouteDraftService';
 import type { RouteService } from '@/data/services/RouteService';
 import { RouteServiceImpl } from '@/data/services/RouteService';
 import type { RouteShareService } from '@/data/services/RouteShareService';
@@ -40,6 +44,7 @@ import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationReposi
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
+import { NetworkRepositoryImpl } from '@/data/repositories/NetworkRepositoryImpl';
 import { OptimizationRepositoryImpl } from '@/data/repositories/OptimizationRepositoryImpl';
 import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCategorySearchRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
@@ -58,6 +63,7 @@ import type { FuelStationRepository } from '@/domain/repositories/FuelStationRep
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
+import type { NetworkRepository } from '@/domain/repositories/NetworkRepository';
 import type { OptimizationRepository } from '@/domain/repositories/OptimizationRepository';
 import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceCategorySearchRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
@@ -84,6 +90,7 @@ import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFue
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FetchMotorcycleSpecsUseCase } from '@/domain/useCases/FetchMotorcycleSpecsUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
+import { FlushPendingDraftsUseCase } from '@/domain/useCases/FlushPendingDraftsUseCase';
 import { GenerateRouteShareCodeUseCase } from '@/domain/useCases/GenerateRouteShareCodeUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
@@ -100,6 +107,7 @@ import { InferStopKindUseCase } from '@/domain/useCases/InferStopKindUseCase';
 import { JoinTripPartyUseCase } from '@/domain/useCases/JoinTripPartyUseCase';
 import { LeaveTripPartyUseCase } from '@/domain/useCases/LeaveTripPartyUseCase';
 import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCase';
+import { ObserveNetworkStatusUseCase } from '@/domain/useCases/ObserveNetworkStatusUseCase';
 import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
@@ -131,9 +139,11 @@ import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NetworkStore } from '@/ui/store/NetworkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 import { SessionStore } from '@/ui/store/SessionStore';
+import { SyncCoordinator } from '@/ui/store/SyncCoordinator';
 import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 import 'reflect-metadata';
@@ -188,12 +198,20 @@ container
   .to(RouteShareServiceImpl)
   .inSingletonScope();
 container
+  .bind<RouteDraftService>(TYPES.RouteDraftService)
+  .to(RouteDraftServiceImpl)
+  .inSingletonScope();
+container
   .bind<ShareCodeGeneratorService>(TYPES.ShareCodeGeneratorService)
   .to(ShareCodeGeneratorServiceImpl)
   .inSingletonScope();
 container
   .bind<TripPartyService>(TYPES.TripPartyService)
   .to(TripPartyServiceImpl)
+  .inSingletonScope();
+container
+  .bind<NetworkService>(TYPES.NetworkService)
+  .to(NetworkServiceImpl)
   .inSingletonScope();
 container
   .bind<PlaceSummaryService>(TYPES.PlaceSummaryService)
@@ -252,6 +270,10 @@ container
 container
   .bind<TripPartyRepository>(TYPES.TripPartyRepository)
   .to(TripPartyRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<NetworkRepository>(TYPES.NetworkRepository)
+  .to(NetworkRepositoryImpl)
   .inSingletonScope();
 container
   .bind<PlaceSummaryRepository>(TYPES.PlaceSummaryRepository)
@@ -373,6 +395,12 @@ container
   .bind<EstimatePartyFuelPlanUseCase>(TYPES.EstimatePartyFuelPlanUseCase)
   .to(EstimatePartyFuelPlanUseCase);
 container
+  .bind<ObserveNetworkStatusUseCase>(TYPES.ObserveNetworkStatusUseCase)
+  .to(ObserveNetworkStatusUseCase);
+container
+  .bind<FlushPendingDraftsUseCase>(TYPES.FlushPendingDraftsUseCase)
+  .to(FlushPendingDraftsUseCase);
+container
   .bind<GetPlaceSummaryUseCase>(TYPES.GetPlaceSummaryUseCase)
   .to(GetPlaceSummaryUseCase);
 container
@@ -429,6 +457,14 @@ container
 container
   .bind<PlannerTemplateController>(TYPES.PlannerTemplateController)
   .to(PlannerTemplateController)
+  .inSingletonScope();
+container
+  .bind<NetworkStore>(TYPES.NetworkStore)
+  .to(NetworkStore)
+  .inSingletonScope();
+container
+  .bind<SyncCoordinator>(TYPES.SyncCoordinator)
+  .to(SyncCoordinator)
   .inSingletonScope();
 container.bind<AuthViewModel>(TYPES.AuthViewModel).to(AuthViewModel);
 container.bind<GarageViewModel>(TYPES.GarageViewModel).to(GarageViewModel);

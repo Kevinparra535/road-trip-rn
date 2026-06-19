@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// Reglas de seguridad de Firestore — Road Trip (Firebase JS SDK v12).
+//
+// Modelo de datos:
+//   riders/{uid}                       doc id == uid de Firebase Auth
+//   riders/{uid}/drafts/{draftKey}     drafts del Planner (draftKey: 'current' | 'route_{routeId}')
+//   motorcycles/{id}                   scoping por campo `rider_id`
+//   routes/{id}                        scoping por campo `rider_id` (geometry polyline)
+//   parties/{id}                       `owner_id` + array `members` (cada uno con `rider_id`)
+//   shareCodes/{code}                  doc id == codigo de compartir
+//
+// Postura general: default deny (todo lo no declarado queda denegado).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── riders ────────────────────────────────────────────────────────────
+    // El rider solo accede a su propio documento (doc id == su uid).
+    match /riders/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // ── drafts (subcoleccion del Planner) ──────────────────────────────
+      // Scoping natural por el path: el {uid} ya garantiza ownership.
+      // draftKey == 'current' o 'route_{routeId}'.
+      match /drafts/{draftKey} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // ── motorcycles ───────────────────────────────────────────────────────
+    // Scoping estricto por owner via campo `rider_id`.
+    // - read/update/delete: el doc existente debe pertenecer al rider.
+    // - create: el doc entrante debe declararse del rider que lo crea.
+    match /motorcycles/{id} {
+      allow read: if request.auth != null
+        && resource.data.rider_id == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.rider_id == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.rider_id == request.auth.uid;
+    }
+
+    // ── routes ────────────────────────────────────────────────────────────
+    // WRITE: estricto por owner (igual que motorcycles, via `rider_id`).
+    // READ: laxo para MVP (cualquier autenticado).
+    //
+    // Motivo (verificado): el flujo share/join LEE rutas de OTRO rider.
+    //   - ResolveRouteShareCodeUseCase/index.ts:53 resuelve el shareCode y
+    //     luego lee la route referenciada via GetRouteUseCase ->
+    //     RouteService.fetchById (RouteService.ts:43). El que resuelve es un
+    //     rider distinto al owner de la ruta, asi que un read owner-only
+    //     romperia el preview de "Unirse a una ruta" (JoinRouteViewModel).
+    // Por eso NO se puede restringir el read a == owner sin romper share/join.
+    //
+    // TODO: endurecer a owner + miembros de party + portador de shareCode
+    //       valido (requiere modelar membership consultable desde reglas).
+    match /routes/{id} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.rider_id == request.auth.uid;
+      allow update, delete: if request.auth != null
+        && resource.data.rider_id == request.auth.uid;
+    }
+
+    // ── parties ───────────────────────────────────────────────────────────
+    // MVP laxo (cualquier autenticado puede leer y escribir).
+    //
+    // Motivo (verificado): el flujo de join LEE y ESCRIBE el party de OTRO
+    //   rider (el owner). JoinRouteViewModel.ts:161 -> JoinTripPartyUseCase
+    //   /index.ts:42 hace repository.getById(partyId) y luego addMember sobre
+    //   un party cuyo owner_id != el rider que se une. Restringir a membership
+    //   ahora romperia el join (el joiner todavia no es miembro al leer/escribir).
+    //
+    // TODO: restringir a membership real. El modelo guarda `members` como array
+    //       de objetos (no un `member_ids` plano), por lo que validar pertenencia
+    //       en reglas exige aplanar a `member_ids: [uid, ...]` en el documento.
+    match /parties/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── shareCodes ────────────────────────────────────────────────────────
+    // read: publico. El resolver de codigos (RouteShareService.ts:48
+    //   fetchByCode -> getDoc) corre sin asumir auth; el preview de "Unirse a
+    //   una ruta" necesita leer el code antes/independiente de la sesion.
+    // create: cualquier autenticado (el owner genera su code —
+    //   GenerateRouteShareCodeUseCase -> RouteShareService.ts:29 createIfMissing).
+    // update: nadie. Ningun flujo edita un shareCode en sitio; al regenerar se
+    //   crea un doc nuevo y se revoca el viejo.
+    // delete: cualquier autenticado. El revoke es un hard delete
+    //   (RevokeRouteShareCodeUseCase/index.ts:29 -> RouteShareService.ts:60
+    //   deleteByCode -> deleteDoc); con `false` el revoke se romperia.
+    //
+    // TODO: endurecer create/delete a == owner del code (requiere validar
+    //       owner_id del payload contra request.auth.uid y, en delete, leer el
+    //       doc existente para comparar el owner).
+    match /shareCodes/{code} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update: if false;
+      allow delete: if request.auth != null;
+    }
+
+    // Default deny: cualquier path no declarado arriba queda denegado.
+  }
+}

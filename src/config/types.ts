@@ -16,8 +16,10 @@ export const TYPES = {
   ElevationService: Symbol.for('ElevationService'),
   OptimizationService: Symbol.for('OptimizationService'),
   RouteShareService: Symbol.for('RouteShareService'),
+  RouteDraftService: Symbol.for('RouteDraftService'),
   ShareCodeGeneratorService: Symbol.for('ShareCodeGeneratorService'),
   TripPartyService: Symbol.for('TripPartyService'),
+  NetworkService: Symbol.for('NetworkService'),
 
   // ── Repositories (contrato en domain, impl en data) ──
   AuthRepository: Symbol.for('AuthRepository'),
@@ -37,6 +39,7 @@ export const TYPES = {
   RouteTemplateRepository: Symbol.for('RouteTemplateRepository'),
   RouteShareRepository: Symbol.for('RouteShareRepository'),
   TripPartyRepository: Symbol.for('TripPartyRepository'),
+  NetworkRepository: Symbol.for('NetworkRepository'),
 
   // ── UseCases (capa domain) ──
   SignUpUseCase: Symbol.for('SignUpUseCase'),
@@ -86,6 +89,8 @@ export const TYPES = {
   LeaveTripPartyUseCase: Symbol.for('LeaveTripPartyUseCase'),
   ObserveTripPartyUseCase: Symbol.for('ObserveTripPartyUseCase'),
   EstimatePartyFuelPlanUseCase: Symbol.for('EstimatePartyFuelPlanUseCase'),
+  ObserveNetworkStatusUseCase: Symbol.for('ObserveNetworkStatusUseCase'),
+  FlushPendingDraftsUseCase: Symbol.for('FlushPendingDraftsUseCase'),
 
   // ── ViewModels (capa ui) ──
   AuthViewModel: Symbol.for('AuthViewModel'),
@@ -107,4 +112,6 @@ export const TYPES = {
   TripPartyStore: Symbol.for('TripPartyStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),
+  NetworkStore: Symbol.for('NetworkStore'),
+  SyncCoordinator: Symbol.for('SyncCoordinator'),
 } as const;

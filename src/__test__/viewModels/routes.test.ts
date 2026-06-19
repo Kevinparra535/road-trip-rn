@@ -3,6 +3,7 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 import { RouteTemplate } from '@/domain/entities/RouteTemplate';
 
@@ -60,6 +61,8 @@ describe('RoutePlannerViewModel', () => {
   ) => {
     const getCurrentRider = { run: jest.fn().mockResolvedValue(makeRider()) };
     const getRoute = { run: jest.fn() };
+    // E3/F5 draft de edición: por defecto no hay draft (merge usa la Route).
+    const getDraft = { run: jest.fn().mockResolvedValue(null) };
     const calculate = {
       run: jest.fn().mockResolvedValue(
         new RouteDirections({
@@ -157,6 +160,7 @@ describe('RoutePlannerViewModel', () => {
     const vm = new RoutePlannerViewModel(
       getCurrentRider as any,
       getRoute as any,
+      getDraft as any,
       calculate as any,
       create as any,
       update as any,
@@ -174,8 +178,11 @@ describe('RoutePlannerViewModel', () => {
     );
     return {
       vm,
+      getRoute,
+      getDraft,
       calculate,
       create,
+      update,
       searchPlaces,
       searchPlacesByCategory,
       estimatePartyFuel,
@@ -901,6 +908,204 @@ describe('RoutePlannerViewModel', () => {
       expect(vm.notes).toBe('Salida temprano');
       expect(vm.waypoints[0].name).toBe('Start');
       expect(vm.waypoints[1].name).toBe('Dest');
+    });
+  });
+
+  // ── Fase F5: autosave de draft en edit + merge al abrir ───────────────
+  describe('draft edit autosave + merge (F5)', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    const flushDraftDebounce = async () => {
+      jest.advanceTimersByTime(850);
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+    };
+
+    // Draft plano de edición (más nuevo / más viejo según `updatedAt`).
+    const makeEditDraft = (
+      overrides: Partial<RouteDraft> & { updatedAt: Date },
+    ): RouteDraft =>
+      ({
+        id: 'route-1',
+        riderId: 'rider-1',
+        routeId: 'route-1',
+        name: 'Draft editado',
+        notes: 'desde el draft',
+        rideType: 'highway',
+        avoid: new RouteAvoidPreferences(),
+        roundTrip: false,
+        waypoints: [
+          {
+            id: 'wp-1',
+            name: 'Start draft',
+            latitude: 4.6,
+            longitude: -74.08,
+            kind: 'start',
+            order: 0,
+          },
+          {
+            id: 'wp-2',
+            name: 'Dest draft',
+            latitude: 4.9,
+            longitude: -74.25,
+            kind: 'destination',
+            order: 1,
+          },
+        ],
+        ...overrides,
+      }) as unknown as RouteDraft;
+
+    it('autosave en edit persiste un draft con routeId === editingId', async () => {
+      const { vm, getRoute, saveDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute()); // id 'route-1'
+      await vm.initialize('route-1');
+      expect(vm.isEditMode).toBe(true);
+
+      vm.setName('Nombre editado');
+      await flushDraftDebounce();
+
+      expect(saveDraft.run).toHaveBeenCalled();
+      const draft = saveDraft.run.mock.calls.at(-1)![0];
+      expect(draft.routeId).toBe('route-1');
+      expect(draft.id).toBe('route-1');
+      expect(draft.name).toBe('Nombre editado');
+    });
+
+    it('autosave en create persiste un draft con routeId === null', async () => {
+      const { vm, saveDraft } = build();
+      await vm.initialize(); // sin routeId → modo create
+      expect(vm.isEditMode).toBe(false);
+
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await flushDraftDebounce();
+
+      expect(saveDraft.run).toHaveBeenCalled();
+      const draft = saveDraft.run.mock.calls.at(-1)![0];
+      expect(draft.routeId).toBeNull();
+      expect(draft.riderId).toBe('rider-1');
+    });
+
+    it('merge: draft de edición más nuevo que la Route hidrata desde el draft', async () => {
+      const { vm, getRoute, getDraft } = build();
+      // Route creada 2026-02-01 (makeRoute); draft más nuevo.
+      getRoute.run.mockResolvedValue(makeRoute());
+      getDraft.run.mockResolvedValue(
+        makeEditDraft({
+          name: 'Draft más nuevo',
+          updatedAt: new Date('2026-03-01T00:00:00Z'),
+        }),
+      );
+
+      await vm.initialize('route-1');
+
+      expect(getDraft.run).toHaveBeenCalledWith({
+        riderId: 'rider-1',
+        routeId: 'route-1',
+      });
+      // Preserva modo edit + editingId aunque hidrate desde el draft.
+      expect(vm.isEditMode).toBe(true);
+      expect((vm as any).editingId).toBe('route-1');
+      // Datos del draft, no de la Route.
+      expect(vm.name).toBe('Draft más nuevo');
+      expect(vm.notes).toBe('desde el draft');
+      expect(vm.waypoints[0].name).toBe('Start draft');
+      expect(vm.waypoints[1].name).toBe('Dest draft');
+    });
+
+    it('merge: draft más viejo que la Route → hidrata desde la Route', async () => {
+      const { vm, getRoute, getDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute()); // createdAt 2026-02-01
+      getDraft.run.mockResolvedValue(
+        makeEditDraft({
+          name: 'Draft viejo',
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+        }),
+      );
+
+      await vm.initialize('route-1');
+
+      expect(vm.isEditMode).toBe(true);
+      // Gana la Route (makeRoute().name).
+      expect(vm.name).toBe(makeRoute().name);
+    });
+
+    it('merge: sin draft → hidrata desde la Route', async () => {
+      const { vm, getRoute, getDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute());
+      getDraft.run.mockResolvedValue(null);
+
+      await vm.initialize('route-1');
+
+      expect(vm.isEditMode).toBe(true);
+      expect(vm.name).toBe(makeRoute().name);
+    });
+
+    it('merge: fallo al cargar el draft no rompe la apertura (cae a la Route)', async () => {
+      const { vm, getRoute, getDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute());
+      getDraft.run.mockRejectedValue(new Error('storage boom'));
+
+      await vm.initialize('route-1');
+
+      expect(vm.isEditMode).toBe(true);
+      expect(vm.name).toBe(makeRoute().name);
+      expect(vm.waypoints).toHaveLength(makeRoute().waypoints.length);
+    });
+
+    it('submit exitoso en edit limpia el draft con la key {routeId: editingId}', async () => {
+      const { vm, getRoute, update, clearDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute());
+      await vm.initialize('route-1');
+      vm.setName('Editada');
+      await vm.calculateDirections();
+
+      const ok = await vm.submit();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(ok).toBe(true);
+      expect(update.run).toHaveBeenCalled();
+      expect(clearDraft.run).toHaveBeenCalledWith({
+        riderId: 'rider-1',
+        routeId: 'route-1',
+      });
+    });
+
+    it('submit exitoso en create limpia el draft con la key {routeId: null}', async () => {
+      const { vm, create, clearDraft } = build();
+      create.run.mockResolvedValueOnce({ ...makeRoute(), id: 'route-99' });
+      await vm.initialize();
+      vm.setName('Nueva');
+      vm.addWaypoint(4.6, -74.08, 'A');
+      vm.addWaypoint(4.8, -74.2, 'B');
+      await vm.calculateDirections();
+
+      await vm.submit();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(clearDraft.run).toHaveBeenCalledWith({
+        riderId: 'rider-1',
+        routeId: null,
+      });
+    });
+
+    it('confirmDiscard en edit limpia el draft con la key {routeId: editingId}', async () => {
+      const { vm, getRoute, clearDraft } = build();
+      getRoute.run.mockResolvedValue(makeRoute());
+      await vm.initialize('route-1');
+
+      vm.confirmDiscard();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(clearDraft.run).toHaveBeenCalledWith({
+        riderId: 'rider-1',
+        routeId: 'route-1',
+      });
     });
   });
 

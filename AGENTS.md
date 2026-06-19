@@ -69,6 +69,15 @@ Lee tambien, segun el trabajo:
 
 ## Notas
 
-- Reemplazar los placeholders `SET_*` de `app.json` (tokens Mapbox + Firebase)
-  antes de buildear. No commitear secretos privados.
+- Los secretos (Firebase + tokens Mapbox) se inyectan vía `app.config.js` desde
+  variables de entorno; NO viven en `app.json` ni se commitean.
+  - Local: copiar `.env.example` a `.env` (gitignored) y poner los valores reales.
+  - Builds EAS: cargar cada secreto como env var, p.ej.
+    `eas env:create --environment <development|preview|production> --name FIREBASE_API_KEY --value <...> --visibility sensitive`
+    (repetir para las 6 claves `FIREBASE_*` + `FIREBASE_MEASUREMENT_ID` +
+    `MAPBOX_PUBLIC_TOKEN` + `RNMAPBOX_MAPS_DOWNLOAD_TOKEN`).
+- Reglas/índices de Firestore: `firestore.rules` + `firestore.indexes.json` (config
+  en `firebase.json`). Deploy:
+  `firebase deploy --only firestore:rules,firestore:indexes --project <projectId>`
+  (requiere `firebase-tools` + `firebase login`).
 - Alias de imports: `@/*` -> `src/*`.

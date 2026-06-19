@@ -1,15 +1,28 @@
 import { RouteDraft } from '@/domain/entities/RouteDraft';
 
 /**
- * Repositorio del draft de ruta (E3 del flow brief). Persiste en AsyncStorage
- * local — un solo draft por rider, se sobrescribe al actualizar. La
- * implementación maneja el caso "JSON corrupto" devolviendo `null`.
+ * Clave que identifica un draft de forma única: el rider dueño + la ruta que
+ * está editando (`null` = draft de creación de una ruta nueva). El repo deriva
+ * de aquí tanto la key local (AsyncStorage) como la remota (Firestore).
+ */
+export type RouteDraftKey = {
+  riderId: string;
+  routeId: string | null;
+};
+
+/**
+ * Repositorio del draft de ruta (E3 del flow brief). Offline-first: la fuente
+ * de verdad inmediata es AsyncStorage local; Firestore actúa como respaldo /
+ * sync entre dispositivos en best-effort (sus fallos nunca rompen la UX).
+ * La implementación maneja el caso "JSON corrupto" devolviendo `null`.
  */
 export interface RouteDraftRepository {
-  /** Devuelve el draft del rider o `null` si no hay. */
-  get(riderId: string): Promise<RouteDraft | null>;
-  /** Guarda/sobrescribe el draft del rider. */
+  /** Devuelve el draft de la key (merge local+remoto) o `null` si no hay. */
+  get(key: RouteDraftKey): Promise<RouteDraft | null>;
+  /** Guarda/sobrescribe el draft (la key se deriva del propio draft). */
   save(draft: RouteDraft): Promise<void>;
-  /** Borra el draft del rider (post-submit o post-discard). */
-  clear(riderId: string): Promise<void>;
+  /** Borra el draft de la key (local + remoto). */
+  clear(key: RouteDraftKey): Promise<void>;
+  /** Reintenta empujar a remoto los drafts encolados por fallos previos. */
+  flushPending(): Promise<void>;
 }

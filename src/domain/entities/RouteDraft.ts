@@ -14,6 +14,13 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 export type RouteDraftConstructorParams = {
   id: string;
   riderId: string;
+  /**
+   * Identidad del draft frente a una ruta existente:
+   * - `null` → draft de CREACIÓN (el rider está planeando una ruta nueva).
+   * - `<id>` → draft de EDICIÓN de la ruta con ese id.
+   * Determina la clave (local + remota) bajo la que se persiste el draft.
+   */
+  routeId?: string | null;
   name: string;
   notes: string;
   rideType: RideType;
@@ -33,6 +40,7 @@ export class RouteDraft {
 
   id: string;
   riderId: string;
+  routeId: string | null;
   name: string;
   notes: string;
   rideType: RideType;
@@ -45,6 +53,7 @@ export class RouteDraft {
   constructor(params: RouteDraftConstructorParams) {
     this.id = params.id;
     this.riderId = params.riderId;
+    this.routeId = params.routeId ?? null;
     this.name = params.name;
     this.notes = params.notes;
     this.rideType = params.rideType;

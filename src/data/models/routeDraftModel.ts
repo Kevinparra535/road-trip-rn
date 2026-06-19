@@ -43,6 +43,7 @@ type RouteDayJson = {
 export type RouteDraftModelConstructorParams = {
   id: string;
   rider_id: string;
+  route_id?: string | null;
   name: string;
   notes: string;
   ride_type: string;
@@ -53,10 +54,35 @@ export type RouteDraftModelConstructorParams = {
   updated_at: unknown;
 };
 
+/** Objeto con método `.toDate(): Date` — la forma de `Timestamp` de Firestore. */
+function hasToDate(value: unknown): value is { toDate: () => Date } {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { toDate?: unknown }).toDate === 'function'
+  );
+}
+
+/**
+ * Normaliza un timestamp a `Date`. Acepta:
+ * - `Date` (passthrough).
+ * - `Timestamp` de Firestore (objeto con `.toDate()`).
+ * - ISO string / epoch number (`new Date(value)`).
+ * Fallback `new Date()` si el valor es inválido o de un tipo desconocido.
+ */
 function toDate(value: unknown): Date {
-  if (value instanceof Date) return value;
+  if (value instanceof Date) {
+    return isNaN(value.getTime()) ? new Date() : value;
+  }
+  if (hasToDate(value)) {
+    const parsed = value.toDate();
+    return parsed instanceof Date && !isNaN(parsed.getTime())
+      ? parsed
+      : new Date();
+  }
   if (typeof value === 'string' || typeof value === 'number') {
-    return new Date(value);
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
   }
   return new Date();
 }
@@ -97,6 +123,7 @@ function readDays(raw: any): RouteDayJson[] | undefined {
 export class RouteDraftModel {
   id: string;
   rider_id: string;
+  route_id?: string | null;
   name: string;
   notes: string;
   ride_type: string;
@@ -109,6 +136,7 @@ export class RouteDraftModel {
   constructor(params: RouteDraftModelConstructorParams) {
     this.id = params.id;
     this.rider_id = params.rider_id;
+    this.route_id = params.route_id ?? null;
     this.name = params.name;
     this.notes = params.notes;
     this.ride_type = params.ride_type;
@@ -124,6 +152,10 @@ export class RouteDraftModel {
     return new RouteDraftModel({
       id: String(json.id ?? ''),
       rider_id: String(json.rider_id ?? ''),
+      route_id:
+        typeof json.route_id === 'string' && json.route_id.length > 0
+          ? json.route_id
+          : null,
       name: String(json.name ?? ''),
       notes: String(json.notes ?? ''),
       ride_type: String(json.ride_type ?? 'highway'),
@@ -162,6 +194,7 @@ export class RouteDraftModel {
     return new RouteDraftModel({
       id: entity.id,
       rider_id: entity.riderId,
+      route_id: entity.routeId ?? null,
       name: entity.name,
       notes: entity.notes,
       ride_type: entity.rideType,
@@ -207,6 +240,7 @@ export class RouteDraftModel {
     return {
       id: this.id,
       rider_id: this.rider_id,
+      route_id: this.route_id ?? null,
       name: this.name,
       notes: this.notes,
       ride_type: this.ride_type,
@@ -229,6 +263,7 @@ RouteDraftModel.prototype.toDomain = function toDomain(): RouteDraft {
   const params: RouteDraftConstructorParams = {
     id: this.id,
     riderId: this.rider_id,
+    routeId: this.route_id ?? null,
     name: this.name,
     notes: this.notes,
     rideType: toRideType(this.ride_type),

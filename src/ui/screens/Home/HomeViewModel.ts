@@ -1262,7 +1262,11 @@ export class HomeViewModel {
         }
       }
       if (!rider) return;
-      const draft = await this.getRouteDraftUseCase.run(rider.id);
+      // Draft de CREACIÓN del Home: routeId null (ruta nueva, no edición).
+      const draft = await this.getRouteDraftUseCase.run({
+        riderId: rider.id,
+        routeId: null,
+      });
       // Solo lo mostramos si tiene al menos 1 waypoint — sino no hay nada
       // que recuperar.
       if (!draft || draft.waypoints.length === 0) return;
@@ -1304,7 +1308,10 @@ export class HomeViewModel {
     });
     if (!draft) return;
     try {
-      await this.clearRouteDraftUseCase.run(draft.riderId);
+      await this.clearRouteDraftUseCase.run({
+        riderId: draft.riderId,
+        routeId: draft.routeId,
+      });
     } catch (error) {
       this.logger.error(
         `Error descartando draft: ${

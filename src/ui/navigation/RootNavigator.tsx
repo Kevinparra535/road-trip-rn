@@ -7,18 +7,28 @@ import { TYPES } from '@/config/types';
 import Colors from '@/ui/styles/Colors';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
+import { NetworkStore } from '@/ui/store/NetworkStore';
 import { SessionStore } from '@/ui/store/SessionStore';
+import { SyncCoordinator } from '@/ui/store/SyncCoordinator';
 
 import AppDrawer from './AppDrawer';
 import AuthNavigator from './AuthNavigator';
 
 const RootNavigator = observer(() => {
   const session = useViewModel<SessionStore>(TYPES.SessionStore);
+  const networkStore = useViewModel<NetworkStore>(TYPES.NetworkStore);
+  const syncCoordinator = useViewModel<SyncCoordinator>(TYPES.SyncCoordinator);
 
   useEffect(() => {
     session.initialize();
-    return () => session.dispose();
-  }, [session]);
+    networkStore.start();
+    syncCoordinator.start();
+    return () => {
+      syncCoordinator.stop();
+      networkStore.dispose();
+      session.dispose();
+    };
+  }, [session, networkStore, syncCoordinator]);
 
   if (!session.isBootstrapped) {
     return (

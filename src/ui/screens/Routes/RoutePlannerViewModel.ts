@@ -27,6 +27,7 @@ import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { inferStopKindFromInput } from '@/domain/useCases/InferStopKindUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
@@ -222,6 +223,8 @@ export class RoutePlannerViewModel {
     private readonly getCurrentRiderUseCase: GetCurrentRiderUseCase,
     @inject(TYPES.GetRouteUseCase)
     private readonly getRouteUseCase: GetRouteUseCase,
+    @inject(TYPES.GetRouteDraftUseCase)
+    private readonly getRouteDraftUseCase: GetRouteDraftUseCase,
     @inject(TYPES.CalculateDirectionsUseCase)
     private readonly calculateDirectionsUseCase: CalculateDirectionsUseCase,
     @inject(TYPES.CreateRouteUseCase)
@@ -281,8 +284,9 @@ export class RoutePlannerViewModel {
       { delay: AUTO_RECALC_DEBOUNCE_MS },
     );
     // Auto-save del draft (E3 del flow brief). El rider planea, cambia de
-    // pantalla, vuelve mas tarde — el plan sigue ahi. Solo guarda en modo
-    // create (en edit ya hay una Route persistida en Firestore).
+    // pantalla, vuelve mas tarde — el plan sigue ahi. Guarda en create
+    // (routeId null) y en edit (routeId = editingId); la key dinámica de
+    // `persistDraft`/`clearDraft` mantiene ambos drafts separados (Fase F5).
     this.draftAutoSaveDisposer = reaction(
       () => this.draftFingerprint,
       () => {
@@ -377,11 +381,12 @@ export class RoutePlannerViewModel {
   }
 
   /**
-   * Reglas para persistir el draft: solo en modo create, con rider conocido
-   * y al menos 1 waypoint (sino no hay nada que recuperar).
+   * Reglas para persistir el draft: rider conocido y al menos 1 waypoint
+   * (sino no hay nada que recuperar). Vale tanto para create (draft de
+   * creación, routeId null) como para edit (draft de edición, routeId =
+   * editingId) — la key dinámica los mantiene separados (Fase F5).
    */
   private get shouldPersistDraft(): boolean {
-    if (this.mode !== 'create') return false;
     if (!this.riderId) return false;
     return this.waypoints.length > 0;
   }
@@ -1460,7 +1465,29 @@ export class RoutePlannerViewModel {
       if (routeId) {
         const route = await this.getRouteUseCase.run(routeId);
         if (route) {
-          this.hydrateFrom(route);
+          // Merge del draft de edición (Fase F5): si el rider dejó cambios sin
+          // guardar más nuevos que la Route persistida, retomamos el draft —
+          // preservando modo edit. Si no hay draft o es más viejo, la Route
+          // gana. Errores aislados: nunca rompen la apertura del Planner.
+          let draft: RouteDraft | null = null;
+          try {
+            draft = await this.getRouteDraftUseCase.run({
+              riderId: rider.id,
+              routeId,
+            });
+          } catch (error) {
+            this.handleError(error, 'load');
+          }
+          // `Route` no expone `updatedAt`; comparamos contra `createdAt`.
+          if (
+            draft &&
+            draft.waypoints.length > 0 &&
+            draft.updatedAt.getTime() > route.createdAt.getTime()
+          ) {
+            this.hydrateFromDraftEdit(draft, route);
+          } else {
+            this.hydrateFrom(route);
+          }
         }
       }
       // Cargar motos del rider para el aviso "Sin moto registrada" (Lote 2).
@@ -1543,9 +1570,14 @@ export class RoutePlannerViewModel {
   private async persistDraft(): Promise<void> {
     if (!this.shouldPersistDraft || !this.riderId) return;
     try {
+      // routeId distingue el draft de creación (null) del de edición
+      // (editingId). En create el `id` == riderId (un draft por rider); en
+      // edit el `id` == editingId para que cada ruta editada tenga el suyo.
+      const draftRouteId = this.isEditMode ? this.editingId : null;
       const draft = new RouteDraft({
-        id: this.riderId, // un draft por rider; el id == riderId simplifica
+        id: this.isEditMode && this.editingId ? this.editingId : this.riderId,
         riderId: this.riderId,
+        routeId: draftRouteId,
         name: this.name,
         notes: this.notes,
         rideType: this.rideType,
@@ -1571,7 +1603,13 @@ export class RoutePlannerViewModel {
   private async clearDraft(): Promise<void> {
     if (!this.riderId) return;
     try {
-      await this.clearRouteDraftUseCase.run(this.riderId);
+      // Key dinámica: en edit borra el draft de edición (routeId = editingId);
+      // en create el de creación (routeId null). Llamado desde submit y
+      // confirmDiscard (Fase F5).
+      await this.clearRouteDraftUseCase.run({
+        riderId: this.riderId,
+        routeId: this.isEditMode ? this.editingId : null,
+      });
     } catch (error) {
       this.logger.error(
         `Error limpiando draft: ${
@@ -1830,6 +1868,36 @@ export class RoutePlannerViewModel {
       // Spread `...w` para preservar TODA la metadata (notes, stopDurationMin,
       // isReturnClone, etc.) al re-normalizar; solo cambian kind/order.
       return new Waypoint({ ...w, kind, order: index });
+    });
+  }
+
+  /**
+   * Hidrata el Planner desde un draft de EDICIÓN (Fase F5): el rider dejó
+   * cambios sin guardar más nuevos que la Route. Reusa la lógica de
+   * `initializeFromDraft` (campos editables del draft) pero PRESERVA el modo
+   * edit + editingId = route.id, en vez de caer a create. Las directions se
+   * dejan en `null` para que la reaction de auto-recalc las recalcule con los
+   * waypoints del draft.
+   */
+  private hydrateFromDraftEdit(draft: RouteDraft, route: Route): void {
+    runInAction(() => {
+      this.mode = 'edit';
+      this.editingId = route.id;
+      this.name = draft.name;
+      this.notes = draft.notes;
+      this.rideType = draft.rideType;
+      this.waypoints = this.normalizeWaypoints(draft.waypoints);
+      this.avoid = draft.avoid;
+      this.isRoundTrip = draft.roundTrip;
+      this.selectedAlternativeIndex = 0;
+      // Avanzar el sequence para no chocar con ids de los waypoints cargados.
+      this.waypointSeq = Math.max(
+        this.waypointSeq,
+        ...draft.waypoints.map(
+          (w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0,
+        ),
+      );
+      this.directions = null;
     });
   }
 
