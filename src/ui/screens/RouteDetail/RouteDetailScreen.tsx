@@ -1,11 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import {
   ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -26,39 +22,18 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
-import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { rideTypeMeta } from '../rideTypeMeta';
 import { RouteDetailViewModel } from '../RouteDetail/RouteDetailViewModel';
+
+import { PartyAction } from './components/PartyAction';
+import { ShareSheetModal } from './components/ShareSheetModal';
+import { Stat } from './components/Stat';
+import { Toggle } from './components/Toggle';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RouteDetail'>;
 type Route = RouteProp<RoutesStackParamList, 'RouteDetail'>;
-
-const Toggle = ({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) => (
-  <TouchableOpacity
-    style={[styles.toggle, active && styles.toggleActive]}
-    onPress={onPress}
-  >
-    <Ionicons
-      name={active ? 'checkmark-circle' : 'ellipse-outline'}
-      size={18}
-      color={active ? Colors.base.accent : Colors.base.iconMuted}
-    />
-    <Text style={[styles.toggleText, active && styles.toggleTextActive]}>
-      {label}
-    </Text>
-  </TouchableOpacity>
-);
 
 const RouteDetailScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -80,26 +55,6 @@ const RouteDetailScreen = observer(() => {
 
   const route = viewModel.isRouteResponse;
 
-  const lineShape = useMemo(
-    () => ({
-      type: 'Feature' as const,
-      properties: {},
-      geometry: {
-        type: 'LineString' as const,
-        coordinates: (route?.geometry ?? []).map((p) => [
-          p.longitude,
-          p.latitude,
-        ]),
-      },
-    }),
-    [route],
-  );
-
-  const center = useMemo<[number, number]>(() => {
-    const first = route?.waypoints[0];
-    return first ? [first.longitude, first.latitude] : [-74.0817, 4.6097];
-  }, [route]);
-
   if (viewModel.isRouteLoading) {
     return (
       <SafeAreaView style={[styles.safeArea, styles.center]}>
@@ -118,7 +73,6 @@ const RouteDetailScreen = observer(() => {
     );
   }
 
-  const meta = rideTypeMeta(route.rideType);
   const estimate = viewModel.estimate;
 
   return (
@@ -189,14 +143,17 @@ const RouteDetailScreen = observer(() => {
         <View style={styles.mapBox}>
           <Mapbox.MapView style={styles.map} styleURL={MAP_STYLE_URL}>
             <Mapbox.Camera
-              defaultSettings={{ centerCoordinate: center, zoomLevel: 8 }}
+              defaultSettings={{
+                centerCoordinate: viewModel.centerCoordinate,
+                zoomLevel: 8,
+              }}
             />
             {route.geometry.length > 1 ? (
-              <Mapbox.ShapeSource id="detail-line" shape={lineShape}>
+              <Mapbox.ShapeSource id="detail-line" shape={viewModel.lineShape}>
                 <Mapbox.LineLayer
                   id="detail-line-layer"
                   style={{
-                    lineColor: meta.color,
+                    lineColor: viewModel.lineColor,
                     lineWidth: 4,
                     lineCap: 'round',
                   }}
@@ -231,12 +188,9 @@ const RouteDetailScreen = observer(() => {
         </View>
 
         <View style={styles.summaryRow}>
-          <Stat
-            label="Distancia"
-            value={`${Math.round(route.distanceKm)} km`}
-          />
+          <Stat label="Distancia" value={viewModel.distanceLabel} />
           <Stat label="Duracion" value={route.durationLabel()} />
-          <Stat label="Tipo" value={meta.label} />
+          <Stat label="Tipo" value={viewModel.rideTypeLabel} />
         </View>
 
         <Text style={styles.sectionTitle}>Tu moto</Text>
@@ -325,11 +279,7 @@ const RouteDetailScreen = observer(() => {
             <View
               style={[
                 styles.estimateBanner,
-                {
-                  backgroundColor: estimate.reachesWithoutRefuel
-                    ? Colors.base.accentDim
-                    : Colors.base.bgInfoCard,
-                },
+                { backgroundColor: viewModel.estimateBannerColor },
               ]}
             >
               <Ionicons
@@ -353,16 +303,10 @@ const RouteDetailScreen = observer(() => {
             <View style={styles.estimateGrid}>
               <Stat
                 label="Autonomia real"
-                value={`${Math.round(estimate.effectiveRangeKm)} km`}
+                value={viewModel.effectiveRangeLabel}
               />
-              <Stat
-                label="Reserva"
-                value={`${Math.round(estimate.safetyReserveKm)} km`}
-              />
-              <Stat
-                label="Combustible"
-                value={`${estimate.totalFuelLiters.toFixed(1)} L`}
-              />
+              <Stat label="Reserva" value={viewModel.safetyReserveLabel} />
+              <Stat label="Combustible" value={viewModel.totalFuelLabel} />
             </View>
             <Text style={styles.conditionsSummary}>
               {estimate.conditionsSummary}
@@ -402,10 +346,11 @@ const RouteDetailScreen = observer(() => {
                     <Text style={styles.stationBrand}>{station.brand}</Text>
                   ) : null}
                   <Text style={styles.stationPrice}>
-                    Corriente ~$
-                    {station.referencePriceCorriente?.toLocaleString('es-CO')} ·
-                    Extra ~$
-                    {station.referencePriceExtra?.toLocaleString('es-CO')}
+                    Corriente ~${viewModel.priceLabel(
+                      station.referencePriceCorriente,
+                    )}{' '}
+                    · Extra ~$
+                    {viewModel.priceLabel(station.referencePriceExtra)}
                   </Text>
                   <Text style={styles.stationNote}>
                     Precio de referencia, no por estacion.
@@ -420,200 +365,10 @@ const RouteDetailScreen = observer(() => {
         ) : null}
       </ScrollView>
 
-      <ShareSheetModal viewModel={viewModel} routeName={route.name} />
+      <ShareSheetModal viewModel={viewModel} />
     </SafeAreaView>
   );
 });
-
-// ── Party action (C.5) ────────────────────────────────────────────────────
-
-/**
- * Icono que cambia segun haya party activa o no para esta ruta:
- * - Sin party → icono "people-outline", tap crea la rodada.
- * - Con party → icono "people" lleno + count, tap navega a PartyMembers.
- */
-const PartyAction = observer(
-  ({
-    viewModel,
-    navigation,
-  }: {
-    viewModel: RouteDetailViewModel;
-    navigation: NativeStackNavigationProp<RoutesStackParamList, 'RouteDetail'>;
-  }) => {
-    const route = viewModel.isRouteResponse;
-    const matchesActive =
-      route !== null && viewModel.partyStore.isPartyForRoute(route.id);
-
-    const handleCreate = () => {
-      if (!viewModel.selectedMotorcycleId) {
-        Alert.alert(
-          'Selecciona una moto',
-          'Elegi la moto que vas a usar en la rodada antes de crearla.',
-        );
-        return;
-      }
-      Alert.alert(
-        'Crear rodada grupal',
-        'Tus amigos podran sumarse usando el codigo de compartir. Vos seras el owner.',
-        [
-          { text: 'Cancelar', style: 'cancel' },
-          {
-            text: 'Crear',
-            onPress: () => void viewModel.createParty(),
-          },
-        ],
-      );
-    };
-
-    if (matchesActive) {
-      return (
-        <TouchableOpacity
-          onPress={() => navigation.navigate('PartyMembers')}
-          hitSlop={8}
-          style={styles.partyChipNav}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="people" size={14} color={Colors.base.accent} />
-          <Text style={styles.partyChipNavText}>
-            {viewModel.partyStore.memberCount}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
-
-    return (
-      <TouchableOpacity
-        onPress={handleCreate}
-        hitSlop={8}
-        disabled={viewModel.isPartyLoading}
-      >
-        {viewModel.isPartyLoading ? (
-          <ActivityIndicator color={Colors.base.accent} />
-        ) : (
-          <Ionicons
-            name="people-outline"
-            size={22}
-            color={Colors.base.accent}
-          />
-        )}
-      </TouchableOpacity>
-    );
-  },
-);
-
-// ── Share sheet (C.4) ─────────────────────────────────────────────────────
-
-const ShareSheetModal = observer(
-  ({
-    viewModel,
-    routeName,
-  }: {
-    viewModel: RouteDetailViewModel;
-    routeName: string;
-  }) => {
-    const shareCode = viewModel.shareCode;
-    const handleShare = async () => {
-      if (!shareCode) return;
-      try {
-        await Share.share({
-          message: `Sumate a mi ruta "${routeName}" en Road Trip. Codigo: ${shareCode.toDisplay()}`,
-        });
-      } catch {
-        // Usuario cancelo el sheet del sistema; nada que hacer.
-      }
-    };
-
-    return (
-      <Modal
-        visible={viewModel.isShareSheetOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => viewModel.closeShareSheet()}
-      >
-        <Pressable
-          style={styles.shareBackdrop}
-          onPress={() => viewModel.closeShareSheet()}
-        >
-          <Pressable style={styles.shareCard} onPress={() => {}}>
-            <View style={styles.shareHeader}>
-              <Text style={styles.shareTitle}>Compartir ruta</Text>
-              <TouchableOpacity
-                onPress={() => viewModel.closeShareSheet()}
-                hitSlop={8}
-              >
-                <Ionicons
-                  name="close"
-                  size={22}
-                  color={Colors.base.iconMuted}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.shareSub}>
-              Tus amigos pueden unirse pegando este codigo en &quot;Unirse a
-              ruta&quot;. Vence en 30 dias.
-            </Text>
-
-            <View style={styles.codeBox}>
-              {viewModel.isShareLoading && !shareCode ? (
-                <ActivityIndicator color={Colors.base.accent} />
-              ) : shareCode ? (
-                <Text style={styles.codeText} selectable>
-                  {shareCode.toDisplay()}
-                </Text>
-              ) : (
-                <Text style={styles.codePlaceholder}>—</Text>
-              )}
-            </View>
-
-            {viewModel.isShareError ? (
-              <Text style={styles.error}>{viewModel.isShareError}</Text>
-            ) : null}
-
-            <TouchableOpacity
-              style={[
-                styles.shareCta,
-                (!shareCode || viewModel.isShareLoading) && styles.shareCtaOff,
-              ]}
-              disabled={!shareCode || viewModel.isShareLoading}
-              onPress={handleShare}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="share-social"
-                size={18}
-                color={Colors.base.textPrimary}
-              />
-              <Text style={styles.shareCtaText}>Compartir</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.shareRevoke}
-              onPress={() => void viewModel.revokeShareCode()}
-              disabled={!shareCode || viewModel.isShareLoading}
-            >
-              <Text
-                style={[
-                  styles.shareRevokeText,
-                  (!shareCode || viewModel.isShareLoading) && styles.shareOff,
-                ]}
-              >
-                Revocar codigo
-              </Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    );
-  },
-);
-
-const Stat = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.stat}>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -641,21 +396,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.md,
-  },
-  partyChipNav: {
-    paddingHorizontal: Spacings.sm,
-    paddingVertical: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.accentDimBorder,
-  },
-  partyChipNavText: {
-    ...Fonts.links,
-    color: Colors.base.accent,
   },
   scroll: {
     padding: Spacings.spacex2,
@@ -689,24 +429,6 @@ const styles = StyleSheet.create({
     marginTop: Spacings.lg,
     flexDirection: 'row',
     gap: Spacings.md,
-  },
-  stat: {
-    flex: 1,
-    paddingVertical: Spacings.md,
-    alignItems: 'center',
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  statValue: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  statLabel: {
-    marginTop: Spacings.xs,
-    ...Fonts.links,
-    color: Colors.base.textMuted,
   },
   sectionTitle: {
     marginTop: Spacings.xl,
@@ -747,27 +469,6 @@ const styles = StyleSheet.create({
   },
   toggles: {
     gap: Spacings.sm,
-  },
-  toggle: {
-    padding: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.sm,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  toggleActive: {
-    borderColor: Colors.base.accentDimBorder,
-  },
-  toggleText: {
-    ...Fonts.bodyText,
-    color: Colors.base.textSecondary,
-  },
-  toggleTextActive: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
   },
   estimateBtn: {
     marginTop: Spacings.lg,
@@ -867,87 +568,6 @@ const styles = StyleSheet.create({
     marginTop: Spacings.md,
     ...Fonts.labelInputError,
     color: Colors.alerts.error,
-  },
-  // Share sheet modal
-  shareBackdrop: {
-    flex: 1,
-    backgroundColor: hexToRgba(Colors.base.shadow, 0.6),
-    justifyContent: 'flex-end',
-  },
-  shareCard: {
-    padding: Spacings.spacex2,
-    paddingBottom: Spacings.spacex6,
-    backgroundColor: Colors.base.bgGradientEnd,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  shareHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  shareTitle: {
-    ...Fonts.header5,
-    color: Colors.base.textPrimary,
-  },
-  shareSub: {
-    marginTop: Spacings.sm,
-    marginBottom: Spacings.lg,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  codeBox: {
-    paddingVertical: Spacings.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  codeText: {
-    ...Fonts.header2,
-    color: Colors.base.textPrimary,
-    letterSpacing: 4,
-    fontVariant: ['tabular-nums'],
-  },
-  codePlaceholder: {
-    ...Fonts.header2,
-    color: Colors.base.textMuted,
-    letterSpacing: 4,
-  },
-  shareCta: {
-    marginTop: Spacings.lg,
-    paddingVertical: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacings.sm,
-    backgroundColor: Colors.base.accent,
-    borderRadius: BorderRadius.pill,
-  },
-  shareCtaOff: {
-    opacity: 0.4,
-  },
-  shareCtaText: {
-    ...Fonts.callToActions,
-    color: Colors.base.textPrimary,
-  },
-  shareRevoke: {
-    marginTop: Spacings.md,
-    paddingVertical: Spacings.sm,
-    alignItems: 'center',
-  },
-  shareRevokeText: {
-    ...Fonts.smallBodyText,
-    color: Colors.alerts.error,
-  },
-  shareOff: {
-    opacity: 0.4,
   },
 });
 

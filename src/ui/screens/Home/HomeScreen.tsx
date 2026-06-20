@@ -1,17 +1,8 @@
-import {
-  ComponentProps,
-  ElementRef,
-  Fragment,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import { ElementRef, Fragment, useCallback, useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Alert,
   Keyboard,
-  Modal,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,11 +23,14 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
+import { IDLE_ACTIONS, IdleActionType } from '@/config/homeIdleActions';
+import {
+  ROUTE_CORE_WIDTH_PLANNING,
+  ROUTE_FIT_PADDING,
+} from '@/config/routeLineWidths';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
-import { RideType } from '@/domain/entities/Route';
-import { StopKind } from '@/domain/entities/StopKind';
 
 import ArrivalPanel from '@/ui/components/ArrivalPanel';
 import BottomSheet, {
@@ -59,56 +53,13 @@ import Fonts from '@/ui/styles/Fonts';
 import { ms } from '@/ui/styles/FontsScale';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
-import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { HomeViewModel } from './HomeViewModel';
 
 import HomeFeedItem from './components/HomeFeedItem';
-
-type MciName = ComponentProps<typeof MaterialCommunityIcons>['name'];
-
-// Margenes para encuadrar la ruta: [arriba, derecha, abajo, izquierda].
-const ROUTE_FIT_PADDING: [number, number, number, number] = [220, 64, 320, 64];
-
-// Anchos del trazado segun el modo (frame "Active Route" / "Route 3D Core"
-// del Pencil). Nucleo mas grueso navegando para que la ruta se lea como una
-// "flecha 3D"; alternativas finas para no competir con la principal.
-const ROUTE_CORE_WIDTH_NAV = 14;
-const ROUTE_CORE_WIDTH_PLANNING = 6;
-const ROUTE_ALT_WIDTH = 3;
-
-// Acciones rapidas del Home idle (Pencil: "1 - Home Idle"). Son atajos a
-// flows principales — NO son selectores de rideType, esos viven en el
-// RoutePlanner / DestinationPreview ahora.
-type IdleActionType = 'plan_ride' | 'garage' | 'group';
-
-const IDLE_ACTIONS: {
-  type: IdleActionType;
-  label: string;
-  icon: MciName;
-  testID: string;
-}[] = [
-  {
-    type: 'plan_ride',
-    label: 'Planear viaje',
-    icon: 'road-variant',
-    testID: 'home-chip-plan-trip',
-  },
-  {
-    type: 'garage',
-    label: 'Mi Garaje',
-    icon: 'motorbike',
-    testID: 'home-chip-garage',
-  },
-  {
-    type: 'group',
-    label: 'Viaje grupal',
-    icon: 'account-group',
-    testID: 'home-chip-group-trip',
-  },
-];
+import { RouteDraftRecoveryModal } from './components/RouteDraftRecoveryModal';
 
 /**
  * Pantalla principal (Home v2): mapa estilo navegacion, buscador y selector
@@ -185,7 +136,7 @@ const HomeScreen = observer(() => {
 
   // Encuadra la camara sobre la ruta una vez por destino calculado.
   const routeBounds = viewModel.routeBounds;
-  const destinationId = viewModel.destination?.id ?? null;
+  const destinationId = viewModel.destinationId;
   useEffect(() => {
     if (
       routeBounds &&
@@ -209,9 +160,7 @@ const HomeScreen = observer(() => {
   // abierto. Reacciona al fingerprint de coords (no a la referencia del objeto)
   // — sino el effect dispararia cada vez que MobX re-evalua el computed.
   const plannerBounds = viewModel.plannerBounds;
-  const plannerBoundsKey = plannerBounds
-    ? `${plannerBounds.ne[0]},${plannerBounds.ne[1]},${plannerBounds.sw[0]},${plannerBounds.sw[1]}`
-    : null;
+  const plannerBoundsKey = viewModel.plannerBoundsKey;
   useEffect(() => {
     if (!plannerBounds) return;
     cameraRef.current?.fitBounds(
@@ -350,11 +299,7 @@ const HomeScreen = observer(() => {
         />
 
         {viewModel.routeLines.map((line) => {
-          const coreWidth = !line.isPrimary
-            ? ROUTE_ALT_WIDTH
-            : isNavigating
-              ? ROUTE_CORE_WIDTH_NAV
-              : ROUTE_CORE_WIDTH_PLANNING;
+          const coreWidth = viewModel.coreWidthFor(line);
           return (
             <Mapbox.ShapeSource
               key={line.id}
@@ -386,9 +331,7 @@ const HomeScreen = observer(() => {
          * el rider acaba de agregar paradas y Mapbox aun no respondio.
          */}
         {viewModel.plannerRouteLines.map((line) => {
-          const isDashed =
-            (line.shape.properties as Record<string, unknown> | undefined)
-              ?.isDashed === true;
+          const isDashed = viewModel.isPlannerLineDashed(line);
           return (
             <Mapbox.ShapeSource
               key={line.id}
@@ -575,9 +518,7 @@ const HomeScreen = observer(() => {
               <ElevationStrip
                 maxLabel={elevation.max}
                 minLabel={elevation.min}
-                currentLabel={`${Math.round(
-                  viewModel.currentNavElevation.currentM,
-                )} m`}
+                currentLabel={`${viewModel.navElevationCurrentLabel} m`}
                 ratio={viewModel.currentNavElevation.ratio}
                 onClose={() => viewModel.toggleElevationStrip()}
               />
@@ -599,11 +540,11 @@ const HomeScreen = observer(() => {
                 color={Colors.base.accent}
               />
               <Text style={styles.elevationGlanceValue}>
-                {Math.round(viewModel.currentNavElevation.currentM)} m
+                {viewModel.navElevationCurrentLabel} m
               </Text>
               <View style={styles.elevationGlanceSeparator} />
               <Text style={styles.elevationGlanceAscent}>
-                +{Math.round(viewModel.currentNavElevation.ascentSoFarM)} m
+                +{viewModel.navElevationAscentLabel} m
               </Text>
             </TouchableOpacity>
           ) : null}
@@ -653,10 +594,10 @@ const HomeScreen = observer(() => {
           {viewModel.navRemaining ? (
             <SafeAreaView edges={['bottom']} style={styles.navBarSafe}>
               <View style={styles.navBar}>
-                {viewModel.navSpeedKmh !== null ? (
+                {viewModel.navSpeedLabel !== null ? (
                   <View style={styles.navSpeedBox}>
                     <Text style={styles.navSpeedValue}>
-                      {Math.round(viewModel.navSpeedKmh)}
+                      {viewModel.navSpeedLabel}
                     </Text>
                     <Text style={styles.navSpeedUnit}>km/h</Text>
                   </View>
@@ -1394,207 +1335,6 @@ const HomeScreen = observer(() => {
       ) : null}
     </View>
   );
-});
-
-/**
- * Modal "Continúa donde quedaste" (E3 del flow brief). Aparece cuando hay
- * un draft persistido en AsyncStorage del rider activo. 2 acciones:
- * Continuar planeando (hidrata el plannerVM + navega al Planner) y
- * Empezar de nuevo (borra el draft).
- */
-const RouteDraftRecoveryModal = observer(
-  ({
-    viewModel,
-    onContinue,
-    onDismiss,
-  }: {
-    viewModel: HomeViewModel;
-    onContinue: () => void;
-    onDismiss: () => void;
-  }) => {
-    const draft = viewModel.pendingDraft;
-    if (!draft) return null;
-    const wps = draft.waypoints;
-    return (
-      <Modal
-        visible
-        transparent
-        animationType="slide"
-        onRequestClose={onDismiss}
-      >
-        <Pressable style={recoveryStyles.backdrop} onPress={onDismiss}>
-          <Pressable style={recoveryStyles.sheet} onPress={() => {}}>
-            <View style={recoveryStyles.headerRow}>
-              <View style={recoveryStyles.iconBox}>
-                <Ionicons
-                  name="time-outline"
-                  size={24}
-                  color={Colors.base.accent}
-                />
-              </View>
-              <View style={recoveryStyles.headerText}>
-                <Text style={recoveryStyles.title}>
-                  Continúa donde quedaste
-                </Text>
-                <Text style={recoveryStyles.sub}>
-                  {draft.destinationName
-                    ? `Dejaste a medias una ruta a ${draft.destinationName}.`
-                    : 'Tenés un plan a medio armar.'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={recoveryStyles.previewCard}>
-              {wps.map((w) => {
-                const color =
-                  Colors.stopKind[w.kind as StopKind] ?? Colors.base.iconMuted;
-                return (
-                  <View key={w.id} style={recoveryStyles.previewRow}>
-                    <View
-                      style={[
-                        recoveryStyles.previewDot,
-                        { backgroundColor: color },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        recoveryStyles.previewText,
-                        w.kind === 'start' || w.kind === 'destination'
-                          ? recoveryStyles.previewTextStrong
-                          : null,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {w.name}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity
-              style={recoveryStyles.ctaPrimary}
-              onPress={onContinue}
-              activeOpacity={0.85}
-              testID="home-draft-recovery-continue-btn"
-            >
-              <Ionicons
-                name="navigate"
-                size={20}
-                color={Colors.base.textPrimary}
-              />
-              <Text style={recoveryStyles.ctaPrimaryText}>
-                Continuar planeando
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={recoveryStyles.ctaGhost}
-              onPress={onDismiss}
-              activeOpacity={0.85}
-              testID="home-draft-recovery-dismiss-btn"
-            >
-              <Text style={recoveryStyles.ctaGhostText}>Empezar de nuevo</Text>
-            </TouchableOpacity>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    );
-  },
-);
-
-const recoveryStyles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: hexToRgba(Colors.base.shadow, 0.6),
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    padding: Spacings.spacex2,
-    paddingBottom: Spacings.spacex6,
-    gap: Spacings.md,
-    backgroundColor: Colors.base.bgGradientEnd,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    borderRightWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.md,
-  },
-  iconBox: {
-    width: 46,
-    height: 46,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.accentDimBorder,
-  },
-  headerText: {
-    flex: 1,
-  },
-  title: {
-    ...Fonts.header5,
-    color: Colors.base.textPrimary,
-  },
-  sub: {
-    marginTop: 2,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  previewCard: {
-    padding: Spacings.md,
-    gap: Spacings.sm,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  previewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.sm,
-  },
-  previewDot: {
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.pill,
-  },
-  previewText: {
-    flex: 1,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  previewTextStrong: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  ctaPrimary: {
-    paddingVertical: Spacings.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacings.sm,
-    backgroundColor: Colors.base.accent,
-    borderRadius: BorderRadius.pill,
-  },
-  ctaPrimaryText: {
-    ...Fonts.callToActions,
-    color: Colors.base.textPrimary,
-  },
-  ctaGhost: {
-    paddingVertical: Spacings.md,
-    alignItems: 'center',
-  },
-  ctaGhostText: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textSecondary,
-  },
 });
 
 const styles = StyleSheet.create({

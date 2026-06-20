@@ -20,9 +20,12 @@ import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 
+import Colors from '@/ui/styles/Colors';
+import { formatDistance } from '@/ui/utils/formatDistance';
 import Logger from '@/ui/utils/Logger';
 
 import { SerializedDuplicateRoute } from '@/ui/navigation/types';
+import { rideTypeMeta } from '@/ui/screens/rideTypeMeta';
 import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
 type ICalls = 'route' | 'estimate' | 'stations' | 'delete' | 'share' | 'party';
@@ -107,6 +110,88 @@ export class RouteDetailViewModel {
 
   get canEstimate(): boolean {
     return this.isRouteResponse !== null && this.selectedMotorcycle !== null;
+  }
+
+  // ── Display getters (map + labels) ──────────────────────────────────────
+
+  /** GeoJSON LineString del trazado de la ruta para el ShapeSource del mapa. */
+  get lineShape(): GeoJSON.Feature<GeoJSON.LineString> {
+    const route = this.isRouteResponse;
+    return {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'LineString',
+        coordinates: (route?.geometry ?? []).map((p) => [
+          p.longitude,
+          p.latitude,
+        ]),
+      },
+    };
+  }
+
+  /** Centro inicial de la cámara: primer waypoint o fallback a Bogotá. */
+  get centerCoordinate(): [number, number] {
+    const first = this.isRouteResponse?.waypoints[0];
+    return first ? [first.longitude, first.latitude] : [-74.0817, 4.6097];
+  }
+
+  /** Color de la línea de la ruta según el tipo de rodada. */
+  get lineColor(): string {
+    const route = this.isRouteResponse;
+    return route ? rideTypeMeta(route.rideType).color : Colors.base.accent;
+  }
+
+  /** Etiqueta legible del tipo de rodada (p.ej. `'Carretera'`). */
+  get rideTypeLabel(): string {
+    const route = this.isRouteResponse;
+    return route ? rideTypeMeta(route.rideType).label : '';
+  }
+
+  /** Mensaje listo para el share nativo (nombre de la ruta + código). */
+  get shareMessage(): string {
+    const route = this.isRouteResponse;
+    const code = this.shareCode;
+    if (!route || !code) return '';
+    return `Sumate a mi ruta "${route.name}" en Road Trip. Codigo: ${code.toDisplay()}`;
+  }
+
+  /** Color de fondo del banner del estimado según si llega sin tanquear. */
+  get estimateBannerColor(): string {
+    return this.estimate?.reachesWithoutRefuel
+      ? Colors.base.accentDim
+      : Colors.base.bgInfoCard;
+  }
+
+  /** `true` si hay una party activa que corresponde a esta ruta. */
+  get partyMatchesActive(): boolean {
+    const route = this.isRouteResponse;
+    return route !== null && this.partyStore.isPartyForRoute(route.id);
+  }
+
+  /** Distancia de la ruta formateada (p.ej. `'42 km'`). */
+  get distanceLabel(): string {
+    return formatDistance(this.isRouteResponse?.distanceKm ?? 0);
+  }
+
+  /** Combustible total del estimado con un decimal (p.ej. `'8.4 L'`). */
+  get totalFuelLabel(): string {
+    return `${(this.estimate?.totalFuelLiters ?? 0).toFixed(1)} L`;
+  }
+
+  /** Autonomía real del estimado redondeada (p.ej. `'320 km'`). */
+  get effectiveRangeLabel(): string {
+    return `${Math.round(this.estimate?.effectiveRangeKm ?? 0)} km`;
+  }
+
+  /** Reserva de seguridad del estimado redondeada (p.ej. `'40 km'`). */
+  get safetyReserveLabel(): string {
+    return `${Math.round(this.estimate?.safetyReserveKm ?? 0)} km`;
+  }
+
+  /** Formatea un precio de referencia en pesos colombianos. */
+  priceLabel(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('es-CO');
   }
 
   /**

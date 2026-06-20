@@ -4,6 +4,11 @@ import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
+import {
+  ROUTE_ALT_WIDTH,
+  ROUTE_CORE_WIDTH_NAV,
+  ROUTE_CORE_WIDTH_PLANNING,
+} from '@/config/routeLineWidths';
 import { TYPES } from '@/config/types';
 
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
@@ -523,6 +528,14 @@ export class HomeViewModel {
     return this.destination ? this.destination.toLngLat() : null;
   }
 
+  /**
+   * Id del destino actual (o `null`). El screen lo usa como clave para
+   * encuadrar la camara una sola vez por destino calculado.
+   */
+  get destinationId(): string | null {
+    return this.destination?.id ?? null;
+  }
+
   /** Gasolineras halladas a lo largo de la ruta, listas para el mapa. */
   get fuelStationMarkers(): { id: string; coordinate: [number, number] }[] {
     return (this.isFuelStopResponse ?? []).map((station) => ({
@@ -580,6 +593,29 @@ export class HomeViewModel {
       }
     }
     return lines;
+  }
+
+  /**
+   * Ancho de trazado del nucleo para una linea de ruta segun su rol y el modo
+   * actual: alternativas finas; principal mas gruesa navegando ("flecha 3D")
+   * que planeando. Centraliza la seleccion que antes vivia inline en el screen.
+   */
+  coreWidthFor(line: RouteLine): number {
+    if (!line.isPrimary) return ROUTE_ALT_WIDTH;
+    return this.isNavigating
+      ? ROUTE_CORE_WIDTH_NAV
+      : ROUTE_CORE_WIDTH_PLANNING;
+  }
+
+  /**
+   * `true` si la linea del Planner es la recta punteada de feedback inmediato
+   * (sin directions calculadas). Lee la propiedad `isDashed` del shape GeoJSON.
+   */
+  isPlannerLineDashed(line: RouteLine): boolean {
+    return (
+      (line.shape.properties as Record<string, unknown> | undefined)
+        ?.isDashed === true
+    );
   }
 
   /**
@@ -769,6 +805,18 @@ export class HomeViewModel {
       ne: [box.northEast.longitude, box.northEast.latitude],
       sw: [box.southWest.longitude, box.southWest.latitude],
     };
+  }
+
+  /**
+   * Fingerprint de coordenadas del `plannerBounds` (o `null`). El effect del
+   * screen reacciona a este string en vez de a la referencia del objeto —
+   * sino dispararia cada vez que MobX re-evalua el computed.
+   */
+  get plannerBoundsKey(): string | null {
+    const bounds = this.plannerBounds;
+    return bounds
+      ? `${bounds.ne[0]},${bounds.ne[1]},${bounds.sw[0]},${bounds.sw[1]}`
+      : null;
   }
 
   /**
@@ -1127,6 +1175,30 @@ export class HomeViewModel {
   }
 
   /**
+   * Altitud actual ya redondeada para los overlays de navegacion (strip 6b y
+   * chip 6a). `null` cuando no hay elevacion disponible.
+   */
+  get navElevationCurrentLabel(): number | null {
+    const elevation = this.currentNavElevation;
+    return elevation ? Math.round(elevation.currentM) : null;
+  }
+
+  /** Ascenso acumulado ya redondeado para el chip "glance" (6a). */
+  get navElevationAscentLabel(): number | null {
+    const elevation = this.currentNavElevation;
+    return elevation ? Math.round(elevation.ascentSoFarM) : null;
+  }
+
+  /**
+   * Velocidad instantanea ya redondeada para el velocimetro de la barra de
+   * navegacion. `null` cuando no hay velocidad que mostrar.
+   */
+  get navSpeedLabel(): number | null {
+    const speed = this.navSpeedKmh;
+    return speed === null ? null : Math.round(speed);
+  }
+
+  /**
    * Velocidad instantanea del conductor en km/h para el velocimetro de la
    * barra de navegacion. En la ruta de prueba devuelve la velocidad promedio
    * modelada; en una ruta real vendra del GPS cuando se exponga en el store.
@@ -1249,6 +1321,27 @@ export class HomeViewModel {
 
   get pendingDraft() {
     return this.plannerStore.pendingDraft;
+  }
+
+  /**
+   * Filas display-ready del sheet "Continúa donde quedaste": cada waypoint del
+   * draft con su color de StopKind ya resuelto (fallback gris muted) y el flag
+   * `isStrong` para los extremos (start/destination). El componente solo pinta.
+   */
+  get draftRecoveryRows(): {
+    id: string;
+    name: string;
+    color: string;
+    isStrong: boolean;
+  }[] {
+    const draft = this.plannerStore.pendingDraft;
+    if (!draft) return [];
+    return draft.waypoints.map((w) => ({
+      id: w.id,
+      name: w.name,
+      color: Colors.stopKind[w.kind as StopKind] ?? Colors.base.iconMuted,
+      isStrong: w.kind === 'start' || w.kind === 'destination',
+    }));
   }
 
   continuePlanningDraft(): void {

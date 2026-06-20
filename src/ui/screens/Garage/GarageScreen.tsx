@@ -4,7 +4,6 @@ import {
   FlatList,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,49 +14,22 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
-import { Motorcycle } from '@/domain/entities/Motorcycle';
-
 import GradientView from '@/ui/components/GradientView';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 
 import { GarageStackParamList } from '@/ui/navigation/types';
 
-import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { GarageViewModel } from './GarageViewModel';
 
-type Nav = NativeStackNavigationProp<GarageStackParamList, 'GarageList'>;
+import { MotorcycleRow } from './components/MotorcycleRow';
 
-const MotorcycleRow = ({
-  motorcycle,
-  onPress,
-}: {
-  motorcycle: Motorcycle;
-  onPress: () => void;
-}) => (
-  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
-    <View style={styles.cardIcon}>
-      <Ionicons name="bicycle" size={24} color={Colors.base.accent} />
-    </View>
-    <View style={styles.cardBody}>
-      <Text style={styles.cardTitle}>{motorcycle.displayName()}</Text>
-      <Text style={styles.cardMeta}>
-        {motorcycle.tankCapacityLiters} L ·{' '}
-        {motorcycle.fuelConsumptionKmPerLiter} km/L · {motorcycle.fuelType}
-      </Text>
-      <Text style={styles.cardRange}>
-        Autonomia ~{Math.round(motorcycle.fullTankRangeKm())} km
-      </Text>
-    </View>
-    <Ionicons name="chevron-forward" size={20} color={Colors.base.iconMuted} />
-  </TouchableOpacity>
-);
+type Nav = NativeStackNavigationProp<GarageStackParamList, 'GarageList'>;
 
 const GarageScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -93,12 +65,14 @@ const GarageScreen = observer(() => {
         </View>
       ) : (
         <FlatList
-          data={viewModel.isMotorcyclesResponse ?? []}
+          data={viewModel.motorcycleRows}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <MotorcycleRow
-              motorcycle={item}
+              name={item.name}
+              meta={item.meta}
+              autonomyLabel={item.autonomyLabel}
               onPress={() =>
                 navigation.navigate('MotorcycleForm', {
                   motorcycleId: item.id,
@@ -166,42 +140,6 @@ const styles = StyleSheet.create({
     padding: Spacings.spacex2,
     gap: Spacings.md,
     flexGrow: 1,
-  },
-  card: {
-    padding: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.md,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-    ...Shadows.bankCard,
-  },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.sm,
-  },
-  cardBody: {
-    flex: 1,
-  },
-  cardTitle: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  cardMeta: {
-    marginTop: Spacings.xs,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  cardRange: {
-    marginTop: Spacings.xs,
-    ...Fonts.links,
-    color: Colors.base.accent,
   },
   empty: {
     flex: 1,

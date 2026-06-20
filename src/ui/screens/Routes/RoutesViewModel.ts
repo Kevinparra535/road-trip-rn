@@ -11,7 +11,21 @@ import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase
 
 import Logger from '@/ui/utils/Logger';
 
+import { rideTypeMeta } from '@/ui/screens/rideTypeMeta';
+
 type ICalls = 'routes' | 'delete';
+
+/** Datos display-ready para renderizar una fila de ruta (RouteRow). */
+export type RouteRowData = {
+  id: string;
+  name: string;
+  icon: ReturnType<typeof rideTypeMeta>['icon'];
+  color: string;
+  metaLabel: string;
+  distanceLabel: string;
+  durationLabel: string;
+  subtitle: string;
+};
 
 @injectable()
 export class RoutesViewModel {
@@ -41,6 +55,23 @@ export class RoutesViewModel {
 
   get isEmpty(): boolean {
     return this.isLoaded && (this.isRoutesResponse?.length ?? 0) === 0;
+  }
+
+  /** Filas display-ready para el FlatList; resuelve meta/labels fuera de la UI. */
+  get routeRows(): RouteRowData[] {
+    return (this.isRoutesResponse ?? []).map((route) => {
+      const meta = rideTypeMeta(route.rideType);
+      return {
+        id: route.id,
+        name: route.name,
+        icon: meta.icon,
+        color: meta.color,
+        metaLabel: meta.label,
+        distanceLabel: `${Math.round(route.distanceKm)} km`,
+        durationLabel: route.durationLabel(),
+        subtitle: `${route.waypoints.length} puntos · ${route.stops().length} paradas`,
+      };
+    });
   }
 
   async initialize(): Promise<void> {

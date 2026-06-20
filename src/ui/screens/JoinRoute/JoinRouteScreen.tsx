@@ -25,7 +25,7 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { JoinRouteViewModel } from '../JoinRoute/JoinRouteViewModel';
+import { JoinRouteViewModel } from './JoinRouteViewModel';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'JoinRoute'>;
 type Route = RouteProp<RoutesStackParamList, 'JoinRoute'>;

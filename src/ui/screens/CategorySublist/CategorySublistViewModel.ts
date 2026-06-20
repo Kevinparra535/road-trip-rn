@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
+import { Ionicons } from '@expo/vector-icons';
 
 import { TYPES } from '@/config/types';
 
@@ -44,6 +45,8 @@ export type CategoryPoiRow = {
   place: Place;
   /** Distancia desde el waypoint 1 (start) al POI, en km — aprox del rider. */
   distanceFromStartKm: number;
+  /** Label display-ready de la distancia, ej. "12 km" (km redondeado). */
+  distanceLabel: string;
   /** `true` si el POI esta a menos de ON_ROUTE_THRESHOLD_KM de la polilinea. */
   isOnRoute: boolean;
 };
@@ -122,6 +125,7 @@ export class CategorySublistViewModel {
       return {
         place,
         distanceFromStartKm: distance,
+        distanceLabel: `${Math.round(distance)} km`,
         isOnRoute: distToPoly <= ON_ROUTE_THRESHOLD_KM,
       };
     });
@@ -136,7 +140,8 @@ export class CategorySublistViewModel {
   get chipCategories(): {
     category: SearchableCategory;
     label: string;
-    iconName: string;
+    iconName: keyof typeof Ionicons.glyphMap;
+    color: string;
   }[] {
     return SEARCHABLE_CATEGORIES.map((category) => {
       const meta = stopKindMeta(category as StopKind);
@@ -144,6 +149,7 @@ export class CategorySublistViewModel {
         category,
         label: meta.label,
         iconName: meta.icon,
+        color: meta.color,
       };
     });
   }
@@ -166,6 +172,35 @@ export class CategorySublistViewModel {
       return 'Agrega un destino para ver opciones sobre la ruta.';
     }
     return `Sobre la ruta a ${dest.name}`;
+  }
+
+  /** Color de la categoria activa — usado por el icono de cada POI row. */
+  get activeColor(): string {
+    return stopKindMeta(this.activeCategory).color;
+  }
+
+  /** Icono Ionicons de la categoria activa — POI rows + empty state. */
+  get activeIconName(): keyof typeof Ionicons.glyphMap {
+    return stopKindMeta(this.activeCategory).icon;
+  }
+
+  /**
+   * Titulo del empty state (C2 del flow brief). "Nada de {label} en la
+   * zona/ruta" segun `isWideSearch`, con el label de la categoria en minuscula.
+   */
+  get emptyTitle(): string {
+    const labelLower = stopKindMeta(this.activeCategory).label.toLowerCase();
+    return this.isWideSearch
+      ? `Nada de ${labelLower} en la zona`
+      : `Nada de ${labelLower} en la ruta`;
+  }
+
+  /** Subtitulo explicativo del empty state, dependiente de `isWideSearch`. */
+  get emptySubtitle(): string {
+    const labelLower = stopKindMeta(this.activeCategory).label.toLowerCase();
+    return this.isWideSearch
+      ? `Ampliamos la búsqueda y aún así no encontramos lugares de ${labelLower}. Prueba otra categoría.`
+      : `No encontramos lugares de ${labelLower} cerca de tu trazado actual. Prueba otra categoría o amplía la búsqueda.`;
   }
 
   initialize(category: SearchableCategory): void {
