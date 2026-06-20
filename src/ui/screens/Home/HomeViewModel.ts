@@ -103,6 +103,13 @@ const NAV_ARRIVAL_THRESHOLD_KM = 0.05;
 const ROUTE_STATION_SAMPLES = 6;
 // Idioma para las anuncios de voz turn-by-turn (Mapbox ya las localiza).
 const NAV_VOICE_LANGUAGE = 'es-CO';
+const NAV_SUGGESTION_LIMIT = 3;
+const NAV_FUEL_SOON_THRESHOLD_KM = 25;
+const NAV_STATION_NEARBY_THRESHOLD_KM = 5;
+const NAV_ELEVATION_LOOKAHEAD_KM = 3;
+const NAV_ELEVATION_DELTA_THRESHOLD_M = 35;
+const NAV_CURVE_WARNING_KM = 0.8;
+const NAV_ARRIVAL_SOON_KM = 5;
 // Tipo de rodada por defecto del trazado del Home.
 const DEFAULT_RIDE_TYPE: RideType = 'highway';
 
@@ -207,6 +214,25 @@ export type NavigationLabMarker = {
   coordinate: [number, number];
   isActive: boolean;
 };
+
+export type NavSuggestionKind =
+  | 'fuel'
+  | 'fuel-warning'
+  | 'station'
+  | 'climb'
+  | 'descent'
+  | 'curve'
+  | 'arrival';
+
+export type NavSuggestion = {
+  id: string;
+  kind: NavSuggestionKind;
+  title: string;
+  value: string;
+  detail: string;
+};
+
+type RankedNavSuggestion = NavSuggestion & { priority: number };
 
 type ICalls =
   | 'search'
@@ -1055,35 +1081,18 @@ export class HomeViewModel {
   } | null {
     const route = this.isRouteResponse;
     if (!route) return null;
-    const stations = this.isFuelStopResponse ?? [];
-    // Estacion conocida mas cercana a un punto de la ruta.
-    const nearestStation = (point: GeoPoint): FuelStation | null => {
-      let best: FuelStation | null = null;
-      let bestKm = Infinity;
-      for (const station of stations) {
-        const km = haversineKm(point, {
-          latitude: station.latitude,
-          longitude: station.longitude,
-        });
-        if (km < bestKm) {
-          bestKm = km;
-          best = station;
-        }
-      }
-      return best;
-    };
     const stops = this.fuelStops.map((stop, index) => {
-      const station = nearestStation(stop.location);
+      const station = this.findNearestFuelStation(stop.location)?.station;
       return {
         id: stop.id,
         km: Math.round(stop.distanceFromStartKm),
-        name: station ? station.brand || station.name : null,
+        name: station ? this.stationDisplayName(station) : null,
         suggested: index === 0,
       };
     });
     return {
       totalKm: Math.round(route.distanceKm),
-      progressKm: Math.round(this.routeProgressKm),
+      progressKm: Math.round(this.navProgressKm),
       destinationName: this.destination?.name ?? 'Destino',
       searching: this.isFuelStopLoading,
       error: this.isFuelStopError,
@@ -1306,7 +1315,160 @@ export class HomeViewModel {
     };
   }
 
-  // ── Computed: rider ─────────────────────────────────────────────────────────
+  // -- Computed: HUD de navegacion --
+
+  /**
+   * Sugerencias compactas para el HUD de navegacion. No disparan APIs: salen
+   * de route directions, perfil de elevacion y gasolineras ya precargadas.
+   */
+  get navSuggestions(): NavSuggestion[] {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return [];
+
+    const progressKm = Math.max(
+      0,
+      Math.min(route.distanceKm, this.navProgressKm),
+    );
+    const suggestions: RankedNavSuggestion[] = [];
+    const nextFuelStop =
+      this.fuelStops
+        .filter((stop) => stop.distanceFromStartKm > progressKm + 0.1)
+        .sort((a, b) => a.distanceFromStartKm - b.distanceFromStartKm)[0] ??
+      null;
+    const fuelEstimate = this.isFuelEstimateResponse;
+
+    if (nextFuelStop) {
+      const remainingToStopKm = Math.max(
+        0,
+        nextFuelStop.distanceFromStartKm - progressKm,
+      );
+      const station = this.findNearestFuelStation(
+        nextFuelStop.location,
+      )?.station;
+      const isFuelCritical =
+        fuelEstimate !== null && !fuelEstimate.reachesWithoutRefuel;
+      const isFuelSoon = remainingToStopKm <= NAV_FUEL_SOON_THRESHOLD_KM;
+      suggestions.push({
+        id: `fuel-${nextFuelStop.id}`,
+        kind: isFuelCritical || isFuelSoon ? 'fuel-warning' : 'fuel',
+        title:
+          isFuelCritical || isFuelSoon
+            ? 'Tanqueo recomendado'
+            : 'Proximo tanqueo',
+        value: this.formatSuggestionDistance(remainingToStopKm),
+        detail: station
+          ? this.stationDisplayName(station)
+          : 'Parada sugerida por autonomia',
+        priority: isFuelCritical ? 105 : isFuelSoon ? 92 : 55,
+      });
+    } else if (fuelEstimate !== null && !fuelEstimate.reachesWithoutRefuel) {
+      suggestions.push({
+        id: 'fuel-range-warning',
+        kind: 'fuel-warning',
+        title: 'Autonomia justa',
+        value: `${Math.round(fuelEstimate.effectiveRangeKm)} km`,
+        detail: 'Busca gasolina en ruta',
+        priority: 105,
+      });
+    }
+
+    const hasFuelSuggestion = suggestions.some(
+      (suggestion) =>
+        suggestion.kind === 'fuel' || suggestion.kind === 'fuel-warning',
+    );
+    const riderPoint = this.navRiderPoint;
+    const nearestStation = riderPoint
+      ? this.findNearestFuelStation(riderPoint)
+      : null;
+    if (
+      !hasFuelSuggestion &&
+      nearestStation !== null &&
+      nearestStation.distanceKm <= NAV_STATION_NEARBY_THRESHOLD_KM
+    ) {
+      suggestions.push({
+        id: `station-${nearestStation.station.id}`,
+        kind: 'station',
+        title: 'Gasolinera cerca',
+        value: this.formatSuggestionDistance(nearestStation.distanceKm),
+        detail: this.stationDisplayName(nearestStation.station),
+        priority: 78,
+      });
+    }
+
+    const profile = this.isElevationResponse;
+    if (profile && !profile.isEmpty) {
+      const lookAheadKm = Math.min(
+        route.distanceKm,
+        progressKm + NAV_ELEVATION_LOOKAHEAD_KM,
+      );
+      const currentM = profile.elevationAtKm(progressKm);
+      const aheadM = profile.elevationAtKm(lookAheadKm);
+      if (currentM !== null && aheadM !== null) {
+        const deltaM = aheadM - currentM;
+        if (Math.abs(deltaM) >= NAV_ELEVATION_DELTA_THRESHOLD_M) {
+          const isClimb = deltaM > 0;
+          suggestions.push({
+            id: isClimb ? 'elevation-climb' : 'elevation-descent',
+            kind: isClimb ? 'climb' : 'descent',
+            title: isClimb ? 'Subida adelante' : 'Bajada adelante',
+            value: `${isClimb ? '+' : ''}${Math.round(deltaM)} m`,
+            detail: `Proximos ${this.formatSuggestionDistance(
+              Math.max(0, lookAheadKm - progressKm),
+            )}`,
+            priority: 72,
+          });
+        }
+      }
+    }
+
+    const turn = this.currentTurn;
+    const isSharpCurve =
+      turn !== null &&
+      turn.remainingKm <= NAV_CURVE_WARNING_KM &&
+      (turn.maneuverModifier === 'sharp left' ||
+        turn.maneuverModifier === 'sharp right' ||
+        turn.maneuverModifier === 'uturn' ||
+        turn.maneuverType === 'roundabout' ||
+        turn.maneuverType === 'rotary');
+    if (turn !== null && isSharpCurve) {
+      suggestions.push({
+        id: 'turn-curve',
+        kind: 'curve',
+        title: 'Curva cerrada',
+        value: turn.distanceText,
+        detail: turn.streetName || turn.instruction,
+        priority: 90,
+      });
+    }
+
+    const remainingKm = Math.max(0, route.distanceKm - progressKm);
+    if (
+      remainingKm > NAV_ARRIVAL_THRESHOLD_KM &&
+      remainingKm <= NAV_ARRIVAL_SOON_KM
+    ) {
+      suggestions.push({
+        id: 'arrival-soon',
+        kind: 'arrival',
+        title: 'Llegada cerca',
+        value: this.formatSuggestionDistance(remainingKm),
+        detail: this.destination?.name ?? 'Destino',
+        priority: 64,
+      });
+    }
+
+    return suggestions
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, NAV_SUGGESTION_LIMIT)
+      .map(({ id, kind, title, value, detail }) => ({
+        id,
+        kind,
+        title,
+        value,
+        detail,
+      }));
+  }
+
+  // -- Computed: rider --
 
   /** Iniciales del rider para el avatar del buscador; `--` si aun no carga. */
   get riderInitials(): string {
@@ -2223,6 +2385,29 @@ export class HomeViewModel {
     return speedMps * 3.6;
   }
 
+  private findNearestFuelStation(
+    point: GeoPoint,
+  ): { station: FuelStation; distanceKm: number } | null {
+    const stations = this.isFuelStopResponse ?? [];
+    let best: FuelStation | null = null;
+    let bestKm = Infinity;
+    for (const station of stations) {
+      const distanceKm = haversineKm(point, {
+        latitude: station.latitude,
+        longitude: station.longitude,
+      });
+      if (distanceKm < bestKm) {
+        bestKm = distanceKm;
+        best = station;
+      }
+    }
+    return best ? { station: best, distanceKm: bestKm } : null;
+  }
+
+  private stationDisplayName(station: FuelStation): string {
+    return station.brand || station.name;
+  }
+
   private remainingPlacesForReroute(destination: Place): Place[] {
     const route = this.isRouteResponse;
     const chain = [...this.intermediateStops, destination];
@@ -2524,6 +2709,16 @@ export class HomeViewModel {
       return `En ${meters} m`;
     }
     return `En ${km.toFixed(1)} km`;
+  }
+
+  private formatSuggestionDistance(km: number): string {
+    if (km < 0.05) return 'Ahora';
+    if (km < 1) {
+      const meters = Math.max(50, Math.round((km * 1000) / 50) * 50);
+      return `${meters} m`;
+    }
+    if (km < 10) return `${km.toFixed(1)} km`;
+    return `${Math.round(km)} km`;
   }
 
   /** Texto de respaldo cuando Mapbox no entrega `maneuver.instruction`. */

@@ -1,5 +1,9 @@
 import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
 
+import { FuelStation } from '@/domain/entities/FuelStation';
+import { FuelStop } from '@/domain/entities/FuelStop';
+import { NavigationStep } from '@/domain/entities/NavigationStep';
+
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
@@ -1239,5 +1243,175 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     expect(vm.routeProgressKm).toBeGreaterThan(5);
     expect(vm.routeProgressKm).toBeLessThan(6);
     expect(vm.navProgressKm).toBeGreaterThan(10);
+  });
+
+  it('navSuggestions prioriza el proximo tanqueo recomendado', () => {
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({ latitude: 0, longitude: 0 }),
+    });
+    const vm = makeVM(store);
+    vm.destination = makePlace({ id: 'fuel-destination', name: 'Villa' });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 120,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 1, longitude: 0 },
+      ],
+    });
+    vm.isFuelEstimateResponse = makeRouteFuelEstimate({
+      distanceKm: 120,
+      effectiveRangeKm: 40,
+    });
+    vm.fuelStops = [
+      new FuelStop({
+        id: 'refuel-1',
+        order: 1,
+        distanceFromStartKm: 20,
+        location: { latitude: 0.18, longitude: 0 },
+        label: 'Tanqueo 1',
+      }),
+    ];
+    vm.isFuelStopResponse = [
+      new FuelStation({
+        id: 'station-1',
+        name: 'EDS Terpel Norte',
+        brand: 'Terpel',
+        latitude: 0.18,
+        longitude: 0,
+        fuelTypes: ['corriente', 'extra'],
+      }),
+    ];
+
+    vm.startNavigation();
+
+    expect(vm.navSuggestions[0]).toEqual(
+      expect.objectContaining({
+        kind: 'fuel-warning',
+        title: 'Tanqueo recomendado',
+        value: '20 km',
+        detail: 'Terpel',
+      }),
+    );
+    vm.stopNavigation();
+  });
+
+  it('navSuggestions muestra gasolinera cercana cuando no hay tanqueo pendiente', () => {
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({ latitude: 0, longitude: 0 }),
+    });
+    const vm = makeVM(store);
+    vm.destination = makePlace({ id: 'station-destination' });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 20,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 0.2, longitude: 0 },
+      ],
+    });
+    vm.isFuelStopResponse = [
+      new FuelStation({
+        id: 'station-near',
+        name: 'Primax Calle 80',
+        brand: null,
+        latitude: 0.01,
+        longitude: 0,
+        fuelTypes: ['corriente'],
+      }),
+    ];
+
+    vm.startNavigation();
+
+    expect(vm.navSuggestions[0]).toEqual(
+      expect.objectContaining({
+        kind: 'station',
+        title: 'Gasolinera cerca',
+        value: '1.1 km',
+        detail: 'Primax Calle 80',
+      }),
+    );
+    vm.stopNavigation();
+  });
+
+  it('navSuggestions anticipa cambios de elevacion en la ruta', () => {
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({ latitude: 0, longitude: 0 }),
+    });
+    const vm = makeVM(store);
+    vm.destination = makePlace({ id: 'climb-destination' });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 10,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 0.1, longitude: 0 },
+      ],
+    });
+    vm.isElevationResponse = makeElevationProfile({
+      samples: [
+        { distanceKm: 0, elevationM: 1000, latitude: 0, longitude: 0 },
+        { distanceKm: 3, elevationM: 1080, latitude: 0.03, longitude: 0 },
+        { distanceKm: 10, elevationM: 1090, latitude: 0.1, longitude: 0 },
+      ],
+    });
+
+    vm.startNavigation();
+
+    expect(vm.navSuggestions[0]).toEqual(
+      expect.objectContaining({
+        kind: 'climb',
+        title: 'Subida adelante',
+        value: '+80 m',
+        detail: 'Proximos 3.0 km',
+      }),
+    );
+    vm.stopNavigation();
+  });
+
+  it('navSuggestions sube una curva cerrada cuando esta cerca', () => {
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({ latitude: 0, longitude: 0 }),
+    });
+    const vm = makeVM(store);
+    vm.destination = makePlace({ id: 'curve-destination' });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 10,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 0.1, longitude: 0 },
+      ],
+      steps: [
+        new NavigationStep({
+          distanceKm: 0,
+          durationMin: 0,
+          distanceFromStartKm: 0,
+          instruction: 'Sal de la ruta',
+          streetName: '',
+          maneuverType: 'depart',
+          maneuverModifier: null,
+          maneuverLocation: { latitude: 0, longitude: 0 },
+        }),
+        new NavigationStep({
+          distanceKm: 1,
+          durationMin: 1,
+          distanceFromStartKm: 0.6,
+          instruction: 'Giro cerrado a la derecha',
+          streetName: 'Via Honda',
+          maneuverType: 'turn',
+          maneuverModifier: 'sharp right',
+          maneuverLocation: { latitude: 0.006, longitude: 0 },
+        }),
+      ],
+    });
+
+    vm.startNavigation();
+
+    expect(vm.navSuggestions[0]).toEqual(
+      expect.objectContaining({
+        kind: 'curve',
+        title: 'Curva cerrada',
+        value: 'En 600 m',
+        detail: 'Via Honda',
+      }),
+    );
+    vm.stopNavigation();
   });
 });

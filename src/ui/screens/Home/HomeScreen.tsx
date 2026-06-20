@@ -46,6 +46,7 @@ import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
+import NavSuggestionRail from '@/ui/components/NavSuggestionRail';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
@@ -353,6 +354,8 @@ const HomeScreen = () => {
   const autonomy = viewModel.autonomySummary;
   const journey = viewModel.journey;
   const elevation = viewModel.elevationSummary;
+  const currentTurn = viewModel.currentTurn;
+  const navSuggestions = viewModel.navSuggestions;
 
   return (
     <View style={styles.container} testID="screen-home">
@@ -789,20 +792,23 @@ const HomeScreen = () => {
       {/* ── Overlays durante la navegacion (frames 6a/6b del Pencil) ───── */}
       {viewModel.isNavigating ? (
         <>
-          {/* TurnBanner: step indicator con la maniobra siguiente. */}
-          {viewModel.currentTurn ? (
+          {/* TurnBanner + sugerencias tacticas del HUD activo. */}
+          {currentTurn || navSuggestions.length > 0 ? (
             <SafeAreaView
               edges={['top', 'left', 'right']}
               style={styles.turnBannerWrap}
               pointerEvents="box-none"
             >
-              <TurnBanner
-                distanceText={viewModel.currentTurn.distanceText}
-                instruction={viewModel.currentTurn.instruction}
-                streetName={viewModel.currentTurn.streetName}
-                maneuverType={viewModel.currentTurn.maneuverType}
-                maneuverModifier={viewModel.currentTurn.maneuverModifier}
-              />
+              {currentTurn ? (
+                <TurnBanner
+                  distanceText={currentTurn.distanceText}
+                  instruction={currentTurn.instruction}
+                  streetName={currentTurn.streetName}
+                  maneuverType={currentTurn.maneuverType}
+                  maneuverModifier={currentTurn.maneuverModifier}
+                />
+              ) : null}
+              <NavSuggestionRail suggestions={navSuggestions} />
             </SafeAreaView>
           ) : null}
 
@@ -2348,6 +2354,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    gap: Spacings.sm,
     paddingHorizontal: Spacings.lg,
   },
   // 6b: barra lateral con la rampa de elevacion + marcador del rider.
