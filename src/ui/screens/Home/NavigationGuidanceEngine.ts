@@ -22,6 +22,7 @@ const NAV_SUGGESTION_MIN_VISIBLE_MS = 4500;
 const NAV_SUGGESTION_COOLDOWN_MS = 12000;
 
 export type NavSuggestionKind =
+  | 'off-route'
   | 'fuel'
   | 'fuel-warning'
   | 'station'
@@ -59,6 +60,11 @@ export type NavigationGuidanceInput = {
   currentTurn: NavigationGuidanceTurn | null;
   destinationName: string;
   arrivalThresholdKm: number;
+  isOffRoute?: boolean;
+  isRerouting?: boolean;
+  offRouteDistanceKm?: number;
+  rerouteCooldownRemainingMs?: number;
+  rerouteError?: string | null;
 };
 
 export type NavigationSuggestionLifecycleState = {
@@ -134,11 +140,39 @@ export const buildNavigationSuggestions = ({
   currentTurn,
   destinationName,
   arrivalThresholdKm,
+  isOffRoute = false,
+  isRerouting = false,
+  offRouteDistanceKm = 0,
+  rerouteCooldownRemainingMs = 0,
+  rerouteError = null,
 }: NavigationGuidanceInput): NavSuggestion[] => {
   if (!isNavigating) return [];
 
   const routeProgressKm = Math.max(0, Math.min(route.distanceKm, progressKm));
   const suggestions: RankedNavSuggestion[] = [];
+
+  if (isOffRoute) {
+    const cooldownSeconds = Math.ceil(rerouteCooldownRemainingMs / 1000);
+    suggestions.push({
+      id: 'off-route-status',
+      kind: 'off-route',
+      title: isRerouting ? 'Recalculando ruta' : 'Fuera de ruta',
+      value: isRerouting
+        ? 'Buscando'
+        : cooldownSeconds > 0
+          ? `${cooldownSeconds} s`
+          : formatGuidanceDistance(offRouteDistanceKm),
+      detail: rerouteError
+        ? 'Reintento automatico pendiente'
+        : isRerouting
+          ? 'Trazando regreso seguro'
+          : cooldownSeconds > 0
+            ? 'Evitando recalculos seguidos'
+            : 'Mantente atento al mapa',
+      priority: 120,
+    });
+  }
+
   const nextFuelStop =
     fuelStops
       .filter((stop) => stop.distanceFromStartKm > routeProgressKm + 0.1)

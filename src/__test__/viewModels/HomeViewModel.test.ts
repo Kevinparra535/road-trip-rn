@@ -1250,6 +1250,72 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     expect(vm.navProgressKm).toBeGreaterThan(10);
   });
 
+  it('confirma off-route y limita recalculos con cooldown', async () => {
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1_000);
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(
+      makeRouteDirections({
+        distanceKm: 90,
+        geometry: [
+          { latitude: 0, longitude: 0 },
+          { latitude: 1, longitude: 0 },
+        ],
+      }),
+    );
+    const store = makeLocationStore({
+      isLocationResponse: makeGeoLocation({
+        latitude: 0.2,
+        longitude: 0.2,
+        speed: 10,
+        accuracy: 8,
+      }),
+    });
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+    vm.destination = makePlace({
+      id: 'reroute-destination',
+      latitude: 1,
+      longitude: 0,
+    });
+    vm.isRouteResponse = makeRouteDirections({
+      distanceKm: 111,
+      geometry: [
+        { latitude: 0, longitude: 0 },
+        { latitude: 1, longitude: 0 },
+      ],
+    });
+
+    try {
+      (vm as any).navigationSession.startNavigation(0);
+
+      for (let index = 0; index < 4; index += 1) {
+        (vm as any).monitorOffRoute();
+      }
+      await flush();
+
+      expect(directions.run).toHaveBeenCalledTimes(1);
+      expect(vm.isRerouting).toBe(false);
+      expect(vm.navigationPhase).toBe('navigating');
+      expect((vm as any).navigationSession.rerouteAttempts).toBe(1);
+
+      nowSpy.mockReturnValue(5_000);
+      for (let index = 0; index < 4; index += 1) {
+        (vm as any).monitorOffRoute();
+      }
+
+      expect(directions.run).toHaveBeenCalledTimes(1);
+      expect(vm.navigationPhase).toBe('offRoute');
+      expect(vm.navSuggestions[0]).toEqual(
+        expect.objectContaining({
+          kind: 'off-route',
+          title: 'Fuera de ruta',
+          detail: 'Evitando recalculos seguidos',
+        }),
+      );
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
   it('navSuggestions prioriza el proximo tanqueo recomendado', () => {
     const store = makeLocationStore({
       isLocationResponse: makeGeoLocation({ latitude: 0, longitude: 0 }),

@@ -128,4 +128,41 @@ describe('NavigationSessionStore', () => {
     store.resumeNavigation();
     expect(store.navigationPhase).toBe('groupRide');
   });
+
+  it('tracks reroute attempts with cooldown while off-route', () => {
+    const store = new NavigationSessionStore();
+
+    store.prepareLiveNavigation();
+    store.startNavigation(3);
+    store.markOffRoute(0.24, 1_000);
+
+    expect(store.navigationPhase).toBe('offRoute');
+    expect(store.offRouteDistanceKm).toBe(0.24);
+    expect(store.offRouteDetectedAtMs).toBe(1_000);
+    expect(store.canRequestReroute(1_000)).toBe(true);
+
+    expect(store.beginReroute(1_000, 30_000)).toBe(true);
+    expect(store.isRerouting).toBe(true);
+    expect(store.rerouteAttempts).toBe(1);
+    expect(store.lastRerouteAtMs).toBe(1_000);
+    expect(store.rerouteCooldownRemainingMs(10_000)).toBe(21_000);
+    expect(store.canRequestReroute(10_000)).toBe(false);
+
+    store.failReroute('network', 12_000, 60_000);
+
+    expect(store.isRerouting).toBe(false);
+    expect(store.rerouteError).toBe('network');
+    expect(store.rerouteCooldownRemainingMs(42_000)).toBe(30_000);
+    expect(store.beginReroute(42_000, 30_000)).toBe(false);
+
+    expect(store.beginReroute(72_000, 30_000)).toBe(true);
+    store.completeReroute();
+
+    expect(store.navigationPhase).toBe('navigating');
+    expect(store.isRerouting).toBe(false);
+    expect(store.rerouteError).toBeNull();
+    expect(store.offRouteDistanceKm).toBe(0);
+    expect(store.rerouteAttempts).toBe(2);
+    expect(store.rerouteCooldownRemainingMs(80_000)).toBe(22_000);
+  });
 });

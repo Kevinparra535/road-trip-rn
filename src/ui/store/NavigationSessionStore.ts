@@ -31,6 +31,13 @@ export class NavigationSessionStore {
   isMuted: boolean = false;
   lastRealProgressKm: number = 0;
   offRouteTicks: number = 0;
+  offRouteDistanceKm: number = 0;
+  offRouteDetectedAtMs: number | null = null;
+  isRerouting: boolean = false;
+  rerouteAttempts: number = 0;
+  lastRerouteAtMs: number | null = null;
+  rerouteCooldownUntilMs: number = 0;
+  rerouteError: string | null = null;
   isSimulationMode: boolean = false;
   isGroupRideMode: boolean = false;
   simulatedOrigin: Place | null = null;
@@ -74,6 +81,14 @@ export class NavigationSessionStore {
     return this.navigationPhase === 'groupRide';
   }
 
+  get hasRerouteCooldown(): boolean {
+    return this.rerouteCooldownUntilMs > Date.now();
+  }
+
+  rerouteCooldownRemainingMs(nowMs: number = Date.now()): number {
+    return Math.max(0, this.rerouteCooldownUntilMs - nowMs);
+  }
+
   prepareSimulation(origin: Place): void {
     this.resetRouteSession();
     this.isSimulationMode = true;
@@ -103,6 +118,7 @@ export class NavigationSessionStore {
     this.navigationPhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
     this.resumePhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
     this.arrivedAt = null;
+    this.clearOffRouteState({ keepCooldown: true });
     this.simulatedDistanceKm = 0;
     this.lastRealProgressKm = this.isSimulationMode ? 0 : initialRealProgressKm;
     this.offRouteTicks = 0;
@@ -133,14 +149,64 @@ export class NavigationSessionStore {
     this.navigationPhase = 'offRoute';
   }
 
+  markOffRoute(distanceKm: number, nowMs: number = Date.now()): void {
+    this.enterOffRoute();
+    this.offRouteDistanceKm = Math.max(0, distanceKm);
+    this.offRouteDetectedAtMs ??= nowMs;
+  }
+
   exitOffRoute(): void {
     if (!this.isOffRoute) return;
     this.navigationPhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+    this.clearOffRouteState({ keepCooldown: true });
+  }
+
+  canRequestReroute(nowMs: number = Date.now()): boolean {
+    return (
+      this.isOffRoute &&
+      !this.isRerouting &&
+      nowMs >= this.rerouteCooldownUntilMs
+    );
+  }
+
+  beginReroute(nowMs: number = Date.now(), cooldownMs: number = 0): boolean {
+    if (!this.canRequestReroute(nowMs)) return false;
+    this.isRerouting = true;
+    this.rerouteAttempts += 1;
+    this.lastRerouteAtMs = nowMs;
+    this.rerouteCooldownUntilMs = Math.max(
+      this.rerouteCooldownUntilMs,
+      nowMs + cooldownMs,
+    );
+    this.rerouteError = null;
+    return true;
+  }
+
+  completeReroute(): void {
+    this.isRerouting = false;
+    this.rerouteError = null;
+    this.resetNavigationProgress();
+    this.clearOffRouteState({ keepCooldown: true });
+    this.exitOffRoute();
+  }
+
+  failReroute(
+    errorMessage: string,
+    nowMs: number = Date.now(),
+    cooldownMs: number = 0,
+  ): void {
+    this.isRerouting = false;
+    this.rerouteError = errorMessage;
+    this.rerouteCooldownUntilMs = Math.max(
+      this.rerouteCooldownUntilMs,
+      nowMs + cooldownMs,
+    );
   }
 
   stopNavigation(): void {
     this.navigationPhase = 'preview';
     this.resetNavigationProgress();
+    this.clearOffRouteState({ keepCooldown: false });
     this.clearSpokenVoiceIds();
   }
 
@@ -149,6 +215,7 @@ export class NavigationSessionStore {
     this.arrivedAt = arrivedAt;
     this.offRouteTicks = 0;
     this.lastRealProgressKm = 0;
+    this.clearOffRouteState({ keepCooldown: false });
   }
 
   dismissArrival(): void {
@@ -204,6 +271,7 @@ export class NavigationSessionStore {
     this.navigationPhase = 'idle';
     this.arrivedAt = null;
     this.resetNavigationProgress();
+    this.clearOffRouteState({ keepCooldown: false });
     this.isSimulationMode = false;
     this.isGroupRideMode = false;
     this.simulatedOrigin = null;
@@ -215,5 +283,21 @@ export class NavigationSessionStore {
     this.resetRouteSession();
     this.isMuted = false;
     this.isElevationStripOpen = true;
+  }
+
+  private clearOffRouteState({
+    keepCooldown,
+  }: {
+    keepCooldown: boolean;
+  }): void {
+    this.offRouteDistanceKm = 0;
+    this.offRouteDetectedAtMs = null;
+    this.isRerouting = false;
+    this.rerouteError = null;
+    if (!keepCooldown) {
+      this.rerouteAttempts = 0;
+      this.lastRerouteAtMs = null;
+      this.rerouteCooldownUntilMs = 0;
+    }
   }
 }

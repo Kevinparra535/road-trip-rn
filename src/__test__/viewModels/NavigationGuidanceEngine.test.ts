@@ -38,6 +38,58 @@ const baseInput = (
 });
 
 describe('NavigationGuidanceEngine', () => {
+  it('prioriza la alerta off-route sobre las demas sugerencias', () => {
+    const suggestions = buildNavigationSuggestions(
+      baseInput({
+        isOffRoute: true,
+        isRerouting: true,
+        offRouteDistanceKm: 0.22,
+        fuelEstimate: makeRouteFuelEstimate({
+          distanceKm: 120,
+          effectiveRangeKm: 40,
+        }),
+        fuelStops: [
+          new FuelStop({
+            id: 'refuel-1',
+            order: 1,
+            distanceFromStartKm: 20,
+            location: { latitude: 0.18, longitude: 0 },
+            label: 'Tanqueo 1',
+          }),
+        ],
+      }),
+    );
+
+    expect(suggestions[0]).toEqual(
+      expect.objectContaining({
+        id: 'off-route-status',
+        kind: 'off-route',
+        title: 'Recalculando ruta',
+        value: 'Buscando',
+        detail: 'Trazando regreso seguro',
+      }),
+    );
+  });
+
+  it('muestra cooldown si el recalculo off-route debe esperar', () => {
+    const suggestions = buildNavigationSuggestions(
+      baseInput({
+        isOffRoute: true,
+        offRouteDistanceKm: 0.22,
+        rerouteCooldownRemainingMs: 12_400,
+      }),
+    );
+
+    expect(suggestions[0]).toEqual(
+      expect.objectContaining({
+        kind: 'off-route',
+        title: 'Fuera de ruta',
+        value: '13 s',
+        detail: 'Evitando recalculos seguidos',
+      }),
+    );
+  });
+
   it('prioriza el proximo tanqueo recomendado', () => {
     const suggestions = buildNavigationSuggestions(
       baseInput({

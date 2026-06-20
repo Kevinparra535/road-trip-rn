@@ -110,6 +110,10 @@ const DEFAULT_NAVIGATION_LAB_SPEED_MULTIPLIER: NavigationLabSpeedMultiplier = 60
 const OFF_ROUTE_THRESHOLD_KM = 0.06;
 // Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
 const OFF_ROUTE_CONFIRM_TICKS = 4;
+// Cooldown entre llamadas Mapbox de recalculo para controlar costos.
+const OFF_ROUTE_REROUTE_COOLDOWN_MS = 30_000;
+// Si Mapbox falla, esperamos mas antes del siguiente intento automatico.
+const OFF_ROUTE_REROUTE_FAILURE_COOLDOWN_MS = 60_000;
 // Distancia (km) al final de la ruta a partir de la cual se considera que el
 // rider llego al destino. Tolerancia para que el GPS no tenga que coincidir
 // exactamente con la geometria de Mapbox.
@@ -440,6 +444,22 @@ export class HomeViewModel {
 
   get isOffRoute(): boolean {
     return this.navigationSession.isOffRoute;
+  }
+
+  get isRerouting(): boolean {
+    return this.navigationSession.isRerouting;
+  }
+
+  get offRouteDistanceKm(): number {
+    return this.navigationSession.offRouteDistanceKm;
+  }
+
+  get rerouteCooldownRemainingMs(): number {
+    return this.navigationSession.rerouteCooldownRemainingMs();
+  }
+
+  get rerouteError(): string | null {
+    return this.navigationSession.rerouteError;
   }
 
   get isGroupRideNavigation(): boolean {
@@ -2045,6 +2065,7 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     const rider = this.navRiderPoint;
     if (!route || !rider) return;
+    const nowMs = Date.now();
     const projection = projectPointOnPolyline(route.geometry, rider);
     const decision = detectOffRoute({
       distanceToRouteKm: projection.distanceToRouteKm,
@@ -2054,22 +2075,55 @@ export class HomeViewModel {
     });
     if (!decision.isOffRouteCandidate) {
       this.navigationSession.resetOffRouteTicks();
-      this.navigationSession.exitOffRoute();
+      if (
+        this.navigationSession.isOffRoute &&
+        !this.navigationSession.isRerouting
+      ) {
+        this.navigationSession.exitOffRoute();
+        this.refreshNavSuggestionSnapshot(nowMs);
+      }
       return;
     }
+
+    if (this.navigationSession.isOffRoute) {
+      this.navigationSession.markOffRoute(projection.distanceToRouteKm, nowMs);
+      this.requestRerouteIfAllowed(rider, nowMs);
+      this.refreshNavSuggestionSnapshot(nowMs);
+      return;
+    }
+
     if (
       this.navigationSession.incrementOffRouteTicks() >= OFF_ROUTE_CONFIRM_TICKS
     ) {
       this.navigationSession.resetOffRouteTicks();
-      this.navigationSession.enterOffRoute();
-      void this.recalculateFrom(rider);
+      this.navigationSession.markOffRoute(projection.distanceToRouteKm, nowMs);
+      this.requestRerouteIfAllowed(rider, nowMs);
+      this.refreshNavSuggestionSnapshot(nowMs);
     }
+  }
+
+  private requestRerouteIfAllowed(origin: GeoPoint, nowMs: number): void {
+    if (
+      !this.navigationSession.beginReroute(nowMs, OFF_ROUTE_REROUTE_COOLDOWN_MS)
+    ) {
+      return;
+    }
+    this.refreshNavSuggestionSnapshot(nowMs);
+    void this.recalculateFrom(origin);
   }
 
   /** Recalcula la ruta desde la posicion actual hacia el mismo destino. */
   private async recalculateFrom(origin: GeoPoint): Promise<void> {
     const place = this.destination;
-    if (!place) return;
+    if (!place) {
+      this.navigationSession.failReroute(
+        'No hay destino para recalcular.',
+        Date.now(),
+        OFF_ROUTE_REROUTE_FAILURE_COOLDOWN_MS,
+      );
+      this.refreshNavSuggestionSnapshot();
+      return;
+    }
     try {
       const remainingPlaces = this.remainingPlacesForReroute(place);
       const remainingWaypoints = await Promise.all(
@@ -2110,14 +2164,18 @@ export class HomeViewModel {
       runInAction(() => {
         this.isRouteResponse = directions;
       });
-      this.navigationSession.resetNavigationProgress();
-      this.navigationSession.exitOffRoute();
+      this.navigationSession.completeReroute();
+      this.resetNavSuggestionLifecycle();
+      this.refreshNavSuggestionSnapshot();
     } catch (error) {
-      this.logger.error(
-        `Error recalculando ruta: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+      const message = error instanceof Error ? error.message : String(error);
+      this.navigationSession.failReroute(
+        message,
+        Date.now(),
+        OFF_ROUTE_REROUTE_FAILURE_COOLDOWN_MS,
       );
+      this.refreshNavSuggestionSnapshot();
+      this.logger.error(`Error recalculando ruta: ${message}`);
     }
   }
 
@@ -2266,7 +2324,9 @@ export class HomeViewModel {
     return speedMps * 3.6;
   }
 
-  private buildNavSuggestionCandidates(): NavSuggestion[] {
+  private buildNavSuggestionCandidates(
+    nowMs: number = Date.now(),
+  ): NavSuggestion[] {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return [];
     return buildNavigationSuggestions({
@@ -2281,6 +2341,12 @@ export class HomeViewModel {
       currentTurn: this.currentTurn,
       destinationName: this.destination?.name ?? 'Destino',
       arrivalThresholdKm: NAV_ARRIVAL_THRESHOLD_KM,
+      isOffRoute: this.isOffRoute,
+      isRerouting: this.isRerouting,
+      offRouteDistanceKm: this.offRouteDistanceKm,
+      rerouteCooldownRemainingMs:
+        this.navigationSession.rerouteCooldownRemainingMs(nowMs),
+      rerouteError: this.rerouteError,
     });
   }
 
@@ -2290,7 +2356,7 @@ export class HomeViewModel {
       return;
     }
     const result = resolveNavigationSuggestionLifecycle({
-      candidates: this.buildNavSuggestionCandidates(),
+      candidates: this.buildNavSuggestionCandidates(nowMs),
       previous: this.navSuggestionLifecycle,
       nowMs,
     });

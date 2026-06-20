@@ -15,6 +15,7 @@ type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 export type NavSuggestionRailItem = {
   id: string;
   kind:
+    | 'off-route'
     | 'fuel'
     | 'fuel-warning'
     | 'station'
@@ -40,6 +41,13 @@ type SuggestionTone = {
 
 const toneFor = (kind: NavSuggestionRailItem['kind']): SuggestionTone => {
   switch (kind) {
+    case 'off-route':
+      return {
+        icon: 'map-marker-alert',
+        color: Colors.alerts.warning,
+        backgroundColor: hexToRgba(Colors.alerts.warning, 0.18),
+        borderColor: hexToRgba(Colors.alerts.warning, 0.45),
+      };
     case 'fuel-warning':
       return {
         icon: 'gas-station',
