@@ -111,6 +111,7 @@ export const TYPES = {
   // ── Stores globales (singletons, capa ui) ──
   SessionStore: Symbol.for('SessionStore'),
   LocationStore: Symbol.for('LocationStore'),
+  NavigationSessionStore: Symbol.for('NavigationSessionStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),

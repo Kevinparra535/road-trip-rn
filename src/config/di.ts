@@ -141,6 +141,7 @@ import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NetworkStore } from '@/ui/store/NetworkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
@@ -453,6 +454,10 @@ container
 container
   .bind<LocationStore>(TYPES.LocationStore)
   .to(LocationStore)
+  .inSingletonScope();
+container
+  .bind<NavigationSessionStore>(TYPES.NavigationSessionStore)
+  .to(NavigationSessionStore)
   .inSingletonScope();
 container
   .bind<TripPartyStore>(TYPES.TripPartyStore)

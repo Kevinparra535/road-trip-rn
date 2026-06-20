@@ -3,6 +3,7 @@ import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 
 import {
   makeElevationProfile,
@@ -50,6 +51,7 @@ const makeGetAllRoutesUseCase = () => ({
 const makeInferStopKindUseCase = () => ({
   run: jest.fn().mockResolvedValue(null),
 });
+const makeNavigationSessionStore = () => new NavigationSessionStore();
 
 /**
  * Mock minimo del RoutePlannerViewModel — el HomeViewModel solo lo lee para
@@ -78,6 +80,7 @@ const makeVM = (
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
   inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
   planner: ReturnType<typeof makePlannerVM> = makePlannerVM(),
+  navigationSession: NavigationSessionStore = makeNavigationSessionStore(),
   getRouteDraft: { run: jest.Mock } = {
     run: jest.fn().mockResolvedValue(null),
   },
@@ -87,6 +90,7 @@ const makeVM = (
 ) =>
   new HomeViewModel(
     store as any,
+    navigationSession,
     searchPlaces as any,
     directions as any,
     elevation as any,

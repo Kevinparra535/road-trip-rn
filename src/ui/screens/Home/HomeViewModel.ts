@@ -59,6 +59,7 @@ import Logger from '@/ui/utils/Logger';
 
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.
@@ -304,28 +305,9 @@ export class HomeViewModel {
   isFuelEstimateError: string | null = null;
   isFuelEstimateResponse: RouteFuelEstimate | null = null;
 
-  // ── State: navegacion (simulacion del recorrido) ──
-  isNavigating: boolean = false;
-  simulatedDistanceKm: number = 0;
-  /**
-   * Pantalla "8 - Home Llegada" del Pencil: al alcanzar el destino, congela
-   * la nav y muestra el panel de llegada con el resumen del viaje. Permanece
-   * en `true` hasta que el rider toca "Finalizar" (`dismissArrival`).
-   */
-  isArrived: boolean = false;
-  private arrivedAt: Date | null = null;
-  /**
-   * Pantalla "6b - Home Nav Activa + Elevacion" del Pencil: muestra la barra
-   * lateral con el perfil de altura. Cuando es `false` (pantalla 6a) solo se
-   * ve un chip compacto con altitud y ascenso al lado del marcador del rider.
-   */
-  isElevationStripOpen: boolean = true;
-  /**
-   * Silencia los anuncios de voz turn-by-turn. Persiste solo en memoria —
-   * se reinicia al cerrar la app. Por defecto el motero recibe voz cuando
-   * arranca la navegacion para que no haya que mirar la pantalla.
-   */
-  isMuted: boolean = false;
+  // -- State: navegacion --
+  // La sesion activa vive en NavigationSessionStore; este VM expone getters
+  // para mantener una fachada estable hacia HomeScreen.
 
   // -- State: Navigation Lab (herramienta DEV para probar rutas A/B manuales) --
   isNavigationLabOpen: boolean = false;
@@ -360,17 +342,13 @@ export class HomeViewModel {
   private navTimer: ReturnType<typeof setInterval> | null = null;
   /** Disposer de la reaccion que escucha el avance del GPS real. */
   private navReactionDisposer: (() => void) | null = null;
-  /** Claves de los anuncios de voz ya reproducidos (no repetir). */
-  private spokenVoiceIds: Set<string> = new Set();
-  private offRouteTicks: number = 0;
-  private lastRealProgressKm: number = 0;
-  private isSimulationMode: boolean = false;
-  private simulatedOrigin: Place | null = null;
   private logger = new Logger('HomeViewModel');
 
   constructor(
     @inject(TYPES.LocationStore)
     private readonly locationStore: LocationStore,
+    @inject(TYPES.NavigationSessionStore)
+    private readonly navigationSession: NavigationSessionStore,
     @inject(TYPES.SearchPlacesUseCase)
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
     @inject(TYPES.CalculateDirectionsUseCase)
@@ -424,6 +402,38 @@ export class HomeViewModel {
 
   get userCoordinates(): [number, number] | null {
     return this.locationStore.coordinates;
+  }
+
+  get isNavigating(): boolean {
+    return this.navigationSession.isNavigating;
+  }
+
+  get simulatedDistanceKm(): number {
+    return this.navigationSession.simulatedDistanceKm;
+  }
+
+  get isArrived(): boolean {
+    return this.navigationSession.isArrived;
+  }
+
+  get isElevationStripOpen(): boolean {
+    return this.navigationSession.isElevationStripOpen;
+  }
+
+  get isMuted(): boolean {
+    return this.navigationSession.isMuted;
+  }
+
+  private get arrivedAt(): Date | null {
+    return this.navigationSession.arrivedAt;
+  }
+
+  private get lastRealProgressKm(): number {
+    return this.navigationSession.lastRealProgressKm;
+  }
+
+  private get offRouteTicks(): number {
+    return this.navigationSession.offRouteTicks;
   }
 
   // ── Computed: presentacion del marcador del rider ───────────────────────────
@@ -546,7 +556,7 @@ export class HomeViewModel {
 
   get routeOriginLabel(): string {
     return this.isSimulatedNavigation
-      ? (this.simulatedOrigin?.name ?? DEV_FAKE_ORIGIN.name)
+      ? (this.navigationSession.simulatedOrigin?.name ?? DEV_FAKE_ORIGIN.name)
       : 'Mi ubicacion';
   }
 
@@ -1086,7 +1096,8 @@ export class HomeViewModel {
   /** La ruta actual proviene del boton DEV "Ruta de prueba". */
   get isSimulatedNavigation(): boolean {
     return (
-      this.isSimulationMode || this.destination?.id === DEV_FAKE_DESTINATION.id
+      this.navigationSession.isSimulationMode ||
+      this.destination?.id === DEV_FAKE_DESTINATION.id
     );
   }
 
@@ -1528,9 +1539,8 @@ export class HomeViewModel {
       this.addStop(place);
       return;
     }
+    this.navigationSession.prepareLiveNavigation();
     runInAction(() => {
-      this.isSimulationMode = false;
-      this.simulatedOrigin = null;
       this.destination = place;
       this.intermediateStops = [];
       this.searchQuery = '';
@@ -1559,11 +1569,9 @@ export class HomeViewModel {
   ): Promise<void> {
     this.clearNavTimer();
     Speech.stop();
-    this.spokenVoiceIds.clear();
+    this.navigationSession.prepareSimulation(origin);
     void this.locationStore.setNavigationMode(false);
     runInAction(() => {
-      this.isSimulationMode = true;
-      this.simulatedOrigin = origin;
       this.destination = destination;
       this.previewPlace = null;
       this.intermediateStops = [];
@@ -1574,11 +1582,6 @@ export class HomeViewModel {
       this.rideType = DEFAULT_RIDE_TYPE;
       this.isRouteResponse = null;
       this.isRouteError = null;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.lastRealProgressKm = 0;
-      this.offRouteTicks = 0;
       this.isFuelStopResponse = null;
       this.fuelStops = [];
     });
@@ -1652,9 +1655,8 @@ export class HomeViewModel {
         category: w.mapboxCategory,
       });
 
+    this.navigationSession.prepareLiveNavigation();
     runInAction(() => {
-      this.isSimulationMode = false;
-      this.simulatedOrigin = null;
       this.destination = toPlace(last);
       this.intermediateStops = middle.map(toPlace);
       this.rideType = planner.rideType;
@@ -1827,9 +1829,8 @@ export class HomeViewModel {
   /** Agrega una parada intermedia al final del trayecto y recalcula la ruta. */
   addStop(place: Place): void {
     if (!this.destination) return;
+    this.navigationSession.prepareLiveNavigation();
     runInAction(() => {
-      this.isSimulationMode = false;
-      this.simulatedOrigin = null;
       this.intermediateStops.push(place);
       this.searchQuery = '';
       this.isSearchResponse = null;
@@ -1894,15 +1895,7 @@ export class HomeViewModel {
    */
   startNavigation(): void {
     if (!this.hasRoute) return;
-    runInAction(() => {
-      this.isNavigating = true;
-      this.simulatedDistanceKm = 0;
-      this.lastRealProgressKm = this.isSimulatedNavigation
-        ? 0
-        : this.routeProgressKm;
-      this.offRouteTicks = 0;
-    });
-    this.spokenVoiceIds.clear();
+    this.navigationSession.startNavigation(this.routeProgressKm);
     this.clearNavTimer();
     void this.locationStore.setNavigationMode(!this.isSimulatedNavigation);
     if (this.isSimulatedNavigation) {
@@ -1926,29 +1919,20 @@ export class HomeViewModel {
 
   /** Alterna los anuncios de voz turn-by-turn. */
   toggleMute(): void {
-    runInAction(() => {
-      this.isMuted = !this.isMuted;
-    });
-    if (this.isMuted) Speech.stop();
+    if (this.navigationSession.toggleMute()) Speech.stop();
   }
 
   /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */
   toggleElevationStrip(): void {
-    this.isElevationStripOpen = !this.isElevationStripOpen;
+    this.navigationSession.toggleElevationStrip();
   }
 
   /** Termina la navegacion y restaura la pantalla del Home. */
   stopNavigation(): void {
     this.clearNavTimer();
     Speech.stop();
-    this.spokenVoiceIds.clear();
     void this.locationStore.setNavigationMode(false);
-    runInAction(() => {
-      this.isNavigating = false;
-      this.simulatedDistanceKm = 0;
-      this.lastRealProgressKm = 0;
-      this.offRouteTicks = 0;
-    });
+    this.navigationSession.stopNavigation();
   }
 
   /**
@@ -1961,21 +1945,12 @@ export class HomeViewModel {
   private markArrived(): void {
     this.clearNavTimer();
     void this.locationStore.setNavigationMode(false);
-    runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = true;
-      this.arrivedAt = new Date();
-      this.offRouteTicks = 0;
-      this.lastRealProgressKm = 0;
-    });
+    this.navigationSession.markArrived();
   }
 
   /** Cierra el panel de llegada y limpia la ruta (vuelve al Home vacio). */
   dismissArrival(): void {
-    runInAction(() => {
-      this.isArrived = false;
-      this.arrivedAt = null;
-    });
+    this.navigationSession.dismissArrival();
     this.clearRoute();
   }
 
@@ -1986,12 +1961,12 @@ export class HomeViewModel {
       this.stopNavigation();
       return;
     }
-    runInAction(() => {
-      this.simulatedDistanceKm = Math.min(
+    this.navigationSession.setSimulatedDistanceKm(
+      Math.min(
         route.distanceKm,
         this.simulatedDistanceKm + this.simulationKmPerTick,
-      );
-    });
+      ),
+    );
     this.maybeSpeak();
     this.monitorOffRoute();
     if (this.simulatedDistanceKm >= route.distanceKm) {
@@ -2016,8 +1991,8 @@ export class HomeViewModel {
           step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
         if (progressKm < triggerKm) continue;
         const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
-        if (this.spokenVoiceIds.has(key)) continue;
-        this.spokenVoiceIds.add(key);
+        if (this.navigationSession.hasSpokenVoiceId(key)) continue;
+        this.navigationSession.markSpokenVoiceId(key);
         Speech.speak(voice.announcement, { language: NAV_VOICE_LANGUAGE });
       }
     }
@@ -2041,12 +2016,13 @@ export class HomeViewModel {
       accuracyM: this.locationStore.isLocationResponse?.accuracy,
     });
     if (!decision.isOffRouteCandidate) {
-      this.offRouteTicks = 0;
+      this.navigationSession.resetOffRouteTicks();
       return;
     }
-    this.offRouteTicks += 1;
-    if (this.offRouteTicks >= OFF_ROUTE_CONFIRM_TICKS) {
-      this.offRouteTicks = 0;
+    if (
+      this.navigationSession.incrementOffRouteTicks() >= OFF_ROUTE_CONFIRM_TICKS
+    ) {
+      this.navigationSession.resetOffRouteTicks();
       void this.recalculateFrom(rider);
     }
   }
@@ -2094,9 +2070,8 @@ export class HomeViewModel {
       });
       runInAction(() => {
         this.isRouteResponse = directions;
-        this.simulatedDistanceKm = 0;
-        this.lastRealProgressKm = 0;
       });
+      this.navigationSession.resetNavigationProgress();
     } catch (error) {
       this.logger.error(
         `Error recalculando ruta: ${
@@ -2114,10 +2089,7 @@ export class HomeViewModel {
   private handleRealNavTick(): void {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return;
-    this.lastRealProgressKm = Math.max(
-      this.lastRealProgressKm,
-      this.routeProgressKm,
-    );
+    this.navigationSession.recordRealProgress(this.routeProgressKm);
     this.maybeSpeak();
     this.monitorOffRoute();
     if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
@@ -2138,17 +2110,9 @@ export class HomeViewModel {
   clearRoute(): void {
     this.clearNavTimer();
     Speech.stop();
-    this.spokenVoiceIds.clear();
     void this.locationStore.setNavigationMode(false);
+    this.navigationSession.resetRouteSession();
     runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.lastRealProgressKm = 0;
-      this.offRouteTicks = 0;
-      this.isSimulationMode = false;
-      this.simulatedOrigin = null;
       this.destination = null;
       this.previewPlace = null;
       this.intermediateStops = [];
@@ -2174,22 +2138,12 @@ export class HomeViewModel {
   reset(): void {
     this.clearNavTimer();
     Speech.stop();
-    this.spokenVoiceIds.clear();
     void this.locationStore.setNavigationMode(false);
+    this.navigationSession.reset();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
-      this.isMuted = false;
       this.isPerspective = false;
       this.hasAutoCentered = false;
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.lastRealProgressKm = 0;
-      this.offRouteTicks = 0;
-      this.isSimulationMode = false;
-      this.simulatedOrigin = null;
-      this.isElevationStripOpen = true;
       this.isNavigationLabOpen = false;
       this.navigationLabPickMode = 'origin';
       this.navigationLabOrigin = DEV_FAKE_ORIGIN;
