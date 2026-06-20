@@ -212,7 +212,7 @@ export class PlannerStore {
   private waypointSeq: number = 0;
   /** Índices de waypoint que cierran cada día (sin el último). Interno. */
   private dayBoundaries: number[] = [];
-  private logger = new Logger('RoutePlannerViewModel');
+  private logger = new Logger('PlannerStore');
   private searchDisposer: IReactionDisposer | null = null;
   private autoRecalcDisposer: IReactionDisposer | null = null;
   /** Disposer del auto-save del draft (E3 flow brief). */
