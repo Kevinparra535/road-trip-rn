@@ -33,11 +33,9 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import {
-  ADD_STOP_CATEGORIES,
-  AddStopCategoryTile,
+  AddStopCategoryDisplayTile,
   AddStopViewModel,
 } from '../AddStop/AddStopViewModel';
-import { stopKindMeta } from '../stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'AddStop'>;
 
@@ -64,7 +62,7 @@ const AddStopScreen = observer(() => {
     };
   }, [viewModel]);
 
-  const handleCategoryTap = (tile: AddStopCategoryTile) => {
+  const handleCategoryTap = (tile: AddStopCategoryDisplayTile) => {
     navigation.navigate('CategorySublist', { category: tile.category });
   };
 
@@ -77,11 +75,6 @@ const AddStopScreen = observer(() => {
     viewModel.selectSearchResult(place);
     navigation.goBack();
   };
-
-  const isEditing = viewModel.isEditingWaypoint;
-  const editingName = viewModel.editingWaypointName;
-  const title = isEditing ? 'Cambiar parada' : 'Agregar parada';
-  const subtitle = isEditing && editingName ? `Reemplazando: ${editingName}` : null;
 
   const handleMic = () => {
     Alert.alert(
@@ -98,11 +91,11 @@ const AddStopScreen = observer(() => {
         </TouchableOpacity>
         <View style={styles.navTitleColumn}>
           <Text style={styles.navTitle} numberOfLines={1}>
-            {title}
+            {viewModel.headerTitle}
           </Text>
-          {subtitle ? (
+          {viewModel.headerSubtitle ? (
             <Text style={styles.navSub} numberOfLines={1}>
-              {subtitle}
+              {viewModel.headerSubtitle}
             </Text>
           ) : null}
         </View>
@@ -175,29 +168,26 @@ const AddStopScreen = observer(() => {
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.grid}>
-            {ADD_STOP_CATEGORIES.map((tile, index) => {
-              const meta = stopKindMeta(tile.kind);
-              return (
-                <TouchableOpacity
-                  key={`${tile.category}-${index}`}
-                  style={[styles.tile, { borderColor: hexToRgba(meta.color, 0.4) }]}
-                  onPress={() => handleCategoryTap(tile)}
-                  activeOpacity={0.85}
+            {viewModel.categoryTiles.map((tile, index) => (
+              <TouchableOpacity
+                key={`${tile.category}-${index}`}
+                style={[styles.tile, { borderColor: hexToRgba(tile.color, 0.4) }]}
+                onPress={() => handleCategoryTap(tile)}
+                activeOpacity={0.85}
+              >
+                <View
+                  style={[
+                    styles.tileIconBox,
+                    { backgroundColor: hexToRgba(tile.color, 0.15) },
+                  ]}
                 >
-                  <View
-                    style={[
-                      styles.tileIconBox,
-                      { backgroundColor: hexToRgba(meta.color, 0.15) },
-                    ]}
-                  >
-                    <Ionicons name={tile.iconName as any} size={28} color={meta.color} />
-                  </View>
-                  <Text style={styles.tileLabel} numberOfLines={1}>
-                    {tile.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  <Ionicons name={tile.iconName} size={28} color={tile.color} />
+                </View>
+                <Text style={styles.tileLabel} numberOfLines={1}>
+                  {tile.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           <Text style={styles.sectionLabel}>Recientes y favoritos</Text>

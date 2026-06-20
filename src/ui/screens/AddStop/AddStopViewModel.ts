@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
+import { Ionicons } from '@expo/vector-icons';
 
 import { TYPES } from '@/config/types';
 
@@ -15,7 +16,22 @@ import Logger from '@/ui/utils/Logger';
 
 import { PlannerStore } from '@/ui/store/PlannerStore';
 
+import { stopKindMeta } from '../stopKindMeta';
+
 type ICalls = 'recents';
+
+/**
+ * Tile del grid de categorias ya resuelto a display: combina la categoria
+ * estatica (`ADD_STOP_CATEGORIES`) con la meta visual de su `StopKind`
+ * (color) y el icono tipado para Ionicons. La UI lo renderiza directo.
+ */
+export type AddStopCategoryDisplayTile = {
+  category: SearchableCategory;
+  kind: StopKind;
+  label: string;
+  color: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+};
 
 /**
  * Items del grid de categorias del AddStopScreen (frame DiJJK).
@@ -25,7 +41,7 @@ export type AddStopCategoryTile = {
   category: SearchableCategory;
   kind: StopKind;
   label: string;
-  iconName: string;
+  iconName: keyof typeof Ionicons.glyphMap;
 };
 
 export const ADD_STOP_CATEGORIES: AddStopCategoryTile[] = [
@@ -82,6 +98,40 @@ export class AddStopViewModel {
   /** Categorias del grid. Constantes; el VM las expone para que la UI no las hardcodee. */
   get categories(): AddStopCategoryTile[] {
     return ADD_STOP_CATEGORIES;
+  }
+
+  /**
+   * Tiles del grid ya resueltos para render: cada categoria con el color de la
+   * meta de su `StopKind` y el icono tipado. La UI los pinta sin llamar a
+   * `stopKindMeta` ni castear el icono.
+   */
+  get categoryTiles(): AddStopCategoryDisplayTile[] {
+    return ADD_STOP_CATEGORIES.map((tile) => {
+      const meta = stopKindMeta(tile.kind);
+      return {
+        category: tile.category,
+        kind: tile.kind,
+        label: tile.label,
+        color: meta.color,
+        iconName: tile.iconName,
+      };
+    });
+  }
+
+  /** Titulo del header: distingue agregar vs. editar waypoint. */
+  get headerTitle(): string {
+    return this.isEditingWaypoint ? 'Cambiar parada' : 'Agregar parada';
+  }
+
+  /**
+   * Subtitulo del header: en modo edit muestra el waypoint que se reemplaza.
+   * `null` cuando no hay edit (o no hay nombre) — la UI lo omite.
+   */
+  get headerSubtitle(): string | null {
+    if (this.isEditingWaypoint && this.editingWaypointName) {
+      return `Reemplazando: ${this.editingWaypointName}`;
+    }
+    return null;
   }
 
   /** `true` si el caller ya tiene al menos start+destination (i.e. una ruta plan). */

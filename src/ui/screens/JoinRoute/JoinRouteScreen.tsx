@@ -47,22 +47,18 @@ const JoinRouteScreen = observer(() => {
   }, [viewModel, params?.initialCode]);
 
   useEffect(() => {
-    if (viewModel.hasJoinedParty && viewModel.resolved) {
-      const routeId = viewModel.resolved.route.id;
+    const routeId = viewModel.resolvedRouteId;
+    if (viewModel.hasJoinedParty && routeId) {
       viewModel.consumeJoinPartyResult();
       navigation.replace('RouteDetail', { routeId });
     }
-  }, [viewModel, viewModel.hasJoinedParty, viewModel.resolved, navigation]);
+  }, [viewModel, viewModel.hasJoinedParty, viewModel.resolvedRouteId, navigation]);
 
   const handleViewRoute = () => {
-    if (!viewModel.resolved) return;
-    navigation.replace('RouteDetail', {
-      routeId: viewModel.resolved.route.id,
-    });
+    const routeId = viewModel.resolvedRouteId;
+    if (!routeId) return;
+    navigation.replace('RouteDetail', { routeId });
   };
-
-  const showEmptyState =
-    viewModel.hasTriedResolve && !viewModel.resolved && !viewModel.isError;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -126,7 +122,7 @@ const JoinRouteScreen = observer(() => {
           <Text style={styles.error}>{viewModel.isError}</Text>
         ) : null}
 
-        {showEmptyState ? (
+        {viewModel.showEmptyState ? (
           <View style={styles.emptyBox}>
             <Ionicons
               name="alert-circle-outline"
@@ -144,12 +140,10 @@ const JoinRouteScreen = observer(() => {
         {viewModel.resolved ? (
           <View style={styles.previewCard}>
             <Text style={styles.previewName} numberOfLines={1}>
-              {viewModel.resolved.route.name}
+              {viewModel.routeName}
             </Text>
             <Text style={styles.previewSub} numberOfLines={1}>
-              {Math.round(viewModel.resolved.route.distanceKm)} km ·{' '}
-              {viewModel.resolved.route.waypoints.length} paradas
-              {viewModel.resolvedHasParty ? ' · Rodada grupal' : ''}
+              {viewModel.routePreviewSubtitle}
             </Text>
 
             {viewModel.resolvedHasParty ? (
@@ -169,29 +163,25 @@ const JoinRouteScreen = observer(() => {
                       showsHorizontalScrollIndicator={false}
                       contentContainerStyle={styles.motoRow}
                     >
-                      {viewModel.myMotorcycles.map((moto) => {
-                        const active =
-                          viewModel.selectedMotorcycleId === moto.id;
-                        return (
-                          <TouchableOpacity
-                            key={moto.id}
+                      {viewModel.motorcycleRows.map((moto) => (
+                        <TouchableOpacity
+                          key={moto.id}
+                          style={[
+                            styles.motoChip,
+                            moto.active && styles.motoChipActive,
+                          ]}
+                          onPress={() => viewModel.selectMotorcycle(moto.id)}
+                        >
+                          <Text
                             style={[
-                              styles.motoChip,
-                              active && styles.motoChipActive,
+                              styles.motoChipText,
+                              moto.active && styles.motoChipTextActive,
                             ]}
-                            onPress={() => viewModel.selectMotorcycle(moto.id)}
                           >
-                            <Text
-                              style={[
-                                styles.motoChipText,
-                                active && styles.motoChipTextActive,
-                              ]}
-                            >
-                              {moto.displayName()}
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
+                            {moto.name}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
                     </ScrollView>
                   </>
                 )}

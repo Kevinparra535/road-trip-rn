@@ -28,21 +28,6 @@ import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { DestinationPreviewViewModel } from './DestinationPreviewViewModel';
 
-const formatDistance = (km: number): string => {
-  if (km < 1) return `${Math.round(km * 1000)} m`;
-  if (km < 10) return `${km.toFixed(1)} km`;
-  return `${Math.round(km)} km`;
-};
-
-const formatDuration = (minutes: number): string => {
-  if (minutes < 1) return '<1 min';
-  const total = Math.round(minutes);
-  const hours = Math.floor(total / 60);
-  const mins = total % 60;
-  if (hours <= 0) return `${mins} min`;
-  return `${hours} h ${mins} min`;
-};
-
 /**
  * Sheet de previsualizacion del destino: el rider eligio un resultado del
  * buscador, lo confirmamos antes de trazar la ruta. Tres capas de info:
@@ -112,13 +97,7 @@ const DestinationPreviewScreen = observer(() => {
     // pero estamos navegando desde el Home stack — el AppDrawer flat lo
     // resuelve en runtime.
     (navigation as any).navigate('RoutePlanner', {
-      destinationPlace: {
-        latitude: place.latitude,
-        longitude: place.longitude,
-        name: place.name,
-        mapboxCategory: place.category,
-        placeType: place.placeType,
-      },
+      destinationPlace: viewModel.plannerDestinationParam,
     });
   };
 
@@ -170,9 +149,7 @@ const DestinationPreviewScreen = observer(() => {
                 size={14}
                 color={Colors.base.accent}
               />
-              <Text style={styles.statValue}>
-                {formatDistance(viewModel.distanceKm!)}
-              </Text>
+              <Text style={styles.statValue}>{viewModel.distanceLabel}</Text>
               <Text style={styles.statLabel}>aprox.</Text>
             </View>
             <View style={styles.statDivider} />
@@ -182,9 +159,7 @@ const DestinationPreviewScreen = observer(() => {
                 size={14}
                 color={Colors.base.accent}
               />
-              <Text style={styles.statValue}>
-                {formatDuration(viewModel.etaMin!)}
-              </Text>
+              <Text style={styles.statValue}>{viewModel.etaLabel}</Text>
               <Text style={styles.statLabel}>en moto</Text>
             </View>
           </View>

@@ -76,6 +76,39 @@ export class JoinRouteViewModel {
     return Boolean(this.resolved?.shareCode.partyId);
   }
 
+  /** Id de la ruta resuelta — lo usa el screen para navegar al RouteDetail. */
+  get resolvedRouteId(): string | null {
+    return this.resolved?.route.id ?? null;
+  }
+
+  /** Nombre de la ruta resuelta para el preview card. */
+  get routeName(): string {
+    return this.resolved?.route.name ?? '';
+  }
+
+  /** Subtitulo del preview: distancia, paradas y flag de rodada grupal. */
+  get routePreviewSubtitle(): string {
+    if (!this.resolved) return '';
+    const km = Math.round(this.resolved.route.distanceKm);
+    const stops = this.resolved.route.waypoints.length;
+    const party = this.resolvedHasParty ? ' · Rodada grupal' : '';
+    return `${km} km · ${stops} paradas${party}`;
+  }
+
+  /** `true` cuando el rider intento resolver y no hubo match (vs. error). */
+  get showEmptyState(): boolean {
+    return this.hasTriedResolve && !this.resolved && !this.isError;
+  }
+
+  /** Filas de motos para los chips de seleccion en una rodada. */
+  get motorcycleRows(): { id: string; name: string; active: boolean }[] {
+    return this.myMotorcycles.map((moto) => ({
+      id: moto.id,
+      name: moto.displayName(),
+      active: this.selectedMotorcycleId === moto.id,
+    }));
+  }
+
   get canJoinParty(): boolean {
     return (
       this.resolvedHasParty &&

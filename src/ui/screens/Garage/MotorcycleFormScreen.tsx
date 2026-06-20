@@ -18,8 +18,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
-import { FuelType, LuggagePosition } from '@/domain/entities/Motorcycle';
-
 import AppTextInput from '@/ui/components/AppTextInput';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 import WeightSlider from '@/ui/components/WeightSlider';
@@ -42,16 +40,6 @@ import {
 
 type Nav = NativeStackNavigationProp<GarageStackParamList, 'MotorcycleForm'>;
 type Route = RouteProp<GarageStackParamList, 'MotorcycleForm'>;
-
-const FUEL_OPTIONS: FuelType[] = ['corriente', 'extra'];
-
-const LUGGAGE_POSITIONS: LuggagePosition[] = ['left', 'right', 'top'];
-
-const LUGGAGE_LABEL: Record<LuggagePosition, string> = {
-  left: 'izquierdo',
-  right: 'derecho',
-  top: 'superior',
-};
 
 const MotorcycleFormScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -181,28 +169,25 @@ const MotorcycleFormScreen = observer(() => {
 
           <Text style={styles.fieldLabel}>Tipo de gasolina</Text>
           <View style={styles.segment}>
-            {FUEL_OPTIONS.map((option) => {
-              const active = viewModel.fuelType === option;
-              return (
-                <TouchableOpacity
-                  key={option}
+            {viewModel.fuelOptions.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.segmentItem,
+                  option.active && styles.segmentItemActive,
+                ]}
+                onPress={() => viewModel.setFuelType(option.value)}
+              >
+                <Text
                   style={[
-                    styles.segmentItem,
-                    active && styles.segmentItemActive,
+                    styles.segmentText,
+                    option.active && styles.segmentTextActive,
                   ]}
-                  onPress={() => viewModel.setFuelType(option)}
                 >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      active && styles.segmentTextActive,
-                    ]}
-                  >
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           <View style={styles.gap} />
@@ -299,15 +284,15 @@ const MotorcycleFormScreen = observer(() => {
               <Text style={styles.luggageHint}>
                 Ajusta el peso aproximado de cada maletero.
               </Text>
-              {LUGGAGE_POSITIONS.map((position) => (
+              {viewModel.luggageRows.map((row) => (
                 <WeightSlider
-                  key={position}
-                  label={`Maletero ${LUGGAGE_LABEL[position]}`}
-                  value={viewModel.luggageWeights[position]}
+                  key={row.position}
+                  label={`Maletero ${row.label}`}
+                  value={row.weightKg}
                   min={0}
                   max={MAX_LUGGAGE_KG}
                   onChange={(weight) =>
-                    viewModel.setLuggageWeight(position, weight)
+                    viewModel.setLuggageWeight(row.position, weight)
                   }
                 />
               ))}

@@ -121,6 +121,49 @@ export class DestinationPreviewViewModel {
     return this.distanceKm !== null && this.etaMin !== null;
   }
 
+  /** Distancia formateada para el chip de stats (`<1km` -> metros, etc.). */
+  get distanceLabel(): string | null {
+    const km = this.distanceKm;
+    if (km === null) return null;
+    if (km < 1) return `${Math.round(km * 1000)} m`;
+    if (km < 10) return `${km.toFixed(1)} km`;
+    return `${Math.round(km)} km`;
+  }
+
+  /** ETA formateado para el chip de stats (`<1 min`, `1 h 5 min`, etc.). */
+  get etaLabel(): string | null {
+    const minutes = this.etaMin;
+    if (minutes === null) return null;
+    if (minutes < 1) return '<1 min';
+    const total = Math.round(minutes);
+    const hours = Math.floor(total / 60);
+    const mins = total % 60;
+    if (hours <= 0) return `${mins} min`;
+    return `${hours} h ${mins} min`;
+  }
+
+  /**
+   * DTO serializable del destino para navegar al RoutePlanner. Se arma desde
+   * `previewPlace`; `null` cuando no hay preview activo.
+   */
+  get plannerDestinationParam(): {
+    latitude: number;
+    longitude: number;
+    name: string;
+    mapboxCategory: Place['category'];
+    placeType: Place['placeType'];
+  } | null {
+    const place = this.previewPlace;
+    if (!place) return null;
+    return {
+      latitude: place.latitude,
+      longitude: place.longitude,
+      name: place.name,
+      mapboxCategory: place.category,
+      placeType: place.placeType,
+    };
+  }
+
   /** URL del thumbnail estatico de Mapbox para el lugar previsualizado. */
   get staticMapUrl(): string | null {
     const place = this.previewPlace;
