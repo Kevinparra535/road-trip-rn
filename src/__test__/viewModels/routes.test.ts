@@ -8,10 +8,10 @@ import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 import { RouteTemplate } from '@/domain/entities/RouteTemplate';
 
-import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
-import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
+import { RouteDetailViewModel } from '@/ui/screens/RouteDetail/RouteDetailViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
+import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 
 import {
@@ -165,7 +165,7 @@ describe('RouteDetailViewModel', () => {
   });
 });
 
-describe('RoutePlannerViewModel', () => {
+describe('PlannerStore', () => {
   const build = (
     overrides: {
       searchResults?: Place[];
@@ -272,7 +272,7 @@ describe('RoutePlannerViewModel', () => {
       hasLocation: false,
       isLocationResponse: null,
     };
-    const vm = new RoutePlannerViewModel(
+    const vm = new PlannerStore(
       getCurrentRider as any,
       getRoute as any,
       getDraft as any,

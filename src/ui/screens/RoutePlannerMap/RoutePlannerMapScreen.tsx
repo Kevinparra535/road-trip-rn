@@ -67,19 +67,18 @@ import { formatDuration } from '@/ui/utils/formatDuration';
 import { useViewModel } from '@/ui/hooks/useViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 
-import { RoutePlannerViewModel } from './RoutePlannerViewModel';
-
-import DetailsSheet, { DetailsSheetHandle } from './_planner/DetailsSheet';
-import MultiDayTimeline from './_planner/MultiDayTimeline';
-import PlannerEmptyState from './_planner/PlannerEmptyState';
-import PlannerMap from './_planner/PlannerMap';
-import { PlannerMapCanvas } from './_planner/PlannerMapCanvas';
-import PlannerSheet, { PlannerSheetHandle } from './_planner/PlannerSheet';
-import SummaryChip from './_planner/SummaryChip';
-import TemplateSheet from './_planner/TemplateSheet';
-import WaypointEditSheet from './_planner/WaypointEditSheet';
-import { rideTypeMeta } from './rideTypeMeta';
-import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
+import DetailsSheet, { DetailsSheetHandle } from '../_planner/DetailsSheet';
+import MultiDayTimeline from '../_planner/MultiDayTimeline';
+import PlannerEmptyState from '../_planner/PlannerEmptyState';
+import PlannerMap from '../_planner/PlannerMap';
+import { PlannerMapCanvas } from '../_planner/PlannerMapCanvas';
+import PlannerSheet, { PlannerSheetHandle } from '../_planner/PlannerSheet';
+import SummaryChip from '../_planner/SummaryChip';
+import TemplateSheet from '../_planner/TemplateSheet';
+import WaypointEditSheet from '../_planner/WaypointEditSheet';
+import { rideTypeMeta } from '../rideTypeMeta';
+import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
+import { SELECTABLE_STOP_KINDS, stopKindMeta } from '../stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
 type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;
@@ -103,15 +102,12 @@ const RoutePlannerMapScreen = observer(() => {
   const route = useRoute<Route>();
   const routeId = route.params?.routeId;
 
-  const viewModel = useViewModel<RoutePlannerViewModel>(
-    TYPES.RoutePlannerViewModel,
-  );
+  const viewModel = useViewModel<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel);
   const homeViewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
 
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
   const [editingDetailFor, setEditingDetailFor] = useState<string | null>(null);
-  const [showLocationPermissionDialog, setShowLocationPermissionDialog] =
-    useState(false);
+  const [showLocationPermissionDialog, setShowLocationPermissionDialog] = useState(false);
   // Fase 9: cuando el rider elige "Elegir en el mapa", entramos en modo
   // "pick": el próximo tap sobre el mapa fija el punto de arranque.
   const [mapPickMode, setMapPickMode] = useState(false);
@@ -184,7 +180,7 @@ const RoutePlannerMapScreen = observer(() => {
       await viewModel.calculateDirections();
       if (!viewModel.directions) return;
     }
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
     if (!ok) {
       Alert.alert(
         'No pudimos iniciar',
@@ -211,7 +207,7 @@ const RoutePlannerMapScreen = observer(() => {
   };
 
   const handleStartFromSaved = () => {
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
     if (!ok) {
       viewModel.closeSavedSheet();
       Alert.alert(
@@ -257,9 +253,7 @@ const RoutePlannerMapScreen = observer(() => {
   })();
 
   const ctaDisabled =
-    !viewModel.canCalculate ||
-    viewModel.isDirectionsLoading ||
-    viewModel.isSubmitting;
+    !viewModel.canCalculate || viewModel.isDirectionsLoading || viewModel.isSubmitting;
 
   const toggleSection = (section: Exclude<OpenSection, null>) =>
     setOpenSection((current) => (current === section ? null : section));
@@ -342,10 +336,7 @@ const RoutePlannerMapScreen = observer(() => {
         ) : (
           <>
             <View
-              style={[
-                styles.editorContent,
-                viewModel.isReadOnly && styles.readOnlyDim,
-              ]}
+              style={[styles.editorContent, viewModel.isReadOnly && styles.readOnlyDim]}
             >
               {!isEmpty && viewModel.timelineItems.length > 0 ? (
                 <RouteSheetHeader viewModel={viewModel} />
@@ -395,9 +386,7 @@ const RoutePlannerMapScreen = observer(() => {
                     <Flag size={16} color={Colors.base.accent} />
                   </View>
                   <View style={styles.stopBody}>
-                    <Text style={styles.startPlaceholderName}>
-                      Punto de arranque
-                    </Text>
+                    <Text style={styles.startPlaceholderName}>Punto de arranque</Text>
                     <Text style={styles.startPlaceholderSub}>Sin definir</Text>
                   </View>
                 </View>
@@ -406,16 +395,33 @@ const RoutePlannerMapScreen = observer(() => {
               {viewModel.timelineItems.map((item) => {
                 const meta = stopKindMeta(item.kind);
                 const canEditKind = item.isIntermediate;
-                const PinIcon = meta.lucideIcon;
+                // Pin por variante (diseño Pencil): arranque = aro hueco sin
+                // icono; destino = círculo lleno con flag blanca; intermedia =
+                // círculo lleno con icono oscuro del kind.
+                const PinIcon = item.isLast ? Flag : meta.lucideIcon;
                 return (
                   <View key={item.id} style={styles.stopRow}>
                     <TouchableOpacity
                       onPress={() => canEditKind && setEditingKindFor(item.id)}
                       disabled={!canEditKind}
-                      style={[styles.stopPin, { backgroundColor: meta.color }]}
+                      style={[
+                        styles.stopPin,
+                        item.isFirst
+                          ? [styles.stopPinRing, { borderColor: meta.color }]
+                          : { backgroundColor: meta.color },
+                      ]}
                       hitSlop={8}
                     >
-                      <PinIcon size={16} color={Colors.base.textPrimary} />
+                      {item.isFirst ? null : (
+                        <PinIcon
+                          size={16}
+                          color={
+                            item.isLast
+                              ? Colors.base.textPrimary
+                              : Colors.base.bgPrimary
+                          }
+                        />
+                      )}
                     </TouchableOpacity>
                     <View style={styles.stopBody}>
                       <View style={styles.stopHeader}>
@@ -428,9 +434,7 @@ const RoutePlannerMapScreen = observer(() => {
                             { borderColor: hexToRgba(meta.color, 0.4) },
                           ]}
                         >
-                          <Text
-                            style={[styles.kindChipText, { color: meta.color }]}
-                          >
+                          <Text style={[styles.kindChipText, { color: meta.color }]}>
                             {meta.label}
                           </Text>
                         </View>
@@ -470,8 +474,7 @@ const RoutePlannerMapScreen = observer(() => {
                           <Pencil size={16} color={Colors.base.iconMuted} />
                         </TouchableOpacity>
                       ) : null}
-                      {!viewModel.isReadOnly &&
-                      (item.canMoveUp || item.canMoveDown) ? (
+                      {!viewModel.isReadOnly && (item.canMoveUp || item.canMoveDown) ? (
                         <View style={styles.reorderColumn}>
                           <TouchableOpacity
                             onPress={() => viewModel.moveStop(item.id, 'up')}
@@ -521,8 +524,7 @@ const RoutePlannerMapScreen = observer(() => {
                                   {
                                     text: 'Eliminar',
                                     style: 'destructive',
-                                    onPress: () =>
-                                      viewModel.removeStop(item.id),
+                                    onPress: () => viewModel.removeStop(item.id),
                                   },
                                 ],
                               );
@@ -551,9 +553,7 @@ const RoutePlannerMapScreen = observer(() => {
                   </View>
                   <View style={styles.addStopBody}>
                     <Text style={styles.addStopTitle}>Agregar parada</Text>
-                    <Text style={styles.addStopSub}>
-                      gasolina · comida · turismo…
-                    </Text>
+                    <Text style={styles.addStopSub}>gasolina · comida · turismo…</Text>
                   </View>
                   <ChevronRight size={20} color={Colors.base.iconMuted} />
                 </TouchableOpacity>
@@ -617,9 +617,7 @@ const RoutePlannerMapScreen = observer(() => {
                       activeOpacity={0.85}
                       testID="route-planner-details-btn"
                     >
-                      <Text style={styles.resumenVerDetallesTxt}>
-                        Ver detalles
-                      </Text>
+                      <Text style={styles.resumenVerDetallesTxt}>Ver detalles</Text>
                       <ChevronRight size={16} color={Colors.base.accent} />
                     </TouchableOpacity>
                   </View>
@@ -628,9 +626,7 @@ const RoutePlannerMapScreen = observer(() => {
 
                   <View style={styles.resumenStatsRow}>
                     <View style={styles.resumenStat}>
-                      <Text style={styles.resumenStatVal}>
-                        {viewModel.distanceKm} km
-                      </Text>
+                      <Text style={styles.resumenStatVal}>{viewModel.distanceKm} km</Text>
                       <Text style={styles.resumenStatLab}>DISTANCIA</Text>
                     </View>
                     <View style={styles.resumenStatDivider} />
@@ -671,10 +667,7 @@ const RoutePlannerMapScreen = observer(() => {
               <View style={styles.footerRow}>
                 {viewModel.canCalculate ? (
                   <TouchableOpacity
-                    style={[
-                      styles.guardarBtn,
-                      ctaDisabled && styles.ctaDisabled,
-                    ]}
+                    style={[styles.guardarBtn, ctaDisabled && styles.ctaDisabled]}
                     onPress={handleSavePress}
                     disabled={ctaDisabled}
                     activeOpacity={0.85}
@@ -699,15 +692,10 @@ const RoutePlannerMapScreen = observer(() => {
                     style={styles.iniciarGradient}
                   >
                     {viewModel.isDirectionsLoading || viewModel.isSubmitting ? (
-                      <ActivityIndicator
-                        color={Colors.semantic.text.primaryDark}
-                      />
+                      <ActivityIndicator color={Colors.semantic.text.primaryDark} />
                     ) : (
                       <>
-                        <Navigation
-                          size={18}
-                          color={Colors.semantic.text.primaryDark}
-                        />
+                        <Navigation size={18} color={Colors.semantic.text.primaryDark} />
                         <Text style={styles.iniciarBtnText}>{ctaLabel}</Text>
                       </>
                     )}
@@ -831,36 +819,23 @@ const PartyFuelPlanCard = observer(
 
         {weakest && strongest ? (
           <Text style={styles.fuelSub}>
-            Moto debil: {weakest.displayName} (
-            {Math.round(weakest.effectiveRangeKm)} km) · Mas fuerte:{' '}
-            {strongest.displayName} ({Math.round(strongest.effectiveRangeKm)}{' '}
-            km)
+            Moto debil: {weakest.displayName} ({Math.round(weakest.effectiveRangeKm)} km)
+            · Mas fuerte: {strongest.displayName} (
+            {Math.round(strongest.effectiveRangeKm)} km)
           </Text>
         ) : null}
 
         {plan.reachesWithoutRefuel ? (
           <View style={styles.fuelHappy}>
             <CircleCheck size={20} color={Colors.alerts.check} />
-            <Text style={styles.fuelHappyText}>
-              Todas las motos llegan sin tanquear.
-            </Text>
+            <Text style={styles.fuelHappyText}>Todas las motos llegan sin tanquear.</Text>
           </View>
         ) : (
           <>
             {plan.stops.map((stop, idx) => (
               <View key={stop.id} style={styles.fuelStopRow}>
-                <View
-                  style={[
-                    styles.fuelStopBullet,
-                    { borderColor: fuelMeta.color },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.fuelStopBulletText,
-                      { color: fuelMeta.color },
-                    ]}
-                  >
+                <View style={[styles.fuelStopBullet, { borderColor: fuelMeta.color }]}>
+                  <Text style={[styles.fuelStopBulletText, { color: fuelMeta.color }]}>
                     {idx + 1}
                   </Text>
                 </View>
@@ -883,13 +858,7 @@ const PartyFuelPlanCard = observer(
 );
 
 const DirectionsErrorCard = observer(
-  ({
-    viewModel,
-    onRetry,
-  }: {
-    viewModel: RoutePlannerViewModel;
-    onRetry: () => void;
-  }) => {
+  ({ viewModel, onRetry }: { viewModel: RoutePlannerViewModel; onRetry: () => void }) => {
     if (!viewModel.isDirectionsError) return null;
     const errorColor = Colors.alerts.error;
     return (
@@ -933,13 +902,7 @@ const DirectionsErrorCard = observer(
 );
 
 const NoMotorcycleNotice = observer(
-  ({
-    viewModel,
-    onPress,
-  }: {
-    viewModel: RoutePlannerViewModel;
-    onPress: () => void;
-  }) => {
+  ({ viewModel, onPress }: { viewModel: RoutePlannerViewModel; onPress: () => void }) => {
     if (!viewModel.canCalculate) return null;
     if (viewModel.hasMotorcycleRegistered) return null;
     return (
@@ -1028,12 +991,7 @@ const LocationPermissionDialog = ({
   onAllow: () => void;
   onChooseFromMap: () => void;
 }) => (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="fade"
-    onRequestClose={onDismiss}
-  >
+  <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
     <Pressable
       style={[styles.modalBackdrop, { justifyContent: 'center' }]}
       onPress={onDismiss}
@@ -1052,8 +1010,8 @@ const LocationPermissionDialog = ({
         </View>
         <Text style={styles.permissionTitle}>Activa tu ubicación</Text>
         <Text style={styles.permissionSub}>
-          La usamos para trazar la ruta desde donde estás y sugerir tanqueos a
-          tiempo. Solo mientras planeas o navegas.
+          La usamos para trazar la ruta desde donde estás y sugerir tanqueos a tiempo.
+          Solo mientras planeas o navegas.
         </Text>
         <TouchableOpacity
           style={styles.cta}
@@ -1070,9 +1028,7 @@ const LocationPermissionDialog = ({
           activeOpacity={0.85}
         >
           <MapIcon size={18} color={Colors.base.accent} />
-          <Text style={styles.discardCtaPrimaryText}>
-            Elegir inicio en el mapa
-          </Text>
+          <Text style={styles.discardCtaPrimaryText}>Elegir inicio en el mapa</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.discardCtaGhost}
@@ -1095,12 +1051,7 @@ const KindPickerModal = ({
   onDismiss: () => void;
   onPick: (kind: StopKind) => void;
 }) => (
-  <Modal
-    visible={visible}
-    transparent
-    animationType="fade"
-    onRequestClose={onDismiss}
-  >
+  <Modal visible={visible} transparent animationType="fade" onRequestClose={onDismiss}>
     <Pressable style={styles.modalBackdrop} onPress={onDismiss}>
       <Pressable style={styles.modalCard} onPress={() => {}}>
         <Text style={styles.modalTitle}>Tipo de parada</Text>
@@ -1114,10 +1065,7 @@ const KindPickerModal = ({
             return (
               <TouchableOpacity
                 key={kind}
-                style={[
-                  styles.modalCell,
-                  { borderColor: hexToRgba(meta.color, 0.33) },
-                ]}
+                style={[styles.modalCell, { borderColor: hexToRgba(meta.color, 0.33) }]}
                 onPress={() => onPick(kind)}
               >
                 <KindIcon size={22} color={meta.color} />
@@ -1138,166 +1086,147 @@ const KindPickerModal = ({
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
-const SaveRouteSheet = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
-    const start = viewModel.waypoints[0];
-    const dest = viewModel.waypoints[viewModel.waypoints.length - 1];
-    const handleSave = () => {
-      if (!viewModel.name.trim()) return;
-      void viewModel.submit().then((ok) => {
-        if (ok) viewModel.closeSaveSheet();
-      });
-    };
+const SaveRouteSheet = observer(({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  const start = viewModel.waypoints[0];
+  const dest = viewModel.waypoints[viewModel.waypoints.length - 1];
+  const handleSave = () => {
+    if (!viewModel.name.trim()) return;
+    void viewModel.submit().then((ok) => {
+      if (ok) viewModel.closeSaveSheet();
+    });
+  };
 
-    const rideTypeTabs: { value: typeof viewModel.rideType; label: string }[] =
-      [
-        { value: 'highway', label: 'Carretera' },
-        { value: 'offroad', label: 'Offroad' },
-        { value: 'longtrip', label: 'Largo' },
-      ];
+  const rideTypeTabs: { value: typeof viewModel.rideType; label: string }[] = [
+    { value: 'highway', label: 'Carretera' },
+    { value: 'offroad', label: 'Offroad' },
+    { value: 'longtrip', label: 'Largo' },
+  ];
 
-    return (
-      <Modal
-        visible={viewModel.isSaveSheetOpen}
-        transparent
-        animationType="slide"
-        onRequestClose={() => viewModel.closeSaveSheet()}
-      >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => viewModel.closeSaveSheet()}
-        >
-          <Pressable style={styles.saveSheetCard} onPress={() => {}}>
-            <View style={styles.saveSheetHeader}>
-              <TouchableOpacity
-                onPress={() => viewModel.closeSaveSheet()}
-                hitSlop={8}
-              >
-                <ChevronLeft size={22} color={Colors.base.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.saveSheetTitle}>Guardar ruta</Text>
-              <TouchableOpacity
-                onPress={() => viewModel.closeSaveSheet()}
-                hitSlop={8}
-              >
-                <X size={22} color={Colors.base.iconMuted} />
-              </TouchableOpacity>
+  return (
+    <Modal
+      visible={viewModel.isSaveSheetOpen}
+      transparent
+      animationType="slide"
+      onRequestClose={() => viewModel.closeSaveSheet()}
+    >
+      <Pressable style={styles.modalBackdrop} onPress={() => viewModel.closeSaveSheet()}>
+        <Pressable style={styles.saveSheetCard} onPress={() => {}}>
+          <View style={styles.saveSheetHeader}>
+            <TouchableOpacity onPress={() => viewModel.closeSaveSheet()} hitSlop={8}>
+              <ChevronLeft size={22} color={Colors.base.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.saveSheetTitle}>Guardar ruta</Text>
+            <TouchableOpacity onPress={() => viewModel.closeSaveSheet()} hitSlop={8}>
+              <X size={22} color={Colors.base.iconMuted} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <View style={styles.saveSummaryRow}>
+              <SummaryChip
+                iconName="navigate-outline"
+                label={`${viewModel.distanceKm} km`}
+              />
+              <SummaryChip
+                iconName="time-outline"
+                label={formatDuration(viewModel.durationMin)}
+              />
+              <SummaryChip
+                iconName="git-commit-outline"
+                label={`${viewModel.waypoints.length} paradas`}
+              />
             </View>
 
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <View style={styles.saveSummaryRow}>
-                <SummaryChip
-                  iconName="navigate-outline"
-                  label={`${viewModel.distanceKm} km`}
-                />
-                <SummaryChip
-                  iconName="time-outline"
-                  label={formatDuration(viewModel.durationMin)}
-                />
-                <SummaryChip
-                  iconName="git-commit-outline"
-                  label={`${viewModel.waypoints.length} paradas`}
-                />
+            <View style={styles.savePreview}>
+              <View style={styles.savePreviewIcon}>
+                <MapIcon size={20} color={Colors.base.accent} />
               </View>
-
-              <View style={styles.savePreview}>
-                <View style={styles.savePreviewIcon}>
-                  <MapIcon size={20} color={Colors.base.accent} />
-                </View>
-                <View style={styles.savePreviewBody}>
-                  <Text style={styles.savePreviewName} numberOfLines={1}>
-                    {start && dest
-                      ? `${start.name} → ${dest.name}`
-                      : 'Ruta sin nombre'}
-                  </Text>
-                  <Text style={styles.savePreviewMeta}>
-                    {viewModel.distanceKm} km ·{' '}
-                    {formatDuration(viewModel.durationMin)} ·{' '}
-                    {viewModel.waypoints.length} paradas
-                  </Text>
-                </View>
+              <View style={styles.savePreviewBody}>
+                <Text style={styles.savePreviewName} numberOfLines={1}>
+                  {start && dest ? `${start.name} → ${dest.name}` : 'Ruta sin nombre'}
+                </Text>
+                <Text style={styles.savePreviewMeta}>
+                  {viewModel.distanceKm} km · {formatDuration(viewModel.durationMin)} ·{' '}
+                  {viewModel.waypoints.length} paradas
+                </Text>
               </View>
+            </View>
 
-              <AppTextInput
-                label="Nombre de la ruta"
-                placeholder="Ej: Bogota → Catedral de Sal"
-                value={viewModel.name}
-                onChangeText={(t) => viewModel.setName(t)}
-                autoCorrect={false}
-              />
+            <AppTextInput
+              label="Nombre de la ruta"
+              placeholder="Ej: Bogota → Catedral de Sal"
+              value={viewModel.name}
+              onChangeText={(t) => viewModel.setName(t)}
+              autoCorrect={false}
+            />
 
-              <Text style={styles.saveLabel}>TIPO DE RODADA</Text>
-              <View style={styles.rideTypeTabs}>
-                {rideTypeTabs.map((tab) => {
-                  const active = viewModel.rideType === tab.value;
-                  return (
-                    <TouchableOpacity
-                      key={tab.value}
+            <Text style={styles.saveLabel}>TIPO DE RODADA</Text>
+            <View style={styles.rideTypeTabs}>
+              {rideTypeTabs.map((tab) => {
+                const active = viewModel.rideType === tab.value;
+                return (
+                  <TouchableOpacity
+                    key={tab.value}
+                    style={[styles.rideTypeTab, active && styles.rideTypeTabActive]}
+                    onPress={() => viewModel.setRideType(tab.value)}
+                  >
+                    <Text
                       style={[
-                        styles.rideTypeTab,
-                        active && styles.rideTypeTabActive,
+                        styles.rideTypeTabText,
+                        active && styles.rideTypeTabTextActive,
                       ]}
-                      onPress={() => viewModel.setRideType(tab.value)}
                     >
-                      <Text
-                        style={[
-                          styles.rideTypeTabText,
-                          active && styles.rideTypeTabTextActive,
-                        ]}
-                      >
-                        {tab.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                      {tab.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-              <AppTextInput
-                label="Notas (opcional)"
-                placeholder="Salida temprano, volvemos por la noche..."
-                value={viewModel.notes}
-                onChangeText={(t) => viewModel.setNotes(t)}
-                multiline
-                numberOfLines={3}
-              />
+            <AppTextInput
+              label="Notas (opcional)"
+              placeholder="Salida temprano, volvemos por la noche..."
+              value={viewModel.notes}
+              onChangeText={(t) => viewModel.setNotes(t)}
+              multiline
+              numberOfLines={3}
+            />
 
-              {viewModel.isSubmitError ? (
-                <Text style={styles.error}>{viewModel.isSubmitError}</Text>
-              ) : null}
+            {viewModel.isSubmitError ? (
+              <Text style={styles.error}>{viewModel.isSubmitError}</Text>
+            ) : null}
 
-              <View style={styles.saveActions}>
-                <TouchableOpacity
-                  style={styles.saveCancelBtn}
-                  onPress={() => viewModel.closeSaveSheet()}
-                >
-                  <Text style={styles.saveCancelText}>Esta vez no</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.saveBtn,
-                    (!viewModel.canSave || viewModel.isSubmitting) &&
-                      styles.ctaDisabled,
-                  ]}
-                  disabled={!viewModel.canSave || viewModel.isSubmitting}
-                  onPress={handleSave}
-                >
-                  {viewModel.isSubmitting ? (
-                    <ActivityIndicator color={Colors.base.textPrimary} />
-                  ) : (
-                    <>
-                      <Bookmark size={18} color={Colors.base.textPrimary} />
-                      <Text style={styles.ctaText}>Guardar</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </ScrollView>
-          </Pressable>
+            <View style={styles.saveActions}>
+              <TouchableOpacity
+                style={styles.saveCancelBtn}
+                onPress={() => viewModel.closeSaveSheet()}
+              >
+                <Text style={styles.saveCancelText}>Esta vez no</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.saveBtn,
+                  (!viewModel.canSave || viewModel.isSubmitting) && styles.ctaDisabled,
+                ]}
+                disabled={!viewModel.canSave || viewModel.isSubmitting}
+                onPress={handleSave}
+              >
+                {viewModel.isSubmitting ? (
+                  <ActivityIndicator color={Colors.base.textPrimary} />
+                ) : (
+                  <>
+                    <Bookmark size={18} color={Colors.base.textPrimary} />
+                    <Text style={styles.ctaText}>Guardar</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </Pressable>
-      </Modal>
-    );
-  },
-);
+      </Pressable>
+    </Modal>
+  );
+});
 
 const DiscardConfirmSheet = observer(
   ({
@@ -1317,10 +1246,7 @@ const DiscardConfirmSheet = observer(
         animationType="fade"
         onRequestClose={() => viewModel.cancelExit()}
       >
-        <Pressable
-          style={styles.modalBackdrop}
-          onPress={() => viewModel.cancelExit()}
-        >
+        <Pressable style={styles.modalBackdrop} onPress={() => viewModel.cancelExit()}>
           <Pressable style={styles.discardSheet} onPress={() => {}}>
             <View
               style={[
@@ -1352,12 +1278,7 @@ const DiscardConfirmSheet = observer(
               testID="route-planner-confirm-discard-btn"
             >
               <Trash2 size={18} color={errorColor} />
-              <Text
-                style={[
-                  styles.discardCtaDestructiveText,
-                  { color: errorColor },
-                ]}
-              >
+              <Text style={[styles.discardCtaDestructiveText, { color: errorColor }]}>
                 Descartar ruta
               </Text>
             </TouchableOpacity>
@@ -1424,8 +1345,8 @@ const RouteSavedSheet = observer(
             </View>
             <Text style={styles.savedTitle}>Ruta guardada</Text>
             <Text style={styles.savedSub}>
-              "{viewModel.name.trim() || 'Ruta sin nombre'}" quedó en tus rutas
-              · {summary}.
+              "{viewModel.name.trim() || 'Ruta sin nombre'}" quedó en tus rutas ·{' '}
+              {summary}.
             </Text>
 
             <TouchableOpacity
@@ -1445,9 +1366,7 @@ const RouteSavedSheet = observer(
               testID="route-saved-detail-btn"
             >
               <MapIcon size={18} color={Colors.base.textPrimary} />
-              <Text style={styles.savedCtaGhostText}>
-                Ver detalle de la ruta
-              </Text>
+              <Text style={styles.savedCtaGhostText}>Ver detalle de la ruta</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1545,6 +1464,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BorderRadius.pill,
+  },
+  // Pin de arranque: aro hueco (sin relleno, borde grueso del color del kind).
+  stopPinRing: {
+    backgroundColor: 'transparent',
+    borderWidth: 3,
   },
   startPlaceholderPin: {
     backgroundColor: Colors.base.accentDim,

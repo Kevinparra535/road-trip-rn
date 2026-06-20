@@ -1,11 +1,12 @@
+
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import AddStopScreen from '@/ui/screens/AddStop/AddStopScreen';
+import CategorySublistScreen from '@/ui/screens/CategorySublist/CategorySublistScreen';
+import JoinRouteScreen from '@/ui/screens/JoinRoute/JoinRouteScreen';
 import PartyMembersScreen from '@/ui/screens/Party/PartyMembersScreen';
-import AddStopScreen from '@/ui/screens/Routes/AddStopScreen';
-import CategorySublistScreen from '@/ui/screens/Routes/CategorySublistScreen';
-import JoinRouteScreen from '@/ui/screens/Routes/JoinRouteScreen';
-import RouteDetailScreen from '@/ui/screens/Routes/RouteDetailScreen';
-import RoutePlannerMapScreen from '@/ui/screens/Routes/RoutePlannerMapScreen';
+import RouteDetailScreen from '@/ui/screens/RouteDetail/RouteDetailScreen';
+import RoutePlannerMapScreen from '@/ui/screens/RoutePlannerMap/RoutePlannerMapScreen';
 import RoutesScreen from '@/ui/screens/Routes/RoutesScreen';
 
 import { RoutesStackParamList } from './types';

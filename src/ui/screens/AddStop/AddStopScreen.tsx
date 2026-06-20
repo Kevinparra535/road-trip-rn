@@ -36,9 +36,8 @@ import {
   ADD_STOP_CATEGORIES,
   AddStopCategoryTile,
   AddStopViewModel,
-} from './AddStopViewModel';
-
-import { stopKindMeta } from './stopKindMeta';
+} from '../AddStop/AddStopViewModel';
+import { stopKindMeta } from '../stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'AddStop'>;
 
@@ -82,8 +81,7 @@ const AddStopScreen = observer(() => {
   const isEditing = viewModel.isEditingWaypoint;
   const editingName = viewModel.editingWaypointName;
   const title = isEditing ? 'Cambiar parada' : 'Agregar parada';
-  const subtitle =
-    isEditing && editingName ? `Reemplazando: ${editingName}` : null;
+  const subtitle = isEditing && editingName ? `Reemplazando: ${editingName}` : null;
 
   const handleMic = () => {
     Alert.alert(
@@ -96,11 +94,7 @@ const AddStopScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <View style={styles.navTitleColumn}>
           <Text style={styles.navTitle} numberOfLines={1}>
@@ -165,11 +159,7 @@ const AddStopScreen = observer(() => {
               onPress={() => handleSearchResultTap(place)}
               activeOpacity={0.85}
             >
-              <Ionicons
-                name="location"
-                size={20}
-                color={Colors.base.iconMuted}
-              />
+              <Ionicons name="location" size={20} color={Colors.base.iconMuted} />
               <View style={styles.recentBody}>
                 <Text style={styles.recentName} numberOfLines={1}>
                   {place.name}
@@ -178,11 +168,7 @@ const AddStopScreen = observer(() => {
                   {place.fullName}
                 </Text>
               </View>
-              <Ionicons
-                name="add-circle"
-                size={22}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -194,10 +180,7 @@ const AddStopScreen = observer(() => {
               return (
                 <TouchableOpacity
                   key={`${tile.category}-${index}`}
-                  style={[
-                    styles.tile,
-                    { borderColor: hexToRgba(meta.color, 0.4) },
-                  ]}
+                  style={[styles.tile, { borderColor: hexToRgba(meta.color, 0.4) }]}
                   onPress={() => handleCategoryTap(tile)}
                   activeOpacity={0.85}
                 >
@@ -207,11 +190,7 @@ const AddStopScreen = observer(() => {
                       { backgroundColor: hexToRgba(meta.color, 0.15) },
                     ]}
                   >
-                    <Ionicons
-                      name={tile.iconName as any}
-                      size={28}
-                      color={meta.color}
-                    />
+                    <Ionicons name={tile.iconName as any} size={28} color={meta.color} />
                   </View>
                   <Text style={styles.tileLabel} numberOfLines={1}>
                     {tile.label}
@@ -223,9 +202,7 @@ const AddStopScreen = observer(() => {
 
           <Text style={styles.sectionLabel}>Recientes y favoritos</Text>
 
-          {viewModel.isLoading ? (
-            <ActivityIndicator color={Colors.base.accent} />
-          ) : null}
+          {viewModel.isLoading ? <ActivityIndicator color={Colors.base.accent} /> : null}
           {viewModel.isError ? (
             <Text style={styles.error}>{viewModel.isError}</Text>
           ) : null}
@@ -243,11 +220,7 @@ const AddStopScreen = observer(() => {
               onPress={() => handleRecentTap(recent)}
               activeOpacity={0.85}
             >
-              <Ionicons
-                name="time-outline"
-                size={20}
-                color={Colors.base.iconMuted}
-              />
+              <Ionicons name="time-outline" size={20} color={Colors.base.iconMuted} />
               <View style={styles.recentBody}>
                 <Text style={styles.recentName} numberOfLines={1}>
                   {recent.name}
@@ -256,11 +229,7 @@ const AddStopScreen = observer(() => {
                   {recent.fullName}
                 </Text>
               </View>
-              <Ionicons
-                name="add-circle"
-                size={22}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
             </TouchableOpacity>
           ))}
         </ScrollView>

@@ -11,11 +11,10 @@ the PR is safe to merge without eroding the architecture.
 </purpose>
 
 <when_to_use>
-
 - Reviewing a PR or changeset for architecture compliance.
 - Self-checking a branch before opening or merging a PR.
 - Gating any change that touches UseCases, ViewModels, models, services, or repositories.
-  </when_to_use>
+</when_to_use>
 
 <checklist>
 
@@ -48,12 +47,27 @@ the PR is safe to merge without eroding the architecture.
 - [ ] Side effects use `reaction` with debounce when needed
 - [ ] Error & loading states handled
 - [ ] ViewModel is UI-agnostic (no navigation/Alert/toast/hooks/components)
+- [ ] ViewModel does not import, inject, or consume another ViewModel
 - [ ] Async state naming is explicit by responsibility (`isCreateXLoading`, `isXResponse`, `isUpdateXError`, etc.)
-- [ ] Screen keeps minimal logic (no create-vs-update business branching in UI)
+- [ ] Screen has no flow/business logic (no create-vs-update branching in UI)
 - [ ] Form hydration/transformation logic lives in ViewModel (e.g. `formValues` getter)
 - [ ] ViewModel instance variable is named `viewModel`, never `vm`
 - [ ] Logging uses the scoped `Logger` (`new Logger('ClientsViewModel')`), not raw `console.*`
 - [ ] Streams/subscriptions are torn down (ViewModel `dispose()` wired to screen `useEffect` cleanup)
+
+### UI screen boundary
+
+- [ ] Every new screen lives in `src/ui/screens/<Feature>/`
+- [ ] Every screen folder includes `<Feature>Screen.tsx` and `<Feature>ViewModel.ts`
+- [ ] `XxxScreen.tsx` imports/consumes only its colocated `./XxxViewModel`
+- [ ] `XxxScreen.tsx` does not resolve `TYPES.<OtherFeature>ViewModel`
+- [ ] No subcomponents are declared inside `XxxScreen.tsx`
+- [ ] Screen-only components live in `src/ui/screens/<Feature>/components/`
+- [ ] Shared components live in `src/ui/components/`
+- [ ] Screen files do not declare top-level config constants except `StyleSheet`
+- [ ] Visual constants use design-system tokens (`src/ui/styles/*`), not raw numbers/strings in screens
+- [ ] Reusable UI behavior options live in `src/config/`, not `src/ui/config/`
+- [ ] Screen files do not filter/map/sort/transform domain data; ViewModel exposes display-ready state/getters
 
 ### Cross-cutting conventions
 
@@ -92,8 +106,7 @@ the PR is safe to merge without eroding the architecture.
 </checklist>
 
 <see_also>
-
 - [[unit-testing-clean-architecture]] — the full testing contract this gate enforces.
 - [[clean-architecture-rn-expo-mvvm]] — the architecture rules this checklist verifies.
 - [[realtime-and-global-state-rn]] — subscription teardown and global `Store` conventions.
-  </see_also>
+</see_also>

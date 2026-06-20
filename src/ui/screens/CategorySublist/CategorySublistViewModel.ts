@@ -15,8 +15,9 @@ import { distanceToPolylineKm, haversineKm } from '@/domain/geo/geoMath';
 
 import Logger from '@/ui/utils/Logger';
 
-import { RoutePlannerViewModel } from './RoutePlannerViewModel';
-import { stopKindMeta } from './stopKindMeta';
+import { PlannerStore } from '@/ui/store/PlannerStore';
+
+import { stopKindMeta } from '../stopKindMeta';
 
 type ICalls = 'search';
 
@@ -54,7 +55,7 @@ const ON_ROUTE_THRESHOLD_KM = 5;
  * ViewModel del `CategorySublistScreen` (frame `rc0EQ`). Recibe la categoria
  * inicial y dispara la busqueda alongRoute via `SearchPlacesByCategoryUseCase`.
  *
- * Tap-en-poi delega al `RoutePlannerViewModel.selectSearchResult` que ya
+ * Tap-en-poi delega al `PlannerStore.selectSearchResult` que ya
  * maneja inferencia de kind + insercion en posicion correcta (intermedio).
  */
 /**
@@ -85,8 +86,8 @@ export class CategorySublistViewModel {
   constructor(
     @inject(TYPES.SearchPlacesByCategoryUseCase)
     private readonly searchPlacesByCategoryUseCase: SearchPlacesByCategoryUseCase,
-    @inject(TYPES.RoutePlannerViewModel)
-    private readonly planner: RoutePlannerViewModel,
+    @inject(TYPES.PlannerStore)
+    private readonly planner: PlannerStore,
   ) {
     makeAutoObservable(this);
   }

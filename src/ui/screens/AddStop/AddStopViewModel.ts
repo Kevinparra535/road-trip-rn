@@ -13,7 +13,7 @@ import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestina
 
 import Logger from '@/ui/utils/Logger';
 
-import { RoutePlannerViewModel } from './RoutePlannerViewModel';
+import { PlannerStore } from '@/ui/store/PlannerStore';
 
 type ICalls = 'recents';
 
@@ -57,7 +57,7 @@ export const ADD_STOP_CATEGORIES: AddStopCategoryTile[] = [
  * El grid de categorias es estatico (constante) — el tap-en-categoria
  * navega al `CategorySublistScreen` que hace la busqueda real.
  *
- * El AddStop mutaa el `RoutePlannerViewModel` singleton: el flow es
+ * El AddStop mutaa el `PlannerStore` singleton: el flow es
  * AddStop -> (tap reciente o tap categoria + selectPoi en sublist) ->
  * `planner.addWaypointWithKind(...)` -> goBack. Patron analogo al
  * `DestinationPreviewViewModel` que muta `HomeViewModel`.
@@ -73,8 +73,8 @@ export class AddStopViewModel {
   constructor(
     @inject(TYPES.GetRecentDestinationsUseCase)
     private readonly getRecentDestinationsUseCase: GetRecentDestinationsUseCase,
-    @inject(TYPES.RoutePlannerViewModel)
-    private readonly planner: RoutePlannerViewModel,
+    @inject(TYPES.PlannerStore)
+    private readonly planner: PlannerStore,
   ) {
     makeAutoObservable(this);
   }
@@ -106,7 +106,7 @@ export class AddStopViewModel {
     return this.planner.editingWaypoint?.name ?? null;
   }
 
-  // ── Search (delegada al RoutePlannerViewModel singleton) ────────────────
+  // ── Search (delegada al PlannerStore singleton) ─────────────────────────
   // La busqueda real vive en el planner; el AddStop solo la expone para que
   // el rider busque direcciones/lugares desde esta pantalla.
 

@@ -1,6 +1,7 @@
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
 
-import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
+import { DestinationPreviewViewModel } from '@/ui/screens/DestinationPreview/DestinationPreviewViewModel';
+import { NavigationStore } from '@/ui/store/NavigationStore';
 
 import { makeGeoLocation, makePlace } from '../factories';
 
@@ -15,18 +16,18 @@ jest.mock('@/config/env', () => ({
   },
 }));
 
-const makeHomeVM = (
-  overrides: Record<string, unknown> = {},
-): {
-  previewPlace: ReturnType<typeof makePlace> | null;
-  confirmPreview: jest.Mock;
-  cancelPreview: jest.Mock;
-} => ({
-  previewPlace: null,
-  confirmPreview: jest.fn(),
-  cancelPreview: jest.fn(),
-  ...overrides,
-});
+/**
+ * NavigationStore real (sin deps) sembrado opcionalmente con un previewPlace.
+ * El VM lee/escribe el preview/rideType y confirm/cancel a traves de este store
+ * (es el handoff compartido con el Home).
+ */
+const makeNavStore = (
+  previewPlace: ReturnType<typeof makePlace> | null = null,
+): NavigationStore => {
+  const store = new NavigationStore();
+  if (previewPlace) store.setPreviewPlace(previewPlace);
+  return store;
+};
 
 const makeLocationStore = (
   overrides: Record<string, unknown> = {},
@@ -48,7 +49,7 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 describe('DestinationPreviewViewModel', () => {
   it('exposes initial empty state', () => {
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM() as any,
+      makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );
@@ -73,7 +74,7 @@ describe('DestinationPreviewViewModel', () => {
       country: 'Colombia',
     });
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM({ previewPlace: place }) as any,
+      makeNavStore(place) as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );
@@ -86,7 +87,7 @@ describe('DestinationPreviewViewModel', () => {
   it('computes distance and ETA when user location is known', () => {
     const place = makePlace({ latitude: 5.5, longitude: -73.5 });
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM({ previewPlace: place }) as any,
+      makeNavStore(place) as any,
       makeLocationStore({
         isLocationResponse: makeGeoLocation({
           latitude: 4.6,
@@ -106,7 +107,7 @@ describe('DestinationPreviewViewModel', () => {
   it('builds a static map URL with the previewed place coordinates', () => {
     const place = makePlace({ latitude: 5.5, longitude: -73.5 });
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM({ previewPlace: place }) as any,
+      makeNavStore(place) as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );
@@ -127,7 +128,7 @@ describe('DestinationPreviewViewModel', () => {
     });
     const useCase = makeUseCase(summary);
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM({ previewPlace: place }) as any,
+      makeNavStore(place) as any,
       makeLocationStore() as any,
       useCase as any,
     );
@@ -148,7 +149,7 @@ describe('DestinationPreviewViewModel', () => {
       run: jest.fn().mockRejectedValue(new Error('boom')),
     };
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM({ previewPlace: place }) as any,
+      makeNavStore(place) as any,
       makeLocationStore() as any,
       useCase as any,
     );
@@ -160,24 +161,41 @@ describe('DestinationPreviewViewModel', () => {
     expect(vm.isPlaceSummaryResponse).toBeNull();
   });
 
-  it('confirm and cancel delegate to the parent VM', () => {
-    const home = makeHomeVM({ previewPlace: makePlace() });
+  it('confirm delegates to the navStore (emits confirmedPlace, clears preview)', () => {
+    const place = makePlace();
+    const navStore = makeNavStore(place);
     const vm = new DestinationPreviewViewModel(
-      home as any,
+      navStore as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );
 
+    expect(vm.previewPlace).toBe(place);
     vm.confirm();
-    expect(home.confirmPreview).toHaveBeenCalled();
+    // confirmPreview mueve el preview a la señal one-shot `confirmedPlace`.
+    expect(navStore.confirmedPlace).toBe(place);
+    expect(navStore.previewPlace).toBeNull();
+    expect(vm.previewPlace).toBeNull();
+  });
+
+  it('cancel delegates to the navStore (clears preview without confirming)', () => {
+    const place = makePlace();
+    const navStore = makeNavStore(place);
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      makeLocationStore() as any,
+      makeUseCase() as any,
+    );
 
     vm.cancel();
-    expect(home.cancelPreview).toHaveBeenCalled();
+    expect(navStore.previewPlace).toBeNull();
+    expect(navStore.confirmedPlace).toBeNull();
+    expect(vm.previewPlace).toBeNull();
   });
 
   it('reset clears summary state and viewport width', () => {
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM() as any,
+      makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );
@@ -192,7 +210,7 @@ describe('DestinationPreviewViewModel', () => {
 
   it('dispose releases the reaction without throwing', async () => {
     const vm = new DestinationPreviewViewModel(
-      makeHomeVM() as any,
+      makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
     );

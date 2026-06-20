@@ -12,7 +12,7 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
+import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
 
 import { AccordionSection } from './AccordionSection';
 import AlternativesChips from './AlternativesChips';

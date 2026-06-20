@@ -42,16 +42,16 @@ import { useViewModel } from '@/ui/hooks/useViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { TripPartyStore } from '@/ui/store/TripPartyStore';
 
-import { RoutePlannerViewModel } from './RoutePlannerViewModel';
+import AlternativesChips from '../_planner/AlternativesChips';
+import { AutonomyCard } from '../_planner/AutonomyCard';
+import { ElevationProfileCard } from '../_planner/ElevationProfileCard';
+import { EtaBreakdownCard } from '../_planner/EtaBreakdownCard';
+import RouteOptionsRow from '../_planner/RouteOptionsRow';
+import TemplateSheet from '../_planner/TemplateSheet';
+import WaypointEditSheet from '../_planner/WaypointEditSheet';
+import { SELECTABLE_STOP_KINDS, stopKindMeta } from '../stopKindMeta';
 
-import AlternativesChips from './_planner/AlternativesChips';
-import { AutonomyCard } from './_planner/AutonomyCard';
-import { ElevationProfileCard } from './_planner/ElevationProfileCard';
-import { EtaBreakdownCard } from './_planner/EtaBreakdownCard';
-import RouteOptionsRow from './_planner/RouteOptionsRow';
-import TemplateSheet from './_planner/TemplateSheet';
-import WaypointEditSheet from './_planner/WaypointEditSheet';
-import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
+import { RoutePlannerViewModel } from './RoutePlannerViewModel';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
 type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;
@@ -175,7 +175,7 @@ const RoutePlannerScreen = observer(() => {
       await viewModel.calculateDirections();
       if (!viewModel.directions) return; // hubo error — el error card lo muestra
     }
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
     if (!ok) {
       Alert.alert(
         'No pudimos iniciar',
@@ -209,7 +209,7 @@ const RoutePlannerScreen = observer(() => {
 
   /** Acciones del sheet "Ruta guardada ✓" */
   const handleStartFromSaved = () => {
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel);
+    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
     if (!ok) {
       viewModel.closeSavedSheet();
       Alert.alert(

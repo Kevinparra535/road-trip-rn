@@ -1,7 +1,7 @@
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 
-import { AddStopViewModel } from '@/ui/screens/Routes/AddStopViewModel';
+import { AddStopViewModel } from '@/ui/screens/AddStop/AddStopViewModel';
 
 describe('AddStopViewModel', () => {
   const build = (

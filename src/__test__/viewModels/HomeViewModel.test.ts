@@ -1,6 +1,7 @@
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { NavigationStore } from '@/ui/store/NavigationStore';
 
 import {
   makeElevationProfile,
@@ -49,16 +50,20 @@ const makeInferStopKindUseCase = () => ({
 });
 
 /**
- * Mock minimo del RoutePlannerViewModel — el HomeViewModel solo lo lee para
- * computar los getters de preview (`plannerWaypointPins`, `plannerRouteLines`,
- * `plannerBounds`). Los tests que quieren preview activo pueden sobreescribir
- * `waypoints` y `directions` con datos reales.
+ * Mock minimo del PlannerStore — el HomeViewModel solo lo lee para computar
+ * los getters de preview (`plannerWaypointPins`, `plannerRouteLines`,
+ * `plannerBounds`) y delega el flow del pending draft. Los tests que quieren
+ * preview activo pueden sobreescribir `waypoints` y `directions`.
  */
-const makePlannerVM = (
+const makePlannerStore = (
   overrides: Partial<{ waypoints: unknown[]; directions: unknown }> = {},
 ) => ({
   waypoints: overrides.waypoints ?? [],
   directions: overrides.directions ?? null,
+  pendingDraft: null,
+  loadPendingDraft: jest.fn().mockResolvedValue(undefined),
+  continuePlanningDraft: jest.fn(),
+  dismissPendingDraft: jest.fn().mockResolvedValue(undefined),
 });
 
 const makeVM = (
@@ -74,13 +79,10 @@ const makeVM = (
   addRecent: { run: jest.Mock } = makeAddRecentUseCase(),
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
   inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
-  planner: ReturnType<typeof makePlannerVM> = makePlannerVM(),
-  getRouteDraft: { run: jest.Mock } = {
-    run: jest.fn().mockResolvedValue(null),
-  },
-  clearRouteDraft: { run: jest.Mock } = {
-    run: jest.fn().mockResolvedValue(undefined),
-  },
+  plannerStore: ReturnType<typeof makePlannerStore> = makePlannerStore(),
+  // NavigationStore real: sin deps, y la reaction de `confirmedPlace` necesita
+  // observables reales para disparar selectDestination + recordRecent.
+  navStore: NavigationStore = new NavigationStore(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -95,9 +97,8 @@ const makeVM = (
     addRecent as any,
     getAllRoutes as any,
     inferStopKind as any,
-    planner as any,
-    getRouteDraft as any,
-    clearRouteDraft as any,
+    plannerStore as any,
+    navStore,
   );
 
 const flush = () => new Promise((resolve) => setImmediate(resolve));
@@ -834,7 +835,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
   });
 
   it('con waypoints + sin directions: pins coloreados + linea dashed', () => {
-    const planner = makePlannerVM({
+    const planner = makePlannerStore({
       waypoints: [
         wp('w1', 'start', 4.6, -74.08, 'Start'),
         wp('w2', 'food', 4.7, -74.1, 'Comida'),
@@ -876,7 +877,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
   });
 
   it('con waypoints + directions: N-1 segmentos coloreados por destino de cada par', () => {
-    const planner = makePlannerVM({
+    const planner = makePlannerStore({
       waypoints: [
         wp('w1', 'start', 4.6, -74.08, 'Start'),
         wp('w2', 'food', 4.7, -74.1, 'Comida'),
@@ -920,7 +921,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
   });
 
   it('plannerBounds devuelve bbox cuando hay >= 2 waypoints', () => {
-    const planner = makePlannerVM({
+    const planner = makePlannerStore({
       waypoints: [
         wp('w1', 'start', 4.6, -74.08),
         wp('w2', 'destination', 4.8, -74.2),
@@ -952,7 +953,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
   });
 
   it('plannerBounds es null con menos de 2 waypoints', () => {
-    const planner = makePlannerVM({
+    const planner = makePlannerStore({
       waypoints: [wp('w1', 'start', 4.6, -74.08)],
     });
     const vm = makeVM(

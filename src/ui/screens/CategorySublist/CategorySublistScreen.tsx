@@ -29,9 +29,8 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { CategorySublistViewModel } from './CategorySublistViewModel';
-
-import { stopKindMeta } from './stopKindMeta';
+import { CategorySublistViewModel } from '../CategorySublist/CategorySublistViewModel';
+import { stopKindMeta } from '../stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'CategorySublist'>;
 type Route = RouteProp<RoutesStackParamList, 'CategorySublist'>;

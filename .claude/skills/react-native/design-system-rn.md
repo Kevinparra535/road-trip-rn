@@ -11,12 +11,11 @@ UI stays visually consistent and a value change in one token file propagates eve
 </purpose>
 
 <when_to_use>
-
 - Creating a new screen, component, or `StyleSheet` in the RN (Expo) app.
 - Editing existing UI styles (colors, typography, spacing, radii, shadows, gradients).
 - Adding a button, text input, or gradient surface.
 - Reviewing UI work before delivery for token/component compliance.
-  </when_to_use>
+</when_to_use>
 
 <rules>
 
@@ -175,6 +174,19 @@ See the `<examples>` for each component's usage and props.
 
 See the `<examples>` for the canonical layout snippets.
 
+### Screen composition boundary
+
+- A screen file is visual composition only. It may keep its `StyleSheet`, but it does not declare
+  private subcomponents or top-level config constants.
+- Screen-only UI fragments live in `src/ui/screens/<Feature>/components/`.
+- Reused UI fragments live in `src/ui/components/`.
+- Visual numbers, colors, typography, radii, shadows, and recurring layout values become design
+  tokens in `src/ui/styles/`, not constants inside a screen.
+- Runtime/env/DI values and reusable UI config constants live in `src/config/`; do not create
+  `src/ui/config/`.
+- Reusable UI behavior options (for example list thresholds or shared animation durations) live in
+  `src/config/`.
+
 ### Style property ordering
 
 Order properties in every `StyleSheet` object as:
@@ -209,7 +221,6 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 hexToRgba('#2D7EF8', 0.2); // 'rgba(45,126,248,0.2)'
 hexToRgba('#FFFFFF', 0.08); // 'rgba(255,255,255,0.08)'
 ```
-
 </example>
 
 <example name="Typography token spread">
@@ -219,19 +230,18 @@ import Colors from '@/ui/styles/Colors';
 
 // ✅ Correct
 label: {
-...Fonts.header3,
-color: Colors.base.textPrimary,
+  ...Fonts.header3,
+  color: Colors.base.textPrimary,
 },
 
 // ❌ Wrong — raw fontFamily/fontWeight inline
 label: {
-fontSize: 22,
-fontFamily: 'Poppins-SemiBold',
-fontWeight: '600',
-color: '#FFFFFF',
+  fontSize: 22,
+  fontFamily: 'Poppins-SemiBold',
+  fontWeight: '600',
+  color: '#FFFFFF',
 },
-
-````
+```
 </example>
 
 <example name="GradientView">
@@ -251,8 +261,7 @@ import GradientView from '@/ui/components/GradientView';
 
 // Horizontal direction
 <GradientView preset="accent" direction="horizontal" style={styles.bar} />
-````
-
+```
 </example>
 
 <example name="PrimaryButton">
@@ -267,7 +276,6 @@ import PrimaryButton from '@/ui/components/PrimaryButton';
 <PrimaryButton label="Confirmar" onPress={handleConfirm} disabled={!viewModel.isValid} />
 <PrimaryButton label="Registrar" onPress={handleRegister} style={{ marginTop: 16 }} />
 ```
-
 </example>
 
 <example name="AppTextInput">
@@ -302,7 +310,6 @@ import AppTextInput from '@/ui/components/AppTextInput';
   keyboardType="email-address"
 />
 ```
-
 </example>
 
 <example name="Screen layout">
@@ -310,10 +317,9 @@ import AppTextInput from '@/ui/components/AppTextInput';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-{/_ screen content _/}
+  {/* screen content */}
 </SafeAreaView>;
-
-````
+```
 
 Header / nav bar:
 
@@ -321,7 +327,7 @@ Header / nav bar:
 <GradientView preset="header" style={styles.header}>
   {/* back button, title, right action */}
 </GradientView>
-````
+```
 
 Card container:
 
@@ -335,7 +341,6 @@ cardContainer: {
   ...Shadows.bankCard,
 },
 ```
-
 </example>
 
 </examples>
@@ -353,13 +358,14 @@ Apply to every new or edited UI file before delivery:
 - [ ] No direct `TextInput` — use `AppTextInput`
 - [ ] Spacing values from `Spacings.*`, radii from `BorderRadius.*`
 - [ ] Shadows from `Shadows.*` spread into StyleSheet
+- [ ] No screen-private subcomponents inside `XxxScreen.tsx`
+- [ ] No top-level screen config constants except `StyleSheet`
 - [ ] Style property order matches the ordering rule
 - [ ] `npm run lint` and `npm run format:check` pass
-      </checklist>
-      </output_format>
+</checklist>
+</output_format>
 
 <see_also>
-
 - [[clean-architecture-rn-expo-mvvm]] — the architecture rules these UI conventions sit inside.
 - [[feature-scaffold-rn]] — generates the screens/components this design system styles.
-  </see_also>
+</see_also>

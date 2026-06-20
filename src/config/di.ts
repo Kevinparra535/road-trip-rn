@@ -124,23 +124,25 @@ import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
+import { AddStopViewModel } from '@/ui/screens/AddStop/AddStopViewModel';
 import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
+import { CategorySublistViewModel } from '@/ui/screens/CategorySublist/CategorySublistViewModel';
+import { DestinationPreviewViewModel } from '@/ui/screens/DestinationPreview/DestinationPreviewViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
 import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewModel';
-import { DestinationPreviewViewModel } from '@/ui/screens/Home/DestinationPreviewViewModel';
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { JoinRouteViewModel } from '@/ui/screens/JoinRoute/JoinRouteViewModel';
 import { PartyMembersViewModel } from '@/ui/screens/Party/PartyMembersViewModel';
-import { AddStopViewModel } from '@/ui/screens/Routes/AddStopViewModel';
-import { CategorySublistViewModel } from '@/ui/screens/Routes/CategorySublistViewModel';
-import { JoinRouteViewModel } from '@/ui/screens/Routes/JoinRouteViewModel';
-import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
-import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
+import { RouteDetailViewModel } from '@/ui/screens/RouteDetail/RouteDetailViewModel';
+import { RoutePlannerViewModel } from '@/ui/screens/RoutePlanner/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationStore } from '@/ui/store/NavigationStore';
 import { NetworkStore } from '@/ui/store/NetworkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
+import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 import { SessionStore } from '@/ui/store/SessionStore';
 import { SyncCoordinator } from '@/ui/store/SyncCoordinator';
@@ -451,6 +453,14 @@ container
   .to(TripPartyStore)
   .inSingletonScope();
 container
+  .bind<PlannerStore>(TYPES.PlannerStore)
+  .to(PlannerStore)
+  .inSingletonScope();
+container
+  .bind<NavigationStore>(TYPES.NavigationStore)
+  .to(NavigationStore)
+  .inSingletonScope();
+container
   .bind<PlannerInsightsStore>(TYPES.PlannerInsightsStore)
   .to(PlannerInsightsStore)
   .inSingletonScope();
@@ -472,20 +482,23 @@ container
   .bind<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel)
   .to(MotorcycleFormViewModel);
 container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
-// Singleton: el Planner es estado compartido entre el RoutePlannerScreen, el
-// AddStopScreen y el CategorySublistScreen — todos mutaan los mismos
-// waypoints. Sin singleton, cada inyeccion crea un VM fantasma y las
-// mutaciones se pierden (bug visible: "el boton agregar parada no funciona").
+// Transient: el estado compartido del Planner ahora vive en `PlannerStore`
+// (singleton, arriba). Este ViewModel es una fachada delgada por-pantalla que
+// delega todo al store, asi que cada pantalla (RoutePlannerScreen, AddStopScreen,
+// CategorySublistScreen) puede tener su propia instancia sin perder las
+// mutaciones — todas leen/escriben el mismo PlannerStore.
 container
   .bind<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel)
-  .to(RoutePlannerViewModel)
-  .inSingletonScope();
+  .to(RoutePlannerViewModel);
 container
   .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
   .to(RouteDetailViewModel);
-// Singleton: HomeScreen y DestinationPreviewScreen (formSheet sobre el mapa)
-// comparten estado vía VM — el previewPlace lo setea Home al elegir un
-// resultado y lo lee el sheet para mostrar la card de confirmación.
+// Singleton: el handoff de preview/rideType con DestinationPreview ya vive en
+// el NavigationStore, pero HomeViewModel sigue siendo singleton porque
+// RoutePlannerScreen/RoutePlannerMapScreen llaman `startNavigationFromPlanner`
+// sobre ESTA misma instancia para arrancar la navegación que luego renderiza el
+// HomeScreen (destination/isRouteResponse/isNavigating viven en el VM). Si fuera
+// transient, esas pantallas mutarían una instancia distinta a la del Home.
 container
   .bind<HomeViewModel>(TYPES.HomeViewModel)
   .to(HomeViewModel)

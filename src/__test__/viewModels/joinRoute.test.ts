@@ -2,7 +2,7 @@ import { Route } from '@/domain/entities/Route';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
-import { JoinRouteViewModel } from '@/ui/screens/Routes/JoinRouteViewModel';
+import { JoinRouteViewModel } from '@/ui/screens/JoinRoute/JoinRouteViewModel';
 
 const makeShareCode = (): RouteShareCode =>
   new RouteShareCode({

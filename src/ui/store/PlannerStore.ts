@@ -46,9 +46,10 @@ import {
   splitIntoDays,
 } from '@/domain/geo/routeOps';
 
+import { SerializedDuplicateRoute } from '@/ui/navigation/types';
+
 import Logger from '@/ui/utils/Logger';
 
-import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 import { LocationStore } from '@/ui/store/LocationStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
@@ -111,7 +112,7 @@ export type PlannerTimelineItem = {
 };
 
 @injectable()
-export class RoutePlannerViewModel {
+export class PlannerStore {
   // ── Form state ──────────────────────────────────────────────────────────
   name: string = '';
   /** Notas opcionales del rider sobre la ruta (frame `S85Zfj`). */
@@ -201,6 +202,14 @@ export class RoutePlannerViewModel {
    * o cancelar (`cancelEditingWaypoint`).
    */
   editingWaypointId: string | null = null;
+
+  /**
+   * Draft del Planner detectado en AsyncStorage al iniciar el Home (E3 flow
+   * brief). Si no es null, el HomeScreen muestra el sheet "Continúa donde
+   * quedaste". Se carga con `loadPendingDraft()` y se consume con
+   * `continuePlanningDraft()` (continuar) o `dismissPendingDraft()` (borrar).
+   */
+  pendingDraft: RouteDraft | null = null;
 
   private mode: Mode = 'create';
   private editingId: string | null = null;
@@ -1552,6 +1561,87 @@ export class RoutePlannerViewModel {
     });
   }
 
+  // ── Pending draft (E3 "Continúa donde quedaste" del Home) ────────────────
+
+  /**
+   * Carga el draft de CREACIÓN del rider activo desde AsyncStorage. El Home
+   * lo invoca en su `initialize`; si hay un draft con >=1 waypoint, lo expone
+   * en `pendingDraft` para que el HomeScreen muestre el sheet de recuperación.
+   * Errores se loggean, no se propagan (no debe romper el Home).
+   */
+  async loadPendingDraft(): Promise<void> {
+    try {
+      // Aseguramos el rider antes de buscar el draft (key por-rider). Si el
+      // store ya conoce el riderId (initialize), lo reusamos; sino lo cargamos.
+      let riderId = this.riderId;
+      if (!riderId) {
+        const rider = await this.getCurrentRiderUseCase.run();
+        if (rider) {
+          runInAction(() => {
+            this.riderId = rider.id;
+          });
+          riderId = rider.id;
+        }
+      }
+      if (!riderId) return;
+      // Draft de CREACIÓN del Home: routeId null (ruta nueva, no edición).
+      const draft = await this.getRouteDraftUseCase.run({
+        riderId,
+        routeId: null,
+      });
+      // Solo lo mostramos si tiene al menos 1 waypoint — sino no hay nada
+      // que recuperar.
+      if (!draft || draft.waypoints.length === 0) return;
+      runInAction(() => {
+        this.pendingDraft = draft;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error cargando draft pendiente: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /**
+   * El rider tappeo "Continuar planeando": hidratamos el store con el draft
+   * pendiente y limpiamos el sheet. El HomeScreen solo tiene que navegar al
+   * Planner; sus waypoints ya van a estar cargados.
+   */
+  continuePlanningDraft(): void {
+    const draft = this.pendingDraft;
+    if (!draft) return;
+    this.initializeFromDraft(draft);
+    runInAction(() => {
+      this.pendingDraft = null;
+    });
+  }
+
+  /**
+   * El rider tappeo "Empezar de nuevo": borra el draft de AsyncStorage y
+   * cierra el sheet. Errores se loggean, no se propagan.
+   */
+  async dismissPendingDraft(): Promise<void> {
+    const draft = this.pendingDraft;
+    runInAction(() => {
+      this.pendingDraft = null;
+    });
+    if (!draft) return;
+    try {
+      await this.clearRouteDraftUseCase.run({
+        riderId: draft.riderId,
+        routeId: draft.routeId,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error descartando draft: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
   /**
    * Entrypoint alternativo (A2 del flow brief): el rider eligio un destino
    * desde `DestinationPreview` y vino al Planner para trazar la ruta. Setea
@@ -1859,6 +1949,7 @@ export class RoutePlannerViewModel {
       this.motorcycles = null;
       this.days = null;
       this.dayBoundaries = [];
+      this.pendingDraft = null;
     });
     this.insights.reset();
     this.templates.reset();

@@ -30,9 +30,9 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { RoutesViewModel } from './RoutesViewModel';
+import { rideTypeMeta } from '../rideTypeMeta';
 
-import { rideTypeMeta } from './rideTypeMeta';
+import { RoutesViewModel } from './RoutesViewModel';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutesList'>;
 

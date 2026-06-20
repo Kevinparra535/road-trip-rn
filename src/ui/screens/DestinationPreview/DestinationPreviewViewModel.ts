@@ -15,8 +15,8 @@ import Logger from '@/ui/utils/Logger';
 import { mapboxStaticImageUrl } from '@/ui/utils/mapboxStaticImage';
 import { placeContextLine, placeTypeLabel } from '@/ui/utils/placeFormat';
 
-import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationStore } from '@/ui/store/NavigationStore';
 
 // Velocidad promedio que asumimos para el ETA del preview. La ruta real
 // puede dar otro numero (curvas, semaforos), pero da una idea de magnitud.
@@ -32,11 +32,11 @@ type ICalls = 'placeSummary';
 
 /**
  * VM del formSheet "DestinationPreview". Orquesta:
- * - lectura del `previewPlace` desde `HomeViewModel` (estado compartido)
+ * - lectura del `previewPlace` desde `NavigationStore` (estado compartido)
  * - calculo de distancia/ETA aproximados via `LocationStore`
  * - URL del static map thumbnail (Mapbox Static Images API)
  * - fetch del resumen externo (Wikipedia) via `GetPlaceSummaryUseCase`
- * - confirm/cancel que delegan al VM padre
+ * - confirm/cancel que delegan al `NavigationStore`
  *
  * Sigue el patron canonico (`isPlaceSummaryLoading/Error/Response`,
  * `updateLoadingState` con switch, `handleError`, `runInAction` tras await).
@@ -60,8 +60,8 @@ export class DestinationPreviewViewModel {
   private summaryReactionDisposer: (() => void) | null = null;
 
   constructor(
-    @inject(TYPES.HomeViewModel)
-    private readonly homeViewModel: HomeViewModel,
+    @inject(TYPES.NavigationStore)
+    private readonly navStore: NavigationStore,
     @inject(TYPES.LocationStore)
     private readonly locationStore: LocationStore,
     @inject(TYPES.GetPlaceSummaryUseCase)
@@ -84,7 +84,7 @@ export class DestinationPreviewViewModel {
   // ── Computed (estado leido del VM padre) ──────────────────────────────────
 
   get previewPlace(): Place | null {
-    return this.homeViewModel.previewPlace;
+    return this.navStore.previewPlace;
   }
 
   get hasPreview(): boolean {
@@ -166,11 +166,11 @@ export class DestinationPreviewViewModel {
 
   /**
    * Tipo de rodada activo. Es un getter porque la fuente de verdad vive en
-   * `HomeViewModel.rideType` — `computeRoute()` lo lee desde ahi para
-   * elegir colores de linea y waypoints.
+   * `NavigationStore.rideType` (compartido con el Home, que lo lee en
+   * `computeRoute()` para elegir colores de linea y waypoints).
    */
   get rideType(): RideType {
-    return this.homeViewModel.rideType;
+    return this.navStore.rideType;
   }
 
   /**
@@ -178,17 +178,17 @@ export class DestinationPreviewViewModel {
    * el rider elige modo + confirma en un solo gesto, sin saltar al Planner.
    */
   setRideType(rideType: RideType): void {
-    this.homeViewModel.setRideType(rideType);
+    this.navStore.setRideType(rideType);
   }
 
-  /** Confirma el preview (delegado al VM padre). */
+  /** Confirma el preview (delegado al `NavigationStore`). */
   confirm(): void {
-    this.homeViewModel.confirmPreview();
+    this.navStore.confirmPreview();
   }
 
-  /** Cancela el preview (delegado al VM padre). */
+  /** Cancela el preview (delegado al `NavigationStore`). */
   cancel(): void {
-    this.homeViewModel.cancelPreview();
+    this.navStore.cancelPreview();
   }
 
   /** Limpia el estado del resumen (al cambiar de lugar o al desmontar). */

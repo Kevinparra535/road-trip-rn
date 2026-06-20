@@ -10,7 +10,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../RoutePlannerViewModel';
+import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
 
 import FuelGaugeBar from './FuelGaugeBar';
 import MotorcycleSummaryCard from './MotorcycleSummaryCard';

@@ -34,13 +34,13 @@ import Spacings from '@/ui/styles/Spacings';
 import PartyMembersScreen from '@/ui/screens/Party/PartyMembersScreen';
 import ProfileScreen from '@/ui/screens/Profile/ProfileScreen';
 
+import AddStopScreen from '../screens/AddStop/AddStopScreen';
+import CategorySublistScreen from '../screens/CategorySublist/CategorySublistScreen';
 import GarageScreen from '../screens/Garage/GarageScreen';
 import MotorcycleFormScreen from '../screens/Garage/MotorcycleFormScreen';
-import AddStopScreen from '../screens/Routes/AddStopScreen';
-import CategorySublistScreen from '../screens/Routes/CategorySublistScreen';
-import JoinRouteScreen from '../screens/Routes/JoinRouteScreen';
-import RouteDetailScreen from '../screens/Routes/RouteDetailScreen';
-import RoutePlannerMapScreen from '../screens/Routes/RoutePlannerMapScreen';
+import JoinRouteScreen from '../screens/JoinRoute/JoinRouteScreen';
+import RouteDetailScreen from '../screens/RouteDetail/RouteDetailScreen';
+import RoutePlannerMapScreen from '../screens/RoutePlannerMap/RoutePlannerMapScreen';
 import RoutesScreen from '../screens/Routes/RoutesScreen';
 
 import HomeNavigator from './HomeNavigator';

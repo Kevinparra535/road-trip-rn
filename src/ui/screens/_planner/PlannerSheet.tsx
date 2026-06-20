@@ -102,7 +102,7 @@ PlannerSheet.displayName = 'PlannerSheet';
 
 const styles = StyleSheet.create({
   background: {
-    backgroundColor: Colors.base.bgPrimary,
+    backgroundColor: Colors.base.bgGradientEnd,
     borderTopLeftRadius: BorderRadius.xxl,
     borderTopRightRadius: BorderRadius.xxl,
   },
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   // transparente debajo del SearchBar al scrollear.
   headerSlot: {
     paddingBottom: Spacings.sm,
-    backgroundColor: Colors.base.bgPrimary,
+    backgroundColor: Colors.base.bgGradientEnd,
   },
   content: {
     paddingHorizontal: Spacings.lg,

@@ -8,7 +8,7 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RIDE_TYPES } from '@/ui/screens/Routes/rideTypeMeta';
+import { RIDE_TYPES } from '@/ui/screens/rideTypeMeta';
 
 type Props = {
   value: RideType;

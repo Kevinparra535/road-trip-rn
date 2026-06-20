@@ -110,6 +110,8 @@ export const TYPES = {
   SessionStore: Symbol.for('SessionStore'),
   LocationStore: Symbol.for('LocationStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
+  PlannerStore: Symbol.for('PlannerStore'),
+  NavigationStore: Symbol.for('NavigationStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),
   NetworkStore: Symbol.for('NetworkStore'),

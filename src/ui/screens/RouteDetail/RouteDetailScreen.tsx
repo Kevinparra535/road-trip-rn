@@ -30,9 +30,8 @@ import { hexToRgba } from '@/ui/utils/colorUtils';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { RouteDetailViewModel } from './RouteDetailViewModel';
-
-import { rideTypeMeta } from './rideTypeMeta';
+import { rideTypeMeta } from '../rideTypeMeta';
+import { RouteDetailViewModel } from '../RouteDetail/RouteDetailViewModel';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RouteDetail'>;
 type Route = RouteProp<RoutesStackParamList, 'RouteDetail'>;

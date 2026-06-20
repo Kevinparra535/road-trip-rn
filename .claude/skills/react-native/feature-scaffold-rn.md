@@ -11,11 +11,10 @@ is what keeps the architecture inspectable and the layers swappable.
 </purpose>
 
 <when_to_use>
-
 - Creating a new feature end-to-end (e.g. "Clients", "Measurements", "Sessions").
 - Adding a screen that needs its own UseCases, repository contract, repo impl, and service.
 - Wiring a new feature into Inversify DI with its tests.
-  </when_to_use>
+</when_to_use>
 
 <rules>
 
@@ -38,6 +37,7 @@ minimal UI skeleton with basic ViewModel state/actions.
 - `src/ui/screens/<Feature>/<Feature>Screen.tsx`
 - `src/ui/screens/<Feature>/<Feature>ViewModel.ts`
 - `src/ui/screens/<Feature>/components/` (only if needed)
+- `src/config/ui.ts` or another file in `src/config/` (only when adding reusable UI config constants/options)
 
 **Domain**
 
@@ -81,12 +81,33 @@ Each layer depends only inward, so transport details never leak to UI:
 
 - UI depends only on ViewModel.
 - ViewModel depends only on UseCases.
+- ViewModels never import or inject other ViewModels.
 - UseCases depend only on domain contracts.
 - Data layer implements contracts and calls service/network.
 - Manager details stay isolated in service/network adapters (Axios, Firebase, GraphQL, etc.).
 - Map transport models to domain entities; keep manager-specific shapes out of domain/UI.
 - ViewModel stays UI-agnostic (no navigation APIs, no Alert/toast APIs, no React hooks).
-- Screen logic stays minimal: bind fields, call ViewModel methods, render ViewModel state/errors/loading.
+- Screen wiring stays minimal: bind fields, call ViewModel methods, render ViewModel state/errors/loading.
+
+### Screen boundary
+
+- Every screen lives in its own `src/ui/screens/<Feature>/` folder and ships with a colocated
+  `<Feature>ViewModel.ts`; no exceptions for "small" screens.
+- `<Feature>Screen.tsx` contains only visual composition and wiring: `observer`, `useViewModel`,
+  lifecycle `useEffect`, typed navigation, JSX, and `StyleSheet`.
+- `<Feature>Screen.tsx` may import/consume only `./<Feature>ViewModel` and
+  `TYPES.<Feature>ViewModel`; never another screen's ViewModel or `TYPES.<Other>ViewModel`.
+- Do not declare subcomponents inside `<Feature>Screen.tsx`. Create files under
+  `src/ui/screens/<Feature>/components/` for screen-only components; use `src/ui/components/` for
+  shared components.
+- Do not declare top-level config constants in `<Feature>Screen.tsx` except `StyleSheet`.
+  Visual values become design-system tokens in `src/ui/styles`; reusable UI behavior options live
+  in `src/config`; runtime/env config lives in `src/config`.
+- Do not put filters, mappings, form default composition, validation branching, create-vs-update
+  decisions, DTO composition, or permission logic in the Screen. Expose those as ViewModel getters
+  or actions.
+- Event handlers in the Screen may call `viewModel.action()` and perform typed navigation from the
+  result/state; they must not choose business flow.
 
 ### Entity and model structure
 
@@ -372,14 +393,17 @@ const <Feature>Screen = observer(() => {
 
 Screen/ViewModel rules at a glance:
 
-| Rule                  | Correct                                              | Wrong                                            |
-| --------------------- | ---------------------------------------------------- | ------------------------------------------------ |
-| Instantiate ViewModel | `useViewModel(TYPES.X)`                              | `new ViewModel()` in component body              |
-| Name the instance     | `const viewModel = ...`                              | `const vm = ...`                                 |
-| Trigger side effects  | `useEffect(() => { viewModel.load() }, [viewModel])` | `useMemo(() => { viewModel.load() }, [...])`     |
-| Mutate after `await`  | `runInAction(() => { this.x = val })`                | `this.x = val` directly after await              |
-| Log + set error       | `handleError(e, type)`                               | Inline `this.error = e.message`                  |
-| Set loading/error     | `updateLoadingState(bool, msg, type)`                | Direct field assignment scattered through action |
+| Rule                 | Correct                                 | Wrong                                            |
+| -------------------- | --------------------------------------- | ------------------------------------------------ |
+| Instantiate ViewModel       | `useViewModel(TYPES.X)`                  | `new ViewModel()` in component body              |
+| Name the instance    | `const viewModel = ...`                 | `const vm = ...`                                 |
+| Trigger side effects | `useEffect(() => { viewModel.load() }, [viewModel])`  | `useMemo(() => { viewModel.load() }, [...])`            |
+| ViewModel ownership  | `ClientsScreen` uses `ClientsViewModel` | `InvoicesScreen` imports `ClientsViewModel` |
+| Private UI fragments | `screens/X/components/XCard.tsx`        | `function XCard() { ... }` inside `XScreen.tsx` |
+| Screen constants     | tokens / `src/config` / ViewModel getters | `const CARD_HEIGHT = 120` in `XScreen.tsx` |
+| Mutate after `await` | `runInAction(() => { this.x = val })`   | `this.x = val` directly after await              |
+| Log + set error      | `handleError(e, type)`                  | Inline `this.error = e.message`                  |
+| Set loading/error    | `updateLoadingState(bool, msg, type)`   | Direct field assignment scattered through action |
 
 </example>
 
@@ -393,11 +417,10 @@ Return:
 3. DI changes explicitly shown
 4. Unit test files + test cases added
 5. "How to test" steps (`npm test` and the targeted test command)
-   </output_format>
+</output_format>
 
 <see_also>
-
 - [[clean-architecture-rn-expo-mvvm]] — the general architecture rules this scaffold follows.
 - [[unit-testing-clean-architecture]] — the full testing stack, factories, and coverage policy.
 - [[design-system-rn]] — UI/component conventions for the screen layer.
-  </see_also>
+</see_also>

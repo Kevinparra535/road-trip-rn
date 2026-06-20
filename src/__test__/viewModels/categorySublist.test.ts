@@ -1,6 +1,6 @@
 import { Place } from '@/domain/entities/Place';
 
-import { CategorySublistViewModel } from '@/ui/screens/Routes/CategorySublistViewModel';
+import { CategorySublistViewModel } from '@/ui/screens/CategorySublist/CategorySublistViewModel';
 
 describe('CategorySublistViewModel', () => {
   const buildPlanner = (
