@@ -125,6 +125,7 @@ const RouteDetailScreen = observer(() => {
               <Mapbox.ShapeSource id="detail-line" shape={viewModel.lineShape}>
                 <Mapbox.LineLayer
                   id="detail-line-layer"
+                  slot="top"
                   style={{
                     lineColor: viewModel.lineColor,
                     lineWidth: 4,
