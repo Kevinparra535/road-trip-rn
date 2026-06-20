@@ -1,6 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  ChevronLeft,
+  LockKeyhole,
+  Map as MapIcon,
+  X,
+} from 'lucide-react-native';
 import { observer } from 'mobx-react-lite';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -43,11 +48,7 @@ export const PlannerMapCanvas = observer(
         <View style={StyleSheet.absoluteFill}>{map}</View>
       ) : (
         <View style={styles.mapPlaceholder}>
-          <Ionicons
-            name="map-outline"
-            size={64}
-            color={Colors.base.textMuted}
-          />
+          <MapIcon size={64} color={Colors.base.textMuted} />
           <Text style={styles.placeholderLabel}>
             Mapa (se renderiza en device)
           </Text>
@@ -63,18 +64,16 @@ export const PlannerMapCanvas = observer(
           activeOpacity={0.75}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons
-            name="chevron-back"
-            size={22}
-            color={Colors.base.textPrimary}
-          />
+          <ChevronLeft size={22} color={Colors.base.textPrimary} />
         </TouchableOpacity>
 
-        {/* Pill central con título */}
-        <View style={styles.titlePill}>
-          <Text style={styles.titleText} numberOfLines={1}>
-            {title ?? 'Planear ruta'}
-          </Text>
+        {/* Pill central con título (hug-content, centrado) */}
+        <View style={styles.titleWrap}>
+          <View style={styles.titlePill}>
+            <Text style={styles.titleText} numberOfLines={1}>
+              {title ?? 'Planear ruta'}
+            </Text>
+          </View>
         </View>
 
         {/* Chip de party (opcional) */}
@@ -87,13 +86,11 @@ export const PlannerMapCanvas = observer(
           activeOpacity={0.75}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons
-            name={readOnly ? 'lock-closed' : 'close'}
-            size={22}
-            color={
-              readOnly ? Colors.base.textSecondary : Colors.base.textPrimary
-            }
-          />
+          {readOnly ? (
+            <LockKeyhole size={20} color={Colors.base.textSecondary} />
+          ) : (
+            <X size={20} color={Colors.base.iconMuted} />
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -102,7 +99,8 @@ export const PlannerMapCanvas = observer(
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 
-const NAV_BTN_BG = hexToRgba(Colors.base.bgGradientEnd, 0.85);
+// Pills del nav semitransparentes (#242424CC en el diseño) sobre el mapa.
+const NAV_BTN_BG = hexToRgba(Colors.base.bgCard, 0.8);
 
 const styles = StyleSheet.create({
   root: {
@@ -143,10 +141,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
-  titlePill: {
+  // Contenedor flexible que centra el pill compacto entre back y close.
+  titleWrap: {
     flex: 1,
+    alignItems: 'center',
+  },
+  titlePill: {
     paddingVertical: Spacings.sm,
-    paddingHorizontal: Spacings.md,
+    paddingHorizontal: Spacings.xl,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: NAV_BTN_BG,
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
     ...Shadows.bankCard,
   },
   titleText: {
-    ...Fonts.inputsBold,
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
   },
 });

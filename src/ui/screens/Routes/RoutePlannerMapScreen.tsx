@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import { observer } from 'mobx-react-lite';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   NavigationAction,
   RouteProp,
@@ -20,15 +19,39 @@ import {
   useRoute,
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import {
+  Bike,
+  Bookmark,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  CircleAlert,
+  CircleCheck,
+  Eye,
+  Flag,
+  Hourglass,
+  LocateFixed,
+  Map as MapIcon,
+  MapPin,
+  Navigation,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Route as RouteIcon,
+  Save,
+  Search,
+  SquarePen,
+  Trash2,
+  X,
+} from 'lucide-react-native';
 
 import { TYPES } from '@/config/types';
 
 import { StopKind } from '@/domain/entities/StopKind';
 
 import AppTextInput from '@/ui/components/AppTextInput';
-import PrimaryButton from '@/ui/components/PrimaryButton';
-import RideTypeSelector from '@/ui/components/RideTypeSelector';
-import SecondaryButton from '@/ui/components/SecondaryButton';
+import GradientView from '@/ui/components/GradientView';
 import Switch from '@/ui/components/Switch';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -36,6 +59,7 @@ import { RoutesStackParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
+import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 import { formatDuration } from '@/ui/utils/formatDuration';
@@ -54,12 +78,25 @@ import PlannerSheet, { PlannerSheetHandle } from './_planner/PlannerSheet';
 import SummaryChip from './_planner/SummaryChip';
 import TemplateSheet from './_planner/TemplateSheet';
 import WaypointEditSheet from './_planner/WaypointEditSheet';
+import { rideTypeMeta } from './rideTypeMeta';
 import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
 type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;
 
 type OpenSection = 'options' | 'autonomy' | 'elevation' | null;
+
+/**
+ * Hora de llegada estimada = ahora + ETA (min). Formato 24h "HH:MM" para el
+ * resumen ("· llega 13:42"). Devuelve null si no hay ETA aún.
+ */
+function formatArrival(etaMin: number): string | null {
+  if (!etaMin || etaMin <= 0) return null;
+  const arrival = new Date(Date.now() + etaMin * 60_000);
+  const hh = arrival.getHours().toString().padStart(2, '0');
+  const mm = arrival.getMinutes().toString().padStart(2, '0');
+  return `${hh}:${mm}`;
+}
 
 const RoutePlannerMapScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -227,29 +264,27 @@ const RoutePlannerMapScreen = observer(() => {
   const toggleSection = (section: Exclude<OpenSection, null>) =>
     setOpenSection((current) => (current === section ? null : section));
 
-  /**
-   * Deep-link desde un SummaryChip: abre la sección del acordeón
-   * correspondiente y abre el sheet de detalles.
-   */
-  const openSectionFromChip = (section: Exclude<OpenSection, null>) => {
-    setOpenSection(section);
-    detailsSheetRef.current?.open();
-  };
-
   // Chip de party (rodada grupal) en la navbar: OCULTO por ahora (a pedido).
   // Para reactivar: pasar a PlannerMapCanvas un partyChip condicionado a
   // `viewModel.hasPartyForRoute && !viewModel.isReadOnly` (usaba
   // partyStore.memberCount + navigate('PartyMembers')).
 
-  const autonomy = viewModel.insights.autonomyEstimate;
-  const showFuelChip = !!autonomy && !autonomy.reachesWithoutRefuel;
-  const elevation = viewModel.insights.elevationProfile;
-  const showElevationChip =
-    !!elevation && !elevation.isEmpty && elevation.ascentM > 0;
+  // Resumen Card (diseño Pencil): hora de llegada estimada y nº de paradas.
+  const arrival = formatArrival(viewModel.etaWithStopsMin);
+  const stopsCount = viewModel.waypoints.length;
+
+  // Helper de la card "Varios días". Con multi-día activo mostramos jornadas y
+  // km/día aproximados; si no, una pista de qué hace el toggle.
+  const dayCount = (viewModel.days ?? []).length || 1;
+  const multiDayHelper = viewModel.isMultiDay
+    ? `≈ ${dayCount} jornada${dayCount === 1 ? '' : 's'} · ~${Math.round(
+        viewModel.distanceKm / dayCount,
+      )} km/día`
+    : 'Divide la ruta en jornadas con pernocte';
 
   const SheetHeader = viewModel.isReadOnly ? (
     <View style={styles.viewerBanner}>
-      <Ionicons name="eye" size={16} color={Colors.base.iconMuted} />
+      <Eye size={16} color={Colors.base.iconMuted} />
       <Text style={styles.viewerBannerText}>
         {viewModel.partyOwnerName
           ? `${viewModel.partyOwnerName} planea esta ruta. Sumate cuando inicie navegacion.`
@@ -279,7 +314,7 @@ const RoutePlannerMapScreen = observer(() => {
       {mapPickMode ? (
         <View style={styles.mapPickBanner} pointerEvents="box-none">
           <View style={styles.mapPickBannerCard}>
-            <Ionicons name="location" size={18} color={Colors.base.accent} />
+            <MapPin size={18} color={Colors.base.accent} />
             <Text style={styles.mapPickBannerText}>
               Toca el mapa para fijar tu arranque
             </Text>
@@ -288,7 +323,7 @@ const RoutePlannerMapScreen = observer(() => {
               hitSlop={8}
               testID="route-planner-map-pick-cancel-btn"
             >
-              <Ionicons name="close" size={18} color={Colors.base.iconMuted} />
+              <X size={18} color={Colors.base.iconMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -297,11 +332,7 @@ const RoutePlannerMapScreen = observer(() => {
       <PlannerSheet ref={sheetRef} header={SheetHeader}>
         {viewModel.isReadOnly ? (
           <View style={styles.viewerCta}>
-            <Ionicons
-              name="hourglass-outline"
-              size={18}
-              color={Colors.base.textSecondary}
-            />
+            <Hourglass size={18} color={Colors.base.textSecondary} />
             <Text style={styles.viewerCtaText}>
               {viewModel.partyOwnerName
                 ? `Esperando a ${viewModel.partyOwnerName}`
@@ -316,6 +347,10 @@ const RoutePlannerMapScreen = observer(() => {
                 viewModel.isReadOnly && styles.readOnlyDim,
               ]}
             >
+              {!isEmpty && viewModel.timelineItems.length > 0 ? (
+                <RouteSheetHeader viewModel={viewModel} />
+              ) : null}
+
               {isEmpty ? (
                 <PlannerEmptyState
                   onUseLocation={() => {
@@ -342,11 +377,7 @@ const RoutePlannerMapScreen = observer(() => {
                     },
                   ]}
                 >
-                  <Ionicons
-                    name="flag"
-                    size={16}
-                    color={Colors.stopKind.destination}
-                  />
+                  <Flag size={16} color={Colors.stopKind.destination} />
                   <View style={styles.missingStartBody}>
                     <Text style={styles.missingStartTitle}>
                       Falta tu punto de arranque
@@ -360,7 +391,9 @@ const RoutePlannerMapScreen = observer(() => {
 
               {viewModel.needsStartPoint ? (
                 <View style={styles.stopRow}>
-                  <View style={[styles.dot, styles.startPlaceholderDot]} />
+                  <View style={[styles.stopPin, styles.startPlaceholderPin]}>
+                    <Flag size={16} color={Colors.base.accent} />
+                  </View>
                   <View style={styles.stopBody}>
                     <Text style={styles.startPlaceholderName}>
                       Punto de arranque
@@ -373,14 +406,17 @@ const RoutePlannerMapScreen = observer(() => {
               {viewModel.timelineItems.map((item) => {
                 const meta = stopKindMeta(item.kind);
                 const canEditKind = item.isIntermediate;
+                const PinIcon = meta.lucideIcon;
                 return (
                   <View key={item.id} style={styles.stopRow}>
                     <TouchableOpacity
                       onPress={() => canEditKind && setEditingKindFor(item.id)}
                       disabled={!canEditKind}
-                      style={[styles.dot, { backgroundColor: meta.color }]}
+                      style={[styles.stopPin, { backgroundColor: meta.color }]}
                       hitSlop={8}
-                    />
+                    >
+                      <PinIcon size={16} color={Colors.base.textPrimary} />
+                    </TouchableOpacity>
                     <View style={styles.stopBody}>
                       <View style={styles.stopHeader}>
                         <Text style={styles.stopName} numberOfLines={1}>
@@ -411,8 +447,7 @@ const RoutePlannerMapScreen = observer(() => {
                           style={styles.editBtn}
                           testID={`waypoint-${item.id}-details`}
                         >
-                          <Ionicons
-                            name="create-outline"
+                          <SquarePen
                             size={16}
                             color={
                               item.notes || item.stopDurationMin
@@ -432,11 +467,7 @@ const RoutePlannerMapScreen = observer(() => {
                           style={styles.editBtn}
                           testID={`waypoint-${item.id}-edit`}
                         >
-                          <Ionicons
-                            name="pencil"
-                            size={16}
-                            color={Colors.base.iconMuted}
-                          />
+                          <Pencil size={16} color={Colors.base.iconMuted} />
                         </TouchableOpacity>
                       ) : null}
                       {!viewModel.isReadOnly &&
@@ -448,8 +479,7 @@ const RoutePlannerMapScreen = observer(() => {
                             hitSlop={6}
                             style={styles.reorderBtn}
                           >
-                            <Ionicons
-                              name="chevron-up"
+                            <ChevronUp
                               size={14}
                               color={
                                 item.canMoveUp
@@ -464,8 +494,7 @@ const RoutePlannerMapScreen = observer(() => {
                             hitSlop={6}
                             style={styles.reorderBtn}
                           >
-                            <Ionicons
-                              name="chevron-down"
+                            <ChevronDown
                               size={14}
                               color={
                                 item.canMoveDown
@@ -502,11 +531,7 @@ const RoutePlannerMapScreen = observer(() => {
                           hitSlop={8}
                           style={styles.removeBtn}
                         >
-                          <Ionicons
-                            name="close"
-                            size={18}
-                            color={Colors.base.iconMuted}
-                          />
+                          <X size={18} color={Colors.base.iconMuted} />
                         </TouchableOpacity>
                       ) : null}
                     </View>
@@ -522,7 +547,7 @@ const RoutePlannerMapScreen = observer(() => {
                   testID="route-planner-add-stop-btn"
                 >
                   <View style={styles.addStopCircle}>
-                    <Ionicons name="add" size={20} color={Colors.base.accent} />
+                    <Plus size={18} color={Colors.base.accent} />
                   </View>
                   <View style={styles.addStopBody}>
                     <Text style={styles.addStopTitle}>Agregar parada</Text>
@@ -530,22 +555,21 @@ const RoutePlannerMapScreen = observer(() => {
                       gasolina · comida · turismo…
                     </Text>
                   </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={20}
-                    color={Colors.base.accent}
-                  />
+                  <ChevronRight size={20} color={Colors.base.iconMuted} />
                 </TouchableOpacity>
               ) : null}
 
               {viewModel.waypoints.length >= 2 && !viewModel.isReadOnly ? (
-                <View style={styles.multiDayToggleRow}>
+                <View style={styles.multiDayCard}>
+                  <View style={styles.multiDayTextCol}>
+                    <Text style={styles.multiDayTitle}>Varios días</Text>
+                    <Text style={styles.multiDayHelper}>{multiDayHelper}</Text>
+                  </View>
                   <Switch
                     value={viewModel.isMultiDay}
                     onValueChange={() => viewModel.toggleMultiDay()}
                     testID="route-planner-multiday-switch"
                   />
-                  <Text style={styles.multiDayToggleLabel}>Varios días</Text>
                 </View>
               ) : null}
 
@@ -567,47 +591,25 @@ const RoutePlannerMapScreen = observer(() => {
               ) : null}
 
               {!isEmpty ? (
-                <>
-                  <View style={styles.chipsRow}>
-                    <SummaryChip
-                      iconName="navigate-outline"
-                      label={`${viewModel.distanceKm} km`}
-                      onPress={() => openSectionFromChip('options')}
-                      loading={viewModel.isDirectionsLoading}
-                      testID="route-planner-chip-distance"
-                    />
-                    <SummaryChip
-                      iconName="time-outline"
-                      label={formatDuration(viewModel.durationMin)}
-                      onPress={() => openSectionFromChip('options')}
-                      loading={viewModel.isDirectionsLoading}
-                      testID="route-planner-chip-time"
-                    />
-                    <SummaryChip
-                      iconName="git-commit-outline"
-                      label={`${viewModel.waypoints.length} paradas`}
-                      testID="route-planner-chip-stops"
-                    />
-                    {showFuelChip ? (
-                      <SummaryChip
-                        iconName="water-outline"
-                        label={`${autonomy.fuelStopsNeeded} tanqueo${
-                          autonomy.fuelStopsNeeded === 1 ? '' : 's'
-                        }`}
-                        onPress={() => openSectionFromChip('autonomy')}
-                        testID="route-planner-chip-fuel"
-                      />
-                    ) : null}
-                    {showElevationChip ? (
-                      <SummaryChip
-                        iconName="trending-up"
-                        label={`${Math.round(elevation.ascentM)} m`}
-                        onPress={() => openSectionFromChip('elevation')}
-                        testID="route-planner-chip-elevation"
-                      />
-                    ) : null}
+                <View style={styles.resumenCard}>
+                  <View style={styles.resumenHeader}>
+                    <View style={styles.resumenStatusLeft}>
+                      {viewModel.directions ? (
+                        <CircleCheck size={16} color={Colors.alerts.check} />
+                      ) : null}
+                      <Text style={styles.resumenStatusTxt}>
+                        {viewModel.isDirectionsLoading
+                          ? 'Calculando ruta…'
+                          : viewModel.directions
+                            ? 'Ruta lista'
+                            : 'Resumen'}
+                      </Text>
+                      {viewModel.directions && arrival ? (
+                        <Text style={styles.resumenEta}>· llega {arrival}</Text>
+                      ) : null}
+                    </View>
                     <TouchableOpacity
-                      style={styles.detailsChip}
+                      style={styles.resumenVerDetalles}
                       onPress={() => {
                         setOpenSection((s) => s ?? 'options');
                         detailsSheetRef.current?.open();
@@ -615,15 +617,36 @@ const RoutePlannerMapScreen = observer(() => {
                       activeOpacity={0.85}
                       testID="route-planner-details-btn"
                     >
-                      <Text style={styles.detailsChipText}>Detalles</Text>
-                      <Ionicons
-                        name="chevron-up"
-                        size={14}
-                        color={Colors.base.accent}
-                      />
+                      <Text style={styles.resumenVerDetallesTxt}>
+                        Ver detalles
+                      </Text>
+                      <ChevronRight size={16} color={Colors.base.accent} />
                     </TouchableOpacity>
                   </View>
-                </>
+
+                  <View style={styles.resumenDivider} />
+
+                  <View style={styles.resumenStatsRow}>
+                    <View style={styles.resumenStat}>
+                      <Text style={styles.resumenStatVal}>
+                        {viewModel.distanceKm} km
+                      </Text>
+                      <Text style={styles.resumenStatLab}>DISTANCIA</Text>
+                    </View>
+                    <View style={styles.resumenStatDivider} />
+                    <View style={styles.resumenStat}>
+                      <Text style={styles.resumenStatVal}>
+                        {formatDuration(viewModel.durationMin)}
+                      </Text>
+                      <Text style={styles.resumenStatLab}>TIEMPO</Text>
+                    </View>
+                    <View style={styles.resumenStatDivider} />
+                    <View style={styles.resumenStat}>
+                      <Text style={styles.resumenStatVal}>{stopsCount}</Text>
+                      <Text style={styles.resumenStatLab}>PARADAS</Text>
+                    </View>
+                  </View>
+                </View>
               ) : null}
 
               <DirectionsErrorCard
@@ -645,29 +668,51 @@ const RoutePlannerMapScreen = observer(() => {
             </View>
 
             {!isEmpty ? (
-              <View style={styles.ctaRow}>
+              <View style={styles.footerRow}>
                 {viewModel.canCalculate ? (
-                  <View style={styles.ctaSecondaryCol}>
-                    <SecondaryButton
-                      label={
-                        viewModel.isSubmitting ? 'Guardando...' : 'Guardar'
-                      }
-                      iconName="bookmark"
-                      onPress={handleSavePress}
-                      disabled={ctaDisabled}
-                      testID="route-planner-save-btn"
-                    />
-                  </View>
-                ) : null}
-                <View style={styles.ctaPrimaryCol}>
-                  <PrimaryButton
-                    label={ctaLabel}
-                    iconName="navigate"
-                    onPress={handleStartPress}
+                  <TouchableOpacity
+                    style={[
+                      styles.guardarBtn,
+                      ctaDisabled && styles.ctaDisabled,
+                    ]}
+                    onPress={handleSavePress}
                     disabled={ctaDisabled}
-                    style={styles.ctaPrimaryBtn}
-                  />
-                </View>
+                    activeOpacity={0.85}
+                    testID="route-planner-save-btn"
+                  >
+                    <Save size={18} color={Colors.base.textSecondary} />
+                    <Text style={styles.guardarBtnText}>
+                      {viewModel.isSubmitting ? 'Guardando...' : 'Guardar'}
+                    </Text>
+                  </TouchableOpacity>
+                ) : null}
+                <TouchableOpacity
+                  style={[styles.iniciarBtn, ctaDisabled && styles.ctaDisabled]}
+                  onPress={handleStartPress}
+                  disabled={ctaDisabled}
+                  activeOpacity={0.9}
+                  testID="route-planner-start-btn"
+                >
+                  <GradientView
+                    preset="accent"
+                    direction="horizontal"
+                    style={styles.iniciarGradient}
+                  >
+                    {viewModel.isDirectionsLoading || viewModel.isSubmitting ? (
+                      <ActivityIndicator
+                        color={Colors.semantic.text.primaryDark}
+                      />
+                    ) : (
+                      <>
+                        <Navigation
+                          size={18}
+                          color={Colors.semantic.text.primaryDark}
+                        />
+                        <Text style={styles.iniciarBtnText}>{ctaLabel}</Text>
+                      </>
+                    )}
+                  </GradientView>
+                </TouchableOpacity>
               </View>
             ) : null}
           </>
@@ -736,6 +781,39 @@ const RoutePlannerMapScreen = observer(() => {
 
 // ── Sub-componentes locales ───────────────────────────────────────────────
 
+/**
+ * Cabecera del bottom sheet (diseño Pencil): "Tu ruta", origen → destino y un
+ * chip con el tipo de rodada.
+ */
+const RouteSheetHeader = observer(
+  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+    const items = viewModel.timelineItems;
+    const start = items[0];
+    const dest = items[items.length - 1];
+    const ride = rideTypeMeta(viewModel.rideType);
+    const subtitle =
+      start && dest && start.id !== dest.id
+        ? `${start.name} → ${dest.name}`
+        : (start?.name ?? 'Planea tu recorrido');
+    return (
+      <View style={styles.sheetHeader}>
+        <View style={styles.sheetHeaderCol}>
+          <Text style={styles.sheetHeaderTitle} numberOfLines={1}>
+            Tu ruta
+          </Text>
+          <Text style={styles.sheetHeaderSub} numberOfLines={1}>
+            {subtitle}
+          </Text>
+        </View>
+        <View style={styles.typeChip}>
+          <RouteIcon size={14} color={Colors.base.iconMuted} />
+          <Text style={styles.typeChipText}>{ride.label}</Text>
+        </View>
+      </View>
+    );
+  },
+);
+
 const PartyFuelPlanCard = observer(
   ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
     const plan = viewModel.partyFuelPlan;
@@ -762,11 +840,7 @@ const PartyFuelPlanCard = observer(
 
         {plan.reachesWithoutRefuel ? (
           <View style={styles.fuelHappy}>
-            <Ionicons
-              name="checkmark-circle"
-              size={20}
-              color={Colors.alerts.check}
-            />
+            <CircleCheck size={20} color={Colors.alerts.check} />
             <Text style={styles.fuelHappyText}>
               Todas las motos llegan sin tanquear.
             </Text>
@@ -829,7 +903,7 @@ const DirectionsErrorCard = observer(
         ]}
       >
         <View style={styles.errorCardHeader}>
-          <Ionicons name="alert-circle" size={22} color={errorColor} />
+          <CircleAlert size={22} color={errorColor} />
           <Text style={styles.errorCardTitle}>No pudimos trazar la ruta</Text>
         </View>
         <Text style={styles.errorCardSub}>{viewModel.isDirectionsError}</Text>
@@ -840,7 +914,7 @@ const DirectionsErrorCard = observer(
             activeOpacity={0.85}
             testID="route-planner-error-retry-btn"
           >
-            <Ionicons name="refresh" size={16} color={Colors.base.accent} />
+            <RefreshCw size={16} color={Colors.base.accent} />
             <Text style={styles.errorCardCtaPrimaryText}>Reintentar</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -849,7 +923,7 @@ const DirectionsErrorCard = observer(
             activeOpacity={0.85}
             testID="route-planner-error-dismiss-btn"
           >
-            <Ionicons name="create" size={16} color={Colors.base.textPrimary} />
+            <Pencil size={16} color={Colors.base.textPrimary} />
             <Text style={styles.errorCardCtaGhostText}>Editar paradas</Text>
           </TouchableOpacity>
         </View>
@@ -875,22 +949,14 @@ const NoMotorcycleNotice = observer(
         activeOpacity={0.85}
         testID="route-planner-no-moto-notice"
       >
-        <MaterialCommunityIcons
-          name="motorbike"
-          size={24}
-          color={Colors.base.accent}
-        />
+        <Bike size={24} color={Colors.base.accent} />
         <View style={styles.noMotoBody}>
           <Text style={styles.noMotoTitle}>Registra tu moto</Text>
           <Text style={styles.noMotoSub}>
             Para estimar combustible, autonomía y dónde tanquear en esta ruta.
           </Text>
         </View>
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color={Colors.base.iconMuted}
-        />
+        <ChevronRight size={20} color={Colors.base.iconMuted} />
       </TouchableOpacity>
     );
   },
@@ -919,7 +985,7 @@ const StartPointPicker = observer(
           activeOpacity={0.85}
           testID="route-planner-start-from-location-btn"
         >
-          <Ionicons name="locate" size={18} color={Colors.base.accent} />
+          <LocateFixed size={18} color={Colors.base.accent} />
           <Text style={styles.startBtnPrimaryText}>
             {hasLocation
               ? 'Usar mi ubicación actual'
@@ -934,7 +1000,7 @@ const StartPointPicker = observer(
           activeOpacity={0.85}
           testID="route-planner-start-from-map-btn"
         >
-          <Ionicons name="map" size={18} color={Colors.base.textPrimary} />
+          <MapIcon size={18} color={Colors.base.textPrimary} />
           <Text style={styles.startBtnGhostText}>Elegir en el mapa</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -943,7 +1009,7 @@ const StartPointPicker = observer(
           activeOpacity={0.85}
           testID="route-planner-start-from-search-btn"
         >
-          <Ionicons name="search" size={18} color={Colors.base.textPrimary} />
+          <Search size={18} color={Colors.base.textPrimary} />
           <Text style={styles.startBtnGhostText}>Buscar una dirección</Text>
         </TouchableOpacity>
       </View>
@@ -982,7 +1048,7 @@ const LocationPermissionDialog = ({
             },
           ]}
         >
-          <Ionicons name="locate" size={28} color={Colors.base.accent} />
+          <LocateFixed size={28} color={Colors.base.accent} />
         </View>
         <Text style={styles.permissionTitle}>Activa tu ubicación</Text>
         <Text style={styles.permissionSub}>
@@ -995,7 +1061,7 @@ const LocationPermissionDialog = ({
           activeOpacity={0.85}
           testID="route-planner-permission-allow-btn"
         >
-          <Ionicons name="locate" size={18} color={Colors.base.textPrimary} />
+          <LocateFixed size={18} color={Colors.base.textPrimary} />
           <Text style={styles.ctaText}>Permitir ubicación</Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -1003,7 +1069,7 @@ const LocationPermissionDialog = ({
           onPress={onChooseFromMap}
           activeOpacity={0.85}
         >
-          <Ionicons name="map" size={18} color={Colors.base.accent} />
+          <MapIcon size={18} color={Colors.base.accent} />
           <Text style={styles.discardCtaPrimaryText}>
             Elegir inicio en el mapa
           </Text>
@@ -1044,6 +1110,7 @@ const KindPickerModal = ({
         <View style={styles.modalGrid}>
           {SELECTABLE_STOP_KINDS.map((kind) => {
             const meta = stopKindMeta(kind);
+            const KindIcon = meta.lucideIcon;
             return (
               <TouchableOpacity
                 key={kind}
@@ -1053,7 +1120,7 @@ const KindPickerModal = ({
                 ]}
                 onPress={() => onPick(kind)}
               >
-                <Ionicons name={meta.icon} size={22} color={meta.color} />
+                <KindIcon size={22} color={meta.color} />
                 <Text style={[styles.modalCellText, { color: meta.color }]}>
                   {meta.label}
                 </Text>
@@ -1106,22 +1173,14 @@ const SaveRouteSheet = observer(
                 onPress={() => viewModel.closeSaveSheet()}
                 hitSlop={8}
               >
-                <Ionicons
-                  name="chevron-back"
-                  size={22}
-                  color={Colors.base.textPrimary}
-                />
+                <ChevronLeft size={22} color={Colors.base.textPrimary} />
               </TouchableOpacity>
               <Text style={styles.saveSheetTitle}>Guardar ruta</Text>
               <TouchableOpacity
                 onPress={() => viewModel.closeSaveSheet()}
                 hitSlop={8}
               >
-                <Ionicons
-                  name="close"
-                  size={22}
-                  color={Colors.base.iconMuted}
-                />
+                <X size={22} color={Colors.base.iconMuted} />
               </TouchableOpacity>
             </View>
 
@@ -1143,7 +1202,7 @@ const SaveRouteSheet = observer(
 
               <View style={styles.savePreview}>
                 <View style={styles.savePreviewIcon}>
-                  <Ionicons name="map" size={20} color={Colors.base.accent} />
+                  <MapIcon size={20} color={Colors.base.accent} />
                 </View>
                 <View style={styles.savePreviewBody}>
                   <Text style={styles.savePreviewName} numberOfLines={1}>
@@ -1226,11 +1285,7 @@ const SaveRouteSheet = observer(
                     <ActivityIndicator color={Colors.base.textPrimary} />
                   ) : (
                     <>
-                      <Ionicons
-                        name="bookmark"
-                        size={18}
-                        color={Colors.base.textPrimary}
-                      />
+                      <Bookmark size={18} color={Colors.base.textPrimary} />
                       <Text style={styles.ctaText}>Guardar</Text>
                     </>
                   )}
@@ -1276,7 +1331,7 @@ const DiscardConfirmSheet = observer(
                 },
               ]}
             >
-              <Ionicons name="trash" size={25} color={errorColor} />
+              <Trash2 size={25} color={errorColor} />
             </View>
             <Text style={styles.discardTitle}>¿Descartar esta ruta?</Text>
             <Text style={styles.discardSub}>
@@ -1296,7 +1351,7 @@ const DiscardConfirmSheet = observer(
               activeOpacity={0.85}
               testID="route-planner-confirm-discard-btn"
             >
-              <Ionicons name="trash" size={18} color={errorColor} />
+              <Trash2 size={18} color={errorColor} />
               <Text
                 style={[
                   styles.discardCtaDestructiveText,
@@ -1313,7 +1368,7 @@ const DiscardConfirmSheet = observer(
               activeOpacity={0.85}
               testID="route-planner-save-and-exit-btn"
             >
-              <Ionicons name="bookmark" size={18} color={Colors.base.accent} />
+              <Bookmark size={18} color={Colors.base.accent} />
               <Text style={styles.discardCtaPrimaryText}>Guardar y salir</Text>
             </TouchableOpacity>
 
@@ -1365,7 +1420,7 @@ const RouteSavedSheet = observer(
                 },
               ]}
             >
-              <Ionicons name="checkmark-circle" size={34} color={checkColor} />
+              <CircleCheck size={34} color={checkColor} />
             </View>
             <Text style={styles.savedTitle}>Ruta guardada</Text>
             <Text style={styles.savedSub}>
@@ -1379,11 +1434,7 @@ const RouteSavedSheet = observer(
               activeOpacity={0.85}
               testID="route-saved-start-btn"
             >
-              <Ionicons
-                name="navigate"
-                size={20}
-                color={Colors.base.textPrimary}
-              />
+              <Navigation size={20} color={Colors.base.textPrimary} />
               <Text style={styles.ctaText}>Iniciar navegación ahora</Text>
             </TouchableOpacity>
 
@@ -1393,7 +1444,7 @@ const RouteSavedSheet = observer(
               activeOpacity={0.85}
               testID="route-saved-detail-btn"
             >
-              <Ionicons name="map" size={18} color={Colors.base.textPrimary} />
+              <MapIcon size={18} color={Colors.base.textPrimary} />
               <Text style={styles.savedCtaGhostText}>
                 Ver detalle de la ruta
               </Text>
@@ -1483,14 +1534,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacings.md,
     backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.xl,
     borderWidth: 1,
     borderColor: Colors.base.cardBorder,
   },
-  dot: {
-    width: 14,
-    height: 14,
+  // Pin circular (32×32) con el icono lucide del kind — reemplaza el dot V1.
+  stopPin: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: BorderRadius.pill,
+  },
+  startPlaceholderPin: {
+    backgroundColor: Colors.base.accentDim,
+    borderWidth: 1.5,
+    borderColor: Colors.base.accentDimBorder,
+    borderStyle: 'dashed',
   },
   stopBody: {
     flex: 1,
@@ -1548,58 +1608,134 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Card "Agregar parada" (V2) — dashed orange con circulo + chevron.
+  // Cabecera del sheet (diseño Pencil): "Tu ruta" + origen→destino + typeChip.
+  sheetHeader: {
+    paddingVertical: Spacings.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  sheetHeaderCol: {
+    flex: 1,
+    gap: 2,
+  },
+  sheetHeaderTitle: {
+    ...Fonts.inputsBold,
+    color: Colors.base.textPrimary,
+  },
+  sheetHeaderSub: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  typeChip: {
+    paddingVertical: Spacings.xs + 2,
+    paddingHorizontal: Spacings.sm + 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs + 2,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.pill,
+  },
+  typeChipText: {
+    ...Fonts.linksBold,
+    color: Colors.base.iconMuted,
+  },
+  // Card "Agregar parada" (diseño Pencil) — borde sólido sutil + círculo accent.
   addStopCard: {
     padding: Spacings.md,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.md,
-    backgroundColor: hexToRgba(Colors.base.accent, 0.08),
-    borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: hexToRgba(Colors.base.accent, 0.4),
+    backgroundColor: 'transparent',
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
   },
   addStopCircle: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.accentDimBorder,
+    borderRadius: BorderRadius.lg,
   },
   addStopBody: {
     flex: 1,
   },
   addStopTitle: {
     ...Fonts.bodyTextBold,
-    color: Colors.base.accent,
+    color: Colors.base.textPrimary,
   },
   addStopSub: {
     marginTop: 2,
     ...Fonts.links,
     color: Colors.base.textMuted,
   },
-  // Summary chips (V2)
-  chipsRow: {
+  // Resumen Card (diseño Pencil): status + llegada + stats km/tiempo/paradas.
+  resumenCard: {
+    padding: Spacings.md,
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  resumenHeader: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacings.sm,
   },
-  detailsChip: {
-    marginLeft: 'auto',
-    paddingHorizontal: Spacings.sm,
-    paddingVertical: Spacings.sm,
+  resumenStatusLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs + 2,
+  },
+  resumenStatusTxt: {
+    ...Fonts.smallBodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  resumenEta: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  resumenVerDetalles: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.xs,
   },
-  detailsChipText: {
+  resumenVerDetallesTxt: {
     ...Fonts.linksBold,
     color: Colors.base.accent,
+  },
+  resumenDivider: {
+    height: 1,
+    backgroundColor: Colors.base.separator,
+  },
+  resumenStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  resumenStat: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  resumenStatVal: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  resumenStatLab: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+    letterSpacing: 1.2,
+  },
+  resumenStatDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: Colors.base.separator,
   },
   // Editor content wrapper (V2) — conserva el gap del sheet y permite atenuar
   // el bloque completo en modo read-only sin tocar navbar ni CTA.
@@ -1609,16 +1745,28 @@ const styles = StyleSheet.create({
   readOnlyDim: {
     opacity: 0.5,
   },
-  // Toggle "Varios días" (multi-día)
-  multiDayToggleRow: {
-    paddingVertical: Spacings.sm,
+  // Card "Varios días" (multi-día) — título + helper + Switch (diseño Pencil).
+  multiDayCard: {
+    padding: Spacings.md,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacings.sm,
+    gap: Spacings.md,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
   },
-  multiDayToggleLabel: {
-    ...Fonts.bodyText,
+  multiDayTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  multiDayTitle: {
+    ...Fonts.bodyTextBold,
     color: Colors.base.textPrimary,
+  },
+  multiDayHelper: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
   },
   // Fila de resumen del SaveRouteSheet (km · tiempo · paradas)
   saveSummaryRow: {
@@ -1704,21 +1852,45 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.base.accent,
     borderRadius: BorderRadius.pill,
   },
-  ctaRow: {
+  // Footer de acción (diseño Pencil): Guardar (hug) + Iniciar (fill, gradiente).
+  footerRow: {
     marginTop: Spacings.sm,
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: Spacings.md,
   },
-  ctaSecondaryCol: {
-    flexShrink: 1,
-  },
-  ctaPrimaryCol: {
-    flex: 1,
-  },
-  ctaPrimaryBtn: {
-    flex: 1,
+  guardarBtn: {
+    paddingHorizontal: Spacings.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
+    gap: Spacings.sm,
+    height: 56,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  guardarBtnText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textSecondary,
+  },
+  iniciarBtn: {
+    flex: 1,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadows.bankButton,
+  },
+  iniciarGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.sm,
+    height: 56,
+  },
+  iniciarBtnText: {
+    ...Fonts.callToActions,
+    color: Colors.semantic.text.primaryDark,
   },
   ctaDisabled: {
     opacity: 0.4,
@@ -2146,12 +2318,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
     ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
-  },
-  startPlaceholderDot: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: Colors.base.accent,
-    borderStyle: 'dashed',
   },
   startPlaceholderName: {
     ...Fonts.bodyTextBold,

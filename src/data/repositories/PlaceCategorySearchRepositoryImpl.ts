@@ -10,18 +10,39 @@ import {
   SearchByCategoryInput,
 } from '@/domain/repositories/PlaceCategorySearchRepository';
 
-import { haversineKm, samplePolyline } from '@/domain/geo/geoMath';
+import {
+  polylineLengthKm,
+  projectPointOnPolyline,
+  sampleAlongRouteWithAnchors,
+} from '@/domain/geo/geoMath';
 
 import type { PlaceCategorySearchService } from '@/data/services/PlaceCategorySearchService';
 
 import { PlaceModel } from '@/data/models/placeModel';
 
-/**
- * Cantidad de puntos del polyline que samplamos para la busqueda. Mas
- * samples = mejor cobertura, pero mas llamadas a la API por click.
- * 5 es el sweet spot: cubre start/mid/end + dos intermedios.
- */
-const MAX_SAMPLES = 5;
+/** Tope duro de samples por defecto (presupuesto de llamadas a Mapbox). */
+const DEFAULT_MAX_SAMPLES = 12;
+
+/** Separacion objetivo entre samples equiespaciados (km). */
+const DEFAULT_SPACING_KM = 30;
+
+/** Minimo de samples equiespaciados. */
+const MIN_SAMPLES = 3;
+
+/** Concurrencia maxima de llamadas en vuelo (evita rafaga de 12 a la vez). */
+const CONCURRENCY = 5;
+
+/** Resultados por defecto si el use case no pasa `maxResults`. */
+const DEFAULT_MAX_RESULTS = 15;
+
+/** POI deduplicado con su posicion y desvio respecto a la ruta. */
+interface RankedPoi {
+  place: Place;
+  /** Posicion a lo largo de la ruta (km desde el inicio). */
+  alongKm: number;
+  /** Desvio lateral respecto al trazado (km). */
+  lateralKm: number;
+}
 
 @injectable()
 export class PlaceCategorySearchRepositoryImpl implements PlaceCategorySearchRepository {
@@ -31,63 +52,135 @@ export class PlaceCategorySearchRepositoryImpl implements PlaceCategorySearchRep
   ) {}
 
   /**
-   * Estrategia: samplea hasta `MAX_SAMPLES` puntos a lo largo del polyline
-   * (`alongRoute`), hace una llamada paralela por sample, dedupe por
-   * `place.id` y rankea por distancia al sample mas cercano.
-   *
-   * Esto da una distribucion natural a lo largo de la ruta sin sesgar al
-   * centroide (lo que pasaria con un bbox + proximity al medio).
+   * Estrategia:
+   * 1. Muestreo length-aware de la ruta + anclas obligatorias (paradas).
+   * 2. Una llamada por sample con concurrencia limitada (pool) y
+   *    `.catch(() => [])` por sample (un 429 no aborta toda la busqueda).
+   * 3. Dedup por `place.id`; cada unico se proyecta sobre la ruta para obtener
+   *    su posicion + desvio lateral.
+   * 4. Ranking con cobertura uniforme: se parte la ruta en N buckets por
+   *    posicion (N ≈ maxResults) y se hace round-robin tomando el mejor de cada
+   *    bucket (menor desvio), redistribuyendo cupo de buckets vacios.
    */
   async searchByCategory(input: SearchByCategoryInput): Promise<Place[]> {
-    const samples = sampleAlongRoute(input.alongRoute);
+    const spacingKm = input.spacingKm ?? DEFAULT_SPACING_KM;
+    const maxSamples = input.maxSamples ?? DEFAULT_MAX_SAMPLES;
+
+    const samples = sampleAlongRouteWithAnchors(
+      input.alongRoute,
+      input.anchors ?? [],
+      { spacingKm, minSamples: MIN_SAMPLES, maxSamples },
+    );
     if (samples.length === 0) return [];
 
-    const lngLatSamples: [number, number][] = samples.map((p) => [
-      p.longitude,
-      p.latitude,
+    const lngLatSamples: [number, number][] = samples.map((s) => [
+      s.point.longitude,
+      s.point.latitude,
     ]);
 
-    const batches: PlaceModel[][] = await Promise.all(
-      lngLatSamples.map((pt) =>
-        this.service
-          .searchByCategory(input.category, pt)
-          .catch((): PlaceModel[] => []),
-      ),
+    const batches = await runWithConcurrency(lngLatSamples, CONCURRENCY, (pt) =>
+      this.service
+        .searchByCategory(input.category, pt)
+        .catch((): PlaceModel[] => []),
     );
 
-    // Dedup por id; cada unique tiene su distancia al sample mas cercano.
-    const seen = new Map<string, { place: Place; minKm: number }>();
-    for (let i = 0; i < batches.length; i += 1) {
-      const sample = samples[i];
-      for (const model of batches[i]) {
+    // Dedup por id, proyectando cada POI sobre la ruta una sola vez.
+    const seen = new Map<string, RankedPoi>();
+    for (const batch of batches) {
+      for (const model of batch) {
         const place = model.toDomain();
-        const distance = haversineKm(sample, {
+        if (seen.has(place.id)) continue;
+        const projection = projectPointOnPolyline(input.alongRoute, {
           latitude: place.latitude,
           longitude: place.longitude,
         });
-        const prev = seen.get(place.id);
-        if (!prev || distance < prev.minKm) {
-          seen.set(place.id, { place, minKm: distance });
-        }
+        seen.set(place.id, {
+          place,
+          alongKm: projection.distanceFromStartKm,
+          lateralKm: projection.distanceToRouteKm,
+        });
       }
     }
 
-    const ranked = Array.from(seen.values())
-      .sort((a, b) => a.minKm - b.minKm)
-      .map((entry) => entry.place);
-
-    const cap = input.maxResults ?? ranked.length;
-    return ranked.slice(0, cap);
+    const maxResults = input.maxResults ?? DEFAULT_MAX_RESULTS;
+    return rankUniformCoverage(
+      Array.from(seen.values()),
+      input.alongRoute,
+      maxResults,
+    );
   }
 }
 
 /**
- * Selecciona hasta `MAX_SAMPLES` puntos del polyline. Para rutas cortas
- * (<= MAX_SAMPLES puntos) usa los puntos tal cual; para rutas largas
- * delega en `samplePolyline` para equiespaciar por distancia.
+ * Reparte los POIs por buckets equiespaciados a lo largo de la ruta y hace
+ * round-robin (mejor por menor desvio en cada bucket) hasta `maxResults`. Los
+ * buckets vacios redistribuyen su cupo: en cada vuelta tomamos de cada bucket
+ * con candidatos, asi un tramo denso no monopoliza el resultado.
  */
-function sampleAlongRoute(alongRoute: GeoPoint[]): GeoPoint[] {
-  if (alongRoute.length === 0) return [];
-  if (alongRoute.length <= MAX_SAMPLES) return alongRoute;
-  return samplePolyline(alongRoute, MAX_SAMPLES);
+function rankUniformCoverage(
+  pois: RankedPoi[],
+  geometry: GeoPoint[],
+  maxResults: number,
+): Place[] {
+  if (pois.length === 0) return [];
+  if (maxResults <= 0) return [];
+
+  const totalKm = polylineLengthKm(geometry);
+  const bucketCount = Math.max(1, Math.min(maxResults, pois.length));
+
+  // Asigna cada POI a un bucket por posicion; ordena cada bucket por desvio.
+  const buckets: RankedPoi[][] = Array.from({ length: bucketCount }, () => []);
+  for (const poi of pois) {
+    const ratio = totalKm > 0 ? poi.alongKm / totalKm : 0;
+    const idx = Math.min(
+      bucketCount - 1,
+      Math.max(0, Math.floor(ratio * bucketCount)),
+    );
+    buckets[idx].push(poi);
+  }
+  for (const bucket of buckets) {
+    bucket.sort((a, b) => a.lateralKm - b.lateralKm);
+  }
+
+  // Round-robin: una vuelta toma el mejor restante de cada bucket no vacio.
+  const result: Place[] = [];
+  const cursors = new Array(bucketCount).fill(0);
+  let progressed = true;
+  while (result.length < maxResults && progressed) {
+    progressed = false;
+    for (let i = 0; i < bucketCount && result.length < maxResults; i += 1) {
+      const cursor = cursors[i];
+      if (cursor < buckets[i].length) {
+        result.push(buckets[i][cursor].place);
+        cursors[i] = cursor + 1;
+        progressed = true;
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Ejecuta `task` sobre `items` con un pool de `limit` en vuelo a la vez.
+ * Preserva el orden de entrada en la salida. No usa librerias externas.
+ */
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  task: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+
+  const worker = async (): Promise<void> => {
+    while (next < items.length) {
+      const current = next;
+      next += 1;
+      results[current] = await task(items[current]);
+    }
+  };
+
+  const poolSize = Math.max(1, Math.min(limit, items.length));
+  await Promise.all(Array.from({ length: poolSize }, () => worker()));
+  return results;
 }

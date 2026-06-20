@@ -714,6 +714,16 @@ export class RoutePlannerViewModel {
   }
 
   private async runCategorySearch(category: SearchableCategory): Promise<void> {
+    // F6: si no hay trazado calculado pero hay >=2 waypoints, forzamos el
+    // calculo de directions para muestrear sobre la ruta real. Resiliente: si
+    // falla, caemos al fallback de `alongRouteGeometry` (recta entre waypoints).
+    if (this.geometry.length === 0 && this.waypoints.length >= 2) {
+      try {
+        await this.calculateDirections();
+      } catch (error) {
+        this.handleError(error, 'category');
+      }
+    }
     const alongRoute = this.alongRouteGeometry;
     if (alongRoute.length === 0) {
       runInAction(() => {
@@ -726,6 +736,12 @@ export class RoutePlannerViewModel {
       const places = await this.searchPlacesByCategoryUseCase.run({
         category,
         alongRoute,
+        // F4: anclamos siempre en los waypoints (paradas) ademas del muestreo
+        // equiespaciado de la ruta.
+        anchors: this.waypoints.map((w) => ({
+          latitude: w.latitude,
+          longitude: w.longitude,
+        })),
       });
       // Descarta si el rider ya desactivo el filtro (race condition).
       if (this.activeCategory !== category) return;

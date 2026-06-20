@@ -67,6 +67,7 @@
     "expo-status-bar": "~3.0.9",
     "firebase": "^12.13.0",
     "inversify": "^8.1.0",
+    "lucide-react-native": "^1.21.0",
     "mobx": "^6.15.3",
     "mobx-react-lite": "^4.1.1",
     "react": "19.1.0",

@@ -16,9 +16,24 @@ import { distanceToPolylineKm, haversineKm } from '@/domain/geo/geoMath';
 import Logger from '@/ui/utils/Logger';
 
 import { RoutePlannerViewModel } from './RoutePlannerViewModel';
-import { SELECTABLE_STOP_KINDS, stopKindMeta } from './stopKindMeta';
+import { stopKindMeta } from './stopKindMeta';
 
 type ICalls = 'search';
+
+/**
+ * Categorias buscables expuestas como chips del sub-listado, en orden de
+ * relevancia para el rider. Cada una mapea 1:1 a un `StopKind` homonimo con
+ * meta (label/icon/color) en `stopKindMeta`.
+ */
+const SEARCHABLE_CATEGORIES: SearchableCategory[] = [
+  'food',
+  'fuel',
+  'tourism',
+  'rest',
+  'cafe',
+  'lodging',
+  'town',
+];
 
 /**
  * Item de la lista de POIs (frame `rc0EQ`). Incluye la distancia al primer
@@ -78,13 +93,17 @@ export class CategorySublistViewModel {
 
   /**
    * Lista de POIs con metadata visual: distancia al start + badge "EN LA RUTA".
-   * Ordena los que estan en ruta primero (UX-wise queremos sugerir lo cercano
-   * al trazado).
+   *
+   * IMPORTANTE: respeta el ORDEN que viene del repo (ya rankeado con cobertura
+   * uniforme a lo largo de la ruta). NO re-ordenamos globalmente por distancia
+   * — eso recolapsaria la lista hacia los clusters de los extremos y anularia
+   * el ranking del repo. `isOnRoute` y `distanceFromStartKm` se conservan SOLO
+   * como metadata visual (badge "EN LA RUTA" + label de km).
    */
   get rows(): CategoryPoiRow[] {
     const start = this.planner.waypoints[0];
     const geometry = this.planner.geometry;
-    const rows: CategoryPoiRow[] = this.results.map((place) => {
+    return this.results.map((place) => {
       const distance =
         start != null
           ? haversineKm(start, {
@@ -105,27 +124,23 @@ export class CategorySublistViewModel {
         isOnRoute: distToPoly <= ON_ROUTE_THRESHOLD_KM,
       };
     });
-    // Orden: en-ruta primero, luego por distancia ascendente.
-    return rows.sort((a, b) => {
-      if (a.isOnRoute && !b.isOnRoute) return -1;
-      if (!a.isOnRoute && b.isOnRoute) return 1;
-      return a.distanceFromStartKm - b.distanceFromStartKm;
-    });
   }
 
   /**
-   * Categorias disponibles en el chip row del sub-listado. Son las mismas
-   * que las `SELECTABLE_STOP_KINDS` mapeadas a `SearchableCategory`.
+   * Categorias disponibles en el chip row del sub-listado. Cubre TODAS las
+   * `SearchableCategory` (incluye las nuevas: town/lodging/cafe) para que el
+   * rider pueda alternar entre ellas sin volver al AddStop. Cada una mapea a
+   * un `StopKind` homonimo que ya tiene meta (label/icon/color).
    */
   get chipCategories(): {
     category: SearchableCategory;
     label: string;
     iconName: string;
   }[] {
-    return SELECTABLE_STOP_KINDS.map((kind) => {
-      const meta = stopKindMeta(kind);
+    return SEARCHABLE_CATEGORIES.map((category) => {
+      const meta = stopKindMeta(category as StopKind);
       return {
-        category: kind as SearchableCategory,
+        category,
         label: meta.label,
         iconName: meta.icon,
       };
@@ -219,6 +234,11 @@ export class CategorySublistViewModel {
   }
 
   private async runSearch(): Promise<void> {
+    // F6: si todavia no hay trazado calculado pero hay >=2 waypoints, forzamos
+    // el calculo de directions para muestrear sobre la ruta real (no la recta
+    // entre A/B). Si falla o sigue vacio, el `buildAlongRoute` cae al fallback
+    // de waypoints — el sampler del repo interpola los intermedios.
+    await this.ensureGeometry();
     const alongRoute = this.buildAlongRoute();
     if (alongRoute.length === 0) {
       runInAction(() => {
@@ -231,11 +251,34 @@ export class CategorySublistViewModel {
       const places = await this.searchPlacesByCategoryUseCase.run({
         category: this.activeCategory,
         alongRoute,
+        // F4: anclamos siempre en los waypoints (paradas) para que el repo
+        // muestree esos puntos ademas del muestreo equiespaciado de la ruta.
+        anchors: this.planner.waypoints.map((w) => ({
+          latitude: w.latitude,
+          longitude: w.longitude,
+        })),
       });
       runInAction(() => {
         this.results = places;
       });
       this.updateLoadingState(false, null, 'search');
+    } catch (error) {
+      this.handleError(error, 'search');
+    }
+  }
+
+  /**
+   * F6: garantiza un trazado calculado antes de buscar. Si no hay geometry
+   * pero hay >=2 waypoints, dispara `planner.calculateDirections()` (con su
+   * loading flag propio) para muestrear sobre la ruta real. Resiliente: si
+   * falla, lo logueamos pero NO rompemos la busqueda — el fallback de
+   * waypoints en `buildAlongRoute` cubre el caso (el sampler interpola).
+   */
+  private async ensureGeometry(): Promise<void> {
+    if (this.planner.geometry.length > 0) return;
+    if (this.planner.waypoints.length < 2) return;
+    try {
+      await this.planner.calculateDirections();
     } catch (error) {
       this.handleError(error, 'search');
     }

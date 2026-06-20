@@ -51,9 +51,9 @@ describe('AddStopViewModel', () => {
       category: 'tourism',
     });
 
-  it('expone las 6 categorias del grid', () => {
+  it('expone las 8 categorias del grid (incl. Pueblos/Hospedaje/Cafe)', () => {
     const { vm } = build();
-    expect(vm.categories).toHaveLength(6);
+    expect(vm.categories).toHaveLength(8);
     expect(vm.categories.map((c) => c.label)).toEqual(
       expect.arrayContaining([
         'Gasolinera',
@@ -62,8 +62,32 @@ describe('AddStopViewModel', () => {
         'Bano',
         'Turismo',
         'Mirador',
+        'Pueblos',
+        'Hospedaje',
       ]),
     );
+  });
+
+  it('los tiles nuevos usan category + kind dedicados (town/lodging/cafe)', () => {
+    const { vm } = build();
+    const byLabel = (label: string) =>
+      vm.categories.find((c) => c.label === label);
+
+    expect(byLabel('Pueblos')).toMatchObject({
+      category: 'town',
+      kind: 'town',
+      iconName: 'business',
+    });
+    expect(byLabel('Hospedaje')).toMatchObject({
+      category: 'lodging',
+      kind: 'lodging',
+      iconName: 'bed',
+    });
+    expect(byLabel('Cafe')).toMatchObject({
+      category: 'cafe',
+      kind: 'cafe',
+      iconName: 'cafe',
+    });
   });
 
   it('initialize carga los recientes', async () => {

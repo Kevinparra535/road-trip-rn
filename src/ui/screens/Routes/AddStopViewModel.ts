@@ -31,9 +31,9 @@ export type AddStopCategoryTile = {
 export const ADD_STOP_CATEGORIES: AddStopCategoryTile[] = [
   { category: 'fuel', kind: 'fuel', label: 'Gasolinera', iconName: 'water' },
   { category: 'food', kind: 'food', label: 'Comida', iconName: 'restaurant' },
-  // Cafe se mapea a 'food' kind (no hay un kind dedicado) pero conservamos
-  // el label/categoria para que el rider lo distinga visualmente.
-  { category: 'food', kind: 'food', label: 'Cafe', iconName: 'cafe' },
+  // Cafe ya tiene category + kind dedicados ('cafe'); el repo lo resuelve a su
+  // canonical id y el StopKind 'cafe' tiene meta (color/label/icon) propios.
+  { category: 'cafe', kind: 'cafe', label: 'Cafe', iconName: 'cafe' },
   { category: 'rest', kind: 'rest', label: 'Bano', iconName: 'leaf' },
   {
     category: 'tourism',
@@ -43,6 +43,11 @@ export const ADD_STOP_CATEGORIES: AddStopCategoryTile[] = [
   },
   // "Mirador" = descanso escenico, usa el kind 'rest' del MVP.
   { category: 'rest', kind: 'rest', label: 'Mirador', iconName: 'eye' },
+  // Pueblos: busqueda de localidades via geocoding (category 'town'). El
+  // StopKind 'town' tiene meta propia; icono 'business' (valido en Ionicons).
+  { category: 'town', kind: 'town', label: 'Pueblos', iconName: 'business' },
+  // Hospedaje: category + kind 'lodging' dedicados.
+  { category: 'lodging', kind: 'lodging', label: 'Hospedaje', iconName: 'bed' },
 ];
 
 /**

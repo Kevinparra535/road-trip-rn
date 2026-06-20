@@ -7,6 +7,8 @@ import {
   headingTriangle,
   pointAtDistanceAlong,
   polylineLengthKm,
+  projectPointOnPolyline,
+  sampleAlongRouteWithAnchors,
   samplePolyline,
 } from '@/domain/geo/geoMath';
 
@@ -176,5 +178,129 @@ describe('distanceToPolylineKm', () => {
     const far = distanceToPolylineKm(line, { latitude: 1, longitude: 0.5 });
     expect(near).toBeGreaterThan(0);
     expect(far).toBeGreaterThan(near);
+  });
+});
+
+describe('projectPointOnPolyline', () => {
+  // Linea sobre el meridiano: ~111 km por grado de latitud.
+  const line = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 1, longitude: 0 },
+    { latitude: 2, longitude: 0 },
+  ];
+
+  it('returns zero deviation and 0 along for empty geometry', () => {
+    const out = projectPointOnPolyline([], { latitude: 1, longitude: 1 });
+    expect(out.distanceFromStartKm).toBe(0);
+    expect(out.distanceToRouteKm).toBe(0);
+  });
+
+  it('projects a point onto the middle of a segment (interpolated)', () => {
+    // Punto entre dos vertices, fuera del trazado por el este.
+    const out = projectPointOnPolyline(line, { latitude: 0.5, longitude: 0.2 });
+    // El pie de la perpendicular cae ~a la mitad del primer grado de latitud.
+    expect(out.distanceFromStartKm).toBeGreaterThan(45);
+    expect(out.distanceFromStartKm).toBeLessThan(70);
+    // Desvio lateral > 0 (esta al este de la linea).
+    expect(out.distanceToRouteKm).toBeGreaterThan(15);
+    expect(out.snapped.longitude).toBeCloseTo(0, 3);
+    expect(out.snapped.latitude).toBeCloseTo(0.5, 2);
+  });
+
+  it('exposes distanceAlongKm and lateral aliases', () => {
+    const out = projectPointOnPolyline(line, { latitude: 1, longitude: 0 });
+    expect(out.distanceAlongKm).toBe(out.distanceFromStartKm);
+    expect(out.lateral).toBe(out.distanceToRouteKm);
+    expect(out.distanceToRouteKm).toBeCloseTo(0, 4);
+  });
+
+  it('clamps to the start vertex for points before the route', () => {
+    const out = projectPointOnPolyline(line, {
+      latitude: -0.5,
+      longitude: 0,
+    });
+    expect(out.distanceFromStartKm).toBeCloseTo(0, 3);
+  });
+});
+
+describe('sampleAlongRouteWithAnchors', () => {
+  // Ruta sobre el meridiano: ~111 km por grado.
+  const shortLine = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 0.5, longitude: 0 },
+  ];
+
+  // Ruta larga ~444 km (4 grados de latitud).
+  const longLine = [
+    { latitude: 0, longitude: 0 },
+    { latitude: 4, longitude: 0 },
+  ];
+
+  it('returns [] for empty geometry', () => {
+    expect(sampleAlongRouteWithAnchors([], [])).toEqual([]);
+  });
+
+  it('respects minSamples on a short route', () => {
+    const out = sampleAlongRouteWithAnchors(shortLine, [], {
+      spacingKm: 30,
+      minSamples: 3,
+      maxSamples: 12,
+    });
+    // ~55 km / 30 = ceil -> 2, pero clamp a minSamples = 3.
+    expect(out.length).toBeGreaterThanOrEqual(3);
+    // Ordenado por distancia.
+    for (let i = 1; i < out.length; i += 1) {
+      expect(out[i].distanceAlongKm).toBeGreaterThanOrEqual(
+        out[i - 1].distanceAlongKm,
+      );
+    }
+  });
+
+  it('caps a long route to maxSamples spaced ~spacingKm', () => {
+    const out = sampleAlongRouteWithAnchors(longLine, [], {
+      spacingKm: 30,
+      minSamples: 3,
+      maxSamples: 12,
+    });
+    // ~444 / 30 = 15 -> clamp a 12.
+    expect(out.length).toBe(12);
+    // Separacion media ~= largo / (n - 1) ~ 40 km, dentro de un rango razonable.
+    const totalKm = polylineLengthKm(longLine);
+    const avgGap = totalKm / (out.length - 1);
+    expect(avgGap).toBeGreaterThan(20);
+    expect(avgGap).toBeLessThan(60);
+  });
+
+  it('always inserts projected anchors and dedupes nearby even samples', () => {
+    // Ancla al ~50% de la ruta larga (lat 2 -> ~222 km).
+    const anchor = { latitude: 2, longitude: 0.05 };
+    const out = sampleAlongRouteWithAnchors(longLine, [anchor], {
+      spacingKm: 30,
+      minSamples: 3,
+      maxSamples: 12,
+    });
+
+    const totalKm = polylineLengthKm(longLine);
+    const anchorAlong = totalKm / 2;
+    // El ancla proyectada esta presente (snapped al trazado, lon ~ 0).
+    const anchorSample = out.find(
+      (s) => Math.abs(s.distanceAlongKm - anchorAlong) < 1,
+    );
+    expect(anchorSample).toBeDefined();
+    expect(anchorSample?.point.longitude).toBeCloseTo(0, 3);
+
+    // Dedup: no debe haber dos samples a < spacing/2 (15 km) de distancia.
+    for (let i = 1; i < out.length; i += 1) {
+      expect(
+        out[i].distanceAlongKm - out[i - 1].distanceAlongKm,
+      ).toBeGreaterThan(0);
+    }
+    const tooClose = out.some(
+      (s) =>
+        s !== anchorSample &&
+        Math.abs(s.distanceAlongKm - anchorAlong) < 15 &&
+        Math.abs(s.distanceAlongKm - anchorAlong) > 0,
+    );
+    expect(tooClose).toBe(false);
   });
 });
