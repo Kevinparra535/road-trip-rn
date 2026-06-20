@@ -13,11 +13,11 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
-import { SessionStore } from '@/ui/store/SessionStore';
+
+import { ProfileViewModel } from './ProfileViewModel';
 
 const ProfileScreen = observer(() => {
-  const session = useViewModel<SessionStore>(TYPES.SessionStore);
-  const rider = session.currentRider;
+  const viewModel = useViewModel<ProfileViewModel>(TYPES.ProfileViewModel);
 
   return (
     <SafeAreaView
@@ -31,22 +31,20 @@ const ProfileScreen = observer(() => {
 
       <View style={styles.content}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {rider ? rider.initials() : '--'}
-          </Text>
+          <Text style={styles.avatarText}>{viewModel.riderInitials}</Text>
         </View>
-        <Text style={styles.name}>{rider?.displayName ?? 'Motero'}</Text>
-        <Text style={styles.email}>{rider?.email ?? ''}</Text>
+        <Text style={styles.name}>{viewModel.displayName}</Text>
+        <Text style={styles.email}>{viewModel.email}</Text>
 
-        {session.isSignOutError ? (
-          <Text style={styles.error}>{session.isSignOutError}</Text>
+        {viewModel.isSignOutError ? (
+          <Text style={styles.error}>{viewModel.isSignOutError}</Text>
         ) : null}
 
         <PrimaryButton
           label="Cerrar sesion"
           iconName="log-out-outline"
-          loading={session.isSignOutLoading}
-          onPress={() => session.signOut()}
+          loading={viewModel.isSignOutLoading}
+          onPress={() => viewModel.signOut()}
           style={styles.signOut}
         />
       </View>

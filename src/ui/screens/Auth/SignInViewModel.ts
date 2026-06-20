@@ -4,33 +4,33 @@ import { makeAutoObservable, runInAction } from 'mobx';
 import { TYPES } from '@/config/types';
 
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
-import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
 
+import { friendlyAuthError } from '@/ui/utils/authErrorMessage';
 import Logger from '@/ui/utils/Logger';
 
-import { signInSchema, signUpSchema } from '@/ui/schemas/authSchema';
+import { signInSchema } from '@/ui/schemas/authSchema';
 
-type ICalls = 'signIn' | 'signUp';
-
+/**
+ * ViewModel del `SignInScreen`. Gestiona el formulario de inicio de sesion y
+ * delega la autenticacion al `SignInUseCase`. El screen consume solo este VM
+ * colocado.
+ */
 @injectable()
-export class AuthViewModel {
+export class SignInViewModel {
   // ── Form state ──────────────────────────────────────────────────────────
   email: string = '';
   password: string = '';
-  displayName: string = '';
 
   // ── Async state ─────────────────────────────────────────────────────────
   isSubmitting: boolean = false;
   isSubmitError: string | null = null;
   hasSubmitSuccess: boolean = false;
 
-  private logger = new Logger('AuthViewModel');
+  private logger = new Logger('SignInViewModel');
 
   constructor(
     @inject(TYPES.SignInUseCase)
     private readonly signInUseCase: SignInUseCase,
-    @inject(TYPES.SignUpUseCase)
-    private readonly signUpUseCase: SignUpUseCase,
   ) {
     makeAutoObservable(this);
   }
@@ -41,14 +41,6 @@ export class AuthViewModel {
     return signInSchema.safeParse({
       email: this.email,
       password: this.password,
-    }).success;
-  }
-
-  get isSignUpValid(): boolean {
-    return signUpSchema.safeParse({
-      email: this.email,
-      password: this.password,
-      displayName: this.displayName,
     }).success;
   }
 
@@ -66,16 +58,10 @@ export class AuthViewModel {
     });
   }
 
-  setDisplayName(value: string): void {
-    runInAction(() => {
-      this.displayName = value;
-    });
-  }
-
   // ── Actions ─────────────────────────────────────────────────────────────
 
   async signIn(): Promise<boolean> {
-    this.updateLoadingState(true, null, 'signIn');
+    this.updateLoadingState(true, null);
     try {
       await this.signInUseCase.run({
         email: this.email,
@@ -84,29 +70,10 @@ export class AuthViewModel {
       runInAction(() => {
         this.hasSubmitSuccess = true;
       });
-      this.updateLoadingState(false, null, 'signIn');
+      this.updateLoadingState(false, null);
       return true;
     } catch (error) {
-      this.handleError(error, 'signIn');
-      return false;
-    }
-  }
-
-  async signUp(): Promise<boolean> {
-    this.updateLoadingState(true, null, 'signUp');
-    try {
-      await this.signUpUseCase.run({
-        email: this.email,
-        password: this.password,
-        displayName: this.displayName,
-      });
-      runInAction(() => {
-        this.hasSubmitSuccess = true;
-      });
-      this.updateLoadingState(false, null, 'signUp');
-      return true;
-    } catch (error) {
-      this.handleError(error, 'signUp');
+      this.handleError(error);
       return false;
     }
   }
@@ -115,7 +82,6 @@ export class AuthViewModel {
     runInAction(() => {
       this.email = '';
       this.password = '';
-      this.displayName = '';
       this.isSubmitting = false;
       this.isSubmitError = null;
       this.hasSubmitSuccess = false;
@@ -124,44 +90,18 @@ export class AuthViewModel {
 
   // ── Private helpers ─────────────────────────────────────────────────────
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null) {
     runInAction(() => {
-      switch (type) {
-        case 'signIn':
-        case 'signUp':
-          this.isSubmitting = isLoading;
-          this.isSubmitError = error;
-          break;
-      }
+      this.isSubmitting = isLoading;
+      this.isSubmitError = error;
     });
   }
 
-  private handleError(error: unknown, type: ICalls) {
-    const errorMessage = `Error in ${type}: ${
+  private handleError(error: unknown) {
+    const errorMessage = `Error in signIn: ${
       error instanceof Error ? error.message : String(error)
     }`;
     this.logger.error(errorMessage);
-    this.updateLoadingState(false, this.friendlyMessage(error), type);
-  }
-
-  private friendlyMessage(error: unknown): string {
-    const raw = error instanceof Error ? error.message : String(error);
-    if (raw.includes('auth/invalid-credential')) {
-      return 'Email o contrasena incorrectos.';
-    }
-    if (raw.includes('auth/email-already-in-use')) {
-      return 'Ese email ya tiene una cuenta.';
-    }
-    if (raw.includes('auth/invalid-email')) {
-      return 'El email no es valido.';
-    }
-    if (raw.includes('auth/weak-password')) {
-      return 'La contrasena es demasiado debil.';
-    }
-    return raw;
+    this.updateLoadingState(false, friendlyAuthError(error));
   }
 }

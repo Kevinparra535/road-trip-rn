@@ -125,7 +125,8 @@ import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
 import { AddStopViewModel } from '@/ui/screens/AddStop/AddStopViewModel';
-import { AuthViewModel } from '@/ui/screens/Auth/AuthViewModel';
+import { SignInViewModel } from '@/ui/screens/Auth/SignInViewModel';
+import { SignUpViewModel } from '@/ui/screens/Auth/SignUpViewModel';
 import { CategorySublistViewModel } from '@/ui/screens/CategorySublist/CategorySublistViewModel';
 import { DestinationPreviewViewModel } from '@/ui/screens/DestinationPreview/DestinationPreviewViewModel';
 import { GarageViewModel } from '@/ui/screens/Garage/GarageViewModel';
@@ -133,6 +134,7 @@ import { MotorcycleFormViewModel } from '@/ui/screens/Garage/MotorcycleFormViewM
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 import { JoinRouteViewModel } from '@/ui/screens/JoinRoute/JoinRouteViewModel';
 import { PartyMembersViewModel } from '@/ui/screens/Party/PartyMembersViewModel';
+import { ProfileViewModel } from '@/ui/screens/Profile/ProfileViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/RouteDetail/RouteDetailViewModel';
 import { RoutePlannerViewModel } from '@/ui/screens/RoutePlanner/RoutePlannerViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
@@ -476,7 +478,9 @@ container
   .bind<SyncCoordinator>(TYPES.SyncCoordinator)
   .to(SyncCoordinator)
   .inSingletonScope();
-container.bind<AuthViewModel>(TYPES.AuthViewModel).to(AuthViewModel);
+container.bind<SignInViewModel>(TYPES.SignInViewModel).to(SignInViewModel);
+container.bind<SignUpViewModel>(TYPES.SignUpViewModel).to(SignUpViewModel);
+container.bind<ProfileViewModel>(TYPES.ProfileViewModel).to(ProfileViewModel);
 container.bind<GarageViewModel>(TYPES.GarageViewModel).to(GarageViewModel);
 container
   .bind<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel)

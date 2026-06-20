@@ -93,7 +93,6 @@ export const TYPES = {
   FlushPendingDraftsUseCase: Symbol.for('FlushPendingDraftsUseCase'),
 
   // ── ViewModels (capa ui) ──
-  AuthViewModel: Symbol.for('AuthViewModel'),
   GarageViewModel: Symbol.for('GarageViewModel'),
   MotorcycleFormViewModel: Symbol.for('MotorcycleFormViewModel'),
   RoutesViewModel: Symbol.for('RoutesViewModel'),
@@ -105,6 +104,9 @@ export const TYPES = {
   PartyMembersViewModel: Symbol.for('PartyMembersViewModel'),
   AddStopViewModel: Symbol.for('AddStopViewModel'),
   CategorySublistViewModel: Symbol.for('CategorySublistViewModel'),
+  ProfileViewModel: Symbol.for('ProfileViewModel'),
+  SignInViewModel: Symbol.for('SignInViewModel'),
+  SignUpViewModel: Symbol.for('SignUpViewModel'),
 
   // ── Stores globales (singletons, capa ui) ──
   SessionStore: Symbol.for('SessionStore'),

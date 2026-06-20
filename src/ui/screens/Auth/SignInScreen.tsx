@@ -28,13 +28,13 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { AuthViewModel } from './AuthViewModel';
+import { SignInViewModel } from './SignInViewModel';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
 
 const SignInScreen = observer(() => {
   const navigation = useNavigation<Nav>();
-  const viewModel = useViewModel<AuthViewModel>(TYPES.AuthViewModel);
+  const viewModel = useViewModel<SignInViewModel>(TYPES.SignInViewModel);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
