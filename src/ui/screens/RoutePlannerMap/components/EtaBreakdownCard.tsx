@@ -7,7 +7,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 /**
  * Formatea minutos a "Xh Ym" cuando hay horas, o "Ym" cuando es menos de 1h.
@@ -29,7 +29,7 @@ function fmt(minutes: number): string {
  * duración configurada, no aporta valor mostrar la card).
  */
 export const EtaBreakdownCard = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     if (viewModel.totalStopDurationMin <= 0) return null;
 
     const { durationMin, totalStopDurationMin, etaWithStopsMin } = viewModel;

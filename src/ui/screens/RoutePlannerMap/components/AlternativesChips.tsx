@@ -15,7 +15,7 @@ import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { formatDuration } from '@/ui/utils/formatDuration';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 /**
  * Cards comparativas para elegir entre las rutas alternativas que devuelve
@@ -26,10 +26,10 @@ import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel'
  * - Cada card muestra: label "Ruta N", distancia en km y duración formateada.
  * - onPress → `viewModel.selectAlternative(index)`.
  *
- * Puramente presentacional: toda la lógica vive en `RoutePlannerViewModel`.
+ * Puramente presentacional: toda la lógica vive en `RoutePlannerMapViewModel`.
  */
 const AlternativesChips = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     const alternatives = viewModel.availableAlternatives;
 
     if (alternatives.length <= 1) return null;

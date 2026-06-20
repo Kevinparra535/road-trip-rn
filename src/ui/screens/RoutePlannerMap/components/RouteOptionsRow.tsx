@@ -16,7 +16,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -62,10 +62,10 @@ const SwitchRow = ({
  *   - Botones de acción: Invertir y Optimizar (con spinner).
  *   - Mensaje de error de optimización cuando aplica.
  *
- * Puramente presentational: toda la lógica vive en `RoutePlannerViewModel`.
+ * Puramente presentational: toda la lógica vive en `RoutePlannerMapViewModel`.
  */
 const RouteOptionsRow = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     if (viewModel.waypoints.length < 2) return null;
 
     return (

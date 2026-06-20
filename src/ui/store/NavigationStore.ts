@@ -3,9 +3,23 @@ import { makeAutoObservable, runInAction } from 'mobx';
 
 import { Place } from '@/domain/entities/Place';
 import { RideType } from '@/domain/entities/Route';
+import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { Waypoint } from '@/domain/entities/Waypoint';
 
 /** Tipo de rodada por defecto al iniciar / resetear la selección de destino. */
 const DEFAULT_RIDE_TYPE: RideType = 'highway';
+
+/**
+ * Payload del handoff Planner -> navegación: el trazado ya calculado, sus
+ * waypoints y el tipo de rodada. Lo emite el `RoutePlannerMapViewModel` al
+ * tocar "Iniciar" y lo consume la `reaction` del `HomeViewModel` (que arranca
+ * la navegación live sobre su propia instancia singleton).
+ */
+export type PlannerNavPayload = {
+  directions: RouteDirections;
+  waypoints: Waypoint[];
+  rideType: RideType;
+};
 
 /**
  * Store global (singleton) del handoff de selección de destino entre el
@@ -42,6 +56,13 @@ export class NavigationStore {
    * llama `consumeConfirmed()` para limpiarla.
    */
   confirmedPlace: Place | null = null;
+  /**
+   * Señal one-shot del handoff Planner -> navegación. El
+   * `RoutePlannerMapViewModel` la setea al tocar "Iniciar"; la `reaction` del
+   * `HomeViewModel` la consume (arranca la nav) y llama `consumePlannerNav()`
+   * para limpiarla.
+   */
+  pendingPlannerNav: PlannerNavPayload | null = null;
 
   constructor() {
     makeAutoObservable(this);
@@ -100,10 +121,28 @@ export class NavigationStore {
     });
   }
 
+  /**
+   * Emite la señal de handoff Planner -> navegación. La `reaction` del
+   * `HomeViewModel` reacciona a `pendingPlannerNav` para arrancar la nav.
+   */
+  startFromPlanner(payload: PlannerNavPayload): void {
+    runInAction(() => {
+      this.pendingPlannerNav = payload;
+    });
+  }
+
+  /** Limpia la señal del handoff tras consumirla (lo llama el Home). */
+  consumePlannerNav(): void {
+    runInAction(() => {
+      this.pendingPlannerNav = null;
+    });
+  }
+
   reset(): void {
     runInAction(() => {
       this.previewPlace = null;
       this.confirmedPlace = null;
+      this.pendingPlannerNav = null;
       this.rideType = DEFAULT_RIDE_TYPE;
     });
   }

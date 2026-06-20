@@ -8,7 +8,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const DiscardConfirmSheet = observer(
   ({
@@ -16,7 +16,7 @@ export const DiscardConfirmSheet = observer(
     onDiscard,
     onSaveAndExit,
   }: {
-    viewModel: RoutePlannerViewModel;
+    viewModel: RoutePlannerMapViewModel;
     onDiscard: () => void;
     onSaveAndExit: () => void;
   }) => {

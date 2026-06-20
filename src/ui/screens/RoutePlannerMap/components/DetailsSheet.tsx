@@ -12,7 +12,7 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 import { AccordionSection } from './AccordionSection';
 import AlternativesChips from './AlternativesChips';
@@ -52,7 +52,7 @@ export type DetailsSheetHandle = {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 type Props = {
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
   openSection: OpenSection;
   onToggleSection: (section: Exclude<OpenSection, null>) => void;
 };

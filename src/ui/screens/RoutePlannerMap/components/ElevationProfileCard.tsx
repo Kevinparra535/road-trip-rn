@@ -9,7 +9,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 import ElevationAreaChart from './ElevationAreaChart';
 
@@ -22,7 +22,7 @@ import ElevationAreaChart from './ElevationAreaChart';
  * Render condicional: null si no hay perfil o el perfil está vacío.
  */
 export const ElevationProfileCard = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     const profile = viewModel.insights.elevationProfile;
     if (!profile || profile.isEmpty) return null;
 

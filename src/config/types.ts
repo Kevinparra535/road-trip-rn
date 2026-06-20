@@ -96,7 +96,7 @@ export const TYPES = {
   GarageViewModel: Symbol.for('GarageViewModel'),
   MotorcycleFormViewModel: Symbol.for('MotorcycleFormViewModel'),
   RoutesViewModel: Symbol.for('RoutesViewModel'),
-  RoutePlannerViewModel: Symbol.for('RoutePlannerViewModel'),
+  RoutePlannerMapViewModel: Symbol.for('RoutePlannerMapViewModel'),
   RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
   HomeViewModel: Symbol.for('HomeViewModel'),
   DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),

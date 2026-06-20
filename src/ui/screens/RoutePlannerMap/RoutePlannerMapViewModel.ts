@@ -18,6 +18,7 @@ import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRep
 
 import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationStore } from '@/ui/store/NavigationStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
@@ -31,10 +32,12 @@ import { TripPartyStore } from '@/ui/store/TripPartyStore';
 export type { PlannerTimelineItem } from '@/ui/store/PlannerStore';
 
 @injectable()
-export class RoutePlannerViewModel {
+export class RoutePlannerMapViewModel {
   constructor(
     @inject(TYPES.PlannerStore)
     public readonly planner: PlannerStore,
+    @inject(TYPES.NavigationStore)
+    private readonly navStore: NavigationStore,
   ) {
     makeAutoObservable(this);
   }
@@ -242,6 +245,27 @@ export class RoutePlannerViewModel {
   }
   get needsStartPoint(): boolean {
     return this.planner.needsStartPoint;
+  }
+
+  // ── Navegación: handoff Planner -> Home ───────────────────────────────────
+  /**
+   * Emite el handoff Planner -> navegación al `NavigationStore` con las
+   * directions ya calculadas. La `reaction` del `HomeViewModel` (singleton)
+   * consume la señal y arranca la nav live sobre su propia instancia.
+   *
+   * Devuelve `true` si se emitió; `false` si faltan precondiciones (sin
+   * directions o con menos de 2 waypoints). El caller decide el fallback —
+   * tipicamente un Alert "Calcula la ruta primero".
+   */
+  startNavigation(): boolean {
+    if (!this.planner.directions) return false;
+    if (this.planner.waypoints.length < 2) return false;
+    this.navStore.startFromPlanner({
+      directions: this.planner.directions,
+      waypoints: this.planner.waypoints,
+      rideType: this.planner.rideType,
+    });
+    return true;
   }
 
   // ── Search actions ──────────────────────────────────────────────────────

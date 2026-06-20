@@ -7,7 +7,7 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const StartPointPicker = observer(
   ({
@@ -16,7 +16,7 @@ export const StartPointPicker = observer(
     onChooseFromMap,
     onSearchAddress,
   }: {
-    viewModel: RoutePlannerViewModel;
+    viewModel: RoutePlannerMapViewModel;
     onUseCurrentLocation: () => void;
     onChooseFromMap: () => void;
     onSearchAddress: () => void;

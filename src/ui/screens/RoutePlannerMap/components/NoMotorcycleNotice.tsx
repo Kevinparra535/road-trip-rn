@@ -7,10 +7,10 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const NoMotorcycleNotice = observer(
-  ({ viewModel, onPress }: { viewModel: RoutePlannerViewModel; onPress: () => void }) => {
+  ({ viewModel, onPress }: { viewModel: RoutePlannerMapViewModel; onPress: () => void }) => {
     if (!viewModel.canCalculate) return null;
     if (viewModel.hasMotorcycleRegistered) return null;
     return (

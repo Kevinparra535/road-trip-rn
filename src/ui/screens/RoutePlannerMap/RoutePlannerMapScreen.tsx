@@ -52,10 +52,10 @@ import { formatArrival } from '@/ui/utils/etaFormat';
 import { formatDuration } from '@/ui/utils/formatDuration';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
-import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
 
-import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
 import { stopKindMeta } from '../stopKindMeta';
+
+import { RoutePlannerMapViewModel } from './RoutePlannerMapViewModel';
 
 import DetailsSheet, { DetailsSheetHandle } from './components/DetailsSheet';
 import { DirectionsErrorCard } from './components/DirectionsErrorCard';
@@ -86,8 +86,9 @@ const RoutePlannerMapScreen = observer(() => {
   const route = useRoute<Route>();
   const routeId = route.params?.routeId;
 
-  const viewModel = useViewModel<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel);
-  const homeViewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
+  const viewModel = useViewModel<RoutePlannerMapViewModel>(
+    TYPES.RoutePlannerMapViewModel,
+  );
 
   const [editingKindFor, setEditingKindFor] = useState<string | null>(null);
   const [editingDetailFor, setEditingDetailFor] = useState<string | null>(null);
@@ -164,7 +165,7 @@ const RoutePlannerMapScreen = observer(() => {
       await viewModel.calculateDirections();
       if (!viewModel.directions) return;
     }
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
+    const ok = viewModel.startNavigation();
     if (!ok) {
       Alert.alert(
         'No pudimos iniciar',
@@ -191,7 +192,7 @@ const RoutePlannerMapScreen = observer(() => {
   };
 
   const handleStartFromSaved = () => {
-    const ok = homeViewModel.startNavigationFromPlanner(viewModel.planner);
+    const ok = viewModel.startNavigation();
     if (!ok) {
       viewModel.closeSavedSheet();
       Alert.alert(

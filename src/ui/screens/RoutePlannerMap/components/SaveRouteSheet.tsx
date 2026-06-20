@@ -20,12 +20,12 @@ import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 import { formatDuration } from '@/ui/utils/formatDuration';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 import SummaryChip from './SummaryChip';
 
 export const SaveRouteSheet = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     const start = viewModel.waypoints[0];
     const dest = viewModel.waypoints[viewModel.waypoints.length - 1];
     const handleSave = () => {

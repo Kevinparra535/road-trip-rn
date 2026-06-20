@@ -8,7 +8,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const RouteSavedSheet = observer(
   ({
@@ -17,7 +17,7 @@ export const RouteSavedSheet = observer(
     onViewDetail,
     onClose,
   }: {
-    viewModel: RoutePlannerViewModel;
+    viewModel: RoutePlannerMapViewModel;
     onStart: () => void;
     onViewDetail: () => void;
     onClose: () => void;

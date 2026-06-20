@@ -8,14 +8,14 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
 import { rideTypeMeta } from '../../rideTypeMeta';
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 /**
  * Cabecera del bottom sheet (diseño Pencil): "Tu ruta", origen → destino y un
  * chip con el tipo de rodada.
  */
 export const RouteSheetHeader = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     const items = viewModel.timelineItems;
     const start = items[0];
     const dest = items[items.length - 1];

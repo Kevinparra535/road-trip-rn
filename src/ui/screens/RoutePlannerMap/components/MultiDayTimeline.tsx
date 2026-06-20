@@ -27,13 +27,13 @@ import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 import { stopKindMeta } from '../../stopKindMeta';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type Props = {
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ type Props = {
 /** Formatea km/min opcionales como texto de resumen del día. */
 function buildDaySummary(
   day: RouteDay,
-  waypoints: RoutePlannerViewModel['waypoints'],
+  waypoints: RoutePlannerMapViewModel['waypoints'],
 ): string {
   const count = day.waypointCount();
   const wps = waypoints.slice(day.startIdx, day.endIdx + 1);
@@ -103,7 +103,7 @@ const DayWaypointList = ({
   viewModel,
 }: {
   day: RouteDay;
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
 }) => {
   const items = viewModel.timelineItems.slice(day.startIdx, day.endIdx + 1);
 
@@ -148,7 +148,7 @@ const OvernightBlock = ({
 }: {
   dayIdx: number;
   day: RouteDay;
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
 }) => {
   const [localName, setLocalName] = useState(day.overnightName ?? '');
 
@@ -204,7 +204,7 @@ const OvernightBlock = ({
 
 type MarkEndModalProps = {
   visible: boolean;
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
   onDismiss: () => void;
 };
 

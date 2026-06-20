@@ -8,10 +8,10 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const DirectionsErrorCard = observer(
-  ({ viewModel, onRetry }: { viewModel: RoutePlannerViewModel; onRetry: () => void }) => {
+  ({ viewModel, onRetry }: { viewModel: RoutePlannerMapViewModel; onRetry: () => void }) => {
     if (!viewModel.isDirectionsError) return null;
     const errorColor = Colors.alerts.error;
     return (

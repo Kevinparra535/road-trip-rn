@@ -21,13 +21,13 @@ import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 import { SELECTABLE_STOP_KINDS, stopKindMeta } from '../../stopKindMeta';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Props = {
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
   waypointId: string | null;
   onClose: () => void;
   /** Opcional. El screen lo cablea a startEditingWaypoint + navigate AddStop. */

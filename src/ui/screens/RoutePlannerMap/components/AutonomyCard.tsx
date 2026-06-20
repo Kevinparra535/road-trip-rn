@@ -10,7 +10,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 import FuelGaugeBar from './FuelGaugeBar';
 import MotorcycleSummaryCard from './MotorcycleSummaryCard';
@@ -31,7 +31,7 @@ import MotorcycleSummaryCard from './MotorcycleSummaryCard';
  *  - `autonomyEstimate === null && !isAutonomyLoading` → null.
  */
 export const AutonomyCard = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     if (!viewModel.hasMotorcycleRegistered) return null;
 
     const { insights } = viewModel;

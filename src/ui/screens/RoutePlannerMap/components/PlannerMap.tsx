@@ -12,11 +12,11 @@ import Colors from '@/ui/styles/Colors';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 import { stopKindMeta } from '../../stopKindMeta';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 type Props = {
-  viewModel: RoutePlannerViewModel;
+  viewModel: RoutePlannerMapViewModel;
   onMapPress?: (coord: { latitude: number; longitude: number }) => void;
   /** Alto del peek del BottomSheet para no tapar el FAB ni el fitBounds. */
   bottomInset?: number;

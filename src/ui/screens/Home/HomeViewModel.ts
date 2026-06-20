@@ -61,7 +61,10 @@ import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
 import { LocationStore } from '@/ui/store/LocationStore';
-import { NavigationStore } from '@/ui/store/NavigationStore';
+import {
+  NavigationStore,
+  PlannerNavPayload,
+} from '@/ui/store/NavigationStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
@@ -334,6 +337,8 @@ export class HomeViewModel {
   private searchDisposer: (() => void) | null = null;
   /** Disposer de la reaccion que aplica el destino confirmado del navStore. */
   private confirmReactionDisposer: (() => void) | null = null;
+  /** Disposer de la reaccion que arranca la nav desde el handoff del Planner. */
+  private plannerNavReactionDisposer: (() => void) | null = null;
   private navTimer: ReturnType<typeof setInterval> | null = null;
   /** Disposer de la reaccion que escucha el avance del GPS real. */
   private navReactionDisposer: (() => void) | null = null;
@@ -391,6 +396,18 @@ export class HomeViewModel {
         this.selectDestination(place);
         void this.recordRecentDestination(place);
         this.navStore.consumeConfirmed();
+      },
+    );
+    // El RoutePlannerMapViewModel emite el handoff Planner -> navegación a
+    // través del `NavigationStore` (señal `pendingPlannerNav`). El Home
+    // reacciona aquí: arranca la nav live sobre ESTA instancia singleton (que
+    // el HomeScreen renderiza) y consume la señal.
+    this.plannerNavReactionDisposer = reaction(
+      () => this.navStore.pendingPlannerNav,
+      (payload) => {
+        if (!payload) return;
+        this.startNavigationFromPlanner(payload);
+        this.navStore.consumePlannerNav();
       },
     );
   }
@@ -1375,6 +1392,8 @@ export class HomeViewModel {
     this.searchDisposer = null;
     this.confirmReactionDisposer?.();
     this.confirmReactionDisposer = null;
+    this.plannerNavReactionDisposer?.();
+    this.plannerNavReactionDisposer = null;
     this.clearNavTimer();
     Speech.stop();
     this.locationStore.dispose();
@@ -1450,10 +1469,11 @@ export class HomeViewModel {
   }
 
   /**
-   * Arranca navegacion live usando el state del `RoutePlannerViewModel`
-   * (cuando el rider tappea "Iniciar" en el footer del Planner o
-   * "Iniciar navegacion ahora" en el sheet "Ruta guardada"). Cierra el
-   * loop end-to-end: planear → guardar → iniciar.
+   * Arranca navegacion live usando el payload de handoff del Planner
+   * (`PlannerNavPayload`, emitido vía `NavigationStore.startFromPlanner` cuando
+   * el rider tappea "Iniciar" en el footer del Planner o "Iniciar navegacion
+   * ahora" en el sheet "Ruta guardada"). Cierra el loop end-to-end:
+   * planear → guardar → iniciar.
    *
    * Reusa las `directions` ya calculadas del Planner — NO re-llama Mapbox.
    * Convierte waypoints intermedios y destino a `Place[]` para alimentar
@@ -1464,7 +1484,7 @@ export class HomeViewModel {
    * directions, sin destino claro). El caller decide que hacer con el
    * fallo — tipicamente Alert "Calcula la ruta primero".
    */
-  startNavigationFromPlanner(planner: PlannerStore): boolean {
+  startNavigationFromPlanner(planner: PlannerNavPayload): boolean {
     const directions = planner.directions;
     if (!directions) return false;
     if (planner.waypoints.length < 2) return false;

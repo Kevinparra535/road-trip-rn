@@ -136,7 +136,7 @@ import { JoinRouteViewModel } from '@/ui/screens/JoinRoute/JoinRouteViewModel';
 import { PartyMembersViewModel } from '@/ui/screens/Party/PartyMembersViewModel';
 import { ProfileViewModel } from '@/ui/screens/Profile/ProfileViewModel';
 import { RouteDetailViewModel } from '@/ui/screens/RouteDetail/RouteDetailViewModel';
-import { RoutePlannerViewModel } from '@/ui/screens/RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerMapViewModel } from '@/ui/screens/RoutePlannerMap/RoutePlannerMapViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
@@ -487,13 +487,14 @@ container
   .to(MotorcycleFormViewModel);
 container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
 // Transient: el estado compartido del Planner ahora vive en `PlannerStore`
-// (singleton, arriba). Este ViewModel es una fachada delgada por-pantalla que
-// delega todo al store, asi que cada pantalla (RoutePlannerMapScreen,
-// AddStopScreen, CategorySublistScreen) puede tener su propia instancia sin
-// perder las mutaciones — todas leen/escriben el mismo PlannerStore.
+// (singleton, arriba). Este ViewModel es una fachada delgada colocada con la
+// RoutePlannerMapScreen que delega todo al store, asi que la pantalla puede
+// tener su propia instancia sin perder las mutaciones — todas leen/escriben el
+// mismo PlannerStore. Tambien inyecta el NavigationStore para emitir el handoff
+// Planner -> navegación (startNavigation) sin depender del HomeViewModel.
 container
-  .bind<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel)
-  .to(RoutePlannerViewModel);
+  .bind<RoutePlannerMapViewModel>(TYPES.RoutePlannerMapViewModel)
+  .to(RoutePlannerMapViewModel);
 container
   .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
   .to(RouteDetailViewModel);

@@ -7,11 +7,11 @@ import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 import { stopKindMeta } from '../../stopKindMeta';
+import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const PartyFuelPlanCard = observer(
-  ({ viewModel }: { viewModel: RoutePlannerViewModel }) => {
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => {
     const plan = viewModel.partyFuelPlan;
     if (!plan) return null;
     const weakest = plan.weakest;
