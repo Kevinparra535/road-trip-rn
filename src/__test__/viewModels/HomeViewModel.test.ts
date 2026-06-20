@@ -353,6 +353,106 @@ describe('HomeViewModel — ruta A->B', () => {
     vm.stopNavigation();
   });
 
+  it('captures Navigation Lab A-B points from map taps', () => {
+    const vm = makeVM();
+
+    expect(vm.isNavigationLabOpen).toBe(false);
+    expect(vm.navigationLabMarkers).toEqual([]);
+
+    vm.toggleNavigationLab();
+    expect(vm.isNavigationLabOpen).toBe(true);
+    expect(vm.navigationLabPickMode).toBe('origin');
+
+    vm.handleNavigationLabMapPress({
+      latitude: 4.72,
+      longitude: -74.08,
+    });
+
+    expect(vm.navigationLabOrigin.name).toBe('Punto A (Lab)');
+    expect(vm.navigationLabOrigin.fullName).toBe('4.72000, -74.08000');
+    expect(vm.navigationLabPickMode).toBe('destination');
+
+    vm.handleNavigationLabMapPress({
+      latitude: 4.95,
+      longitude: -73.98,
+    });
+
+    expect(vm.navigationLabDestination.name).toBe('Punto B (Lab)');
+    expect(vm.navigationLabDestination.fullName).toBe('4.95000, -73.98000');
+    expect(vm.navigationLabMarkers).toEqual([
+      expect.objectContaining({ label: 'A', kind: 'origin', isActive: false }),
+      expect.objectContaining({
+        label: 'B',
+        kind: 'destination',
+        isActive: true,
+      }),
+    ]);
+
+    vm.setNavigationLabSpeedMultiplier(10);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+    vm.setNavigationLabSpeedMultiplier(99);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+
+    vm.resetNavigationLabPoints();
+    expect(vm.navigationLabOrigin.id).toBe(DEV_FAKE_ORIGIN.id);
+    expect(vm.navigationLabDestination.id).toBe(DEV_FAKE_DESTINATION.id);
+    expect(vm.navigationLabSpeedMultiplier).toBe(60);
+  });
+
+  it('starts a Navigation Lab simulation from manually picked points', async () => {
+    const directions = makeDirectionsUseCase();
+    directions.run.mockResolvedValue(
+      makeRouteDirections({
+        geometry: [
+          { latitude: 4.72, longitude: -74.08 },
+          { latitude: 4.95, longitude: -73.98 },
+        ],
+      }),
+    );
+    const store = makeLocationStore();
+    const vm = makeVM(store, makeSearchUseCase(), directions);
+
+    vm.toggleNavigationLab();
+    vm.handleNavigationLabMapPress({
+      latitude: 4.72,
+      longitude: -74.08,
+    });
+    vm.handleNavigationLabMapPress({
+      latitude: 4.95,
+      longitude: -73.98,
+    });
+    vm.setNavigationLabSpeedMultiplier(3);
+
+    await vm.startNavigationLabSimulation();
+
+    expect(directions.run).toHaveBeenCalledWith({
+      waypoints: [
+        expect.objectContaining({
+          name: 'Punto A (Lab)',
+          latitude: 4.72,
+          longitude: -74.08,
+          kind: 'start',
+          order: 0,
+        }),
+        expect.objectContaining({
+          name: 'Punto B (Lab)',
+          latitude: 4.95,
+          longitude: -73.98,
+          kind: 'destination',
+          order: 1,
+        }),
+      ],
+      rideType: 'highway',
+    });
+    expect(vm.routeOriginLabel).toBe('Punto A (Lab)');
+    expect(vm.destination?.name).toBe('Punto B (Lab)');
+    expect(vm.isNavigationLabOpen).toBe(false);
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.isSimulatedNavigation).toBe(true);
+    expect(store.setNavigationMode).toHaveBeenLastCalledWith(false);
+    vm.stopNavigation();
+  });
+
   it('recolors the route lines when the ride type changes to offroad', async () => {
     const directions = makeDirectionsUseCase();
     directions.run.mockResolvedValue(

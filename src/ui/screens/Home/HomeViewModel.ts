@@ -85,13 +85,11 @@ const SEARCH_DEBOUNCE_MS = 400;
 const NAV_AVG_SPEED_KMH = 100;
 // Periodo del tick de simulacion.
 const NAV_TICK_MS = 500;
-// Aceleracion del tiempo: 1 s real avanza SIM_TIME_MULTIPLIER s simulados,
-// para poder ver el recorrido sin esperar el viaje completo. 60 = una ruta
-// de ~50 km se recorre en ~30 s; suficiente para seguirla visualmente.
-const SIM_TIME_MULTIPLIER = 60;
-// Distancia que avanza el conductor simulado en cada tick.
-const SIM_KM_PER_TICK =
-  (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
+const NAVIGATION_LAB_SPEED_MULTIPLIERS = [1, 3, 10, 60] as const;
+export type NavigationLabSpeedMultiplier =
+  (typeof NAVIGATION_LAB_SPEED_MULTIPLIERS)[number];
+export type NavigationLabPickMode = 'origin' | 'destination';
+const DEFAULT_NAVIGATION_LAB_SPEED_MULTIPLIER: NavigationLabSpeedMultiplier = 60;
 // Desviacion (km) a partir de la cual se considera que se salio de la ruta.
 const OFF_ROUTE_THRESHOLD_KM = 0.06;
 // Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
@@ -199,6 +197,14 @@ export type RouteLine = {
   isPrimary: boolean;
   /** Degradado por altura; presente solo en la principal con elevacion. */
   gradientStops?: GradientStop[];
+};
+
+export type NavigationLabMarker = {
+  id: string;
+  label: 'A' | 'B';
+  kind: NavigationLabPickMode;
+  coordinate: [number, number];
+  isActive: boolean;
 };
 
 type ICalls =
@@ -321,6 +327,14 @@ export class HomeViewModel {
    */
   isMuted: boolean = false;
 
+  // -- State: Navigation Lab (herramienta DEV para probar rutas A/B manuales) --
+  isNavigationLabOpen: boolean = false;
+  navigationLabPickMode: NavigationLabPickMode = 'origin';
+  navigationLabOrigin: Place = DEV_FAKE_ORIGIN;
+  navigationLabDestination: Place = DEV_FAKE_DESTINATION;
+  navigationLabSpeedMultiplier: NavigationLabSpeedMultiplier =
+    DEFAULT_NAVIGATION_LAB_SPEED_MULTIPLIER;
+
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
   isFuelStopLoading: boolean = false;
@@ -350,6 +364,8 @@ export class HomeViewModel {
   private spokenVoiceIds: Set<string> = new Set();
   private offRouteTicks: number = 0;
   private lastRealProgressKm: number = 0;
+  private isSimulationMode: boolean = false;
+  private simulatedOrigin: Place | null = null;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -529,7 +545,46 @@ export class HomeViewModel {
   }
 
   get routeOriginLabel(): string {
-    return this.isSimulatedNavigation ? DEV_FAKE_ORIGIN.name : 'Mi ubicacion';
+    return this.isSimulatedNavigation
+      ? (this.simulatedOrigin?.name ?? DEV_FAKE_ORIGIN.name)
+      : 'Mi ubicacion';
+  }
+
+  get navigationLabSpeedMultipliers(): readonly NavigationLabSpeedMultiplier[] {
+    return NAVIGATION_LAB_SPEED_MULTIPLIERS;
+  }
+
+  get navigationLabPickModeLabel(): string {
+    return this.navigationLabPickMode === 'origin' ? 'Punto A' : 'Punto B';
+  }
+
+  get navigationLabCanTrace(): boolean {
+    return (
+      !this.isRouteLoading &&
+      !this.isNavigating &&
+      haversineKm(this.navigationLabOrigin, this.navigationLabDestination) >
+        0.001
+    );
+  }
+
+  get navigationLabMarkers(): NavigationLabMarker[] {
+    if (!this.isNavigationLabOpen || this.hasDestination) return [];
+    return [
+      {
+        id: this.navigationLabOrigin.id,
+        label: 'A',
+        kind: 'origin',
+        coordinate: this.navigationLabOrigin.toLngLat(),
+        isActive: this.navigationLabPickMode === 'origin',
+      },
+      {
+        id: this.navigationLabDestination.id,
+        label: 'B',
+        kind: 'destination',
+        coordinate: this.navigationLabDestination.toLngLat(),
+        isActive: this.navigationLabPickMode === 'destination',
+      },
+    ];
   }
 
   /** Gasolineras halladas a lo largo de la ruta, listas para el mapa. */
@@ -1030,7 +1085,9 @@ export class HomeViewModel {
 
   /** La ruta actual proviene del boton DEV "Ruta de prueba". */
   get isSimulatedNavigation(): boolean {
-    return this.destination?.id === DEV_FAKE_DESTINATION.id;
+    return (
+      this.isSimulationMode || this.destination?.id === DEV_FAKE_DESTINATION.id
+    );
   }
 
   /**
@@ -1405,6 +1462,61 @@ export class HomeViewModel {
     if (this.destination) void this.computeRoute();
   }
 
+  toggleNavigationLab(): void {
+    if (this.isNavigating || this.hasDestination) return;
+    runInAction(() => {
+      this.isNavigationLabOpen = !this.isNavigationLabOpen;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+  }
+
+  setNavigationLabPickMode(mode: NavigationLabPickMode): void {
+    this.navigationLabPickMode = mode;
+  }
+
+  setNavigationLabSpeedMultiplier(multiplier: number): void {
+    if (
+      !NAVIGATION_LAB_SPEED_MULTIPLIERS.includes(
+        multiplier as NavigationLabSpeedMultiplier,
+      )
+    ) {
+      return;
+    }
+    this.navigationLabSpeedMultiplier =
+      multiplier as NavigationLabSpeedMultiplier;
+  }
+
+  resetNavigationLabPoints(): void {
+    runInAction(() => {
+      this.navigationLabOrigin = DEV_FAKE_ORIGIN;
+      this.navigationLabDestination = DEV_FAKE_DESTINATION;
+      this.navigationLabPickMode = 'origin';
+      this.navigationLabSpeedMultiplier =
+        DEFAULT_NAVIGATION_LAB_SPEED_MULTIPLIER;
+    });
+  }
+
+  handleNavigationLabMapPress(point: GeoPoint): void {
+    if (!this.isNavigationLabOpen || this.isNavigating || this.hasDestination) {
+      return;
+    }
+
+    const place = this.createNavigationLabPlace(
+      this.navigationLabPickMode,
+      point,
+    );
+    runInAction(() => {
+      if (this.navigationLabPickMode === 'origin') {
+        this.navigationLabOrigin = place;
+        this.navigationLabPickMode = 'destination';
+        return;
+      }
+      this.navigationLabDestination = place;
+    });
+  }
+
   /**
    * Procesa el lugar elegido en el buscador. Segun `searchMode`, lo fija
    * como destino final (y resetea las paradas intermedias) o lo agrega
@@ -1417,6 +1529,8 @@ export class HomeViewModel {
       return;
     }
     runInAction(() => {
+      this.isSimulationMode = false;
+      this.simulatedOrigin = null;
       this.destination = place;
       this.intermediateStops = [];
       this.searchQuery = '';
@@ -1428,14 +1542,32 @@ export class HomeViewModel {
 
   /** Traza una ruta A-B fija de desarrollo y arranca la navegacion simulada. */
   async startDevRouteSimulation(): Promise<void> {
+    await this.startSimulationRoute(DEV_FAKE_ORIGIN, DEV_FAKE_DESTINATION);
+  }
+
+  /** Traza la ruta A-B definida manualmente en Navigation Lab. */
+  async startNavigationLabSimulation(): Promise<void> {
+    await this.startSimulationRoute(
+      this.navigationLabOrigin,
+      this.navigationLabDestination,
+    );
+  }
+
+  private async startSimulationRoute(
+    origin: Place,
+    destination: Place,
+  ): Promise<void> {
     this.clearNavTimer();
     Speech.stop();
     this.spokenVoiceIds.clear();
     void this.locationStore.setNavigationMode(false);
     runInAction(() => {
-      this.destination = DEV_FAKE_DESTINATION;
+      this.isSimulationMode = true;
+      this.simulatedOrigin = origin;
+      this.destination = destination;
       this.previewPlace = null;
       this.intermediateStops = [];
+      this.isNavigationLabOpen = false;
       this.searchQuery = '';
       this.isSearchResponse = null;
       this.searchMode = 'destination';
@@ -1456,18 +1588,18 @@ export class HomeViewModel {
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints: [
           new Waypoint({
-            id: DEV_FAKE_ORIGIN.id,
-            name: DEV_FAKE_ORIGIN.name,
-            latitude: DEV_FAKE_ORIGIN.latitude,
-            longitude: DEV_FAKE_ORIGIN.longitude,
+            id: origin.id,
+            name: origin.name,
+            latitude: origin.latitude,
+            longitude: origin.longitude,
             kind: 'start',
             order: 0,
           }),
           new Waypoint({
-            id: DEV_FAKE_DESTINATION.id,
-            name: DEV_FAKE_DESTINATION.name,
-            latitude: DEV_FAKE_DESTINATION.latitude,
-            longitude: DEV_FAKE_DESTINATION.longitude,
+            id: destination.id,
+            name: destination.name,
+            latitude: destination.latitude,
+            longitude: destination.longitude,
             kind: 'destination',
             order: 1,
           }),
@@ -1521,6 +1653,8 @@ export class HomeViewModel {
       });
 
     runInAction(() => {
+      this.isSimulationMode = false;
+      this.simulatedOrigin = null;
       this.destination = toPlace(last);
       this.intermediateStops = middle.map(toPlace);
       this.rideType = planner.rideType;
@@ -1694,6 +1828,8 @@ export class HomeViewModel {
   addStop(place: Place): void {
     if (!this.destination) return;
     runInAction(() => {
+      this.isSimulationMode = false;
+      this.simulatedOrigin = null;
       this.intermediateStops.push(place);
       this.searchQuery = '';
       this.isSearchResponse = null;
@@ -1853,7 +1989,7 @@ export class HomeViewModel {
     runInAction(() => {
       this.simulatedDistanceKm = Math.min(
         route.distanceKm,
-        this.simulatedDistanceKm + SIM_KM_PER_TICK,
+        this.simulatedDistanceKm + this.simulationKmPerTick,
       );
     });
     this.maybeSpeak();
@@ -2011,6 +2147,8 @@ export class HomeViewModel {
       this.simulatedDistanceKm = 0;
       this.lastRealProgressKm = 0;
       this.offRouteTicks = 0;
+      this.isSimulationMode = false;
+      this.simulatedOrigin = null;
       this.destination = null;
       this.previewPlace = null;
       this.intermediateStops = [];
@@ -2049,7 +2187,15 @@ export class HomeViewModel {
       this.simulatedDistanceKm = 0;
       this.lastRealProgressKm = 0;
       this.offRouteTicks = 0;
+      this.isSimulationMode = false;
+      this.simulatedOrigin = null;
       this.isElevationStripOpen = true;
+      this.isNavigationLabOpen = false;
+      this.navigationLabPickMode = 'origin';
+      this.navigationLabOrigin = DEV_FAKE_ORIGIN;
+      this.navigationLabDestination = DEV_FAKE_DESTINATION;
+      this.navigationLabSpeedMultiplier =
+        DEFAULT_NAVIGATION_LAB_SPEED_MULTIPLIER;
       this.searchQuery = '';
       this.isSearchLoading = false;
       this.isSearchError = null;
@@ -2085,6 +2231,30 @@ export class HomeViewModel {
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────────
+
+  private createNavigationLabPlace(
+    mode: NavigationLabPickMode,
+    point: GeoPoint,
+  ): Place {
+    const label = mode === 'origin' ? 'Punto A (Lab)' : 'Punto B (Lab)';
+    const lat = point.latitude.toFixed(5);
+    const lng = point.longitude.toFixed(5);
+    return new Place({
+      id: `navigation-lab-${mode}-${lat}-${lng}`,
+      name: label,
+      fullName: `${lat}, ${lng}`,
+      latitude: point.latitude,
+      longitude: point.longitude,
+    });
+  }
+
+  private get simulationKmPerTick(): number {
+    return (
+      (NAV_AVG_SPEED_KMH / 3600) *
+      (NAV_TICK_MS / 1000) *
+      this.navigationLabSpeedMultiplier
+    );
+  }
 
   private get currentSpeedKmh(): number | null {
     const speedMps = this.locationStore.isLocationResponse?.speed;

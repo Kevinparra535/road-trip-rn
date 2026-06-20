@@ -324,6 +324,18 @@ const HomeScreen = () => {
     if (viewModel.searchMode === 'addStop') viewModel.cancelAddingStop();
   };
 
+  const handleMapPress = useCallback(
+    (feature: GeoJSON.Feature<GeoJSON.Geometry>) => {
+      if (feature.geometry.type !== 'Point') return;
+      const [longitude, latitude] = feature.geometry.coordinates;
+      if (typeof longitude !== 'number' || typeof latitude !== 'number') {
+        return;
+      }
+      viewModel.handleNavigationLabMapPress({ latitude, longitude });
+    },
+    [viewModel],
+  );
+
   // Cuando el rider tap una ruta guardada del feed, el VM expone su id; el
   // screen es quien navega (el VM no toca navigation por contrato).
   const selectedSavedRouteId = viewModel.selectedSavedRouteId;
@@ -347,6 +359,7 @@ const HomeScreen = () => {
       <Mapbox.MapView
         style={styles.map}
         styleURL={MAP_STYLE_URL}
+        onPress={handleMapPress}
         onCameraChanged={(state) =>
           viewModel.setZoom(state?.properties?.zoom ?? viewModel.defaultZoom)
         }
@@ -450,6 +463,28 @@ const HomeScreen = () => {
           </Mapbox.MarkerView>
         ))}
 
+        {viewModel.navigationLabMarkers.map((marker) => (
+          <Mapbox.MarkerView
+            key={`navigation-lab-${marker.kind}-${marker.id}`}
+            id={`navigation-lab-${marker.kind}`}
+            coordinate={marker.coordinate}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
+          >
+            <View
+              style={[
+                styles.labMarker,
+                marker.kind === 'origin'
+                  ? styles.labMarkerOrigin
+                  : styles.labMarkerDestination,
+                marker.isActive && styles.labMarkerActive,
+              ]}
+            >
+              <Text style={styles.labMarkerText}>{marker.label}</Text>
+            </View>
+          </Mapbox.MarkerView>
+        ))}
+
         {viewModel.destinationCoordinate ? (
           <Mapbox.MarkerView
             id="route-destination"
@@ -529,23 +564,204 @@ const HomeScreen = () => {
         ) : null}
       </Mapbox.MapView>
 
-      {DEV_FLAGS.mockDestination && !viewModel.hasDestination ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={styles.testRouteButton}
-          testID="home-test-route-fab"
-          accessibilityRole="button"
-          accessibilityLabel="Simular ruta de prueba"
-          disabled={viewModel.isRouteLoading}
-          onPress={() => void viewModel.startDevRouteSimulation()}
-        >
-          {viewModel.isRouteLoading ? (
-            <ActivityIndicator size="small" color={Colors.base.accent} />
-          ) : (
-            <Ionicons name="flask" size={15} color={Colors.base.accent} />
-          )}
-          <Text style={styles.testRouteText}>Simular A-B</Text>
-        </TouchableOpacity>
+      {DEV_FLAGS.mockDestination &&
+      !viewModel.hasDestination &&
+      !viewModel.isNavigating ? (
+        <>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[
+              styles.testRouteButton,
+              viewModel.isNavigationLabOpen && styles.labToggleButtonActive,
+            ]}
+            testID="home-test-route-fab"
+            accessibilityRole="button"
+            accessibilityLabel="Abrir Navigation Lab"
+            disabled={viewModel.isRouteLoading}
+            onPress={() => viewModel.toggleNavigationLab()}
+          >
+            {viewModel.isRouteLoading ? (
+              <ActivityIndicator size="small" color={Colors.base.accent} />
+            ) : (
+              <Ionicons name="flask" size={15} color={Colors.base.accent} />
+            )}
+            <Text style={styles.testRouteText}>Lab</Text>
+          </TouchableOpacity>
+
+          {viewModel.isNavigationLabOpen ? (
+            <View
+              style={styles.labPanel}
+              testID="home-navigation-lab-panel"
+              pointerEvents="box-none"
+            >
+              <View style={styles.labPanelCard}>
+                <View style={styles.labHeader}>
+                  <Text style={styles.labTitle}>Navigation Lab</Text>
+                  <TouchableOpacity
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cerrar Navigation Lab"
+                    onPress={() => viewModel.toggleNavigationLab()}
+                  >
+                    <Ionicons
+                      name="close"
+                      size={16}
+                      color={Colors.base.iconMuted}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.labModeRow}>
+                  {(['origin', 'destination'] as const).map((mode) => {
+                    const isActive = viewModel.navigationLabPickMode === mode;
+                    return (
+                      <TouchableOpacity
+                        key={mode}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.labModeButton,
+                          isActive && styles.labModeButtonActive,
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={
+                          mode === 'origin'
+                            ? 'Seleccionar punto A'
+                            : 'Seleccionar punto B'
+                        }
+                        onPress={() => viewModel.setNavigationLabPickMode(mode)}
+                      >
+                        <Text
+                          style={[
+                            styles.labModeText,
+                            isActive && styles.labModeTextActive,
+                          ]}
+                        >
+                          {mode === 'origin' ? 'Punto A' : 'Punto B'}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.labPointList}>
+                  <View style={styles.labPointRow}>
+                    <View
+                      style={[styles.labPointBadge, styles.labPointBadgeOrigin]}
+                    >
+                      <Text style={styles.labPointBadgeText}>A</Text>
+                    </View>
+                    <View style={styles.labPointTextBlock}>
+                      <Text style={styles.labPointName} numberOfLines={1}>
+                        {viewModel.navigationLabOrigin.name}
+                      </Text>
+                      <Text style={styles.labPointCoords} numberOfLines={1}>
+                        {viewModel.navigationLabOrigin.fullName}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.labPointRow}>
+                    <View
+                      style={[
+                        styles.labPointBadge,
+                        styles.labPointBadgeDestination,
+                      ]}
+                    >
+                      <Text style={styles.labPointBadgeText}>B</Text>
+                    </View>
+                    <View style={styles.labPointTextBlock}>
+                      <Text style={styles.labPointName} numberOfLines={1}>
+                        {viewModel.navigationLabDestination.name}
+                      </Text>
+                      <Text style={styles.labPointCoords} numberOfLines={1}>
+                        {viewModel.navigationLabDestination.fullName}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.labSpeedRow}>
+                  {viewModel.navigationLabSpeedMultipliers.map((multiplier) => {
+                    const isActive =
+                      viewModel.navigationLabSpeedMultiplier === multiplier;
+                    return (
+                      <TouchableOpacity
+                        key={multiplier}
+                        activeOpacity={0.85}
+                        style={[
+                          styles.labSpeedChip,
+                          isActive && styles.labSpeedChipActive,
+                        ]}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Simulacion ${multiplier}x`}
+                        onPress={() =>
+                          viewModel.setNavigationLabSpeedMultiplier(multiplier)
+                        }
+                      >
+                        <Text
+                          style={[
+                            styles.labSpeedText,
+                            isActive && styles.labSpeedTextActive,
+                          ]}
+                        >
+                          {multiplier}x
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                <View style={styles.labActions}>
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    style={styles.labSecondaryButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Restablecer puntos del lab"
+                    onPress={() => viewModel.resetNavigationLabPoints()}
+                  >
+                    <Ionicons
+                      name="refresh"
+                      size={16}
+                      color={Colors.base.textSecondary}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    style={[
+                      styles.labPrimaryButton,
+                      (!viewModel.navigationLabCanTrace ||
+                        viewModel.isRouteLoading) &&
+                        styles.labPrimaryButtonDisabled,
+                    ]}
+                    testID="home-navigation-lab-start"
+                    accessibilityRole="button"
+                    accessibilityLabel="Iniciar simulacion del lab"
+                    disabled={
+                      !viewModel.navigationLabCanTrace ||
+                      viewModel.isRouteLoading
+                    }
+                    onPress={() =>
+                      void viewModel.startNavigationLabSimulation()
+                    }
+                  >
+                    {viewModel.isRouteLoading ? (
+                      <ActivityIndicator
+                        size="small"
+                        color={Colors.semantic.text.primaryDark}
+                      />
+                    ) : (
+                      <Ionicons
+                        name="play"
+                        size={16}
+                        color={Colors.semantic.text.primaryDark}
+                      />
+                    )}
+                    <Text style={styles.labPrimaryText}>Simular</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       {!viewModel.hasDestination && viewModel.hasLocation ? (
@@ -1855,6 +2071,159 @@ const styles = StyleSheet.create({
     fontSize: ms(12),
     color: Colors.base.accent,
   },
+  labToggleButtonActive: {
+    backgroundColor: Colors.base.accentDim,
+  },
+  labPanel: {
+    position: 'absolute',
+    top: Spacings.xxl + 116,
+    left: Spacings.lg,
+    right: Spacings.lg,
+    alignItems: 'flex-end',
+  },
+  labPanelCard: {
+    width: '100%',
+    maxWidth: 360,
+    gap: Spacings.md,
+    padding: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...iOSCornerStyle,
+    ...Shadows.bankCard,
+  },
+  labHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  labTitle: {
+    ...Fonts.bodyTextBold,
+    fontSize: ms(13),
+    color: Colors.base.textPrimary,
+  },
+  labModeRow: {
+    flexDirection: 'row',
+    gap: Spacings.xs,
+    padding: 2,
+    backgroundColor: Colors.base.bgPrimary,
+    borderRadius: BorderRadius.md,
+  },
+  labModeButton: {
+    flex: 1,
+    minHeight: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.sm,
+  },
+  labModeButtonActive: {
+    backgroundColor: Colors.base.accent,
+  },
+  labModeText: {
+    ...Fonts.linksBold,
+    color: Colors.base.textSecondary,
+  },
+  labModeTextActive: {
+    color: Colors.semantic.text.primaryDark,
+  },
+  labPointList: {
+    gap: Spacings.sm,
+  },
+  labPointRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  labPointBadge: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.textPrimary,
+  },
+  labPointBadgeOrigin: {
+    backgroundColor: Colors.elevation.low,
+  },
+  labPointBadgeDestination: {
+    backgroundColor: Colors.stopKind.destination,
+  },
+  labPointBadgeText: {
+    ...Fonts.linksBold,
+    color: Colors.base.textPrimary,
+  },
+  labPointTextBlock: {
+    flex: 1,
+    minWidth: 0,
+  },
+  labPointName: {
+    ...Fonts.smallBodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  labPointCoords: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  labSpeedRow: {
+    flexDirection: 'row',
+    gap: Spacings.xs,
+  },
+  labSpeedChip: {
+    flex: 1,
+    minHeight: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    backgroundColor: Colors.base.bgPrimary,
+  },
+  labSpeedChipActive: {
+    borderColor: Colors.base.accent,
+    backgroundColor: Colors.base.accentDim,
+  },
+  labSpeedText: {
+    ...Fonts.linksBold,
+    color: Colors.base.textSecondary,
+  },
+  labSpeedTextActive: {
+    color: Colors.base.accent,
+  },
+  labActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  labSecondaryButton: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    backgroundColor: Colors.base.bgPrimary,
+  },
+  labPrimaryButton: {
+    flex: 1,
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.xs,
+    borderRadius: BorderRadius.pill,
+    backgroundColor: Colors.base.accent,
+  },
+  labPrimaryButtonDisabled: {
+    opacity: 0.55,
+  },
+  labPrimaryText: {
+    ...Fonts.bodyTextBold,
+    fontSize: ms(13),
+    color: Colors.semantic.text.primaryDark,
+  },
 
   // ── Navegación activa (Pencil 6a / 6b) ────────────────────────────────────
   // Bottom Nav Bar: barra inferior grande con la distancia restante, la hora
@@ -2491,6 +2860,29 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.pill,
     borderWidth: 3,
     borderColor: Colors.base.textPrimary,
+  },
+  labMarker: {
+    width: 30,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.textPrimary,
+    ...Shadows.bankCard,
+  },
+  labMarkerOrigin: {
+    backgroundColor: Colors.elevation.low,
+  },
+  labMarkerDestination: {
+    backgroundColor: Colors.stopKind.destination,
+  },
+  labMarkerActive: {
+    borderColor: Colors.base.accent,
+  },
+  labMarkerText: {
+    ...Fonts.linksBold,
+    color: Colors.base.textPrimary,
   },
 });
 
