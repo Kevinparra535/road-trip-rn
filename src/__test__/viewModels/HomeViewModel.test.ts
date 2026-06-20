@@ -356,9 +356,11 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.destination?.id).toBe(DEV_FAKE_DESTINATION.id);
     expect(vm.routeOriginLabel).toBe(DEV_FAKE_ORIGIN.name);
     expect(vm.isNavigating).toBe(true);
+    expect(vm.navigationPhase).toBe('navigating');
     expect(vm.isSimulatedNavigation).toBe(true);
     expect(store.setNavigationMode).toHaveBeenLastCalledWith(false);
     vm.stopNavigation();
+    expect(vm.navigationPhase).toBe('preview');
   });
 
   it('captures Navigation Lab A-B points from map taps', () => {
@@ -456,6 +458,7 @@ describe('HomeViewModel — ruta A->B', () => {
     expect(vm.destination?.name).toBe('Punto B (Lab)');
     expect(vm.isNavigationLabOpen).toBe(false);
     expect(vm.isNavigating).toBe(true);
+    expect(vm.navigationPhase).toBe('navigating');
     expect(vm.isSimulatedNavigation).toBe(true);
     expect(store.setNavigationMode).toHaveBeenLastCalledWith(false);
     vm.stopNavigation();
@@ -1171,6 +1174,7 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     const ok = vm.startNavigationFromPlanner(planner as any);
     expect(ok).toBe(false);
     expect(vm.isNavigating).toBe(false);
+    expect(vm.navigationPhase).toBe('idle');
     expect(vm.destination).toBeNull();
   });
 
@@ -1199,6 +1203,7 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     const ok = vm.startNavigationFromPlanner(planner as any);
     expect(ok).toBe(true);
     expect(vm.isNavigating).toBe(true);
+    expect(vm.navigationPhase).toBe('navigating');
     expect(store.setNavigationMode).toHaveBeenCalledWith(true);
     expect(vm.destination?.name).toBe('Valle de Bravo');
     expect(vm.intermediateStops).toHaveLength(1);

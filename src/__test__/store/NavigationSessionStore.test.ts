@@ -7,9 +7,13 @@ describe('NavigationSessionStore', () => {
     const store = new NavigationSessionStore();
 
     store.prepareSimulation(DEV_FAKE_ORIGIN);
+    expect(store.navigationPhase).toBe('preview');
+    expect(store.isPreviewing).toBe(true);
+
     store.startNavigation(42);
     store.setSimulatedDistanceKm(12.5);
 
+    expect(store.navigationPhase).toBe('navigating');
     expect(store.isSimulationMode).toBe(true);
     expect(store.simulatedOrigin?.id).toBe(DEV_FAKE_ORIGIN.id);
     expect(store.isNavigating).toBe(true);
@@ -18,6 +22,7 @@ describe('NavigationSessionStore', () => {
 
     store.stopNavigation();
 
+    expect(store.navigationPhase).toBe('preview');
     expect(store.isNavigating).toBe(false);
     expect(store.simulatedDistanceKm).toBe(0);
     expect(store.isSimulationMode).toBe(true);
@@ -27,10 +32,13 @@ describe('NavigationSessionStore', () => {
     const store = new NavigationSessionStore();
 
     store.prepareLiveNavigation();
+    expect(store.navigationPhase).toBe('preview');
+
     store.startNavigation(1.2);
     store.recordRealProgress(1.1);
     store.recordRealProgress(2.4);
 
+    expect(store.navigationPhase).toBe('navigating');
     expect(store.isSimulationMode).toBe(false);
     expect(store.lastRealProgressKm).toBe(2.4);
     expect(store.incrementOffRouteTicks()).toBe(1);
@@ -51,6 +59,7 @@ describe('NavigationSessionStore', () => {
     store.toggleElevationStrip();
     store.markArrived(arrivedAt);
 
+    expect(store.navigationPhase).toBe('arrived');
     expect(store.isNavigating).toBe(false);
     expect(store.isArrived).toBe(true);
     expect(store.arrivedAt).toBe(arrivedAt);
@@ -65,5 +74,58 @@ describe('NavigationSessionStore', () => {
     expect(store.isMuted).toBe(false);
     expect(store.isElevationStripOpen).toBe(true);
     expect(store.hasSpokenVoiceId('voice-1')).toBe(false);
+  });
+
+  it('pauses, resumes, and marks off-route without losing the session', () => {
+    const store = new NavigationSessionStore();
+
+    store.prepareLiveNavigation();
+    store.startNavigation(3);
+    store.pauseNavigation();
+
+    expect(store.navigationPhase).toBe('paused');
+    expect(store.isNavigating).toBe(false);
+    expect(store.isNavigationActive).toBe(true);
+
+    store.resumeNavigation();
+
+    expect(store.navigationPhase).toBe('navigating');
+    expect(store.isNavigating).toBe(true);
+
+    store.enterOffRoute();
+
+    expect(store.navigationPhase).toBe('offRoute');
+    expect(store.isOffRoute).toBe(true);
+    expect(store.isNavigating).toBe(true);
+
+    store.exitOffRoute();
+
+    expect(store.navigationPhase).toBe('navigating');
+    expect(store.isOffRoute).toBe(false);
+  });
+
+  it('keeps group rides as a first-class navigation phase', () => {
+    const store = new NavigationSessionStore();
+
+    store.prepareGroupRideNavigation();
+    expect(store.navigationPhase).toBe('preview');
+    expect(store.isGroupRideMode).toBe(true);
+
+    store.startNavigation(8);
+
+    expect(store.navigationPhase).toBe('groupRide');
+    expect(store.isGroupRide).toBe(true);
+    expect(store.isNavigating).toBe(true);
+    expect(store.lastRealProgressKm).toBe(8);
+
+    store.enterOffRoute();
+    expect(store.navigationPhase).toBe('offRoute');
+
+    store.exitOffRoute();
+    expect(store.navigationPhase).toBe('groupRide');
+
+    store.pauseNavigation();
+    store.resumeNavigation();
+    expect(store.navigationPhase).toBe('groupRide');
   });
 });

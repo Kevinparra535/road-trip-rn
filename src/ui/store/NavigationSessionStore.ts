@@ -3,6 +3,20 @@ import { makeAutoObservable } from 'mobx';
 
 import { Place } from '@/domain/entities/Place';
 
+export type NavigationSessionPhase =
+  | 'idle'
+  | 'preview'
+  | 'navigating'
+  | 'paused'
+  | 'offRoute'
+  | 'arrived'
+  | 'groupRide';
+
+type MovingNavigationPhase = Extract<
+  NavigationSessionPhase,
+  'navigating' | 'groupRide'
+>;
+
 /**
  * Estado global (singleton) de la sesion de navegacion activa. No calcula
  * rutas ni habla con GPS/Speech; solo conserva el estado mutable que puede
@@ -10,59 +24,135 @@ import { Place } from '@/domain/entities/Place';
  */
 @injectable()
 export class NavigationSessionStore {
-  isNavigating: boolean = false;
+  navigationPhase: NavigationSessionPhase = 'idle';
   simulatedDistanceKm: number = 0;
-  isArrived: boolean = false;
   arrivedAt: Date | null = null;
   isElevationStripOpen: boolean = true;
   isMuted: boolean = false;
   lastRealProgressKm: number = 0;
   offRouteTicks: number = 0;
   isSimulationMode: boolean = false;
+  isGroupRideMode: boolean = false;
   simulatedOrigin: Place | null = null;
 
+  private resumePhase: MovingNavigationPhase = 'navigating';
   private spokenVoiceIds: Set<string> = new Set();
 
   constructor() {
     makeAutoObservable(this);
   }
 
+  get isNavigating(): boolean {
+    return (
+      this.navigationPhase === 'navigating' ||
+      this.navigationPhase === 'offRoute' ||
+      this.navigationPhase === 'groupRide'
+    );
+  }
+
+  get isNavigationActive(): boolean {
+    return this.navigationPhase !== 'idle';
+  }
+
+  get isArrived(): boolean {
+    return this.navigationPhase === 'arrived';
+  }
+
+  get isPreviewing(): boolean {
+    return this.navigationPhase === 'preview';
+  }
+
+  get isPaused(): boolean {
+    return this.navigationPhase === 'paused';
+  }
+
+  get isOffRoute(): boolean {
+    return this.navigationPhase === 'offRoute';
+  }
+
+  get isGroupRide(): boolean {
+    return this.navigationPhase === 'groupRide';
+  }
+
   prepareSimulation(origin: Place): void {
     this.resetRouteSession();
     this.isSimulationMode = true;
     this.simulatedOrigin = origin;
+    this.navigationPhase = 'preview';
   }
 
   prepareLiveNavigation(): void {
     this.isSimulationMode = false;
+    this.isGroupRideMode = false;
     this.simulatedOrigin = null;
     this.resetNavigationProgress();
+    this.arrivedAt = null;
+    this.navigationPhase = 'preview';
+  }
+
+  prepareGroupRideNavigation(): void {
+    this.isSimulationMode = false;
+    this.isGroupRideMode = true;
+    this.simulatedOrigin = null;
+    this.resetNavigationProgress();
+    this.arrivedAt = null;
+    this.navigationPhase = 'preview';
   }
 
   startNavigation(initialRealProgressKm: number): void {
-    this.isNavigating = true;
+    this.navigationPhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+    this.resumePhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+    this.arrivedAt = null;
     this.simulatedDistanceKm = 0;
     this.lastRealProgressKm = this.isSimulationMode ? 0 : initialRealProgressKm;
     this.offRouteTicks = 0;
     this.clearSpokenVoiceIds();
   }
 
+  startGroupRideNavigation(initialRealProgressKm: number): void {
+    this.isGroupRideMode = true;
+    this.isSimulationMode = false;
+    this.simulatedOrigin = null;
+    this.startNavigation(initialRealProgressKm);
+  }
+
+  pauseNavigation(): void {
+    if (!this.isNavigating) return;
+    this.resumePhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+    this.navigationPhase = 'paused';
+  }
+
+  resumeNavigation(): void {
+    if (!this.isPaused) return;
+    this.navigationPhase = this.resumePhase;
+  }
+
+  enterOffRoute(): void {
+    if (!this.isNavigating || this.isOffRoute) return;
+    this.resumePhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+    this.navigationPhase = 'offRoute';
+  }
+
+  exitOffRoute(): void {
+    if (!this.isOffRoute) return;
+    this.navigationPhase = this.isGroupRideMode ? 'groupRide' : 'navigating';
+  }
+
   stopNavigation(): void {
-    this.isNavigating = false;
+    this.navigationPhase = 'preview';
     this.resetNavigationProgress();
     this.clearSpokenVoiceIds();
   }
 
   markArrived(arrivedAt: Date = new Date()): void {
-    this.isNavigating = false;
-    this.isArrived = true;
+    this.navigationPhase = 'arrived';
     this.arrivedAt = arrivedAt;
     this.offRouteTicks = 0;
     this.lastRealProgressKm = 0;
   }
 
   dismissArrival(): void {
-    this.isArrived = false;
+    this.navigationPhase = 'idle';
     this.arrivedAt = null;
   }
 
@@ -111,12 +201,13 @@ export class NavigationSessionStore {
   }
 
   resetRouteSession(): void {
-    this.isNavigating = false;
-    this.isArrived = false;
+    this.navigationPhase = 'idle';
     this.arrivedAt = null;
     this.resetNavigationProgress();
     this.isSimulationMode = false;
+    this.isGroupRideMode = false;
     this.simulatedOrigin = null;
+    this.resumePhase = 'navigating';
     this.clearSpokenVoiceIds();
   }
 

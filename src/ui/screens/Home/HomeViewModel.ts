@@ -55,7 +55,10 @@ import Logger from '@/ui/utils/Logger';
 
 import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { LocationStore } from '@/ui/store/LocationStore';
-import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
+import {
+  type NavigationSessionPhase,
+  NavigationSessionStore,
+} from '@/ui/store/NavigationSessionStore';
 
 import {
   buildNavigationSuggestions,
@@ -421,6 +424,30 @@ export class HomeViewModel {
 
   get isNavigating(): boolean {
     return this.navigationSession.isNavigating;
+  }
+
+  get navigationPhase(): NavigationSessionPhase {
+    return this.navigationSession.navigationPhase;
+  }
+
+  get isNavigationPreview(): boolean {
+    return this.navigationSession.isPreviewing;
+  }
+
+  get isNavigationPaused(): boolean {
+    return this.navigationSession.isPaused;
+  }
+
+  get isOffRoute(): boolean {
+    return this.navigationSession.isOffRoute;
+  }
+
+  get isGroupRideNavigation(): boolean {
+    return this.navigationSession.isGroupRide;
+  }
+
+  get isNavigationSessionActive(): boolean {
+    return this.navigationSession.isNavigationActive;
   }
 
   get simulatedDistanceKm(): number {
@@ -2027,12 +2054,14 @@ export class HomeViewModel {
     });
     if (!decision.isOffRouteCandidate) {
       this.navigationSession.resetOffRouteTicks();
+      this.navigationSession.exitOffRoute();
       return;
     }
     if (
       this.navigationSession.incrementOffRouteTicks() >= OFF_ROUTE_CONFIRM_TICKS
     ) {
       this.navigationSession.resetOffRouteTicks();
+      this.navigationSession.enterOffRoute();
       void this.recalculateFrom(rider);
     }
   }
@@ -2082,6 +2111,7 @@ export class HomeViewModel {
         this.isRouteResponse = directions;
       });
       this.navigationSession.resetNavigationProgress();
+      this.navigationSession.exitOffRoute();
     } catch (error) {
       this.logger.error(
         `Error recalculando ruta: ${
