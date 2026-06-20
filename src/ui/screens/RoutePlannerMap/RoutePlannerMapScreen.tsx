@@ -17,19 +17,15 @@ import {
 } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
-  ChevronDown,
   ChevronRight,
-  ChevronUp,
   CircleCheck,
   Eye,
   Flag,
   Hourglass,
   MapPin,
   Navigation,
-  Pencil,
   Plus,
   Save,
-  SquarePen,
   X,
 } from 'lucide-react-native';
 
@@ -48,12 +44,8 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
-import { formatArrival } from '@/ui/utils/etaFormat';
-import { formatDuration } from '@/ui/utils/formatDuration';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
-
-import { stopKindMeta } from '../stopKindMeta';
 
 import { RoutePlannerMapViewModel } from './RoutePlannerMapViewModel';
 
@@ -69,6 +61,7 @@ import PlannerEmptyState from './components/PlannerEmptyState';
 import PlannerMap from './components/PlannerMap';
 import { PlannerMapCanvas } from './components/PlannerMapCanvas';
 import PlannerSheet, { PlannerSheetHandle } from './components/PlannerSheet';
+import { PlannerTimelineRow } from './components/PlannerTimelineRow';
 import { RouteSavedSheet } from './components/RouteSavedSheet';
 import { RouteSheetHeader } from './components/RouteSheetHeader';
 import { SaveRouteSheet } from './components/SaveRouteSheet';
@@ -249,17 +242,11 @@ const RoutePlannerMapScreen = observer(() => {
   // partyStore.memberCount + navigate('PartyMembers')).
 
   // Resumen Card (diseño Pencil): hora de llegada estimada y nº de paradas.
-  const arrival = formatArrival(viewModel.etaWithStopsMin);
+  const arrival = viewModel.arrivalLabel;
   const stopsCount = viewModel.waypoints.length;
 
-  // Helper de la card "Varios días". Con multi-día activo mostramos jornadas y
-  // km/día aproximados; si no, una pista de qué hace el toggle.
-  const dayCount = (viewModel.days ?? []).length || 1;
-  const multiDayHelper = viewModel.isMultiDay
-    ? `≈ ${dayCount} jornada${dayCount === 1 ? '' : 's'} · ~${Math.round(
-        viewModel.distanceKm / dayCount,
-      )} km/día`
-    : 'Divide la ruta en jornadas con pernocte';
+  // Helper de la card "Varios días" (jornadas + km/día) calculado en el VM.
+  const multiDayHelper = viewModel.multiDayHelperLabel;
 
   const SheetHeader = viewModel.isReadOnly ? (
     <View style={styles.viewerBanner}>
@@ -377,152 +364,22 @@ const RoutePlannerMapScreen = observer(() => {
                 </View>
               ) : null}
 
-              {viewModel.timelineItems.map((item) => {
-                const meta = stopKindMeta(item.kind);
-                const canEditKind = item.isIntermediate;
-                // Pin por variante (diseño Pencil): arranque = aro hueco sin
-                // icono; destino = círculo lleno con flag blanca; intermedia =
-                // círculo lleno con icono oscuro del kind.
-                const PinIcon = item.isLast ? Flag : meta.lucideIcon;
-                return (
-                  <View key={item.id} style={styles.stopRow}>
-                    <TouchableOpacity
-                      onPress={() => canEditKind && setEditingKindFor(item.id)}
-                      disabled={!canEditKind}
-                      style={[
-                        styles.stopPin,
-                        item.isFirst
-                          ? [styles.stopPinRing, { borderColor: meta.color }]
-                          : { backgroundColor: meta.color },
-                      ]}
-                      hitSlop={8}
-                    >
-                      {item.isFirst ? null : (
-                        <PinIcon
-                          size={16}
-                          color={
-                            item.isLast ? Colors.base.textPrimary : Colors.base.bgPrimary
-                          }
-                        />
-                      )}
-                    </TouchableOpacity>
-                    <View style={styles.stopBody}>
-                      <View style={styles.stopHeader}>
-                        <Text style={styles.stopName} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        <View
-                          style={[
-                            styles.kindChip,
-                            { borderColor: hexToRgba(meta.color, 0.4) },
-                          ]}
-                        >
-                          <Text style={[styles.kindChipText, { color: meta.color }]}>
-                            {meta.label}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text style={styles.stopSub} numberOfLines={1}>
-                        {item.sub}
-                      </Text>
-                    </View>
-                    <View style={styles.stopActions}>
-                      {!viewModel.isReadOnly && item.isIntermediate ? (
-                        <TouchableOpacity
-                          onPress={() => setEditingDetailFor(item.id)}
-                          hitSlop={6}
-                          style={styles.editBtn}
-                          testID={`waypoint-${item.id}-details`}
-                        >
-                          <SquarePen
-                            size={16}
-                            color={
-                              item.notes || item.stopDurationMin
-                                ? Colors.base.accent
-                                : Colors.base.iconMuted
-                            }
-                          />
-                        </TouchableOpacity>
-                      ) : null}
-                      {!viewModel.isReadOnly ? (
-                        <TouchableOpacity
-                          onPress={() => {
-                            viewModel.startEditingWaypoint(item.id);
-                            navigation.navigate('AddStop');
-                          }}
-                          hitSlop={6}
-                          style={styles.editBtn}
-                          testID={`waypoint-${item.id}-edit`}
-                        >
-                          <Pencil size={16} color={Colors.base.iconMuted} />
-                        </TouchableOpacity>
-                      ) : null}
-                      {!viewModel.isReadOnly && (item.canMoveUp || item.canMoveDown) ? (
-                        <View style={styles.reorderColumn}>
-                          <TouchableOpacity
-                            onPress={() => viewModel.moveStop(item.id, 'up')}
-                            disabled={!item.canMoveUp}
-                            hitSlop={6}
-                            style={styles.reorderBtn}
-                          >
-                            <ChevronUp
-                              size={14}
-                              color={
-                                item.canMoveUp
-                                  ? Colors.base.iconMuted
-                                  : Colors.base.textMuted
-                              }
-                            />
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            onPress={() => viewModel.moveStop(item.id, 'down')}
-                            disabled={!item.canMoveDown}
-                            hitSlop={6}
-                            style={styles.reorderBtn}
-                          >
-                            <ChevronDown
-                              size={14}
-                              color={
-                                item.canMoveDown
-                                  ? Colors.base.iconMuted
-                                  : Colors.base.textMuted
-                              }
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      ) : null}
-                      {!viewModel.isReadOnly ? (
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (item.isIntermediate) {
-                              viewModel.removeStop(item.id);
-                            } else {
-                              Alert.alert(
-                                item.isFirst
-                                  ? 'Eliminar punto de arranque'
-                                  : 'Eliminar destino final',
-                                'El siguiente waypoint se convertira en el nuevo extremo.',
-                                [
-                                  { text: 'Cancelar', style: 'cancel' },
-                                  {
-                                    text: 'Eliminar',
-                                    style: 'destructive',
-                                    onPress: () => viewModel.removeStop(item.id),
-                                  },
-                                ],
-                              );
-                            }
-                          }}
-                          hitSlop={8}
-                          style={styles.removeBtn}
-                        >
-                          <X size={18} color={Colors.base.iconMuted} />
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                  </View>
-                );
-              })}
+              {viewModel.timelineItems.map((item) => (
+                <PlannerTimelineRow
+                  key={item.id}
+                  item={item}
+                  readOnly={viewModel.isReadOnly}
+                  onEditKind={setEditingKindFor}
+                  onEditDetail={setEditingDetailFor}
+                  onEditPlace={(id) => {
+                    viewModel.startEditingWaypoint(id);
+                    navigation.navigate('AddStop');
+                  }}
+                  onMoveUp={(id) => viewModel.moveStop(id, 'up')}
+                  onMoveDown={(id) => viewModel.moveStop(id, 'down')}
+                  onRemove={(id) => viewModel.removeStop(id)}
+                />
+              ))}
 
               {!isEmpty ? (
                 <TouchableOpacity
@@ -614,9 +471,7 @@ const RoutePlannerMapScreen = observer(() => {
                     </View>
                     <View style={styles.resumenStatDivider} />
                     <View style={styles.resumenStat}>
-                      <Text style={styles.resumenStatVal}>
-                        {formatDuration(viewModel.durationMin)}
-                      </Text>
+                      <Text style={styles.resumenStatVal}>{viewModel.durationLabel}</Text>
                       <Text style={styles.resumenStatLab}>TIEMPO</Text>
                     </View>
                     <View style={styles.resumenStatDivider} />
@@ -831,11 +686,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: BorderRadius.pill,
   },
-  // Pin de arranque: aro hueco (sin relleno, borde grueso del color del kind).
-  stopPinRing: {
-    backgroundColor: 'transparent',
-    borderWidth: 3,
-  },
   startPlaceholderPin: {
     backgroundColor: Colors.base.accentDim,
     borderWidth: 1.5,
@@ -844,59 +694,6 @@ const styles = StyleSheet.create({
   },
   stopBody: {
     flex: 1,
-  },
-  stopHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.sm,
-  },
-  stopName: {
-    flex: 1,
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  kindChip: {
-    paddingHorizontal: Spacings.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-  },
-  kindChipText: {
-    ...Fonts.links,
-    letterSpacing: 0.5,
-  },
-  stopSub: {
-    marginTop: 2,
-    ...Fonts.links,
-    color: Colors.base.textMuted,
-  },
-  removeBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editBtn: {
-    width: 28,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stopActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  reorderColumn: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  reorderBtn: {
-    width: 22,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   // Card "Agregar parada" (diseño Pencil) — borde sólido sutil + círculo accent.
   addStopCard: {

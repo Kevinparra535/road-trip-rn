@@ -16,6 +16,9 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRepository';
 
+import { formatArrival } from '@/ui/utils/etaFormat';
+import { formatDuration } from '@/ui/utils/formatDuration';
+
 import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 import { LocationStore } from '@/ui/store/LocationStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
@@ -224,6 +227,23 @@ export class RoutePlannerMapViewModel {
   }
   get etaWithStopsMin(): number {
     return this.planner.etaWithStopsMin;
+  }
+  /** Hora de llegada estimada formateada ("HH:MM") o null si no hay ETA. */
+  get arrivalLabel(): string | null {
+    return formatArrival(this.planner.etaWithStopsMin);
+  }
+  /** Duración del trazado formateada ("2 h 15 m") para la card de resumen. */
+  get durationLabel(): string {
+    return formatDuration(this.planner.durationMin);
+  }
+  /** Helper de la card "Varios días": jornadas y km/día aprox, o pista del toggle. */
+  get multiDayHelperLabel(): string {
+    const dayCount = (this.planner.days ?? []).length || 1;
+    return this.planner.isMultiDay
+      ? `≈ ${dayCount} jornada${dayCount === 1 ? '' : 's'} · ~${Math.round(
+          this.planner.distanceKm / dayCount,
+        )} km/día`
+      : 'Divide la ruta en jornadas con pernocte';
   }
   get timelineItems() {
     return this.planner.timelineItems;
