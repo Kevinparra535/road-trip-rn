@@ -16,7 +16,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 

@@ -484,9 +484,9 @@ container
 container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
 // Transient: el estado compartido del Planner ahora vive en `PlannerStore`
 // (singleton, arriba). Este ViewModel es una fachada delgada por-pantalla que
-// delega todo al store, asi que cada pantalla (RoutePlannerScreen, AddStopScreen,
-// CategorySublistScreen) puede tener su propia instancia sin perder las
-// mutaciones — todas leen/escriben el mismo PlannerStore.
+// delega todo al store, asi que cada pantalla (RoutePlannerMapScreen,
+// AddStopScreen, CategorySublistScreen) puede tener su propia instancia sin
+// perder las mutaciones — todas leen/escriben el mismo PlannerStore.
 container
   .bind<RoutePlannerViewModel>(TYPES.RoutePlannerViewModel)
   .to(RoutePlannerViewModel);
@@ -495,7 +495,7 @@ container
   .to(RouteDetailViewModel);
 // Singleton: el handoff de preview/rideType con DestinationPreview ya vive en
 // el NavigationStore, pero HomeViewModel sigue siendo singleton porque
-// RoutePlannerScreen/RoutePlannerMapScreen llaman `startNavigationFromPlanner`
+// RoutePlannerMapScreen llama `startNavigationFromPlanner`
 // sobre ESTA misma instancia para arrancar la navegación que luego renderiza el
 // HomeScreen (destination/isRouteResponse/isNavigating viven en el VM). Si fuera
 // transient, esas pantallas mutarían una instancia distinta a la del Home.

@@ -15,7 +15,7 @@ import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { formatDuration } from '@/ui/utils/formatDuration';
 
-import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 
 /**
  * Cards comparativas para elegir entre las rutas alternativas que devuelve

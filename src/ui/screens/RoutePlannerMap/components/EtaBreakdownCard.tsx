@@ -7,7 +7,7 @@ import Fonts from '@/ui/styles/Fonts';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
+import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
 
 /**
  * Formatea minutos a "Xh Ym" cuando hay horas, o "Ym" cuando es menos de 1h.

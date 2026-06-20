@@ -27,8 +27,8 @@ import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
-import { RoutePlannerViewModel } from '../RoutePlanner/RoutePlannerViewModel';
-import { stopKindMeta } from '../stopKindMeta';
+import { RoutePlannerViewModel } from '../../RoutePlanner/RoutePlannerViewModel';
+import { stopKindMeta } from '../../stopKindMeta';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
