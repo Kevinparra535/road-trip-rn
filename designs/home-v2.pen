@@ -1422,7 +1422,7 @@
           "type": "frame",
           "id": "QHQq7",
           "x": 329,
-          "y": 137,
+          "y": 145,
           "name": "Locate FAB",
           "width": 48,
           "height": 48,
@@ -1459,7 +1459,7 @@
           "type": "frame",
           "id": "Ev646",
           "x": 0,
-          "y": 197,
+          "y": 226,
           "name": "BottomSheet Stops",
           "width": 393,
           "fill": "$bgGradientEnd",
@@ -1507,11 +1507,88 @@
             },
             {
               "type": "frame",
+              "id": "b3NPBi",
+              "name": "Sheet Header",
+              "width": "fill_container",
+              "gap": 8,
+              "padding": 2,
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "AL6bf",
+                  "name": "hcol",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KQbzI",
+                      "name": "hTitle",
+                      "fill": "$textPrimary",
+                      "content": "Tu ruta",
+                      "fontFamily": "Poppins",
+                      "fontSize": 17,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "q7RTCn",
+                      "name": "hSub",
+                      "fill": "$textMuted",
+                      "content": "Bogotá → Villa de Leyva",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zWIVU",
+                  "name": "typeChip",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    6,
+                    10
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "E9NMdz",
+                      "name": "chipIcon",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "route",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QXLSf",
+                      "name": "chipTxt",
+                      "fill": "$textSecondary",
+                      "content": "Carretera",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "draOM",
               "name": "Stop List",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 10,
+              "gap": "$spacing-md",
               "children": [
                 {
                   "type": "frame",
@@ -1527,11 +1604,14 @@
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": 20,
-                      "gap": 12,
+                      "cornerRadius": "$radius-xl",
+                      "stroke": "$cardBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": "$spacing-md",
                       "padding": [
-                        12,
-                        16
+                        "$spacing-md",
+                        "$spacing-lg"
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1549,7 +1629,7 @@
                           "name": "Text",
                           "width": "fill_container",
                           "layout": "vertical",
-                          "gap": 2,
+                          "gap": 3,
                           "children": [
                             {
                               "type": "frame",
@@ -1564,9 +1644,11 @@
                                   "name": "Name",
                                   "fill": "$textPrimary",
                                   "content": "Bogotá",
+                                  "lineHeight": 1.2,
                                   "fontFamily": "Poppins",
                                   "fontSize": 15,
-                                  "fontWeight": "700"
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.2
                                 }
                               ]
                             },
@@ -1576,9 +1658,11 @@
                               "name": "Subtitle",
                               "fill": "$textSecondary",
                               "content": "Arranque",
+                              "lineHeight": 1.2,
                               "fontFamily": "Poppins",
                               "fontSize": 12,
-                              "fontWeight": "normal"
+                              "fontWeight": "500",
+                              "letterSpacing": 0.2
                             }
                           ]
                         },
@@ -1586,7 +1670,7 @@
                           "type": "frame",
                           "id": "qXVv9",
                           "name": "Actions",
-                          "gap": 2,
+                          "gap": "$spacing-xs",
                           "alignItems": "center",
                           "children": [
                             {
@@ -1618,7 +1702,7 @@
                               "name": "Action grip-vertical",
                               "width": 30,
                               "height": 30,
-                              "fill": "#00000000",
+                              "fill": "$bgPrimary",
                               "cornerRadius": "$radius-md",
                               "justifyContent": "center",
                               "alignItems": "center",
@@ -1631,7 +1715,7 @@
                                   "height": 18,
                                   "icon": "grip-vertical",
                                   "library": "lucide",
-                                  "fill": "$iconMuted"
+                                  "fill": "$textSecondary"
                                 }
                               ]
                             }
@@ -1678,11 +1762,14 @@
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": 20,
-                      "gap": 12,
+                      "cornerRadius": "$radius-xl",
+                      "stroke": "$cardBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": "$spacing-md",
                       "padding": [
-                        12,
-                        16
+                        "$spacing-md",
+                        "$spacing-lg"
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1700,7 +1787,7 @@
                           "name": "Text",
                           "width": "fill_container",
                           "layout": "vertical",
-                          "gap": 2,
+                          "gap": 3,
                           "children": [
                             {
                               "type": "frame",
@@ -1715,21 +1802,63 @@
                                   "name": "Name",
                                   "fill": "$textPrimary",
                                   "content": "Terpel La Calera",
+                                  "lineHeight": 1.2,
                                   "fontFamily": "Poppins",
                                   "fontSize": 15,
-                                  "fontWeight": "700"
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.2
                                 }
                               ]
                             },
                             {
-                              "type": "text",
-                              "id": "juXPF",
-                              "name": "Subtitle",
-                              "fill": "$textSecondary",
-                              "content": "km 32",
-                              "fontFamily": "Poppins",
-                              "fontSize": 12,
-                              "fontWeight": "normal"
+                              "type": "frame",
+                              "id": "O7RYk",
+                              "name": "SubRow",
+                              "gap": 8,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "juXPF",
+                                  "name": "Subtitle",
+                                  "fill": "$textSecondary",
+                                  "content": "km 32",
+                                  "lineHeight": 1.2,
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 12,
+                                  "fontWeight": "500",
+                                  "letterSpacing": 0.2
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "u8OsZ",
+                                  "name": "Tanqueo Badge",
+                                  "fill": "$accentDim",
+                                  "cornerRadius": "$radius-sm",
+                                  "stroke": "$accentDimBorder",
+                                  "strokeWidth": 1,
+                                  "strokeAlignment": "inner",
+                                  "padding": [
+                                    2,
+                                    8
+                                  ],
+                                  "justifyContent": "center",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "c1LhW",
+                                      "name": "Label",
+                                      "fill": "$accent",
+                                      "content": "TANQUEO",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 9,
+                                      "fontWeight": "700",
+                                      "letterSpacing": 0.5
+                                    }
+                                  ]
+                                }
+                              ]
                             }
                           ]
                         },
@@ -1737,7 +1866,7 @@
                           "type": "frame",
                           "id": "nnbsy",
                           "name": "Actions",
-                          "gap": 2,
+                          "gap": "$spacing-xs",
                           "alignItems": "center",
                           "children": [
                             {
@@ -1795,7 +1924,7 @@
                               "name": "Action grip-vertical",
                               "width": 30,
                               "height": 30,
-                              "fill": "#00000000",
+                              "fill": "$bgPrimary",
                               "cornerRadius": "$radius-md",
                               "justifyContent": "center",
                               "alignItems": "center",
@@ -1808,7 +1937,7 @@
                                   "height": 18,
                                   "icon": "grip-vertical",
                                   "library": "lucide",
-                                  "fill": "$iconMuted"
+                                  "fill": "$textSecondary"
                                 }
                               ]
                             }
@@ -1855,11 +1984,14 @@
                       "name": "Card",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": 20,
-                      "gap": 12,
+                      "cornerRadius": "$radius-xl",
+                      "stroke": "$cardBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": "$spacing-md",
                       "padding": [
-                        12,
-                        16
+                        "$spacing-md",
+                        "$spacing-lg"
                       ],
                       "alignItems": "center",
                       "children": [
@@ -1884,7 +2016,7 @@
                           "name": "Text",
                           "width": "fill_container",
                           "layout": "vertical",
-                          "gap": 2,
+                          "gap": 3,
                           "children": [
                             {
                               "type": "frame",
@@ -1899,9 +2031,11 @@
                                   "name": "Name",
                                   "fill": "$textPrimary",
                                   "content": "Villa de Leyva",
+                                  "lineHeight": 1.2,
                                   "fontFamily": "Poppins",
                                   "fontSize": 15,
-                                  "fontWeight": "700"
+                                  "fontWeight": "700",
+                                  "letterSpacing": -0.2
                                 }
                               ]
                             },
@@ -1911,9 +2045,11 @@
                               "name": "Subtitle",
                               "fill": "$textSecondary",
                               "content": "Destino · 248 km",
+                              "lineHeight": 1.2,
                               "fontFamily": "Poppins",
                               "fontSize": 12,
-                              "fontWeight": "normal"
+                              "fontWeight": "500",
+                              "letterSpacing": 0.2
                             }
                           ]
                         },
@@ -1921,7 +2057,7 @@
                           "type": "frame",
                           "id": "QrhzP",
                           "name": "Actions",
-                          "gap": 2,
+                          "gap": "$spacing-xs",
                           "alignItems": "center",
                           "children": [
                             {
@@ -1953,7 +2089,7 @@
                               "name": "Action grip-vertical",
                               "width": 30,
                               "height": 30,
-                              "fill": "#00000000",
+                              "fill": "$bgPrimary",
                               "cornerRadius": "$radius-md",
                               "justifyContent": "center",
                               "alignItems": "center",
@@ -1966,7 +2102,7 @@
                                   "height": 18,
                                   "icon": "grip-vertical",
                                   "library": "lucide",
-                                  "fill": "$iconMuted"
+                                  "fill": "$textSecondary"
                                 }
                               ]
                             }
@@ -2003,83 +2139,97 @@
             },
             {
               "type": "frame",
-              "id": "F84xuA",
-              "name": "Agregar Parada",
+              "id": "xKUxX",
+              "name": "Agregar Parada Row",
               "width": "fill_container",
-              "fill": "$accentDim",
-              "cornerRadius": 18,
-              "stroke": "$accentDimBorder",
-              "strokeWidth": 1,
-              "strokeAlignment": "inner",
-              "gap": 12,
               "padding": [
-                12,
-                14
+                0,
+                40,
+                0,
+                0
               ],
-              "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "MTbfF",
-                  "name": "plusCircle",
-                  "width": 38,
-                  "height": 38,
-                  "fill": "$accent",
-                  "cornerRadius": 19,
-                  "justifyContent": "center",
+                  "id": "F84xuA",
+                  "name": "Agregar Parada",
+                  "width": 356,
+                  "fill": "#00000000",
+                  "cornerRadius": 20,
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "duYBf",
-                      "name": "plus",
-                      "width": 22,
-                      "height": 22,
-                      "icon": "plus",
-                      "library": "lucide",
-                      "fill": "$bgPrimary"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "zOOpz",
-                  "name": "addCol",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 2,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "FxQIF",
-                      "name": "addTitle",
-                      "fill": "$accent",
-                      "content": "Agregar parada",
-                      "fontFamily": "Poppins",
-                      "fontSize": 15,
-                      "fontWeight": "700"
+                      "type": "frame",
+                      "id": "MTbfF",
+                      "name": "plusCircle",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "$accentDim",
+                      "cornerRadius": 16,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "duYBf",
+                          "name": "plus",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "avWZs",
-                      "name": "addSub",
-                      "fill": "$textSecondary",
-                      "content": "gasolina · comida · turismo…",
-                      "fontFamily": "Poppins",
-                      "fontSize": 12,
-                      "fontWeight": "500"
+                      "type": "frame",
+                      "id": "zOOpz",
+                      "name": "addCol",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FxQIF",
+                          "name": "addTitle",
+                          "fill": "$textPrimary",
+                          "content": "Agregar parada",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "avWZs",
+                          "name": "addSub",
+                          "fill": "$textSecondary",
+                          "content": "gasolina · comida · turismo…",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "Licpe",
+                      "name": "addChevron",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
                     }
                   ]
-                },
-                {
-                  "type": "icon",
-                  "id": "Licpe",
-                  "name": "addChevron",
-                  "width": 20,
-                  "height": 20,
-                  "icon": "chevron-right",
-                  "library": "lucide",
-                  "fill": "$accent"
                 }
               ]
             },
@@ -2098,13 +2248,13 @@
                   "width": "fill_container",
                   "fill": "$bgCard",
                   "cornerRadius": 20,
-                  "stroke": "$accentDimBorder",
+                  "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 14,
+                  "gap": 12,
                   "padding": [
-                    14,
-                    16
+                    12,
+                    14
                   ],
                   "alignItems": "center",
                   "children": [
@@ -2123,7 +2273,7 @@
                           "fill": "$textPrimary",
                           "content": "Varios días",
                           "fontFamily": "Poppins",
-                          "fontSize": 15,
+                          "fontSize": 14,
                           "fontWeight": "700"
                         },
                         {
@@ -2133,7 +2283,7 @@
                           "fill": "$textSecondary",
                           "textGrowth": "fixed-width",
                           "width": "fill_container",
-                          "content": "Divide la ruta en jornadas con pernoctas",
+                          "content": "≈ 2 jornadas · ~124 km/día",
                           "lineHeight": 1.35,
                           "fontFamily": "Poppins",
                           "fontSize": 12,
@@ -2143,10 +2293,10 @@
                     },
                     {
                       "type": "frame",
-                      "id": "wbEVv",
-                      "name": "Checkbox",
-                      "width": 26,
-                      "height": 26,
+                      "id": "ED1QA",
+                      "name": "Switch",
+                      "width": 42,
+                      "height": 24,
                       "fill": {
                         "type": "gradient",
                         "gradientType": "linear",
@@ -2166,7 +2316,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": 8,
+                      "cornerRadius": 999,
                       "effect": {
                         "type": "shadow",
                         "shadowType": "outer",
@@ -2177,238 +2327,256 @@
                         },
                         "blur": 8
                       },
-                      "justifyContent": "center",
+                      "padding": 3,
+                      "justifyContent": "end",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "ggKzT",
+                          "name": "Thumb",
+                          "fill": "#FFFFFF",
+                          "width": 18,
+                          "height": 18,
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "color": "#00000055",
+                            "offset": {
+                              "x": 0,
+                              "y": 1
+                            },
+                            "blur": 3
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "dUo81",
+              "name": "Resumen Card",
+              "width": "fill_container",
+              "fill": "$bgCard",
+              "cornerRadius": "$radius-lg",
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                10,
+                12
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jGdT1",
+                  "name": "Header",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "LaU79",
+                      "name": "statusLeft",
+                      "gap": 6,
                       "alignItems": "center",
                       "children": [
                         {
                           "type": "icon",
-                          "id": "Ivapo",
-                          "name": "checkMark",
+                          "id": "SNCxh",
+                          "name": "check",
                           "width": 16,
                           "height": 16,
-                          "icon": "check",
+                          "icon": "circle-check",
                           "library": "lucide",
-                          "weight": 600,
-                          "fill": "$bgPrimary"
+                          "fill": "$check"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Tzim6",
+                          "name": "statusTxt",
+                          "fill": "$textPrimary",
+                          "content": "Ruta lista",
+                          "fontFamily": "Poppins",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tueme",
+                          "name": "eta",
+                          "fill": "$textMuted",
+                          "content": "· llega 13:42",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "bS6pc",
+                      "name": "verDetalles",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rEA96",
+                          "name": "vdTxt",
+                          "fill": "$accent",
+                          "content": "Ver detalles",
+                          "fontFamily": "Poppins",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "PZ8aR",
+                          "name": "vdChev",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$accent"
                         }
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "frame",
-                  "id": "g3EUOF",
-                  "name": "Feedback Strip",
+                  "type": "rectangle",
+                  "id": "ErWPn",
+                  "name": "div",
+                  "fill": "$cardBorder",
                   "width": "fill_container",
-                  "fill": "$accentDim",
-                  "cornerRadius": 12,
-                  "gap": 8,
-                  "padding": [
-                    9,
-                    12
-                  ],
+                  "height": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "dyXD3",
+                  "name": "Stats Row",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "ha5di",
-                      "name": "fbIcon",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "moon-star",
-                      "library": "lucide",
-                      "fill": "$accent"
-                    },
-                    {
-                      "type": "text",
-                      "id": "dCB0f",
-                      "name": "fbText",
-                      "fill": "$textSecondary",
-                      "textGrowth": "fixed-width",
+                      "type": "frame",
+                      "id": "DTDeR",
+                      "name": "stat DISTANCIA",
                       "width": "fill_container",
-                      "content": "≈ 2 jornadas · ~124 km/día · pernocta sugerida en Tunja",
-                      "lineHeight": 1.4,
-                      "fontFamily": "Poppins",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "IrsaL",
-              "name": "Route Status",
-              "width": "fill_container",
-              "gap": 8,
-              "padding": 2,
-              "justifyContent": "space_between",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "MQu4v",
-                  "name": "statusLeft",
-                  "gap": 6,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "p88yEu",
-                      "name": "check",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$check"
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tcxzc",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "248 km",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FcxUB",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "DISTANCIA",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "pkXuQ",
-                      "name": "statusTxt",
-                      "fill": "$textPrimary",
-                      "content": "Ruta lista",
-                      "fontFamily": "Poppins",
-                      "fontSize": 13,
-                      "fontWeight": "700"
-                    }
-                  ]
-                },
-                {
-                  "type": "text",
-                  "id": "POOOL",
-                  "name": "eta",
-                  "fill": "$textMuted",
-                  "content": "Llegada ~13:42",
-                  "fontFamily": "Poppins",
-                  "fontSize": 12,
-                  "fontWeight": "500"
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "KKt8w",
-              "name": "Stats",
-              "width": "fill_container",
-              "fill": "$bgCard",
-              "cornerRadius": 20,
-              "padding": [
-                12,
-                8
-              ],
-              "justifyContent": "space_between",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "EVDx7",
-                  "name": "stat DISTANCIA",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "oMY4l",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "248 km",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "rectangle",
+                      "id": "s0KdJn",
+                      "name": "d1",
+                      "fill": "$cardBorder",
+                      "width": 1,
+                      "height": 32
                     },
                     {
-                      "type": "text",
-                      "id": "i1ztb",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "DISTANCIA",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
-                    }
-                  ]
-                },
-                {
-                  "type": "rectangle",
-                  "id": "L2oLn",
-                  "name": "div1",
-                  "fill": "$cardBorder",
-                  "width": 1,
-                  "height": 36
-                },
-                {
-                  "type": "frame",
-                  "id": "YuD2z",
-                  "name": "stat TIEMPO",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "DAiGB",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "4h 10",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "frame",
+                      "id": "UwFaD",
+                      "name": "stat TIEMPO",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eLqJ9",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "4h 10",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tzkTX",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "TIEMPO",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "aFP2w",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "TIEMPO",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
-                    }
-                  ]
-                },
-                {
-                  "type": "rectangle",
-                  "id": "lrH0C",
-                  "name": "div2",
-                  "fill": "$cardBorder",
-                  "width": 1,
-                  "height": 36
-                },
-                {
-                  "type": "frame",
-                  "id": "RRQ2c",
-                  "name": "stat PARADAS",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "VX0nc",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "1",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "rectangle",
+                      "id": "Z0DKs5",
+                      "name": "d2",
+                      "fill": "$cardBorder",
+                      "width": 1,
+                      "height": 32
                     },
                     {
-                      "type": "text",
-                      "id": "q0b8mK",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "PARADAS",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
+                      "type": "frame",
+                      "id": "dUVpe",
+                      "name": "stat PARADAS",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wEVbQ",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "1",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vubEK",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "PARADAS",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
                     }
                   ]
                 }
@@ -2436,7 +2604,7 @@
                       "name": "Guardar Btn",
                       "height": 56,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": "$radius-lg",
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -2466,7 +2634,8 @@
                           "content": "Guardar",
                           "fontFamily": "Poppins",
                           "fontSize": 16,
-                          "fontWeight": "600"
+                          "fontWeight": "600",
+                          "letterSpacing": 0.2
                         }
                       ]
                     },
@@ -2495,16 +2664,16 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": "$radius-lg",
                       "effect": {
                         "type": "shadow",
                         "shadowType": "outer",
-                        "color": "#FF980055",
+                        "color": "$accentGlow",
                         "offset": {
                           "x": 0,
-                          "y": 6
+                          "y": 4
                         },
-                        "blur": 24
+                        "blur": 20
                       },
                       "gap": "$spacing-sm",
                       "justifyContent": "center",
@@ -2527,8 +2696,9 @@
                           "fill": "#000000",
                           "content": "Iniciar",
                           "fontFamily": "Poppins",
-                          "fontSize": 17,
-                          "fontWeight": "700"
+                          "fontSize": 16,
+                          "fontWeight": "700",
+                          "letterSpacing": 0.2
                         }
                       ]
                     }
@@ -24651,7 +24821,7 @@
       "id": "S85Zfj",
       "x": 2718,
       "y": 2856,
-      "name": "Guardar como ruta (sheet)",
+      "name": "3 - Guardar como ruta (sheet)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -25317,7 +25487,7 @@
       "id": "rc0EQ",
       "x": 2265,
       "y": 2856,
-      "name": "Sub-listado categoría (Comida)",
+      "name": "2a - Sub-listado categoría (Comida)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -32209,6 +32379,3882 @@
           "icon": "wrench",
           "library": "lucide",
           "fill": "#E8A030"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "V34v1h",
+      "x": 453,
+      "y": 2856,
+      "name": "1b - Detalles de ruta",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$bgPrimary",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "goPLb",
+          "x": 0,
+          "y": 0,
+          "name": "Map",
+          "width": 393,
+          "height": 177,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.4,
+              "height": 1.4
+            },
+            "colors": [
+              {
+                "color": "#1E2A1E",
+                "position": 0
+              },
+              {
+                "color": "#141414",
+                "position": 0.5
+              },
+              {
+                "color": "#0D1117",
+                "position": 1
+              }
+            ],
+            "center": {
+              "y": 0.4
+            }
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "k4ldUV",
+              "x": 0,
+              "y": 0,
+              "name": "Road",
+              "geometry": "M0 70c120 15 230-15 393 25",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "#2A3A2A",
+              "strokeWidth": 1.5
+            },
+            {
+              "type": "path",
+              "id": "Q7TAl",
+              "x": 0,
+              "y": 0,
+              "name": "Route Glow",
+              "geometry": "M50 100c90-20 125-52 195-64 70-12 103-18 139-24",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "#FF98003B",
+              "strokeWidth": 14,
+              "strokeLinecap": "round"
+            },
+            {
+              "type": "path",
+              "id": "z8D0N",
+              "x": 0,
+              "y": 0,
+              "name": "Route",
+              "geometry": "M50 100c90-20 125-52 195-64 70-12 103-18 139-24",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "$accent",
+              "strokeWidth": 5,
+              "strokeLinecap": "round"
+            },
+            {
+              "id": "YSigp",
+              "type": "ref",
+              "ref": "e2e7H",
+              "name": "Pin Inicio",
+              "x": 34,
+              "y": 84
+            },
+            {
+              "type": "frame",
+              "id": "ubYbS",
+              "x": 16,
+              "y": 46,
+              "name": "Back",
+              "width": 44,
+              "height": 44,
+              "fill": "#242424CC",
+              "cornerRadius": 22,
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "jhMk1",
+                  "name": "chev",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$textPrimary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "deISR",
+          "x": 0,
+          "y": 117,
+          "name": "Sheet",
+          "clip": true,
+          "width": 393,
+          "fill": "$bgGradientEnd",
+          "cornerRadius": 28,
+          "stroke": "$cardBorder",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#000000AA",
+            "offset": {
+              "x": 0,
+              "y": -10
+            },
+            "blur": 28
+          },
+          "layout": "vertical",
+          "gap": 14,
+          "padding": [
+            18,
+            16,
+            24,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "THLwE",
+              "name": "Grab",
+              "width": "fill_container",
+              "height": 6,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 3,
+                  "id": "heUyY",
+                  "name": "bar",
+                  "fill": "$hairline",
+                  "width": 40,
+                  "height": 5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VmbpL",
+              "name": "Sheet Header",
+              "width": "fill_container",
+              "gap": 8,
+              "padding": [
+                2,
+                2,
+                4,
+                2
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "w12nu",
+                  "name": "hcol",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "s1iz8v",
+                      "name": "hTitle",
+                      "fill": "$textPrimary",
+                      "content": "Detalles de ruta",
+                      "fontFamily": "Poppins",
+                      "fontSize": 17,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "qQXHL",
+                      "name": "hSub",
+                      "fill": "$textMuted",
+                      "content": "Bogotá → Villa de Leyva",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "NICJT",
+                  "name": "Close",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$bgCard",
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "OrRvn",
+                      "name": "chev",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "BEFeC",
+              "name": "Stats Row",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "m3f4k",
+                  "name": "pill 248 km",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "sRPoF",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "route",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "NzkLQ",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "248 km",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "aeMPy",
+                  "name": "pill 4h 10",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "zFT3G",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "timer",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Q03DHY",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "4h 10",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "PUNhi",
+                  "name": "pill ×1",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Mg1Sf",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "fuel",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "g7RYfS",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "×1",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "W9wuH",
+                  "name": "pill +1200",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "TNje0",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "mountain",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "VwxTZ",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "+1200",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VjpuD",
+              "name": "Opciones Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "x6rftw",
+                  "name": "Opciones de ruta Card",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "gap": "$spacing-lg",
+                  "padding": "$spacing-lg",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "A32GE",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kyDEh",
+                          "name": "Header Left",
+                          "gap": "$spacing-sm",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "sLW6k",
+                              "name": "Sliders Icon",
+                              "width": 18,
+                              "height": 18,
+                              "icon": "sliders-horizontal",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "wGPy6",
+                              "name": "Title",
+                              "fill": "$textPrimary",
+                              "content": "Opciones de ruta",
+                              "fontFamily": "Poppins",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon",
+                          "id": "xHuVz",
+                          "name": "Chevron",
+                          "width": 20,
+                          "height": 20,
+                          "icon": "chevron-up",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "I4LR52",
+                      "name": "Header Divider",
+                      "width": "fill_container",
+                      "height": 1,
+                      "fill": "$hairline"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TmNdJ",
+                      "name": "Action Buttons",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "l6jJz",
+                          "name": "Invertir Button",
+                          "width": "fill_container",
+                          "fill": "$bgGradientEnd",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$hairline",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": "$spacing-sm",
+                          "padding": "$spacing-md",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "eSrYd",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "arrow-up-down",
+                              "library": "lucide",
+                              "fill": "$textSecondary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "t8WDAJ",
+                              "name": "Label",
+                              "fill": "$textSecondary",
+                              "content": "Invertir",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Ktf8b",
+                          "name": "Optimizar Button",
+                          "width": "fill_container",
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "effect": {
+                            "type": "shadow",
+                            "shadowType": "outer",
+                            "enabled": false,
+                            "color": "#00000000"
+                          },
+                          "gap": "$spacing-sm",
+                          "padding": "$spacing-md",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Pzubt",
+                              "name": "Icon",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "wand-sparkles",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            },
+                            {
+                              "type": "text",
+                              "id": "SmcHh",
+                              "name": "Label",
+                              "fill": "$accent",
+                              "content": "Optimizar",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nI5bH",
+                      "name": "Ida y vuelta Row",
+                      "width": "fill_container",
+                      "padding": [
+                        2,
+                        0
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "G1CaN",
+                          "name": "Label Group",
+                          "layout": "vertical",
+                          "gap": 2,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SSBgf",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Ida y vuelta",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "aAptE",
+                              "name": "Sublabel",
+                              "fill": "$textMuted",
+                              "content": "Vuelve al punto de inicio",
+                              "fontFamily": "Poppins",
+                              "fontSize": 11
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Du0Ax",
+                          "name": "Switch",
+                          "width": 46,
+                          "height": 28,
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 90,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "$accentGradientStart",
+                                "position": 0
+                              },
+                              {
+                                "color": "$accentGradientEnd",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "cornerRadius": "$radius-pill",
+                          "padding": 3,
+                          "justifyContent": "end",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "ellipse",
+                              "id": "Ge4Y4",
+                              "name": "Thumb",
+                              "fill": "$textPrimary",
+                              "width": 22,
+                              "height": 22
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Hqwj0",
+                      "name": "Evitar Section",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": "$spacing-sm",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ppn8P",
+                          "name": "Evitar Label",
+                          "fill": "$textMuted",
+                          "content": "EVITAR",
+                          "fontFamily": "Poppins",
+                          "fontSize": 11,
+                          "fontWeight": "600",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iybb9",
+                          "name": "Evitar Options",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Z4MsVR",
+                              "name": "Row Peajes",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "OOebO",
+                                  "name": "Label",
+                                  "fill": "$textPrimary",
+                                  "content": "Peajes",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "v9LVT2",
+                                  "name": "Switch",
+                                  "width": 46,
+                                  "height": 28,
+                                  "fill": {
+                                    "type": "gradient",
+                                    "gradientType": "linear",
+                                    "enabled": true,
+                                    "rotation": 90,
+                                    "size": {
+                                      "height": 1
+                                    },
+                                    "colors": [
+                                      {
+                                        "color": "$accentGradientStart",
+                                        "position": 0
+                                      },
+                                      {
+                                        "color": "$accentGradientEnd",
+                                        "position": 1
+                                      }
+                                    ]
+                                  },
+                                  "cornerRadius": 999,
+                                  "padding": 3,
+                                  "justifyContent": "end",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "G2qsq",
+                                      "name": "Thumb",
+                                      "fill": "#FFFFFF",
+                                      "width": 22,
+                                      "height": 22
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "b1RhTw",
+                              "name": "sep",
+                              "fill": "$cardBorder",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kD4UK",
+                              "name": "Row Autopistas",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "c59NSb",
+                                  "name": "Label",
+                                  "fill": "$textPrimary",
+                                  "content": "Autopistas",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "MtGf2",
+                                  "name": "Switch",
+                                  "width": 46,
+                                  "height": 28,
+                                  "fill": "$hairline",
+                                  "cornerRadius": 999,
+                                  "padding": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "j4bd0j",
+                                      "name": "Thumb",
+                                      "fill": "#FFFFFF",
+                                      "width": 22,
+                                      "height": 22
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "LmrFs",
+                              "name": "sep",
+                              "fill": "$cardBorder",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Va86p",
+                              "name": "Row Ferries",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "pcPWw",
+                                  "name": "Label",
+                                  "fill": "$textPrimary",
+                                  "content": "Ferries",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "nZknw",
+                                  "name": "Switch",
+                                  "width": 46,
+                                  "height": 28,
+                                  "fill": "$hairline",
+                                  "cornerRadius": 999,
+                                  "padding": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "myx1Q",
+                                      "name": "Thumb",
+                                      "fill": "#FFFFFF",
+                                      "width": 22,
+                                      "height": 22
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "cd1Oh",
+                              "name": "sep",
+                              "fill": "$cardBorder",
+                              "width": "fill_container",
+                              "height": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "pm0gY",
+                              "name": "Row Destapado",
+                              "width": "fill_container",
+                              "padding": [
+                                8,
+                                0
+                              ],
+                              "justifyContent": "space_between",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "DRAJs",
+                                  "name": "Label",
+                                  "fill": "$textPrimary",
+                                  "content": "Destapado",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 14,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "JuvWY",
+                                  "name": "Switch",
+                                  "width": 46,
+                                  "height": 28,
+                                  "fill": "$hairline",
+                                  "cornerRadius": 999,
+                                  "padding": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "ellipse",
+                                      "id": "a1kDL",
+                                      "name": "Thumb",
+                                      "fill": "#FFFFFF",
+                                      "width": 22,
+                                      "height": 22
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uVZwu",
+              "name": "Collapse Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cesvC",
+                  "name": "Autonomía Row",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "mWl6j",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "W7zoGU",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "Fl7XL",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "fuel",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "sA6as",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Autonomía",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "VimB8",
+                      "name": "Value",
+                      "gap": "$spacing-sm",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "WYuCu",
+                          "name": "Amount",
+                          "gap": 3,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "OQmZf",
+                              "name": "Num",
+                              "fill": "$textPrimary",
+                              "content": "312",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "o0BVr",
+                              "name": "Unit",
+                              "fill": "$textSecondary",
+                              "content": "km",
+                              "fontFamily": "Poppins",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tyxYL",
+                          "name": "Laps Pill",
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-pill",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "padding": [
+                            "$spacing-xs",
+                            "$spacing-sm"
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xSw4b",
+                              "name": "Laps",
+                              "fill": "$accent",
+                              "content": "×1",
+                              "fontFamily": "Poppins",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "DvKMZ",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "xGS5N",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "r5IY0T",
+                  "name": "Elevación Row",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s5EMNc",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Shhq3",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "X2fYi",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "mountain",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "sR0cu",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Elevación",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "LcfTs",
+                      "name": "Value",
+                      "gap": 3,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sVURB",
+                          "name": "Num",
+                          "fill": "$textPrimary",
+                          "content": "+1200",
+                          "fontFamily": "Poppins",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZcicW",
+                          "name": "Unit",
+                          "fill": "$textSecondary",
+                          "content": "m",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "o6rHu",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "lysM5",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "CKtSX",
+      "x": 906,
+      "y": 2856,
+      "name": "1c - Detalles (Autonomía abierta)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$bgPrimary",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "YE7ab",
+          "x": 0,
+          "y": 0,
+          "name": "Map",
+          "width": 393,
+          "height": 177,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.4,
+              "height": 1.4
+            },
+            "colors": [
+              {
+                "color": "#1E2A1E",
+                "position": 0
+              },
+              {
+                "color": "#141414",
+                "position": 0.5
+              },
+              {
+                "color": "#0D1117",
+                "position": 1
+              }
+            ],
+            "center": {
+              "y": 0.4
+            }
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "bv9qF",
+              "x": 0,
+              "y": 0,
+              "name": "Road",
+              "geometry": "M0 70c120 15 230-15 393 25",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "#2A3A2A",
+              "strokeWidth": 1.5
+            },
+            {
+              "type": "path",
+              "id": "uJutF",
+              "x": 0,
+              "y": 0,
+              "name": "Route Glow",
+              "geometry": "M50 100c90-20 125-52 195-64 70-12 103-18 139-24",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "#FF98003B",
+              "strokeWidth": 14,
+              "strokeLinecap": "round"
+            },
+            {
+              "type": "path",
+              "id": "r6Jrx",
+              "x": 0,
+              "y": 0,
+              "name": "Route",
+              "geometry": "M50 100c90-20 125-52 195-64 70-12 103-18 139-24",
+              "viewBox": [
+                0,
+                0,
+                393,
+                177
+              ],
+              "width": 393,
+              "height": 170,
+              "stroke": "$accent",
+              "strokeWidth": 5,
+              "strokeLinecap": "round"
+            },
+            {
+              "id": "ax7t9",
+              "type": "ref",
+              "ref": "e2e7H",
+              "name": "Pin Inicio",
+              "x": 34,
+              "y": 84
+            },
+            {
+              "type": "frame",
+              "id": "Bxzgm",
+              "x": 16,
+              "y": 46,
+              "name": "Back",
+              "width": 44,
+              "height": 44,
+              "fill": "#242424CC",
+              "cornerRadius": 22,
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "dG3ed",
+                  "name": "chev",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$textPrimary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "zLI4c",
+          "x": 0,
+          "y": 141,
+          "name": "Sheet",
+          "clip": true,
+          "width": 393,
+          "fill": "$bgGradientEnd",
+          "cornerRadius": 28,
+          "stroke": "$cardBorder",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#000000AA",
+            "offset": {
+              "x": 0,
+              "y": -10
+            },
+            "blur": 28
+          },
+          "layout": "vertical",
+          "gap": 14,
+          "padding": [
+            18,
+            16,
+            24,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Y9N1PK",
+              "name": "Grab",
+              "width": "fill_container",
+              "height": 6,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 3,
+                  "id": "QqjBC",
+                  "name": "bar",
+                  "fill": "$hairline",
+                  "width": 40,
+                  "height": 5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "VEVpi",
+              "name": "Sheet Header",
+              "width": "fill_container",
+              "gap": 8,
+              "padding": [
+                2,
+                2,
+                4,
+                2
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "JGctZ",
+                  "name": "hcol",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "IpWMU",
+                      "name": "hTitle",
+                      "fill": "$textPrimary",
+                      "content": "Detalles de ruta",
+                      "fontFamily": "Poppins",
+                      "fontSize": 17,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "KNTqO",
+                      "name": "hSub",
+                      "fill": "$textMuted",
+                      "content": "Bogotá → Villa de Leyva",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "hHQhO",
+                  "name": "Close",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$bgCard",
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "bONIk",
+                      "name": "chev",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "XAlRL",
+              "name": "Stats Row",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "XOtfA",
+                  "name": "pill 248 km",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "ivWCc",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "route",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "xlY2b",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "248 km",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "s2411J",
+                  "name": "pill 4h 10",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "NevhB",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "timer",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DN7Bc",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "4h 10",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "U3KR6W",
+                  "name": "pill ×1",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "crE8D",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "fuel",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "EUwgT",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "×1",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "eDoba",
+                  "name": "pill +1200",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Q1Vwp",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "mountain",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "sSe3s",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "+1200",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Fn3SN",
+              "name": "Opciones Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "UpCgW",
+                  "name": "Opciones Row (collapsed)",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cueSM",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FxNG7",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "tDwph",
+                              "name": "ic",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "sliders-horizontal",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "LLRZ9",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Opciones de ruta",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "MvLuy",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "AZIST",
+                          "name": "chev",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xsZc0",
+              "name": "Collapse Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "vS2Wi",
+                  "name": "Autonomía Card",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "gap": "$spacing-lg",
+                  "padding": "$spacing-lg",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "cGPZu",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "FZ6Ob",
+                          "name": "Left",
+                          "gap": "$spacing-md",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Fjms7",
+                              "name": "Icon Chip",
+                              "width": 38,
+                              "height": 38,
+                              "fill": "$accentDim",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$accentDimBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "tr1c4",
+                                  "name": "ic",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "fuel",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "Zxihv",
+                              "name": "Title",
+                              "fill": "$textPrimary",
+                              "content": "Autonomía",
+                              "fontFamily": "Poppins",
+                              "fontSize": 16,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "hPBZr",
+                          "name": "Chevron Chip",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$bgPrimary",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$hairline",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "JMT4x",
+                              "name": "chev",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "chevron-up",
+                              "library": "lucide",
+                              "fill": "$iconMuted"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qNmrr",
+                      "name": "Moto Slot",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "unBOF",
+                          "name": "Vehicle Summary Card",
+                          "width": "fill_container",
+                          "fill": "$bgPrimary",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$cardBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": "$spacing-md",
+                          "padding": "$spacing-md",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "S4YnWC",
+                              "name": "Icon Chip",
+                              "width": 44,
+                              "height": 44,
+                              "fill": "$accentDim",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$accentDimBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "iYpVt",
+                                  "name": "Bike Icon",
+                                  "width": 24,
+                                  "height": 24,
+                                  "icon": "bike",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "tcCT9",
+                              "name": "Info",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$spacing-xs",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "NH1m6",
+                                  "name": "Vehicle Name",
+                                  "fill": "$textPrimary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Yamaha MT-03",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 16,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "RCW8n",
+                                  "name": "Spec Line",
+                                  "fill": "$textSecondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Tanque 14 L · 28 km/L",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 13
+                                }
+                              ]
+                            },
+                            {
+                              "type": "icon",
+                              "id": "BGudk",
+                              "name": "Chevron",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "chevron-right",
+                              "library": "lucide",
+                              "fill": "$iconMuted"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "oy8w0",
+                      "name": "Alcance",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "NX5DY",
+                          "name": "lbl",
+                          "fill": "$textMuted",
+                          "content": "ALCANCE ESTIMADO",
+                          "fontFamily": "Poppins",
+                          "fontSize": 11,
+                          "fontWeight": "700",
+                          "letterSpacing": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Amqeh",
+                          "name": "numRow",
+                          "gap": 4,
+                          "alignItems": "end",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "o4BXWD",
+                              "name": "num",
+                              "fill": "$textPrimary",
+                              "content": "312",
+                              "fontFamily": "Poppins",
+                              "fontSize": 40,
+                              "fontWeight": "800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OnxWo",
+                              "name": "unit",
+                              "fill": "$textSecondary",
+                              "content": "km",
+                              "fontFamily": "Poppins",
+                              "fontSize": 16,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "anjve",
+                          "name": "Gauge",
+                          "width": "fill_container",
+                          "height": 12,
+                          "fill": "$hairline",
+                          "cornerRadius": 999,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": [
+                                6,
+                                0,
+                                0,
+                                6
+                              ],
+                              "id": "AfmV3",
+                              "x": 0,
+                              "y": 0,
+                              "name": "fill",
+                              "fill": "$accent",
+                              "width": 261,
+                              "height": 12
+                            },
+                            {
+                              "type": "rectangle",
+                              "id": "mPgo0",
+                              "x": 38,
+                              "y": 0,
+                              "name": "reserveMark",
+                              "fill": "#FFFFFF",
+                              "width": 2,
+                              "height": 12
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Oi4kX",
+                          "name": "labels",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IAHZG",
+                              "name": "reserva",
+                              "fill": "$error",
+                              "content": "Reserva 12%",
+                              "fontFamily": "Poppins",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "IJfk7",
+                              "name": "total",
+                              "fill": "$textSecondary",
+                              "content": "248 / 312 km",
+                              "fontFamily": "Poppins",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "GtE3H",
+                      "name": "Tanqueo Slot",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "EZG7F",
+                          "name": "Suggested Fuel Card",
+                          "width": "fill_container",
+                          "fill": "$bgCard",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "$cardBorder",
+                          "strokeWidth": 1,
+                          "gap": "$spacing-md",
+                          "padding": "$spacing-md",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "k5Z1KP",
+                              "name": "Icon Chip",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$accentDim",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$accentDimBorder",
+                              "strokeWidth": 1,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "XMWtM",
+                                  "name": "Fuel Icon",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "fuel",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "YICIP",
+                              "name": "Text Column",
+                              "width": "fill_container",
+                              "layout": "vertical",
+                              "gap": "$spacing-xs",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "zVgj2",
+                                  "name": "Title",
+                                  "fill": "$textPrimary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "1 tanqueo sugerido",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 15,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "akrR0",
+                                  "name": "Subtitle",
+                                  "fill": "$textSecondary",
+                                  "textGrowth": "fixed-width",
+                                  "width": "fill_container",
+                                  "content": "Terpel La Calera · km 32",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 12
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FAd4C",
+                              "name": "Ver Button",
+                              "cornerRadius": "$radius-pill",
+                              "stroke": "$accent",
+                              "strokeWidth": 1,
+                              "padding": [
+                                "$spacing-sm",
+                                "$spacing-lg"
+                              ],
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "vlA6g",
+                                  "name": "Ver Label",
+                                  "fill": "$accent",
+                                  "content": "Ver",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "fWpm6",
+                  "name": "Elevación Row",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "s9xRq1",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "s3Jk6",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "FNyvF",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "mountain",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "OsAXL",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Elevación",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WXkuj",
+                      "name": "Value",
+                      "gap": 3,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "mJWPZ",
+                          "name": "Num",
+                          "fill": "$textPrimary",
+                          "content": "+1200",
+                          "fontFamily": "Poppins",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "pvWHk",
+                          "name": "Unit",
+                          "fill": "$textSecondary",
+                          "content": "m",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "B7Zyz",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "sCd40",
+                          "name": "Chevron",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "HbdjD",
+      "x": 1359,
+      "y": 2856,
+      "name": "1d - Detalles (Elevación abierta)",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$bgPrimary",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "a7H1K",
+          "x": 0,
+          "y": 0,
+          "name": "Map",
+          "width": 393,
+          "height": 154,
+          "fill": {
+            "type": "gradient",
+            "gradientType": "radial",
+            "enabled": true,
+            "rotation": 0,
+            "size": {
+              "width": 1.4,
+              "height": 1.4
+            },
+            "colors": [
+              {
+                "color": "#1E2A1E",
+                "position": 0
+              },
+              {
+                "color": "#141414",
+                "position": 0.5
+              },
+              {
+                "color": "#0D1117",
+                "position": 1
+              }
+            ],
+            "center": {
+              "y": 0.4
+            }
+          },
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "CTW5r",
+              "x": 0,
+              "y": 0,
+              "name": "Road",
+              "geometry": "M0 60c120 12 230-12 393 20",
+              "viewBox": [
+                0,
+                0,
+                393,
+                154
+              ],
+              "width": 393,
+              "height": 154,
+              "stroke": "#2A3A2A",
+              "strokeWidth": 1.5
+            },
+            {
+              "type": "path",
+              "id": "KXmWZ",
+              "x": 0,
+              "y": 0,
+              "name": "Route Glow",
+              "geometry": "M50 82c80-16 125-42 195-52 70-10 103-14 139-20",
+              "viewBox": [
+                0,
+                0,
+                393,
+                154
+              ],
+              "width": 393,
+              "height": 154,
+              "stroke": "#FF98003B",
+              "strokeWidth": 14,
+              "strokeLinecap": "round"
+            },
+            {
+              "type": "path",
+              "id": "nOkpt",
+              "x": 0,
+              "y": 0,
+              "name": "Route",
+              "geometry": "M50 82c80-16 125-42 195-52 70-10 103-14 139-20",
+              "viewBox": [
+                0,
+                0,
+                393,
+                154
+              ],
+              "width": 393,
+              "height": 154,
+              "stroke": "$accent",
+              "strokeWidth": 5,
+              "strokeLinecap": "round"
+            },
+            {
+              "id": "V3F0pO",
+              "type": "ref",
+              "ref": "e2e7H",
+              "name": "Pin Inicio",
+              "x": 34,
+              "y": 66
+            },
+            {
+              "type": "frame",
+              "id": "qJSlw",
+              "x": 16,
+              "y": 46,
+              "name": "Back",
+              "width": 44,
+              "height": 44,
+              "fill": "#242424CC",
+              "cornerRadius": 22,
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "Q7SKpk",
+                  "name": "chev",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "chevron-left",
+                  "library": "lucide",
+                  "fill": "$textPrimary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "htPJh",
+          "x": 0,
+          "y": 94,
+          "name": "Sheet",
+          "clip": true,
+          "width": 393,
+          "fill": "$bgGradientEnd",
+          "cornerRadius": 28,
+          "stroke": "$cardBorder",
+          "strokeWidth": 1,
+          "strokeAlignment": "inner",
+          "effect": {
+            "type": "shadow",
+            "shadowType": "outer",
+            "color": "#000000AA",
+            "offset": {
+              "x": 0,
+              "y": -10
+            },
+            "blur": 28
+          },
+          "layout": "vertical",
+          "gap": 14,
+          "padding": [
+            18,
+            16,
+            24,
+            16
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "Kz99g",
+              "name": "Grab",
+              "width": "fill_container",
+              "height": 6,
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "cornerRadius": 3,
+                  "id": "CotdG",
+                  "name": "bar",
+                  "fill": "$hairline",
+                  "width": 40,
+                  "height": 5
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "M3zYHo",
+              "name": "Sheet Header",
+              "width": "fill_container",
+              "gap": 8,
+              "padding": [
+                2,
+                2,
+                4,
+                2
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "i5703",
+                  "name": "hcol",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 2,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xqxBL",
+                      "name": "hTitle",
+                      "fill": "$textPrimary",
+                      "content": "Detalles de ruta",
+                      "fontFamily": "Poppins",
+                      "fontSize": 17,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "j2RzYT",
+                      "name": "hSub",
+                      "fill": "$textMuted",
+                      "content": "Bogotá → Villa de Leyva",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "rh3tv",
+                  "name": "Close",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$bgCard",
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "smxQf",
+                      "name": "chev",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-down",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Bxlh7",
+              "name": "Stats Row",
+              "width": "fill_container",
+              "gap": 8,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "J6Q2jU",
+                  "name": "pill 248 km",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "YQeJA",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "route",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "yG1J2",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "248 km",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "zkNrX",
+                  "name": "pill 4h 10",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "XHcXw",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "timer",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "phoqJ",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "4h 10",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "gZbNM",
+                  "name": "pill ×1",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "sYPkt",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "fuel",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "YRZ4e",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "×1",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wzwXt",
+                  "name": "pill +1200",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": 999,
+                  "gap": 6,
+                  "padding": [
+                    7,
+                    12
+                  ],
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "G36FeO",
+                      "name": "ic",
+                      "width": 14,
+                      "height": 14,
+                      "icon": "mountain",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
+                    },
+                    {
+                      "type": "text",
+                      "id": "PsLFS",
+                      "name": "txt",
+                      "fill": "$textPrimary",
+                      "content": "+1200",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z3LdJM",
+              "name": "Opciones Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Yvj1b",
+                  "name": "Opciones Row (collapsed)",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "XhcRa",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "XDuKN",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "cbquD",
+                              "name": "ic",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "sliders-horizontal",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "JshSn",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Opciones de ruta",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "G4r9W",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "dHtyh",
+                          "name": "chev",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "pAobq",
+              "name": "Collapse Slot",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "k1Tl8E",
+                  "name": "Autonomía Row (collapsed)",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": [
+                    "$spacing-md",
+                    "$spacing-lg"
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "w9CjC",
+                      "name": "Left",
+                      "width": "fill_container",
+                      "gap": "$spacing-md",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "zbZcv",
+                          "name": "Icon Chip",
+                          "width": 38,
+                          "height": 38,
+                          "fill": "$accentDim",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$accentDimBorder",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "X0qZj",
+                              "name": "ic",
+                              "width": 20,
+                              "height": 20,
+                              "icon": "fuel",
+                              "library": "lucide",
+                              "fill": "$accent"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "VkEpi",
+                          "name": "Title",
+                          "fill": "$textPrimary",
+                          "content": "Autonomía",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "VeECI",
+                      "name": "Value",
+                      "fill": "$textSecondary",
+                      "content": "312 km · ×1",
+                      "fontFamily": "Poppins",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dk1qS",
+                      "name": "Chevron Chip",
+                      "width": 28,
+                      "height": 28,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "VfiGk",
+                          "name": "chev",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-down",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "pbsTe",
+                  "name": "Elevación Card",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "gap": "$spacing-lg",
+                  "padding": "$spacing-lg",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "z1PqW8",
+                      "name": "Header",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "aElgW",
+                          "name": "Left",
+                          "gap": "$spacing-md",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "beXwD",
+                              "name": "Icon Chip",
+                              "width": 38,
+                              "height": 38,
+                              "fill": "$accentDim",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$accentDimBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "Ss87u",
+                                  "name": "ic",
+                                  "width": 20,
+                                  "height": 20,
+                                  "icon": "mountain",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "GO23W",
+                              "name": "Title",
+                              "fill": "$textPrimary",
+                              "content": "Perfil de elevación",
+                              "fontFamily": "Poppins",
+                              "fontSize": 16,
+                              "fontWeight": "700"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rtvae",
+                          "name": "Chevron Chip",
+                          "width": 28,
+                          "height": 28,
+                          "fill": "$bgPrimary",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$hairline",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "y0dS1",
+                              "name": "chev",
+                              "width": 16,
+                              "height": 16,
+                              "icon": "chevron-up",
+                              "library": "lucide",
+                              "fill": "$iconMuted"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ne2XQ",
+                      "name": "Chart",
+                      "clip": true,
+                      "width": "fill_container",
+                      "height": 160,
+                      "fill": "$bgPrimary",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$hairline",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "path",
+                          "id": "PsOlL",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Area",
+                          "geometry": "M8 125l37-10 30-15 30-20 30-20 25-14 25 24 25-10 30 35 30-15 28 32 22-4 0 52-312 0z",
+                          "viewBox": [
+                            0,
+                            0,
+                            329,
+                            160
+                          ],
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 90,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "#3DA5D955",
+                                "position": 0
+                              },
+                              {
+                                "color": "#3DA5D900",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "width": 329,
+                          "height": 160
+                        },
+                        {
+                          "type": "path",
+                          "id": "ki73Z",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Line",
+                          "geometry": "M8 125l37-10 30-15 30-20 30-20 25-14 25 24 25-10 30 35 30-15 28 32 22-4",
+                          "viewBox": [
+                            0,
+                            0,
+                            329,
+                            160
+                          ],
+                          "width": 329,
+                          "height": 160,
+                          "stroke": "#3DA5D9",
+                          "strokeWidth": 2.5,
+                          "strokeLinejoin": "round",
+                          "strokeLinecap": "round"
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "g36DRS",
+                          "x": 154,
+                          "y": 40,
+                          "name": "Peak",
+                          "fill": "#FFFFFF",
+                          "width": 10,
+                          "height": 10,
+                          "stroke": "#3DA5D9",
+                          "strokeWidth": 3,
+                          "strokeAlignment": "outer"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "oedGz",
+                          "x": 14,
+                          "y": 132,
+                          "name": "labels",
+                          "width": 301,
+                          "gap": 8,
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "mhiqL",
+                              "name": "a",
+                              "fill": "$textMuted",
+                              "content": "A · Bogotá",
+                              "fontFamily": "Poppins",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "text",
+                              "id": "heQTI",
+                              "name": "max",
+                              "fill": "$textSecondary",
+                              "content": "máx 2.940 m",
+                              "fontFamily": "Poppins",
+                              "fontSize": 11,
+                              "fontWeight": "600"
+                            },
+                            {
+                              "type": "text",
+                              "id": "LIlqW",
+                              "name": "b",
+                              "fill": "$textMuted",
+                              "content": "B",
+                              "fontFamily": "Poppins",
+                              "fontSize": 11,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uy7HD",
+                      "name": "Stat Slot",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "ckRtI",
+                          "name": "Stat Cards Row",
+                          "width": "fill_container",
+                          "gap": "$spacing-sm",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "zZIya",
+                              "name": "Stat Card gain",
+                              "width": "fill_container",
+                              "fill": "$bgPrimary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$cardBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": "$spacing-xs",
+                              "padding": "$spacing-md",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "vHrQF",
+                                  "name": "Value Row",
+                                  "gap": "$spacing-xs",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "PozMd",
+                                      "name": "Trend Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "arrow-up",
+                                      "library": "lucide",
+                                      "fill": "$check"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "f5gzt",
+                                      "name": "Value",
+                                      "fill": "$check",
+                                      "content": "1200",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 22,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "m2BjH",
+                                  "name": "Label",
+                                  "fill": "$textMuted",
+                                  "content": "GANANCIA m",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 10,
+                                  "fontWeight": "500",
+                                  "letterSpacing": 0.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "KjdaR",
+                              "name": "Stat Card loss",
+                              "width": "fill_container",
+                              "fill": "$bgPrimary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$cardBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": "$spacing-xs",
+                              "padding": "$spacing-md",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "hr8NJ",
+                                  "name": "Value Row",
+                                  "gap": "$spacing-xs",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "W6Ylbn",
+                                      "name": "Trend Icon",
+                                      "width": 16,
+                                      "height": 16,
+                                      "icon": "arrow-down",
+                                      "library": "lucide",
+                                      "fill": "$error"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "k7RQb",
+                                      "name": "Value",
+                                      "fill": "$error",
+                                      "content": "800",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 22,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "FAzU0",
+                                  "name": "Label",
+                                  "fill": "$textMuted",
+                                  "content": "PÉRDIDA m",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 10,
+                                  "fontWeight": "500",
+                                  "letterSpacing": 0.5
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "T5x9PO",
+                              "name": "Stat Card max",
+                              "width": "fill_container",
+                              "fill": "$bgPrimary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$cardBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "layout": "vertical",
+                              "gap": "$spacing-xs",
+                              "padding": "$spacing-md",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "WHzmq",
+                                  "name": "Value Row",
+                                  "gap": "$spacing-xs",
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "text",
+                                      "id": "j3HxOs",
+                                      "name": "Value",
+                                      "fill": "$textPrimary",
+                                      "content": "2.940",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 22,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "S6qeQY",
+                                  "name": "Label",
+                                  "fill": "$textMuted",
+                                  "content": "MÁX m",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 10,
+                                  "fontWeight": "500",
+                                  "letterSpacing": 0.5
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Lie5e",
+                      "name": "Info Slot",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vD4FX",
+                          "name": "Info Strip",
+                          "width": "fill_container",
+                          "fill": "#3DA5D914",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "#3DA5D933",
+                          "strokeWidth": 1,
+                          "strokeAlignment": "inner",
+                          "gap": "$spacing-sm",
+                          "padding": "$spacing-md",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "T8ZDL4",
+                              "name": "Icon",
+                              "width": 20,
+                              "height": 20,
+                              "justifyContent": "center",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "iS0GP",
+                                  "name": "Trending Up",
+                                  "width": 18,
+                                  "height": 18,
+                                  "icon": "trending-up",
+                                  "library": "lucide",
+                                  "fill": "$stopRest"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "XppHD",
+                              "name": "Hint",
+                              "fill": "$textSecondary",
+                              "textGrowth": "fixed-width",
+                              "width": "fill_container",
+                              "content": "Tramo exigente km 90–140 (subida sostenida). Considera un descanso y tanqueo antes.",
+                              "lineHeight": 1.45,
+                              "fontFamily": "Poppins",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zI8sH",
+      "x": 1812,
+      "y": 2856,
+      "name": "2 - AddStop - Agregar parada",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$bgPrimary",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "QFyoO",
+          "name": "Status Bar",
+          "width": "fill_container",
+          "height": 54,
+          "padding": [
+            18,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "TKmCu",
+              "name": "time",
+              "fill": "$textPrimary",
+              "content": "9:41",
+              "fontFamily": "Poppins",
+              "fontSize": 15,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ECdyh",
+              "name": "right",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BlsMR",
+                  "name": "net",
+                  "fill": "$textPrimary",
+                  "content": "5G",
+                  "fontFamily": "Poppins",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "icon",
+                  "id": "cCfv6",
+                  "name": "batt",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$textPrimary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "l1ORT",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 18,
+          "padding": [
+            6,
+            20,
+            20,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "fWWzy",
+              "name": "Header",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PhGW7",
+                  "name": "Back",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$bgCard",
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Y8KjZp",
+                      "name": "chev",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-left",
+                      "library": "lucide",
+                      "fill": "$textPrimary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "J9aoM",
+                  "name": "title",
+                  "fill": "$textPrimary",
+                  "content": "Agregar parada",
+                  "fontFamily": "Poppins",
+                  "fontSize": 19,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tevTH",
+              "name": "Search",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$bgCard",
+              "cornerRadius": 14,
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ghLJB",
+                  "name": "mag",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "search",
+                  "library": "lucide",
+                  "fill": "$iconMuted"
+                },
+                {
+                  "type": "text",
+                  "id": "nSEo1",
+                  "name": "ph",
+                  "fill": "$textMuted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Buscar lugar o dirección…",
+                  "fontFamily": "Poppins",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y5QDeK",
+              "name": "Category Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q6uMb",
+                  "name": "catLabel",
+                  "fill": "$textMuted",
+                  "content": "POR CATEGORÍA",
+                  "fontFamily": "Poppins",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.2
+                },
+                {
+                  "type": "frame",
+                  "id": "W0zGni",
+                  "name": "Category List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aAfXO",
+                      "name": "Grid Row 1",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Cz3ZE",
+                          "name": "Gasolineras",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#E8A03014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#E8A03066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "k8ELi",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "fuel",
+                              "library": "lucide",
+                              "fill": "#E8A030"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vCbxv",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Gasolineras",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Fzsw9",
+                          "name": "Comida",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#E6C22914",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#E6C22966",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "qHfXZ",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "utensils",
+                              "library": "lucide",
+                              "fill": "#E6C229"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y6O3EZ",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Comida",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yWFl7",
+                      "name": "Grid Row 2",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cZAUo",
+                          "name": "Café",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#FF980014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#FF980066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "odAGZ",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "coffee",
+                              "library": "lucide",
+                              "fill": "#FF9800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "R7tkE",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Café",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GpgUJ",
+                          "name": "Turismo",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#9B59B614",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#9B59B666",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "KuhWA",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "camera",
+                              "library": "lucide",
+                              "fill": "#9B59B6"
+                            },
+                            {
+                              "type": "text",
+                              "id": "f9WCC",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Turismo",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xpI4A",
+                      "name": "Grid Row 3",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y1z9g",
+                          "name": "Mirador",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#4CAF5014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#4CAF5066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "GnXkL",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "telescope",
+                              "library": "lucide",
+                              "fill": "#4CAF50"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zSec7",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Mirador",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xacoA",
+                          "name": "Descanso",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#3DA5D914",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#3DA5D966",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "E6X6b",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "bed",
+                              "library": "lucide",
+                              "fill": "#3DA5D9"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ChcRf",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Descanso",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "HWh8o",
+                      "name": "Grid Row 4",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "vr8A7",
+                          "name": "spacer",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#00000000"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ]
     }
