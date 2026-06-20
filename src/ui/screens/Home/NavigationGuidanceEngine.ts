@@ -18,6 +18,8 @@ const NAV_ELEVATION_LOOKAHEAD_KM = 3;
 const NAV_ELEVATION_DELTA_THRESHOLD_M = 35;
 const NAV_CURVE_WARNING_KM = 0.8;
 const NAV_ARRIVAL_SOON_KM = 5;
+const NAV_SUGGESTION_MIN_VISIBLE_MS = 4500;
+const NAV_SUGGESTION_COOLDOWN_MS = 12000;
 
 export type NavSuggestionKind =
   | 'fuel'
@@ -59,7 +61,34 @@ export type NavigationGuidanceInput = {
   arrivalThresholdKm: number;
 };
 
+export type NavigationSuggestionLifecycleState = {
+  visible: NavSuggestion[];
+  enteredAtMsById: Record<string, number>;
+  cooldownUntilMsById: Record<string, number>;
+};
+
+export type NavigationSuggestionLifecycleInput = {
+  candidates: NavSuggestion[];
+  previous: NavigationSuggestionLifecycleState;
+  nowMs: number;
+  limit?: number;
+  minVisibleMs?: number;
+  cooldownMs?: number;
+};
+
+export type NavigationSuggestionLifecycleResult = {
+  suggestions: NavSuggestion[];
+  lifecycle: NavigationSuggestionLifecycleState;
+};
+
 type RankedNavSuggestion = NavSuggestion & { priority: number };
+
+export const createNavigationSuggestionLifecycleState =
+  (): NavigationSuggestionLifecycleState => ({
+    visible: [],
+    enteredAtMsById: {},
+    cooldownUntilMsById: {},
+  });
 
 export const stationDisplayName = (station: FuelStation): string =>
   station.brand || station.name;
@@ -241,10 +270,71 @@ export const buildNavigationSuggestions = ({
     }));
 };
 
+export const resolveNavigationSuggestionLifecycle = ({
+  candidates,
+  previous,
+  nowMs,
+  limit = NAV_SUGGESTION_LIMIT,
+  minVisibleMs = NAV_SUGGESTION_MIN_VISIBLE_MS,
+  cooldownMs = NAV_SUGGESTION_COOLDOWN_MS,
+}: NavigationSuggestionLifecycleInput): NavigationSuggestionLifecycleResult => {
+  const candidateById = new Map(
+    candidates.map((suggestion) => [suggestion.id, suggestion]),
+  );
+  const nextVisible: NavSuggestion[] = [];
+  const nextEnteredAtMsById: Record<string, number> = {};
+  const nextCooldownUntilMsById = Object.fromEntries(
+    Object.entries(previous.cooldownUntilMsById).filter(
+      ([, untilMs]) => untilMs > nowMs,
+    ),
+  );
+  const activeIds = new Set<string>();
+
+  previous.visible.forEach((previousSuggestion) => {
+    if (nextVisible.length >= limit) return;
+    const candidate = candidateById.get(previousSuggestion.id);
+    const enteredAtMs =
+      previous.enteredAtMsById[previousSuggestion.id] ?? nowMs;
+    const isStillWarm = nowMs - enteredAtMs < minVisibleMs;
+    if (!candidate && !isStillWarm) {
+      nextCooldownUntilMsById[previousSuggestion.id] = Math.max(
+        nextCooldownUntilMsById[previousSuggestion.id] ?? 0,
+        nowMs + cooldownMs,
+      );
+      return;
+    }
+
+    const suggestion = candidate ?? previousSuggestion;
+    nextVisible.push(suggestion);
+    nextEnteredAtMsById[suggestion.id] = enteredAtMs;
+    activeIds.add(suggestion.id);
+  });
+
+  candidates.forEach((candidate) => {
+    if (nextVisible.length >= limit || activeIds.has(candidate.id)) return;
+    const cooldownUntilMs = nextCooldownUntilMsById[candidate.id] ?? 0;
+    if (cooldownUntilMs > nowMs) return;
+    nextVisible.push(candidate);
+    nextEnteredAtMsById[candidate.id] = nowMs;
+    activeIds.add(candidate.id);
+  });
+
+  return {
+    suggestions: nextVisible,
+    lifecycle: {
+      visible: nextVisible,
+      enteredAtMsById: nextEnteredAtMsById,
+      cooldownUntilMsById: nextCooldownUntilMsById,
+    },
+  };
+};
+
 const NavigationGuidanceEngine = {
   buildNavigationSuggestions,
+  createNavigationSuggestionLifecycleState,
   findNearestFuelStation,
   formatGuidanceDistance,
+  resolveNavigationSuggestionLifecycle,
   stationDisplayName,
 };
 

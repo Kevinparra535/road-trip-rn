@@ -24821,7 +24821,7 @@
       "id": "S85Zfj",
       "x": 2718,
       "y": 2856,
-      "name": "Guardar como ruta (sheet)",
+      "name": "3 - Guardar como ruta (sheet)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -25487,7 +25487,7 @@
       "id": "rc0EQ",
       "x": 2265,
       "y": 2856,
-      "name": "Sub-listado categoría (Comida)",
+      "name": "2a - Sub-listado categoría (Comida)",
       "clip": true,
       "width": 393,
       "height": 852,
@@ -32385,7 +32385,7 @@
     {
       "type": "frame",
       "id": "V34v1h",
-      "x": 473,
+      "x": 453,
       "y": 2856,
       "name": "1b - Detalles de ruta",
       "clip": true,
@@ -33606,7 +33606,7 @@
     {
       "type": "frame",
       "id": "CKtSX",
-      "x": 946,
+      "x": 906,
       "y": 2856,
       "name": "1c - Detalles (Autonomía abierta)",
       "clip": true,
@@ -34680,7 +34680,7 @@
     {
       "type": "frame",
       "id": "HbdjD",
-      "x": 1419,
+      "x": 1359,
       "y": 2856,
       "name": "1d - Detalles (Elevación abierta)",
       "clip": true,
@@ -35774,6 +35774,672 @@
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "zI8sH",
+      "x": 1812,
+      "y": 2856,
+      "name": "2 - AddStop - Agregar parada",
+      "clip": true,
+      "width": 393,
+      "height": 852,
+      "fill": "$bgPrimary",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "QFyoO",
+          "name": "Status Bar",
+          "width": "fill_container",
+          "height": 54,
+          "padding": [
+            18,
+            24,
+            0,
+            24
+          ],
+          "justifyContent": "space_between",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "TKmCu",
+              "name": "time",
+              "fill": "$textPrimary",
+              "content": "9:41",
+              "fontFamily": "Poppins",
+              "fontSize": 15,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ECdyh",
+              "name": "right",
+              "gap": 6,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "BlsMR",
+                  "name": "net",
+                  "fill": "$textPrimary",
+                  "content": "5G",
+                  "fontFamily": "Poppins",
+                  "fontSize": 13,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "icon",
+                  "id": "cCfv6",
+                  "name": "batt",
+                  "width": 20,
+                  "height": 20,
+                  "icon": "battery-full",
+                  "library": "lucide",
+                  "fill": "$textPrimary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "l1ORT",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 18,
+          "padding": [
+            6,
+            20,
+            20,
+            20
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "fWWzy",
+              "name": "Header",
+              "width": "fill_container",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PhGW7",
+                  "name": "Back",
+                  "width": 36,
+                  "height": 36,
+                  "fill": "$bgCard",
+                  "cornerRadius": 18,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "Y8KjZp",
+                      "name": "chev",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-left",
+                      "library": "lucide",
+                      "fill": "$textPrimary"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "J9aoM",
+                  "name": "title",
+                  "fill": "$textPrimary",
+                  "content": "Agregar parada",
+                  "fontFamily": "Poppins",
+                  "fontSize": 19,
+                  "fontWeight": "700"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tevTH",
+              "name": "Search",
+              "width": "fill_container",
+              "height": 52,
+              "fill": "$bgCard",
+              "cornerRadius": 14,
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "gap": 10,
+              "padding": [
+                0,
+                16
+              ],
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon",
+                  "id": "ghLJB",
+                  "name": "mag",
+                  "width": 18,
+                  "height": 18,
+                  "icon": "search",
+                  "library": "lucide",
+                  "fill": "$iconMuted"
+                },
+                {
+                  "type": "text",
+                  "id": "nSEo1",
+                  "name": "ph",
+                  "fill": "$textMuted",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "Buscar lugar o dirección…",
+                  "fontFamily": "Poppins",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Y5QDeK",
+              "name": "Category Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q6uMb",
+                  "name": "catLabel",
+                  "fill": "$textMuted",
+                  "content": "POR CATEGORÍA",
+                  "fontFamily": "Poppins",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.2
+                },
+                {
+                  "type": "frame",
+                  "id": "W0zGni",
+                  "name": "Category List",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aAfXO",
+                      "name": "Grid Row 1",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Cz3ZE",
+                          "name": "Gasolineras",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#E8A03014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#E8A03066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "k8ELi",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "fuel",
+                              "library": "lucide",
+                              "fill": "#E8A030"
+                            },
+                            {
+                              "type": "text",
+                              "id": "vCbxv",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Gasolineras",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Fzsw9",
+                          "name": "Comida",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#E6C22914",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#E6C22966",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "qHfXZ",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "utensils",
+                              "library": "lucide",
+                              "fill": "#E6C229"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Y6O3EZ",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Comida",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "yWFl7",
+                      "name": "Grid Row 2",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "cZAUo",
+                          "name": "Café",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#FF980014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#FF980066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "odAGZ",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "coffee",
+                              "library": "lucide",
+                              "fill": "#FF9800"
+                            },
+                            {
+                              "type": "text",
+                              "id": "R7tkE",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Café",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GpgUJ",
+                          "name": "Turismo",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#9B59B614",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#9B59B666",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "KuhWA",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "camera",
+                              "library": "lucide",
+                              "fill": "#9B59B6"
+                            },
+                            {
+                              "type": "text",
+                              "id": "f9WCC",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Turismo",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xpI4A",
+                      "name": "Grid Row 3",
+                      "width": "fill_container",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "y1z9g",
+                          "name": "Mirador",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#4CAF5014",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#4CAF5066",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "GnXkL",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "telescope",
+                              "library": "lucide",
+                              "fill": "#4CAF50"
+                            },
+                            {
+                              "type": "text",
+                              "id": "zSec7",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Mirador",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "xacoA",
+                          "name": "Descanso",
+                          "width": "fill_container",
+                          "height": 120,
+                          "fill": "#3DA5D914",
+                          "cornerRadius": "$radius-lg",
+                          "stroke": "#3DA5D966",
+                          "strokeWidth": 1.5,
+                          "strokeAlignment": "inner",
+                          "layout": "vertical",
+                          "gap": 10,
+                          "padding": 16,
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon",
+                              "id": "E6X6b",
+                              "name": "ic",
+                              "width": 34,
+                              "height": 34,
+                              "icon": "bed",
+                              "library": "lucide",
+                              "fill": "#3DA5D9"
+                            },
+                            {
+                              "type": "text",
+                              "id": "ChcRf",
+                              "name": "Label",
+                              "fill": "$textPrimary",
+                              "content": "Descanso",
+                              "fontFamily": "Poppins",
+                              "fontSize": 14,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "xX1zO",
+              "name": "Recientes Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "K4Rt1c",
+                  "name": "Head",
+                  "width": "fill_container",
+                  "justifyContent": "space_between",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JzUqc",
+                      "name": "label",
+                      "fill": "$textMuted",
+                      "content": "RECIENTES",
+                      "fontFamily": "Poppins",
+                      "fontSize": 11,
+                      "fontWeight": "700",
+                      "letterSpacing": 1.2
+                    },
+                    {
+                      "type": "text",
+                      "id": "z43CRg",
+                      "name": "clear",
+                      "fill": "$textSecondary",
+                      "content": "Borrar",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "v8JqGE",
+                  "name": "List Card",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "id": "XVnKe",
+                      "type": "ref",
+                      "ref": "b08Zm7",
+                      "name": "Recent 1",
+                      "width": "fill_container",
+                      "descendants": {
+                        "e7Xqea": {
+                          "content": "Termales Santa Rosa"
+                        },
+                        "pUfvB": {
+                          "content": "Santa Rosa de Cabal · 86 km"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "x0ERWt",
+                      "name": "sep",
+                      "fill": "$hairline",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "id": "YziHh",
+                      "type": "ref",
+                      "ref": "b08Zm7",
+                      "name": "Recent 2",
+                      "width": "fill_container",
+                      "descendants": {
+                        "e7Xqea": {
+                          "content": "Alto de Letras"
+                        },
+                        "pUfvB": {
+                          "content": "Manizales → Líbano · 120 km"
+                        }
+                      }
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "lh1jH",
+                      "name": "sep",
+                      "fill": "$hairline",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "id": "D0QHXK",
+                      "type": "ref",
+                      "ref": "b08Zm7",
+                      "name": "Recent 3",
+                      "width": "fill_container",
+                      "descendants": {
+                        "e7Xqea": {
+                          "content": "Salento, Quindío"
+                        },
+                        "pUfvB": {
+                          "content": "Valle de Cocora · 64 km"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "b08Zm7",
+      "x": 1780,
+      "y": 8568,
+      "name": "Recent/Row",
+      "reusable": true,
+      "width": 361,
+      "fill": "#00000000",
+      "gap": 12,
+      "padding": [
+        9,
+        14
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "W8b5sF",
+          "name": "IconCircle",
+          "width": 32,
+          "height": 32,
+          "fill": "#FFFFFF0D",
+          "cornerRadius": "$radius-pill",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon",
+              "id": "VMltf",
+              "name": "ic",
+              "width": 16,
+              "height": 16,
+              "icon": "history",
+              "library": "lucide",
+              "fill": "$iconMuted"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "dCpP4",
+          "name": "Texts",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 2,
+          "children": [
+            {
+              "type": "text",
+              "id": "e7Xqea",
+              "name": "Name",
+              "fill": "$textPrimary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Termales Santa Rosa",
+              "fontFamily": "Poppins",
+              "fontSize": 15,
+              "fontWeight": "600"
+            },
+            {
+              "type": "text",
+              "id": "pUfvB",
+              "name": "Sub",
+              "fill": "$textSecondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Santa Rosa de Cabal · 86 km",
+              "fontFamily": "Poppins",
+              "fontSize": 12,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "icon",
+          "id": "yRLUi",
+          "name": "arrow",
+          "width": 18,
+          "height": 18,
+          "icon": "arrow-up-left",
+          "library": "lucide",
+          "fill": "$textMuted"
         }
       ]
     }

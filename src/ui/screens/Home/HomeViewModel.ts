@@ -59,9 +59,12 @@ import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 
 import {
   buildNavigationSuggestions,
+  createNavigationSuggestionLifecycleState,
   findNearestFuelStation,
   type NavigationGuidanceTurn,
+  type NavigationSuggestionLifecycleState,
   type NavSuggestion,
+  resolveNavigationSuggestionLifecycle,
   stationDisplayName,
 } from './NavigationGuidanceEngine';
 
@@ -317,6 +320,9 @@ export class HomeViewModel {
   // -- State: navegacion --
   // La sesion activa vive en NavigationSessionStore; este VM expone getters
   // para mantener una fachada estable hacia HomeScreen.
+  navSuggestionSnapshot: NavSuggestion[] = [];
+  private navSuggestionLifecycle: NavigationSuggestionLifecycleState =
+    createNavigationSuggestionLifecycleState();
 
   // -- State: Navigation Lab (herramienta DEV para probar rutas A/B manuales) --
   isNavigationLabOpen: boolean = false;
@@ -1301,21 +1307,8 @@ export class HomeViewModel {
    * de route directions, perfil de elevacion y gasolineras ya precargadas.
    */
   get navSuggestions(): NavSuggestion[] {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return [];
-    return buildNavigationSuggestions({
-      route,
-      isNavigating: this.isNavigating,
-      progressKm: this.navProgressKm,
-      riderPoint: this.navRiderPoint,
-      fuelStops: this.fuelStops,
-      fuelEstimate: this.isFuelEstimateResponse,
-      fuelStations: this.isFuelStopResponse ?? [],
-      elevationProfile: this.isElevationResponse,
-      currentTurn: this.currentTurn,
-      destinationName: this.destination?.name ?? 'Destino',
-      arrivalThresholdKm: NAV_ARRIVAL_THRESHOLD_KM,
-    });
+    if (!this.isRouteResponse || !this.isNavigating) return [];
+    return this.navSuggestionSnapshot;
   }
 
   // -- Computed: rider --
@@ -1908,6 +1901,8 @@ export class HomeViewModel {
   startNavigation(): void {
     if (!this.hasRoute) return;
     this.navigationSession.startNavigation(this.routeProgressKm);
+    this.resetNavSuggestionLifecycle();
+    this.refreshNavSuggestionSnapshot();
     this.clearNavTimer();
     void this.locationStore.setNavigationMode(!this.isSimulatedNavigation);
     if (this.isSimulatedNavigation) {
@@ -1945,6 +1940,7 @@ export class HomeViewModel {
     Speech.stop();
     void this.locationStore.setNavigationMode(false);
     this.navigationSession.stopNavigation();
+    this.resetNavSuggestionLifecycle();
   }
 
   /**
@@ -1958,6 +1954,7 @@ export class HomeViewModel {
     this.clearNavTimer();
     void this.locationStore.setNavigationMode(false);
     this.navigationSession.markArrived();
+    this.resetNavSuggestionLifecycle();
   }
 
   /** Cierra el panel de llegada y limpia la ruta (vuelve al Home vacio). */
@@ -1979,6 +1976,7 @@ export class HomeViewModel {
         this.simulatedDistanceKm + this.simulationKmPerTick,
       ),
     );
+    this.refreshNavSuggestionSnapshot();
     this.maybeSpeak();
     this.monitorOffRoute();
     if (this.simulatedDistanceKm >= route.distanceKm) {
@@ -2102,6 +2100,7 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return;
     this.navigationSession.recordRealProgress(this.routeProgressKm);
+    this.refreshNavSuggestionSnapshot();
     this.maybeSpeak();
     this.monitorOffRoute();
     if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
@@ -2124,6 +2123,7 @@ export class HomeViewModel {
     Speech.stop();
     void this.locationStore.setNavigationMode(false);
     this.navigationSession.resetRouteSession();
+    this.resetNavSuggestionLifecycle();
     runInAction(() => {
       this.destination = null;
       this.previewPlace = null;
@@ -2152,6 +2152,7 @@ export class HomeViewModel {
     Speech.stop();
     void this.locationStore.setNavigationMode(false);
     this.navigationSession.reset();
+    this.resetNavSuggestionLifecycle();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
       this.isPerspective = false;
@@ -2233,6 +2234,43 @@ export class HomeViewModel {
       return null;
     }
     return speedMps * 3.6;
+  }
+
+  private buildNavSuggestionCandidates(): NavSuggestion[] {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return [];
+    return buildNavigationSuggestions({
+      route,
+      isNavigating: this.isNavigating,
+      progressKm: this.navProgressKm,
+      riderPoint: this.navRiderPoint,
+      fuelStops: this.fuelStops,
+      fuelEstimate: this.isFuelEstimateResponse,
+      fuelStations: this.isFuelStopResponse ?? [],
+      elevationProfile: this.isElevationResponse,
+      currentTurn: this.currentTurn,
+      destinationName: this.destination?.name ?? 'Destino',
+      arrivalThresholdKm: NAV_ARRIVAL_THRESHOLD_KM,
+    });
+  }
+
+  private refreshNavSuggestionSnapshot(nowMs: number = Date.now()): void {
+    if (!this.isRouteResponse || !this.isNavigating) {
+      this.resetNavSuggestionLifecycle();
+      return;
+    }
+    const result = resolveNavigationSuggestionLifecycle({
+      candidates: this.buildNavSuggestionCandidates(),
+      previous: this.navSuggestionLifecycle,
+      nowMs,
+    });
+    this.navSuggestionSnapshot = result.suggestions;
+    this.navSuggestionLifecycle = result.lifecycle;
+  }
+
+  private resetNavSuggestionLifecycle(): void {
+    this.navSuggestionSnapshot = [];
+    this.navSuggestionLifecycle = createNavigationSuggestionLifecycleState();
   }
 
   private remainingPlacesForReroute(destination: Place): Place[] {
@@ -2389,6 +2427,7 @@ export class HomeViewModel {
         this.isElevationResponse = profile;
       });
       this.updateLoadingState(false, null, 'elevation');
+      this.refreshNavSuggestionSnapshot();
     } catch (error) {
       this.handleError(error, 'elevation');
     }
@@ -2437,6 +2476,7 @@ export class HomeViewModel {
         this.isFuelEstimateResponse = estimate;
       });
       this.updateLoadingState(false, null, 'fuel');
+      this.refreshNavSuggestionSnapshot();
       void this.computeFuelStop();
     } catch (error) {
       this.handleError(error, 'fuel');
@@ -2473,6 +2513,7 @@ export class HomeViewModel {
     runInAction(() => {
       this.fuelStops = refuelStops;
     });
+    this.refreshNavSuggestionSnapshot();
 
     // (b) Gasolineras a lo largo de TODA la ruta, para pintarlas en el mapa.
     //     Se buscan una sola vez por ruta (no en cada recarga de la moto).
@@ -2503,6 +2544,7 @@ export class HomeViewModel {
         this.isFuelStopResponse = unique;
       });
       this.updateLoadingState(false, null, 'fuelStop');
+      this.refreshNavSuggestionSnapshot();
     } catch (error) {
       this.handleError(error, 'fuelStop');
     }

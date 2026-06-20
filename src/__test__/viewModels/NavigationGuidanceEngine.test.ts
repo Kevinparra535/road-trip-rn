@@ -3,7 +3,9 @@ import { FuelStop } from '@/domain/entities/FuelStop';
 
 import {
   buildNavigationSuggestions,
+  createNavigationSuggestionLifecycleState,
   NavigationGuidanceInput,
+  resolveNavigationSuggestionLifecycle,
 } from '@/ui/screens/Home/NavigationGuidanceEngine';
 
 import {
@@ -184,6 +186,128 @@ describe('NavigationGuidanceEngine', () => {
         value: '3.8 km',
         detail: 'Villa',
       }),
+    );
+  });
+
+  it('mantiene el orden visible aunque llegue una sugerencia de mayor prioridad', () => {
+    const previous = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'station-near',
+          kind: 'station',
+          title: 'Gasolinera cerca',
+          value: '1.1 km',
+          detail: 'Primax Calle 80',
+        },
+      ],
+      previous: createNavigationSuggestionLifecycleState(),
+      nowMs: 1000,
+    });
+
+    const next = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'turn-curve',
+          kind: 'curve',
+          title: 'Curva cerrada',
+          value: 'En 600 m',
+          detail: 'Via Honda',
+        },
+        {
+          id: 'station-near',
+          kind: 'station',
+          title: 'Gasolinera cerca',
+          value: '900 m',
+          detail: 'Primax Calle 80',
+        },
+      ],
+      previous: previous.lifecycle,
+      nowMs: 1600,
+    });
+
+    expect(next.suggestions.map((suggestion) => suggestion.id)).toEqual([
+      'station-near',
+      'turn-curve',
+    ]);
+    expect(next.suggestions[0].value).toBe('900 m');
+  });
+
+  it('retiene una sugerencia brevemente para evitar parpadeo', () => {
+    const first = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'fuel-refuel-1',
+          kind: 'fuel-warning',
+          title: 'Tanqueo recomendado',
+          value: '20 km',
+          detail: 'Terpel',
+        },
+      ],
+      previous: createNavigationSuggestionLifecycleState(),
+      nowMs: 1000,
+    });
+
+    const warm = resolveNavigationSuggestionLifecycle({
+      candidates: [],
+      previous: first.lifecycle,
+      nowMs: 3000,
+    });
+
+    expect(warm.suggestions).toHaveLength(1);
+    expect(warm.suggestions[0].id).toBe('fuel-refuel-1');
+  });
+
+  it('aplica cooldown cuando una sugerencia desaparece y reaparece', () => {
+    const first = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'fuel-refuel-1',
+          kind: 'fuel-warning',
+          title: 'Tanqueo recomendado',
+          value: '20 km',
+          detail: 'Terpel',
+        },
+      ],
+      previous: createNavigationSuggestionLifecycleState(),
+      nowMs: 1000,
+    });
+
+    const expired = resolveNavigationSuggestionLifecycle({
+      candidates: [],
+      previous: first.lifecycle,
+      nowMs: 7000,
+    });
+    const suppressed = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'fuel-refuel-1',
+          kind: 'fuel-warning',
+          title: 'Tanqueo recomendado',
+          value: '19 km',
+          detail: 'Terpel',
+        },
+      ],
+      previous: expired.lifecycle,
+      nowMs: 8000,
+    });
+    const afterCooldown = resolveNavigationSuggestionLifecycle({
+      candidates: [
+        {
+          id: 'fuel-refuel-1',
+          kind: 'fuel-warning',
+          title: 'Tanqueo recomendado',
+          value: '18 km',
+          detail: 'Terpel',
+        },
+      ],
+      previous: suppressed.lifecycle,
+      nowMs: 20000,
+    });
+
+    expect(expired.suggestions).toEqual([]);
+    expect(suppressed.suggestions).toEqual([]);
+    expect(afterCooldown.suggestions[0]).toEqual(
+      expect.objectContaining({ id: 'fuel-refuel-1', value: '18 km' }),
     );
   });
 });
