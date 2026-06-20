@@ -1459,7 +1459,7 @@
           "type": "frame",
           "id": "Ev646",
           "x": 0,
-          "y": 222,
+          "y": 226,
           "name": "BottomSheet Stops",
           "width": 393,
           "fill": "$bgGradientEnd",
@@ -2139,83 +2139,97 @@
             },
             {
               "type": "frame",
-              "id": "F84xuA",
-              "name": "Agregar Parada",
+              "id": "xKUxX",
+              "name": "Agregar Parada Row",
               "width": "fill_container",
-              "fill": "#00000000",
-              "cornerRadius": 18,
-              "stroke": "$cardBorder",
-              "strokeWidth": 1,
-              "strokeAlignment": "inner",
-              "gap": 12,
               "padding": [
-                12,
-                14
+                0,
+                40,
+                0,
+                0
               ],
-              "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "MTbfF",
-                  "name": "plusCircle",
-                  "width": 38,
-                  "height": 38,
-                  "fill": "$accentDim",
-                  "cornerRadius": 19,
-                  "justifyContent": "center",
+                  "id": "F84xuA",
+                  "name": "Agregar Parada",
+                  "width": 356,
+                  "fill": "#00000000",
+                  "cornerRadius": 20,
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": 12,
+                  "padding": [
+                    12,
+                    16
+                  ],
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "icon",
-                      "id": "duYBf",
-                      "name": "plus",
-                      "width": 22,
-                      "height": 22,
-                      "icon": "plus",
-                      "library": "lucide",
-                      "fill": "$accent"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "zOOpz",
-                  "name": "addCol",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 2,
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "FxQIF",
-                      "name": "addTitle",
-                      "fill": "$textPrimary",
-                      "content": "Agregar parada",
-                      "fontFamily": "Poppins",
-                      "fontSize": 15,
-                      "fontWeight": "600"
+                      "type": "frame",
+                      "id": "MTbfF",
+                      "name": "plusCircle",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "$accentDim",
+                      "cornerRadius": 16,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "duYBf",
+                          "name": "plus",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "avWZs",
-                      "name": "addSub",
-                      "fill": "$textSecondary",
-                      "content": "gasolina · comida · turismo…",
-                      "fontFamily": "Poppins",
-                      "fontSize": 12,
-                      "fontWeight": "500"
+                      "type": "frame",
+                      "id": "zOOpz",
+                      "name": "addCol",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FxQIF",
+                          "name": "addTitle",
+                          "fill": "$textPrimary",
+                          "content": "Agregar parada",
+                          "fontFamily": "Poppins",
+                          "fontSize": 15,
+                          "fontWeight": "600"
+                        },
+                        {
+                          "type": "text",
+                          "id": "avWZs",
+                          "name": "addSub",
+                          "fill": "$textSecondary",
+                          "content": "gasolina · comida · turismo…",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon",
+                      "id": "Licpe",
+                      "name": "addChevron",
+                      "width": 20,
+                      "height": 20,
+                      "icon": "chevron-right",
+                      "library": "lucide",
+                      "fill": "$iconMuted"
                     }
                   ]
-                },
-                {
-                  "type": "icon",
-                  "id": "Licpe",
-                  "name": "addChevron",
-                  "width": 20,
-                  "height": 20,
-                  "icon": "chevron-right",
-                  "library": "lucide",
-                  "fill": "$iconMuted"
                 }
               ]
             },
@@ -2343,207 +2357,226 @@
             },
             {
               "type": "frame",
-              "id": "IrsaL",
-              "name": "Route Status",
-              "width": "fill_container",
-              "gap": 8,
-              "padding": 2,
-              "justifyContent": "space_between",
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "frame",
-                  "id": "MQu4v",
-                  "name": "statusLeft",
-                  "gap": 6,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "id": "p88yEu",
-                      "name": "check",
-                      "width": 16,
-                      "height": 16,
-                      "icon": "circle-check",
-                      "library": "lucide",
-                      "fill": "$check"
-                    },
-                    {
-                      "type": "text",
-                      "id": "pkXuQ",
-                      "name": "statusTxt",
-                      "fill": "$textPrimary",
-                      "content": "Ruta lista",
-                      "fontFamily": "Poppins",
-                      "fontSize": 13,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "text",
-                      "id": "POOOL",
-                      "name": "eta",
-                      "fill": "$textMuted",
-                      "content": "· Llegada ~13:42",
-                      "fontFamily": "Poppins",
-                      "fontSize": 12,
-                      "fontWeight": "500"
-                    }
-                  ]
-                },
-                {
-                  "type": "frame",
-                  "id": "zeEkF",
-                  "name": "detallesBtn",
-                  "gap": 5,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "woYOd",
-                      "name": "detallesTxt",
-                      "fill": "$accent",
-                      "content": "Detalles",
-                      "fontFamily": "Poppins",
-                      "fontSize": 13,
-                      "fontWeight": "700"
-                    },
-                    {
-                      "type": "icon",
-                      "id": "W4Lt67",
-                      "name": "detallesChevron",
-                      "width": 14,
-                      "height": 14,
-                      "icon": "chevron-up",
-                      "library": "lucide",
-                      "fill": "$accent"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "type": "frame",
-              "id": "KKt8w",
-              "name": "Stats",
+              "id": "dUo81",
+              "name": "Resumen Card",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": 20,
+              "cornerRadius": "$radius-lg",
+              "stroke": "$cardBorder",
+              "strokeWidth": 1,
+              "strokeAlignment": "inner",
+              "layout": "vertical",
+              "gap": 8,
               "padding": [
-                12,
-                8
+                10,
+                12
               ],
-              "justifyContent": "space_between",
-              "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
-                  "id": "EVDx7",
-                  "name": "stat DISTANCIA",
+                  "id": "jGdT1",
+                  "name": "Header",
                   "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
+                  "justifyContent": "space_between",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "oMY4l",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "248 km",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "frame",
+                      "id": "LaU79",
+                      "name": "statusLeft",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "SNCxh",
+                          "name": "check",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "circle-check",
+                          "library": "lucide",
+                          "fill": "$check"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Tzim6",
+                          "name": "statusTxt",
+                          "fill": "$textPrimary",
+                          "content": "Ruta lista",
+                          "fontFamily": "Poppins",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tueme",
+                          "name": "eta",
+                          "fill": "$textMuted",
+                          "content": "· llega 13:42",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "500"
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "i1ztb",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "DISTANCIA",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
+                      "type": "frame",
+                      "id": "bS6pc",
+                      "name": "verDetalles",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "rEA96",
+                          "name": "vdTxt",
+                          "fill": "$accent",
+                          "content": "Ver detalles",
+                          "fontFamily": "Poppins",
+                          "fontSize": 13,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "icon",
+                          "id": "PZ8aR",
+                          "name": "vdChev",
+                          "width": 16,
+                          "height": 16,
+                          "icon": "chevron-right",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
                     }
                   ]
                 },
                 {
                   "type": "rectangle",
-                  "id": "L2oLn",
-                  "name": "div1",
+                  "id": "ErWPn",
+                  "name": "div",
                   "fill": "$cardBorder",
-                  "width": 1,
-                  "height": 36
+                  "width": "fill_container",
+                  "height": 1
                 },
                 {
                   "type": "frame",
-                  "id": "YuD2z",
-                  "name": "stat TIEMPO",
+                  "id": "dyXD3",
+                  "name": "Stats Row",
                   "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
+                  "justifyContent": "space_between",
                   "alignItems": "center",
                   "children": [
                     {
-                      "type": "text",
-                      "id": "DAiGB",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "4h 10",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "frame",
+                      "id": "DTDeR",
+                      "name": "stat DISTANCIA",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "tcxzc",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "248 km",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "FcxUB",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "DISTANCIA",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
                     },
                     {
-                      "type": "text",
-                      "id": "aFP2w",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "TIEMPO",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
-                    }
-                  ]
-                },
-                {
-                  "type": "rectangle",
-                  "id": "lrH0C",
-                  "name": "div2",
-                  "fill": "$cardBorder",
-                  "width": 1,
-                  "height": 36
-                },
-                {
-                  "type": "frame",
-                  "id": "RRQ2c",
-                  "name": "stat PARADAS",
-                  "width": "fill_container",
-                  "layout": "vertical",
-                  "gap": 4,
-                  "alignItems": "center",
-                  "children": [
-                    {
-                      "type": "text",
-                      "id": "VX0nc",
-                      "name": "val",
-                      "fill": "$textPrimary",
-                      "content": "1",
-                      "fontFamily": "Poppins",
-                      "fontSize": 18,
-                      "fontWeight": "800"
+                      "type": "rectangle",
+                      "id": "s0KdJn",
+                      "name": "d1",
+                      "fill": "$cardBorder",
+                      "width": 1,
+                      "height": 32
                     },
                     {
-                      "type": "text",
-                      "id": "q0b8mK",
-                      "name": "lab",
-                      "fill": "$textMuted",
-                      "content": "PARADAS",
-                      "fontFamily": "Poppins",
-                      "fontSize": 10,
-                      "fontWeight": "normal",
-                      "letterSpacing": 1.5
+                      "type": "frame",
+                      "id": "UwFaD",
+                      "name": "stat TIEMPO",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "eLqJ9",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "4h 10",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tzkTX",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "TIEMPO",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "Z0DKs5",
+                      "name": "d2",
+                      "fill": "$cardBorder",
+                      "width": 1,
+                      "height": 32
+                    },
+                    {
+                      "type": "frame",
+                      "id": "dUVpe",
+                      "name": "stat PARADAS",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 2,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wEVbQ",
+                          "name": "val",
+                          "fill": "$textPrimary",
+                          "content": "1",
+                          "fontFamily": "Poppins",
+                          "fontSize": 16,
+                          "fontWeight": "800"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vubEK",
+                          "name": "lab",
+                          "fill": "$textMuted",
+                          "content": "PARADAS",
+                          "fontFamily": "Poppins",
+                          "fontSize": 10,
+                          "fontWeight": "normal",
+                          "letterSpacing": 1.2
+                        }
+                      ]
                     }
                   ]
                 }
@@ -2578,7 +2611,7 @@
                       "gap": "$spacing-sm",
                       "padding": [
                         0,
-                        "$spacing-xl"
+                        "$spacing-lg"
                       ],
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -2587,8 +2620,8 @@
                           "type": "icon",
                           "id": "FBobv",
                           "name": "saveIcon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "save",
                           "library": "lucide",
                           "fill": "$textSecondary"
@@ -2650,8 +2683,8 @@
                           "type": "icon",
                           "id": "y7ZrcV",
                           "name": "navIcon",
-                          "width": 20,
-                          "height": 20,
+                          "width": 18,
+                          "height": 18,
                           "icon": "navigation",
                           "library": "lucide",
                           "fill": "#000000"
@@ -2663,7 +2696,7 @@
                           "fill": "#000000",
                           "content": "Iniciar",
                           "fontFamily": "Poppins",
-                          "fontSize": 17,
+                          "fontSize": 16,
                           "fontWeight": "700",
                           "letterSpacing": 0.2
                         }
