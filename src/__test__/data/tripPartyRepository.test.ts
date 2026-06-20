@@ -4,9 +4,7 @@ import { TripPartyRepositoryImpl } from '@/data/repositories/TripPartyRepository
 
 import { TripPartyModel } from '@/data/models/tripPartyModel';
 
-const makeModel = (
-  membersOverride?: Partial<TripPartyModel['members'][number]>[],
-) =>
+const makeModel = (membersOverride?: Partial<TripPartyModel['members'][number]>[]) =>
   TripPartyModel.fromJson({
     id: 'p-1',
     route_id: 'r-1',
@@ -137,12 +135,8 @@ describe('TripPartyRepositoryImpl', () => {
 
     const call = service.updateMembers.mock.calls[0];
     expect(call[1].owner_id).toBe('r-old');
-    expect(
-      call[1].members.find((m: any) => m.rider_id === 'r-old').is_owner,
-    ).toBe(true);
-    expect(
-      call[1].members.find((m: any) => m.rider_id === 'r-new').is_owner,
-    ).toBe(false);
+    expect(call[1].members.find((m: any) => m.rider_id === 'r-old').is_owner).toBe(true);
+    expect(call[1].members.find((m: any) => m.rider_id === 'r-new').is_owner).toBe(false);
   });
 
   it('removeMember solo filtra (sin promote) si no era owner', async () => {

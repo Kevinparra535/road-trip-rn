@@ -1,11 +1,5 @@
 import { useEffect } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
@@ -65,11 +59,7 @@ const CategorySublistScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.navTitle} numberOfLines={1}>
@@ -116,9 +106,7 @@ const CategorySublistScreen = observer(() => {
                 style={[
                   styles.chipText,
                   {
-                    color: isActive
-                      ? chip.color
-                      : Colors.base.textSecondary,
+                    color: isActive ? chip.color : Colors.base.textSecondary,
                   },
                 ]}
               >
@@ -131,9 +119,7 @@ const CategorySublistScreen = observer(() => {
 
       <ScrollView contentContainerStyle={styles.list}>
         {viewModel.isLoading ? <SearchingState /> : null}
-        {viewModel.isError ? (
-          <Text style={styles.error}>{viewModel.isError}</Text>
-        ) : null}
+        {viewModel.isError ? <Text style={styles.error}>{viewModel.isError}</Text> : null}
 
         {!viewModel.isLoading && viewModel.rows.length === 0 ? (
           <EmptyState

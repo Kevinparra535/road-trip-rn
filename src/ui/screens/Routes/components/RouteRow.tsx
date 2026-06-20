@@ -20,23 +20,23 @@ type Props = {
  * resueltos por el ViewModel); no toca entidades de dominio ni meta resolvers.
  */
 export const RouteRow = ({ row, onPress, onEdit }: Props) => (
-    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
-      <View style={[styles.cardIcon, { borderColor: row.color }]}>
-        <Ionicons name={row.icon} size={22} color={row.color} />
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{row.name}</Text>
-        <Text style={styles.cardMeta}>
-          {row.metaLabel} · {row.distanceLabel} · {row.durationLabel}
-        </Text>
-        <Text style={styles.cardSub}>{row.subtitle}</Text>
-      </View>
-      <TouchableOpacity onPress={onEdit} hitSlop={8} testID="route-row-edit-btn">
-        <Ionicons name="create-outline" size={20} color={Colors.base.accent} />
-      </TouchableOpacity>
-      <Ionicons name="chevron-forward" size={20} color={Colors.base.iconMuted} />
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.card}>
+    <View style={[styles.cardIcon, { borderColor: row.color }]}>
+      <Ionicons name={row.icon} size={22} color={row.color} />
+    </View>
+    <View style={styles.cardBody}>
+      <Text style={styles.cardTitle}>{row.name}</Text>
+      <Text style={styles.cardMeta}>
+        {row.metaLabel} · {row.distanceLabel} · {row.durationLabel}
+      </Text>
+      <Text style={styles.cardSub}>{row.subtitle}</Text>
+    </View>
+    <TouchableOpacity onPress={onEdit} hitSlop={8} testID="route-row-edit-btn">
+      <Ionicons name="create-outline" size={20} color={Colors.base.accent} />
     </TouchableOpacity>
-  );
+    <Ionicons name="chevron-forward" size={20} color={Colors.base.iconMuted} />
+  </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
   card: {

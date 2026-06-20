@@ -38,9 +38,7 @@ const makeLocationStore = (
   ...overrides,
 });
 
-const makeUseCase = (
-  result: PlaceSummary | null = null,
-): { run: jest.Mock } => ({
+const makeUseCase = (result: PlaceSummary | null = null): { run: jest.Mock } => ({
   run: jest.fn().mockResolvedValue(result),
 });
 

@@ -29,8 +29,7 @@ const mapboxResponse = {
 
 describe('RouteDirectionsModel — alternativas', () => {
   it('maps the primary route and the alternatives', () => {
-    const directions =
-      RouteDirectionsModel.fromMapboxJson(mapboxResponse).toDomain();
+    const directions = RouteDirectionsModel.fromMapboxJson(mapboxResponse).toDomain();
     expect(directions.distanceKm).toBe(42);
     expect(directions.durationMin).toBe(75);
     expect(directions.geometry).toHaveLength(3);
@@ -40,9 +39,7 @@ describe('RouteDirectionsModel — alternativas', () => {
 
   it('has no alternatives when only one route is returned', () => {
     const directions = RouteDirectionsModel.fromMapboxJson({
-      routes: [
-        { distance: 1000, duration: 600, geometry: { coordinates: [] } },
-      ],
+      routes: [{ distance: 1000, duration: 600, geometry: { coordinates: [] } }],
     }).toDomain();
     expect(directions.alternatives).toEqual([]);
   });

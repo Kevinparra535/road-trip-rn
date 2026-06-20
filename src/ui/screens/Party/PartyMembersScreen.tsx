@@ -43,9 +43,7 @@ type Nav = NativeStackNavigationProp<RoutesStackParamList, 'PartyMembers'>;
 const PartyMembersScreen = observer(() => {
   const navigation = useNavigation<Nav>();
 
-  const viewModel = useViewModel<PartyMembersViewModel>(
-    TYPES.PartyMembersViewModel,
-  );
+  const viewModel = useViewModel<PartyMembersViewModel>(TYPES.PartyMembersViewModel);
 
   useEffect(() => {
     void viewModel.initialize();
@@ -76,31 +74,19 @@ const PartyMembersScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>Miembros de la rodada</Text>
         <View style={styles.navSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {viewModel.isLoading ? (
-          <ActivityIndicator color={Colors.base.accent} />
-        ) : null}
-        {viewModel.isError ? (
-          <Text style={styles.error}>{viewModel.isError}</Text>
-        ) : null}
+        {viewModel.isLoading ? <ActivityIndicator color={Colors.base.accent} /> : null}
+        {viewModel.isError ? <Text style={styles.error}>{viewModel.isError}</Text> : null}
 
         {!hasParty && !viewModel.isLoading ? (
           <View style={styles.empty}>
-            <Ionicons
-              name="people-outline"
-              size={48}
-              color={Colors.base.iconMuted}
-            />
+            <Ionicons name="people-outline" size={48} color={Colors.base.iconMuted} />
             <Text style={styles.emptyTitle}>No estas en una rodada</Text>
             <Text style={styles.emptySub}>
               Cuando crees o te unas a una rodada, los miembros apareceran aca.
@@ -123,11 +109,7 @@ const PartyMembersScreen = observer(() => {
               <ActivityIndicator color={Colors.alerts.error} />
             ) : (
               <>
-                <Ionicons
-                  name="exit-outline"
-                  size={18}
-                  color={Colors.alerts.error}
-                />
+                <Ionicons name="exit-outline" size={18} color={Colors.alerts.error} />
                 <Text style={styles.leaveBtnText}>Salir de la rodada</Text>
               </>
             )}

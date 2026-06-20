@@ -45,9 +45,7 @@ const Badge = ({ label, tone, iconName }: Props) => {
         },
       ]}
     >
-      {iconName !== undefined && (
-        <Ionicons name={iconName} size={12} color={color} />
-      )}
+      {iconName !== undefined && <Ionicons name={iconName} size={12} color={color} />}
       <Text style={[styles.label, { color }]}>{label}</Text>
     </View>
   );

@@ -79,10 +79,7 @@ const Chip = ({
       ) : null}
       <View style={styles.textBlock}>
         <Text
-          style={[
-            styles.label,
-            isAccent ? styles.labelAccent : styles.labelNeutral,
-          ]}
+          style={[styles.label, isAccent ? styles.labelAccent : styles.labelNeutral]}
           numberOfLines={1}
         >
           {label}

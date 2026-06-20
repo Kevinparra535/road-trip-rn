@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -122,12 +116,7 @@ const DayWaypointList = ({
                 {item.sub}
               </Text>
             </View>
-            <View
-              style={[
-                styles.kindChip,
-                { borderColor: hexToRgba(meta.color, 0.4) },
-              ]}
-            >
+            <View style={[styles.kindChip, { borderColor: hexToRgba(meta.color, 0.4) }]}>
               <Text style={[styles.kindChipText, { color: meta.color }]}>
                 {meta.label}
               </Text>
@@ -208,16 +197,10 @@ type MarkEndModalProps = {
   onDismiss: () => void;
 };
 
-const MarkEndOfDayModal = ({
-  visible,
-  viewModel,
-  onDismiss,
-}: MarkEndModalProps) => {
+const MarkEndOfDayModal = ({ visible, viewModel, onDismiss }: MarkEndModalProps) => {
   // Only intermediates can be day boundaries (the last waypoint is always
   // the destination — no split needed there).
-  const candidates = viewModel.timelineItems.filter(
-    (item) => item.isIntermediate,
-  );
+  const candidates = viewModel.timelineItems.filter((item) => item.isIntermediate);
 
   const handlePick = (order: number) => {
     viewModel.markEndOfDay(order);
@@ -232,14 +215,11 @@ const MarkEndOfDayModal = ({
 
       {candidates.length === 0 ? (
         <Text style={styles.modalEmpty}>
-          No hay paradas intermedias disponibles. Agrega al menos una parada
-          entre el arranque y el destino.
+          No hay paradas intermedias disponibles. Agrega al menos una parada entre el
+          arranque y el destino.
         </Text>
       ) : (
-        <ScrollView
-          style={styles.modalList}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
           {candidates.map((item) => {
             const meta = stopKindMeta(item.kind);
             return (
@@ -250,9 +230,7 @@ const MarkEndOfDayModal = ({
                 activeOpacity={0.8}
                 testID={`multiday-mark-end-${item.id}`}
               >
-                <View
-                  style={[styles.modalRowDot, { backgroundColor: meta.color }]}
-                />
+                <View style={[styles.modalRowDot, { backgroundColor: meta.color }]} />
                 <Text style={styles.modalRowName} numberOfLines={1}>
                   {item.name}
                 </Text>
@@ -292,11 +270,7 @@ const MultiDayTimeline = observer(({ viewModel }: Props) => {
     <View style={styles.container}>
       {/* Header row */}
       <View style={styles.headerRow}>
-        <Ionicons
-          name="calendar-outline"
-          size={16}
-          color={Colors.base.iconGroupRide}
-        />
+        <Ionicons name="calendar-outline" size={16} color={Colors.base.iconGroupRide} />
         <Text style={styles.headerLabel}>
           {daysCount} día{daysCount !== 1 ? 's' : ''}
         </Text>

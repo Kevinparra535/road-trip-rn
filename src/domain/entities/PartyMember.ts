@@ -64,8 +64,6 @@ export class PartyMember {
       .filter((t) => /[a-zA-Z]/.test(t));
     if (tokens.length === 0) return '?';
     if (tokens.length === 1) return tokens[0].charAt(0).toUpperCase();
-    return (
-      tokens[0].charAt(0) + tokens[tokens.length - 1].charAt(0)
-    ).toUpperCase();
+    return (tokens[0].charAt(0) + tokens[tokens.length - 1].charAt(0)).toUpperCase();
   }
 }

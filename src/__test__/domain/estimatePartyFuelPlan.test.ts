@@ -31,8 +31,7 @@ const makeParty = (members: PartyMember[]): TripParty =>
   new TripParty({
     id: 'p-1',
     routeId: 'route-1',
-    ownerId:
-      members.find((m) => m.isOwner)?.riderId ?? members[0]?.riderId ?? '',
+    ownerId: members.find((m) => m.isOwner)?.riderId ?? members[0]?.riderId ?? '',
     members,
     createdAt: new Date(),
   });

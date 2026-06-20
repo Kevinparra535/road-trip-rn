@@ -115,9 +115,7 @@ export class ElevationProfile {
   private accumulate(pick: (delta: number) => number): number {
     let total = 0;
     for (let i = 1; i < this.samples.length; i += 1) {
-      total += pick(
-        this.samples[i].elevationM - this.samples[i - 1].elevationM,
-      );
+      total += pick(this.samples[i].elevationM - this.samples[i - 1].elevationM);
     }
     return total;
   }

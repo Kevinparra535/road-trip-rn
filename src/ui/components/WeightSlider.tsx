@@ -14,14 +14,7 @@ type Props = {
   onChange: (value: number) => void;
 };
 
-const WeightSlider = ({
-  label,
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-}: Props) => (
+const WeightSlider = ({ label, value, min, max, step = 1, onChange }: Props) => (
   <View style={styles.container}>
     <View style={styles.header}>
       <Text style={styles.label}>{label}</Text>

@@ -19,10 +19,7 @@ import { PlaceModel } from '@/data/models/placeModel';
  * `'town'` NO esta aca: no es una categoria de Search Box sino una busqueda de
  * localidades via geocoding (ver `searchTownsNear`).
  */
-const CATEGORY_CANONICAL_ID: Record<
-  Exclude<SearchableCategory, 'town'>,
-  string
-> = {
+const CATEGORY_CANONICAL_ID: Record<Exclude<SearchableCategory, 'town'>, string> = {
   food: 'restaurant',
   fuel: 'gas_station',
   tourism: 'tourist_attraction',
@@ -31,11 +28,9 @@ const CATEGORY_CANONICAL_ID: Record<
   cafe: 'cafe',
 };
 
-const MAPBOX_SEARCH_BOX_BASE =
-  'https://api.mapbox.com/search/searchbox/v1/category';
+const MAPBOX_SEARCH_BOX_BASE = 'https://api.mapbox.com/search/searchbox/v1/category';
 
-const MAPBOX_GEOCODING_URL =
-  'https://api.mapbox.com/geocoding/v5/mapbox.places';
+const MAPBOX_GEOCODING_URL = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
 
 /** Resultados por sample por defecto. La Search Box API permite hasta 25. */
 const RESULTS_PER_SAMPLE = 10;
@@ -175,10 +170,7 @@ export class PlaceCategorySearchServiceImpl implements PlaceCategorySearchServic
       .filter((model): model is PlaceModel => model !== null);
   }
 
-  private buildCacheKey(
-    category: SearchableCategory,
-    proximity: LngLat,
-  ): string {
+  private buildCacheKey(category: SearchableCategory, proximity: LngLat): string {
     return `${category}:${proximity[0].toFixed(2)},${proximity[1].toFixed(2)}`;
   }
 

@@ -38,12 +38,7 @@ type StepButtonProps = {
   testID?: string;
 };
 
-const StepButton = ({
-  iconName,
-  disabled,
-  onPress,
-  testID,
-}: StepButtonProps) => {
+const StepButton = ({ iconName, disabled, onPress, testID }: StepButtonProps) => {
   const scale = useSharedValue(SCALE_REST);
 
   const animStyle = useAnimatedStyle(() => ({
@@ -96,18 +91,14 @@ const Stepper = ({
   const handleDecrement = () => {
     const next = value - step;
     onChange(
-      max !== undefined
-        ? Math.max(min, Math.min(next, max))
-        : Math.max(min, next),
+      max !== undefined ? Math.max(min, Math.min(next, max)) : Math.max(min, next),
     );
   };
 
   const handleIncrement = () => {
     const next = value + step;
     onChange(
-      max !== undefined
-        ? Math.min(max, Math.max(min, next))
-        : Math.max(min, next),
+      max !== undefined ? Math.min(max, Math.max(min, next)) : Math.max(min, next),
     );
   };
 

@@ -125,9 +125,7 @@ describe('HomeViewModel — camara y marcador', () => {
   });
 
   it('exposes a follow target when the user location is known', () => {
-    const vm = makeVM(
-      makeLocationStore({ hasLocation: true, coordinates: [-74, 4] }),
-    );
+    const vm = makeVM(makeLocationStore({ hasLocation: true, coordinates: [-74, 4] }));
     expect(vm.hasLocation).toBe(true);
     expect(vm.userCoordinates).toEqual([-74, 4]);
     expect(vm.followTarget).toEqual({
@@ -228,9 +226,7 @@ describe('HomeViewModel — buscador de lugares', () => {
     await Promise.resolve();
 
     expect(search.run).toHaveBeenCalledTimes(1);
-    expect(search.run).toHaveBeenCalledWith(
-      expect.objectContaining({ query: 'villa' }),
-    );
+    expect(search.run).toHaveBeenCalledWith(expect.objectContaining({ query: 'villa' }));
     expect(vm.searchResults).toHaveLength(1);
     expect(vm.hasSearchResults).toBe(true);
 
@@ -691,9 +687,7 @@ describe('HomeViewModel — feed del Home idle', () => {
       addRecent,
     );
 
-    await expect(
-      vm.recordRecentDestination(makePlace()),
-    ).resolves.toBeUndefined();
+    await expect(vm.recordRecentDestination(makePlace())).resolves.toBeUndefined();
   });
 });
 
@@ -743,9 +737,7 @@ describe('HomeViewModel — routeLines coloreado por StopKind', () => {
     installRoute(vm);
 
     const lines = vm.routeLines;
-    const primarySegs = lines.filter((l: any) =>
-      l.id.startsWith('primary-seg-'),
-    );
+    const primarySegs = lines.filter((l: any) => l.id.startsWith('primary-seg-'));
     expect(primarySegs).toHaveLength(1);
     // Color del destino: stopKind.destination = '#E74446' (rojo)
     expect(primarySegs[0].color).toBe('#E74446');
@@ -780,9 +772,7 @@ describe('HomeViewModel — routeLines coloreado por StopKind', () => {
     installRoute(vm);
 
     const lines = vm.routeLines;
-    const primarySegs = lines.filter((l: any) =>
-      l.id.startsWith('primary-seg-'),
-    );
+    const primarySegs = lines.filter((l: any) => l.id.startsWith('primary-seg-'));
     expect(primarySegs).toHaveLength(3);
     // Segment 0: origen -> food => color food
     expect(primarySegs[0].color).toBe('#E6C229');
@@ -809,13 +799,7 @@ describe('HomeViewModel — routeLines coloreado por StopKind', () => {
 describe('HomeViewModel — preview de Planner en mapa', () => {
   // Forma minima de un Waypoint que el HomeViewModel.preview consume. No
   // construimos la entity real para no acoplar el test al constructor.
-  const wp = (
-    id: string,
-    kind: string,
-    lat: number,
-    lng: number,
-    name = id,
-  ) => ({
+  const wp = (id: string, kind: string, lat: number, lng: number, name = id) => ({
     id,
     kind,
     latitude: lat,
@@ -871,9 +855,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
     expect(vm.plannerRouteLines).toHaveLength(1);
     const preview = vm.plannerRouteLines[0];
     expect(preview.id).toBe('planner-preview-dashed');
-    expect((preview.shape.properties as Record<string, unknown>).isDashed).toBe(
-      true,
-    );
+    expect((preview.shape.properties as Record<string, unknown>).isDashed).toBe(true);
   });
 
   it('con waypoints + directions: N-1 segmentos coloreados por destino de cada par', () => {
@@ -922,10 +904,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
 
   it('plannerBounds devuelve bbox cuando hay >= 2 waypoints', () => {
     const planner = makePlannerStore({
-      waypoints: [
-        wp('w1', 'start', 4.6, -74.08),
-        wp('w2', 'destination', 4.8, -74.2),
-      ],
+      waypoints: [wp('w1', 'start', 4.6, -74.08), wp('w2', 'destination', 4.8, -74.2)],
     });
     const vm = makeVM(
       makeLocationStore(),
@@ -976,13 +955,7 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
 });
 
 describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
-  const wp = (
-    id: string,
-    kind: string,
-    lat: number,
-    lng: number,
-    name = id,
-  ) => ({
+  const wp = (id: string, kind: string, lat: number, lng: number, name = id) => ({
     id,
     kind,
     latitude: lat,
@@ -1007,10 +980,7 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
 
   it('sin directions devuelve false y no muta state', () => {
     const planner = buildPlanner({
-      waypoints: [
-        wp('w1', 'start', 4.6, -74.08),
-        wp('w2', 'destination', 4.8, -74.2),
-      ],
+      waypoints: [wp('w1', 'start', 4.6, -74.08), wp('w2', 'destination', 4.8, -74.2)],
       directions: null,
     });
     const vm = makeVM();

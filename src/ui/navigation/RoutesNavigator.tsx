@@ -1,4 +1,3 @@
-
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import AddStopScreen from '@/ui/screens/AddStop/AddStopScreen';

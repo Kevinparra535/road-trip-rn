@@ -1,4 +1,3 @@
-
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import * as Speech from 'expo-speech';
@@ -61,10 +60,7 @@ import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
 import { LocationStore } from '@/ui/store/LocationStore';
-import {
-  NavigationStore,
-  PlannerNavPayload,
-} from '@/ui/store/NavigationStore';
+import { NavigationStore, PlannerNavPayload } from '@/ui/store/NavigationStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
@@ -162,11 +158,7 @@ const elevationColor = (ratio: number): string => {
   const segments = ELEVATION_RAMP.length - 1;
   const scaled = clamped * segments;
   const index = Math.min(segments - 1, Math.floor(scaled));
-  return lerpHexColor(
-    ELEVATION_RAMP[index],
-    ELEVATION_RAMP[index + 1],
-    scaled - index,
-  );
+  return lerpHexColor(ELEVATION_RAMP[index], ELEVATION_RAMP[index + 1], scaled - index);
 };
 
 /** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
@@ -454,9 +446,7 @@ export class HomeViewModel {
 
   /** El triangulo de rumbo se muestra solo con zoom y rumbo suficientes. */
   get isHeadingMarkerVisible(): boolean {
-    return (
-      this.currentZoom >= HEADING_MARKER_MIN_ZOOM && this.headingShape !== null
-    );
+    return this.currentZoom >= HEADING_MARKER_MIN_ZOOM && this.headingShape !== null;
   }
 
   /** El punto simple se muestra cuando hay ubicacion pero no triangulo. */
@@ -619,9 +609,7 @@ export class HomeViewModel {
    */
   coreWidthFor(line: RouteLine): number {
     if (!line.isPrimary) return ROUTE_ALT_WIDTH;
-    return this.isNavigating
-      ? ROUTE_CORE_WIDTH_NAV
-      : ROUTE_CORE_WIDTH_PLANNING;
+    return this.isNavigating ? ROUTE_CORE_WIDTH_NAV : ROUTE_CORE_WIDTH_PLANNING;
   }
 
   /**
@@ -630,8 +618,7 @@ export class HomeViewModel {
    */
   isPlannerLineDashed(line: RouteLine): boolean {
     return (
-      (line.shape.properties as Record<string, unknown> | undefined)
-        ?.isDashed === true
+      (line.shape.properties as Record<string, unknown> | undefined)?.isDashed === true
     );
   }
 
@@ -786,9 +773,7 @@ export class HomeViewModel {
 
     // Sin directions: linea recta punteada entre pins (feedback inmediato
     // pre-calculo). El consumidor del shape la pinta con `lineDasharray`.
-    const coords = wps.map(
-      (w) => [w.longitude, w.latitude] as [number, number],
-    );
+    const coords = wps.map((w) => [w.longitude, w.latitude] as [number, number]);
     const shape: GeoJSON.Feature<GeoJSON.LineString> = {
       type: 'Feature',
       properties: { isDashed: true },
@@ -923,9 +908,7 @@ export class HomeViewModel {
     const count = profile.samples.length;
     return profile.samples.map((sample, index) => ({
       progress: index / (count - 1),
-      color: elevationColor(
-        range === 0 ? 0 : (sample.elevationM - min) / range,
-      ),
+      color: elevationColor(range === 0 ? 0 : (sample.elevationM - min) / range),
     }));
   }
 
@@ -989,9 +972,7 @@ export class HomeViewModel {
       consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
       load: `${Math.round(estimate.loadKg)} kg`,
       reaches: estimate.reachesWithoutRefuel,
-      rangeUsedPercent: Math.round(
-        Math.min(1.5, estimate.rangeUsedFraction) * 100,
-      ),
+      rangeUsedPercent: Math.round(Math.min(1.5, estimate.rangeUsedFraction) * 100),
     };
   }
 
@@ -1095,9 +1076,7 @@ export class HomeViewModel {
    * sobre la polyline.
    */
   get navProgressKm(): number {
-    return this.isSimulatedNavigation
-      ? this.simulatedDistanceKm
-      : this.routeProgressKm;
+    return this.isSimulatedNavigation ? this.simulatedDistanceKm : this.routeProgressKm;
   }
 
   /**
@@ -1145,8 +1124,7 @@ export class HomeViewModel {
     const dLon = toRad(lookAhead.longitude - rider.longitude);
     const y = Math.sin(dLon) * Math.cos(lat2);
     const x =
-      Math.cos(lat1) * Math.sin(lat2) -
-      Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
     if (x === 0 && y === 0) return null;
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
   }
@@ -1847,8 +1825,7 @@ export class HomeViewModel {
     const progressKm = this.navProgressKm;
     for (const step of route.steps) {
       for (const voice of step.voiceInstructions) {
-        const triggerKm =
-          step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
+        const triggerKm = step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
         if (progressKm < triggerKm) continue;
         const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
         if (this.spokenVoiceIds.has(key)) continue;
@@ -2253,10 +2230,7 @@ export class HomeViewModel {
     // (b) Gasolineras a lo largo de TODA la ruta, para pintarlas en el mapa.
     //     Se buscan una sola vez por ruta (no en cada recarga de la moto).
     if (this.isFuelStopResponse !== null || route.geometry.length < 2) return;
-    const searchStops = samplePolyline(
-      route.geometry,
-      ROUTE_STATION_SAMPLES,
-    ).map(
+    const searchStops = samplePolyline(route.geometry, ROUTE_STATION_SAMPLES).map(
       (location, index) =>
         new FuelStop({
           id: `sample-${index}`,
@@ -2272,9 +2246,7 @@ export class HomeViewModel {
     try {
       const stations = await this.findFuelStationsUseCase.run(searchStops);
       // Quita estaciones repetidas halladas cerca de varias muestras.
-      const unique = Array.from(
-        new Map(stations.map((s) => [s.id, s])).values(),
-      );
+      const unique = Array.from(new Map(stations.map((s) => [s.id, s])).values());
       runInAction(() => {
         this.isFuelStopResponse = unique;
       });
@@ -2341,11 +2313,7 @@ export class HomeViewModel {
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'search':

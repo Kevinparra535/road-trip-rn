@@ -24,18 +24,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { DEV_FAKE_DESTINATION, DEV_FLAGS } from '@/config/devFlags';
 import { IDLE_ACTIONS, IdleActionType } from '@/config/homeIdleActions';
-import {
-  ROUTE_CORE_WIDTH_PLANNING,
-  ROUTE_FIT_PADDING,
-} from '@/config/routeLineWidths';
+import { ROUTE_CORE_WIDTH_PLANNING, ROUTE_FIT_PADDING } from '@/config/routeLineWidths';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
 
 import ArrivalPanel from '@/ui/components/ArrivalPanel';
-import BottomSheet, {
-  type BottomSheetHandle,
-} from '@/ui/components/BottomSheet';
+import BottomSheet, { type BottomSheetHandle } from '@/ui/components/BottomSheet';
 import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
@@ -138,11 +133,7 @@ const HomeScreen = observer(() => {
   const routeBounds = viewModel.routeBounds;
   const destinationId = viewModel.destinationId;
   useEffect(() => {
-    if (
-      routeBounds &&
-      destinationId &&
-      fittedDestinationRef.current !== destinationId
-    ) {
+    if (routeBounds && destinationId && fittedDestinationRef.current !== destinationId) {
       fittedDestinationRef.current = destinationId;
       cameraRef.current?.fitBounds(
         routeBounds.ne,
@@ -301,11 +292,7 @@ const HomeScreen = observer(() => {
         {viewModel.routeLines.map((line) => {
           const coreWidth = viewModel.coreWidthFor(line);
           return (
-            <Mapbox.ShapeSource
-              key={line.id}
-              id={`route-${line.id}`}
-              shape={line.shape}
-            >
+            <Mapbox.ShapeSource key={line.id} id={`route-${line.id}`} shape={line.shape}>
               <Mapbox.LineLayer
                 id={`route-${line.id}-line`}
                 // Mapbox Standard v11 usa "slots" para ordenar capas custom;
@@ -452,9 +439,7 @@ const HomeScreen = observer(() => {
         ) : null}
       </Mapbox.MapView>
 
-      {DEV_FLAGS.mockDestination &&
-      !viewModel.hasDestination &&
-      viewModel.hasLocation ? (
+      {DEV_FLAGS.mockDestination && !viewModel.hasDestination && viewModel.hasLocation ? (
         <TouchableOpacity
           activeOpacity={0.9}
           style={styles.testRouteButton}
@@ -555,18 +540,14 @@ const HomeScreen = observer(() => {
             style={styles.navMute}
             accessibilityRole="button"
             accessibilityLabel={
-              viewModel.isMuted
-                ? 'Activar anuncios de voz'
-                : 'Silenciar anuncios de voz'
+              viewModel.isMuted ? 'Activar anuncios de voz' : 'Silenciar anuncios de voz'
             }
             onPress={() => viewModel.toggleMute()}
           >
             <Ionicons
               name={viewModel.isMuted ? 'volume-mute' : 'volume-high'}
               size={22}
-              color={
-                viewModel.isMuted ? Colors.base.textMuted : Colors.base.accent
-              }
+              color={viewModel.isMuted ? Colors.base.textMuted : Colors.base.accent}
             />
           </TouchableOpacity>
 
@@ -596,9 +577,7 @@ const HomeScreen = observer(() => {
               <View style={styles.navBar}>
                 {viewModel.navSpeedLabel !== null ? (
                   <View style={styles.navSpeedBox}>
-                    <Text style={styles.navSpeedValue}>
-                      {viewModel.navSpeedLabel}
-                    </Text>
+                    <Text style={styles.navSpeedValue}>{viewModel.navSpeedLabel}</Text>
                     <Text style={styles.navSpeedUnit}>km/h</Text>
                   </View>
                 ) : null}
@@ -627,11 +606,7 @@ const HomeScreen = observer(() => {
                   accessibilityLabel="Finalizar navegación"
                   onPress={() => viewModel.stopNavigation()}
                 >
-                  <Ionicons
-                    name="stop"
-                    size={28}
-                    color={Colors.base.textPrimary}
-                  />
+                  <Ionicons name="stop" size={28} color={Colors.base.textPrimary} />
                 </TouchableOpacity>
               </View>
             </SafeAreaView>
@@ -727,9 +702,7 @@ const HomeScreen = observer(() => {
                     direction="vertical"
                     style={styles.profileAvatar}
                   >
-                    <Text style={styles.profileInitials}>
-                      {viewModel.riderInitials}
-                    </Text>
+                    <Text style={styles.profileInitials}>{viewModel.riderInitials}</Text>
                   </GradientView>
                 </TouchableOpacity>
               </>
@@ -745,11 +718,7 @@ const HomeScreen = observer(() => {
             accessibilityLabel="Cancelar agregar parada"
             onPress={() => viewModel.cancelAddingStop()}
           >
-            <Ionicons
-              name="close-circle"
-              size={16}
-              color={Colors.base.accent}
-            />
+            <Ionicons name="close-circle" size={16} color={Colors.base.accent} />
             <Text style={styles.addStopHintText}>
               Buscá la parada que querés agregar al viaje. Tap para cancelar.
             </Text>
@@ -764,10 +733,7 @@ const HomeScreen = observer(() => {
                   {index > 0 ? <View style={styles.resultDivider} /> : null}
                   <TouchableOpacity
                     activeOpacity={0.7}
-                    style={[
-                      styles.resultRow,
-                      index === 0 && styles.resultRowPrimary,
-                    ]}
+                    style={[styles.resultRow, index === 0 && styles.resultRowPrimary]}
                     onPress={() => handleSelectPlace(place)}
                   >
                     <View
@@ -779,11 +745,7 @@ const HomeScreen = observer(() => {
                       <Ionicons
                         name="location"
                         size={18}
-                        color={
-                          index === 0
-                            ? Colors.base.accent
-                            : Colors.base.iconMuted
-                        }
+                        color={index === 0 ? Colors.base.accent : Colors.base.iconMuted}
                       />
                     </View>
                     <View style={styles.resultBody}>
@@ -860,27 +822,18 @@ const HomeScreen = observer(() => {
                   accessibilityLabel="Cerrar ruta"
                   onPress={handleClearRoute}
                 >
-                  <Ionicons
-                    name="close"
-                    size={15}
-                    color={Colors.base.iconMuted}
-                  />
+                  <Ionicons name="close" size={15} color={Colors.base.iconMuted} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.routePoints}>
                 <View style={styles.timeline}>
-                  <View
-                    style={[styles.timelineDot, styles.timelineDotOrigin]}
-                  />
+                  <View style={[styles.timelineDot, styles.timelineDotOrigin]} />
                   {viewModel.intermediateStops.map((stop) => (
                     <Fragment key={`tl-${stop.id}`}>
                       <View style={styles.timelineLine} />
                       <View
-                        style={[
-                          styles.timelineDot,
-                          styles.timelineDotIntermediate,
-                        ]}
+                        style={[styles.timelineDot, styles.timelineDotIntermediate]}
                       />
                     </Fragment>
                   ))}
@@ -947,16 +900,13 @@ const HomeScreen = observer(() => {
                     >
                       {viewModel.destination?.name}
                     </Text>
-                    {viewModel.intermediateStops.length > 0 &&
-                    viewModel.destination ? (
+                    {viewModel.intermediateStops.length > 0 && viewModel.destination ? (
                       <TouchableOpacity
                         hitSlop={6}
                         style={styles.stopActionBtn}
                         accessibilityRole="button"
                         accessibilityLabel="Subir destino"
-                        onPress={() =>
-                          viewModel.moveStopUp(viewModel.destination!.id)
-                        }
+                        onPress={() => viewModel.moveStopUp(viewModel.destination!.id)}
                       >
                         <Ionicons
                           name="arrow-up"
@@ -977,11 +927,7 @@ const HomeScreen = observer(() => {
                 accessibilityLabel="Agregar parada"
                 onPress={handleStartAddStop}
               >
-                <Ionicons
-                  name="add-circle"
-                  size={18}
-                  color={Colors.base.accent}
-                />
+                <Ionicons name="add-circle" size={18} color={Colors.base.accent} />
                 <Text style={styles.addStopText}>Agregar parada</Text>
               </TouchableOpacity>
 
@@ -995,9 +941,7 @@ const HomeScreen = observer(() => {
                     icon="gas-station"
                     iconColor={Colors.base.accent}
                     value={fuel?.fuelNeeded ?? '—'}
-                    valueColor={
-                      fuelReachFails ? Colors.alerts.error : undefined
-                    }
+                    valueColor={fuelReachFails ? Colors.alerts.error : undefined}
                     label="Combustible est."
                   />
                   <StatCell
@@ -1034,22 +978,14 @@ const HomeScreen = observer(() => {
                       <Text style={styles.motoName} numberOfLines={1}>
                         {autonomy.motorcycleName}
                       </Text>
-                      <Text style={styles.autonomySub}>
-                        Autonomía y tanqueo
-                      </Text>
+                      <Text style={styles.autonomySub}>Autonomía y tanqueo</Text>
                     </View>
                   </View>
                   <View style={styles.statusChip}>
                     <Ionicons
-                      name={
-                        autonomy.reaches ? 'checkmark-circle' : 'alert-circle'
-                      }
+                      name={autonomy.reaches ? 'checkmark-circle' : 'alert-circle'}
                       size={12}
-                      color={
-                        autonomy.reaches
-                          ? Colors.alerts.check
-                          : Colors.alerts.error
-                      }
+                      color={autonomy.reaches ? Colors.alerts.check : Colors.alerts.error}
                     />
                     <Text
                       style={[
@@ -1093,10 +1029,7 @@ const HomeScreen = observer(() => {
                     {journey.stops.map((stop, index) => (
                       <View
                         key={stop.id}
-                        style={[
-                          styles.stopRow,
-                          index > 0 && styles.stopRowBorder,
-                        ]}
+                        style={[styles.stopRow, index > 0 && styles.stopRowBorder]}
                       >
                         <View
                           style={[
@@ -1116,10 +1049,7 @@ const HomeScreen = observer(() => {
                         </View>
                         <View style={styles.stopInfo}>
                           <Text
-                            style={[
-                              styles.stopName,
-                              !stop.name && styles.stopNameMuted,
-                            ]}
+                            style={[styles.stopName, !stop.name && styles.stopNameMuted]}
                             numberOfLines={1}
                           >
                             {stop.name ??
@@ -1127,9 +1057,7 @@ const HomeScreen = observer(() => {
                                 ? 'Buscando estación…'
                                 : 'Sin estación cercana en el mapa')}
                           </Text>
-                          <Text style={styles.stopSub}>
-                            Punto de tanqueo sugerido
-                          </Text>
+                          <Text style={styles.stopSub}>Punto de tanqueo sugerido</Text>
                         </View>
                         <Text style={styles.stopKm}>km {stop.km}</Text>
                       </View>
@@ -1202,9 +1130,7 @@ const HomeScreen = observer(() => {
                 <View style={styles.elevationHeader}>
                   <Text style={styles.elevationTitle}>Perfil de elevación</Text>
                   <Text style={styles.elevationRange}>
-                    {elevation
-                      ? `${elevation.min} — ${elevation.max}`
-                      : 'Calculando…'}
+                    {elevation ? `${elevation.min} — ${elevation.max}` : 'Calculando…'}
                   </Text>
                 </View>
                 {viewModel.elevationBars.length > 0 ? (
@@ -1250,10 +1176,7 @@ const HomeScreen = observer(() => {
                   </>
                 ) : (
                   <View style={styles.elevationPlaceholder}>
-                    <ActivityIndicator
-                      size="small"
-                      color={Colors.base.textMuted}
-                    />
+                    <ActivityIndicator size="small" color={Colors.base.textMuted} />
                   </View>
                 )}
               </SheetCard>

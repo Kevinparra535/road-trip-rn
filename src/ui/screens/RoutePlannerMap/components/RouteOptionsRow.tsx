@@ -28,13 +28,7 @@ type SwitchRowProps = {
   testID?: string;
 };
 
-const SwitchRow = ({
-  label,
-  icon,
-  value,
-  onValueChange,
-  testID,
-}: SwitchRowProps) => (
+const SwitchRow = ({ label, icon, value, onValueChange, testID }: SwitchRowProps) => (
   <View style={styles.switchRow}>
     <View style={styles.switchRowLeft}>
       <Ionicons
@@ -42,9 +36,7 @@ const SwitchRow = ({
         size={16}
         color={value ? Colors.base.accent : Colors.base.iconMuted}
       />
-      <Text
-        style={[styles.switchRowLabel, value && styles.switchRowLabelActive]}
-      >
+      <Text style={[styles.switchRowLabel, value && styles.switchRowLabelActive]}>
         {label}
       </Text>
     </View>
@@ -126,11 +118,7 @@ const RouteOptionsRow = observer(
             activeOpacity={0.75}
             testID="route-options-reverse"
           >
-            <Ionicons
-              name="swap-vertical"
-              size={16}
-              color={Colors.base.textPrimary}
-            />
+            <Ionicons name="swap-vertical" size={16} color={Colors.base.textPrimary} />
             <Text style={styles.actionBtnText}>Invertir</Text>
           </TouchableOpacity>
 
@@ -152,11 +140,7 @@ const RouteOptionsRow = observer(
               <Ionicons
                 name="git-network"
                 size={16}
-                color={
-                  viewModel.canOptimize
-                    ? Colors.base.accent
-                    : Colors.base.iconMuted
-                }
+                color={viewModel.canOptimize ? Colors.base.accent : Colors.base.iconMuted}
               />
             )}
             <Text

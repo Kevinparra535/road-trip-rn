@@ -43,15 +43,8 @@ const SignUpScreen = observer(() => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-          <TouchableOpacity
-            style={styles.back}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={Colors.base.textPrimary}
-            />
+          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={Colors.base.textPrimary} />
             <Text style={styles.backText}>Volver</Text>
           </TouchableOpacity>
 

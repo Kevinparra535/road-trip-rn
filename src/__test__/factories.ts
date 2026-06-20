@@ -21,9 +21,7 @@ export const makeRider = (overrides: Partial<Rider> = {}): Rider =>
     ...overrides,
   });
 
-export const makeMotorcycle = (
-  overrides: Partial<Motorcycle> = {},
-): Motorcycle =>
+export const makeMotorcycle = (overrides: Partial<Motorcycle> = {}): Motorcycle =>
   new Motorcycle({
     id: 'moto-1',
     riderId: 'rider-1',
@@ -77,9 +75,7 @@ export const makeRoute = (overrides: Partial<Route> = {}): Route =>
     ...overrides,
   });
 
-export const makeGeoLocation = (
-  overrides: Partial<GeoLocation> = {},
-): GeoLocation =>
+export const makeGeoLocation = (overrides: Partial<GeoLocation> = {}): GeoLocation =>
   new GeoLocation({
     latitude: 4.6097,
     longitude: -74.0817,
@@ -163,9 +159,7 @@ export const makeRouteFuelEstimate = (
     ...overrides,
   });
 
-export const makePartyMember = (
-  overrides: Partial<PartyMember> = {},
-): PartyMember =>
+export const makePartyMember = (overrides: Partial<PartyMember> = {}): PartyMember =>
   new PartyMember({
     riderId: 'rider-1',
     displayName: 'Kevin',

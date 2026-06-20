@@ -11,10 +11,7 @@ import { UseCase } from '@/domain/useCases/UseCase';
 
 /** Obtiene el perfil de elevacion de un trazado de ruta. */
 @injectable()
-export class GetRouteElevationUseCase implements UseCase<
-  GeoPoint[],
-  ElevationProfile
-> {
+export class GetRouteElevationUseCase implements UseCase<GeoPoint[], ElevationProfile> {
   constructor(
     @inject(TYPES.ElevationRepository)
     private readonly repository: ElevationRepository,

@@ -61,9 +61,7 @@ export const TYPES = {
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
   EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
   FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
-  RequestLocationPermissionUseCase: Symbol.for(
-    'RequestLocationPermissionUseCase',
-  ),
+  RequestLocationPermissionUseCase: Symbol.for('RequestLocationPermissionUseCase'),
   GetCurrentLocationUseCase: Symbol.for('GetCurrentLocationUseCase'),
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),

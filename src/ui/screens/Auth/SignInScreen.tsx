@@ -45,16 +45,10 @@ const SignInScreen = observer(() => {
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.brand}>
             <View style={styles.logoCircle}>
-              <Ionicons
-                name="trail-sign"
-                size={32}
-                color={Colors.base.textPrimary}
-              />
+              <Ionicons name="trail-sign" size={32} color={Colors.base.textPrimary} />
             </View>
             <Text style={styles.title}>Road Trip</Text>
-            <Text style={styles.subtitle}>
-              Planea tus rodadas, conoce tu autonomia.
-            </Text>
+            <Text style={styles.subtitle}>Planea tus rodadas, conoce tu autonomia.</Text>
           </View>
 
           <View style={styles.card}>

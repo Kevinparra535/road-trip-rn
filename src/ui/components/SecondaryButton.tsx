@@ -62,9 +62,7 @@ const SecondaryButton = ({
   const isDestructive = tone === 'destructive';
   const isGhost = variant === 'ghost';
 
-  const contentColor = isDestructive
-    ? Colors.alerts.error
-    : Colors.base.textPrimary;
+  const contentColor = isDestructive ? Colors.alerts.error : Colors.base.textPrimary;
 
   return (
     <Animated.View

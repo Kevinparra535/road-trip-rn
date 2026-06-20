@@ -31,21 +31,12 @@ export const RouteDraftRecoveryModal = observer(
     if (!draft) return null;
     const rows = viewModel.draftRecoveryRows;
     return (
-      <Modal
-        visible
-        transparent
-        animationType="slide"
-        onRequestClose={onDismiss}
-      >
+      <Modal visible transparent animationType="slide" onRequestClose={onDismiss}>
         <Pressable style={styles.backdrop} onPress={onDismiss}>
           <Pressable style={styles.sheet} onPress={() => {}}>
             <View style={styles.headerRow}>
               <View style={styles.iconBox}>
-                <Ionicons
-                  name="time-outline"
-                  size={24}
-                  color={Colors.base.accent}
-                />
+                <Ionicons name="time-outline" size={24} color={Colors.base.accent} />
               </View>
               <View style={styles.headerText}>
                 <Text style={styles.title}>Continúa donde quedaste</Text>
@@ -60,9 +51,7 @@ export const RouteDraftRecoveryModal = observer(
             <View style={styles.previewCard}>
               {rows.map((row) => (
                 <View key={row.id} style={styles.previewRow}>
-                  <View
-                    style={[styles.previewDot, { backgroundColor: row.color }]}
-                  />
+                  <View style={[styles.previewDot, { backgroundColor: row.color }]} />
                   <Text
                     style={[
                       styles.previewText,
@@ -82,11 +71,7 @@ export const RouteDraftRecoveryModal = observer(
               activeOpacity={0.85}
               testID="home-draft-recovery-continue-btn"
             >
-              <Ionicons
-                name="navigate"
-                size={20}
-                color={Colors.base.textPrimary}
-              />
+              <Ionicons name="navigate" size={20} color={Colors.base.textPrimary} />
               <Text style={styles.ctaPrimaryText}>Continuar planeando</Text>
             </TouchableOpacity>
             <TouchableOpacity

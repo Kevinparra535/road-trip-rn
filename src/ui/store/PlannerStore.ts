@@ -1,10 +1,5 @@
 import { inject, injectable } from 'inversify';
-import {
-  IReactionDisposer,
-  makeAutoObservable,
-  reaction,
-  runInAction,
-} from 'mobx';
+import { IReactionDisposer, makeAutoObservable, reaction, runInAction } from 'mobx';
 
 import { TYPES } from '@/config/types';
 
@@ -451,9 +446,7 @@ export class PlannerStore {
   get hasPartyForRoute(): boolean {
     const party = this.partyStore.activeParty;
     if (!party) return false;
-    return (
-      party.routeId === this.editingId || party.routeId === this.savedRouteId
-    );
+    return party.routeId === this.editingId || party.routeId === this.savedRouteId;
   }
 
   /** Nombre del owner del party activo (para el banner "Esperando a..."). */
@@ -518,22 +511,16 @@ export class PlannerStore {
   /** `true` cuando hay paradas intermedias y el conteo cabe en la API (3..12). */
   get canOptimize(): boolean {
     return (
-      this.waypoints.length >= 3 &&
-      this.waypoints.length <= 12 &&
-      !this.isOptimizeLoading
+      this.waypoints.length >= 3 && this.waypoints.length <= 12 && !this.isOptimizeLoading
     );
   }
 
   get distanceKm(): number {
-    return this.activeDirections
-      ? Math.round(this.activeDirections.distanceKm)
-      : 0;
+    return this.activeDirections ? Math.round(this.activeDirections.distanceKm) : 0;
   }
 
   get durationMin(): number {
-    return this.activeDirections
-      ? Math.round(this.activeDirections.durationMin)
-      : 0;
+    return this.activeDirections ? Math.round(this.activeDirections.durationMin) : 0;
   }
 
   get geometry(): GeoPoint[] {
@@ -1003,11 +990,7 @@ export class PlannerStore {
             : w,
         );
       }
-      if (
-        template.isRoundTrip &&
-        !this.isRoundTrip &&
-        this.waypoints.length >= 2
-      ) {
+      if (template.isRoundTrip && !this.isRoundTrip && this.waypoints.length >= 2) {
         this.waypoints = appendReturnToOrigin(this.waypoints);
         this.isRoundTrip = true;
       }
@@ -1231,9 +1214,7 @@ export class PlannerStore {
    * la UI con los 3 botones (ubicación / mapa / dirección).
    */
   get needsStartPoint(): boolean {
-    return (
-      this.waypoints.length === 1 && this.waypoints[0].kind === 'destination'
-    );
+    return this.waypoints.length === 1 && this.waypoints[0].kind === 'destination';
   }
 
   /**
@@ -1258,13 +1239,8 @@ export class PlannerStore {
       });
       // Conserva todos los waypoints existentes excepto el start anterior
       // (si lo habia). Si solo hay un destino (A2), queda intacto.
-      const existingWithoutStart = this.waypoints.filter(
-        (w) => w.kind !== 'start',
-      );
-      this.waypoints = this.normalizeWaypoints([
-        startWp,
-        ...existingWithoutStart,
-      ]);
+      const existingWithoutStart = this.waypoints.filter((w) => w.kind !== 'start');
+      this.waypoints = this.normalizeWaypoints([startWp, ...existingWithoutStart]);
       this.directions = null;
     });
   }
@@ -1288,13 +1264,8 @@ export class PlannerStore {
         order: 0,
       });
       // Conserva todos los waypoints existentes excepto el start anterior.
-      const existingWithoutStart = this.waypoints.filter(
-        (w) => w.kind !== 'start',
-      );
-      this.waypoints = this.normalizeWaypoints([
-        startWp,
-        ...existingWithoutStart,
-      ]);
+      const existingWithoutStart = this.waypoints.filter((w) => w.kind !== 'start');
+      this.waypoints = this.normalizeWaypoints([startWp, ...existingWithoutStart]);
       this.directions = null;
     });
   }
@@ -1376,9 +1347,7 @@ export class PlannerStore {
       if (kind === 'start' || kind === 'destination') return;
 
       this.waypoints = this.waypoints.map((w) =>
-        w.id === waypointId
-          ? new Waypoint({ ...w, kind, userOverrideKind: true })
-          : w,
+        w.id === waypointId ? new Waypoint({ ...w, kind, userOverrideKind: true }) : w,
       );
       // El kind no afecta la geometria pero si los colores del trazado.
       // No invalidamos directions: el rider ya pago el calculo.
@@ -1466,9 +1435,7 @@ export class PlannerStore {
    */
   removeWaypoint(id: string): void {
     runInAction(() => {
-      this.waypoints = this.normalizeWaypoints(
-        this.waypoints.filter((w) => w.id !== id),
-      );
+      this.waypoints = this.normalizeWaypoints(this.waypoints.filter((w) => w.id !== id));
       this.directions = null;
     });
   }
@@ -1551,9 +1518,7 @@ export class PlannerStore {
       // Avanzar el sequence para no chocar con ids de los waypoints cargados.
       this.waypointSeq = Math.max(
         this.waypointSeq,
-        ...draft.waypoints.map(
-          (w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0,
-        ),
+        ...draft.waypoints.map((w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0),
       );
       this.directions = null;
       // F2: restaurar la segmentación multi-día en curso del draft.
@@ -1753,9 +1718,7 @@ export class PlannerStore {
       });
     } catch (error) {
       this.logger.error(
-        `Error cargando motos: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `Error cargando motos: ${error instanceof Error ? error.message : String(error)}`,
       );
       // No volcamos el error a la UI — el notice solo aparece cuando
       // explicitamente sabemos que hay 0 motos.
@@ -1977,10 +1940,7 @@ export class PlannerStore {
    * el mapeo 1:1 deja de ser válido y devolvemos `next` intacto (nombres se
    * reconstruyen desde cero). No muta sus inputs.
    */
-  private mergeOvernightNames(
-    previous: RouteDay[],
-    next: RouteDay[],
-  ): RouteDay[] {
+  private mergeOvernightNames(previous: RouteDay[], next: RouteDay[]): RouteDay[] {
     if (previous.length !== next.length) return next;
     return next.map((day, index) => {
       const overnightName = previous[index]?.overnightName;
@@ -2063,9 +2023,7 @@ export class PlannerStore {
       // Avanzar el sequence para no chocar con ids de los waypoints cargados.
       this.waypointSeq = Math.max(
         this.waypointSeq,
-        ...draft.waypoints.map(
-          (w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0,
-        ),
+        ...draft.waypoints.map((w) => parseInt(w.id.replace(/\D/g, ''), 10) || 0),
       );
       this.directions = null;
       // F2: restaurar la segmentación multi-día en curso del draft.
@@ -2095,11 +2053,7 @@ export class PlannerStore {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'load':

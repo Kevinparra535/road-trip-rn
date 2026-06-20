@@ -120,9 +120,4 @@ export function stopKindMeta(kind: StopKind): StopKindMeta {
  * Lista de kinds que el rider puede elegir cuando re-categoriza una parada
  * intermedia. Excluye `start` y `destination` (son posicionales).
  */
-export const SELECTABLE_STOP_KINDS: StopKind[] = [
-  'food',
-  'fuel',
-  'tourism',
-  'rest',
-];
+export const SELECTABLE_STOP_KINDS: StopKind[] = ['food', 'fuel', 'tourism', 'rest'];

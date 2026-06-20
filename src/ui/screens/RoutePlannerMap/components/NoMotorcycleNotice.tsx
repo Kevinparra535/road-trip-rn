@@ -10,7 +10,13 @@ import Spacings from '@/ui/styles/Spacings';
 import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 export const NoMotorcycleNotice = observer(
-  ({ viewModel, onPress }: { viewModel: RoutePlannerMapViewModel; onPress: () => void }) => {
+  ({
+    viewModel,
+    onPress,
+  }: {
+    viewModel: RoutePlannerMapViewModel;
+    onPress: () => void;
+  }) => {
     if (!viewModel.canCalculate) return null;
     if (viewModel.hasMotorcycleRegistered) return null;
     return (

@@ -144,21 +144,13 @@ const DestinationPreviewScreen = observer(() => {
         {viewModel.hasStats ? (
           <View style={styles.stats}>
             <View style={styles.statItem}>
-              <Ionicons
-                name="navigate-outline"
-                size={14}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="navigate-outline" size={14} color={Colors.base.accent} />
               <Text style={styles.statValue}>{viewModel.distanceLabel}</Text>
               <Text style={styles.statLabel}>aprox.</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Ionicons
-                name="time-outline"
-                size={14}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="time-outline" size={14} color={Colors.base.accent} />
               <Text style={styles.statValue}>{viewModel.etaLabel}</Text>
               <Text style={styles.statLabel}>en moto</Text>
             </View>
@@ -205,11 +197,7 @@ const DestinationPreviewScreen = observer(() => {
           ]}
           testID="destination-preview-plan-btn"
         >
-          <Ionicons
-            name="git-branch"
-            size={16}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="git-branch" size={16} color={Colors.base.textPrimary} />
           <Text style={styles.planButtonText}>Planear con paradas</Text>
         </Pressable>
 

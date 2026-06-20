@@ -22,9 +22,7 @@ export const Toggle = ({ label, active, onPress }: ToggleProps) => (
       size={18}
       color={active ? Colors.base.accent : Colors.base.iconMuted}
     />
-    <Text style={[styles.toggleText, active && styles.toggleTextActive]}>
-      {label}
-    </Text>
+    <Text style={[styles.toggleText, active && styles.toggleTextActive]}>{label}</Text>
   </TouchableOpacity>
 );
 

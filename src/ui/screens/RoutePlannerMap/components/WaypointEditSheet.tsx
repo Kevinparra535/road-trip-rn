@@ -1,11 +1,4 @@
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
@@ -90,11 +83,7 @@ const WaypointEditSheet = observer(
                   accessibilityRole="button"
                   accessibilityLabel="Cambiar lugar"
                 >
-                  <Ionicons
-                    name="swap-horizontal"
-                    size={14}
-                    color={Colors.base.accent}
-                  />
+                  <Ionicons name="swap-horizontal" size={14} color={Colors.base.accent} />
                   <Text style={styles.changePlaceText}>Cambiar lugar</Text>
                 </Pressable>
               ) : null}
@@ -133,9 +122,7 @@ const WaypointEditSheet = observer(
                   step={15}
                   min={0}
                   max={240}
-                  onChange={(v) =>
-                    viewModel.setWaypointStopDuration(waypoint.id, v)
-                  }
+                  onChange={(v) => viewModel.setWaypointStopDuration(waypoint.id, v)}
                   formatValue={(v) => (v === 0 ? 'Sin pausa' : `${v} min`)}
                   testID="waypoint-duration-stepper"
                 />
@@ -150,11 +137,7 @@ const WaypointEditSheet = observer(
               />
 
               {/* CTA Listo */}
-              <PrimaryButton
-                label="Listo"
-                onPress={onClose}
-                iconName="checkmark"
-              />
+              <PrimaryButton label="Listo" onPress={onClose} iconName="checkmark" />
             </ScrollView>
           </Pressable>
         </Pressable>

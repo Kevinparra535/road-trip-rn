@@ -70,16 +70,12 @@ export class PartyFuelPlan {
   }
 
   get weakest(): PerMotoRange | null {
-    return (
-      this.perMotoRanges.find((r) => r.motorcycleId === this.weakestMotoId) ??
-      null
-    );
+    return this.perMotoRanges.find((r) => r.motorcycleId === this.weakestMotoId) ?? null;
   }
 
   get strongest(): PerMotoRange | null {
     return (
-      this.perMotoRanges.find((r) => r.motorcycleId === this.strongestMotoId) ??
-      null
+      this.perMotoRanges.find((r) => r.motorcycleId === this.strongestMotoId) ?? null
     );
   }
 }

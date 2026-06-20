@@ -14,9 +14,7 @@ describe('GarageViewModel', () => {
     const getCurrentRider = {
       run: jest
         .fn()
-        .mockResolvedValue(
-          'rider' in overrides ? overrides.rider : makeRider(),
-        ),
+        .mockResolvedValue('rider' in overrides ? overrides.rider : makeRider()),
     };
     const getAll = {
       run: jest.fn().mockResolvedValue(overrides.motos ?? [makeMotorcycle()]),
@@ -24,11 +22,7 @@ describe('GarageViewModel', () => {
     const del = {
       run: overrides.deleteImpl ?? jest.fn().mockResolvedValue(undefined),
     };
-    const vm = new GarageViewModel(
-      getCurrentRider as any,
-      getAll as any,
-      del as any,
-    );
+    const vm = new GarageViewModel(getCurrentRider as any, getAll as any, del as any);
     return { vm, getAll, del };
   };
 

@@ -30,26 +30,20 @@ describe('inferStopKindFromInput (sync helper)', () => {
   });
 
   it('devuelve null cuando no hay match (deja al caller decidir fallback)', () => {
-    expect(
-      inferStopKindFromInput({ mapboxCategory: 'unknown_category' }),
-    ).toBeNull();
+    expect(inferStopKindFromInput({ mapboxCategory: 'unknown_category' })).toBeNull();
     expect(inferStopKindFromInput({})).toBeNull();
     expect(inferStopKindFromInput({ mapboxCategory: '' })).toBeNull();
   });
 
   it('respeta whitespace en la entrada (trim)', () => {
-    expect(inferStopKindFromInput({ mapboxCategory: '  restaurant  ' })).toBe(
-      'food',
-    );
+    expect(inferStopKindFromInput({ mapboxCategory: '  restaurant  ' })).toBe('food');
   });
 });
 
 describe('InferStopKindUseCase', () => {
   it('run() delega en inferStopKindFromInput (mismo resultado)', async () => {
     const useCase = new InferStopKindUseCase();
-    await expect(useCase.run({ mapboxCategory: 'gas_station' })).resolves.toBe(
-      'fuel',
-    );
+    await expect(useCase.run({ mapboxCategory: 'gas_station' })).resolves.toBe('fuel');
     await expect(useCase.run({})).resolves.toBeNull();
   });
 });

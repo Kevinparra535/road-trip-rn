@@ -52,9 +52,7 @@ const RoutesScreen = observer(() => {
     >
       <GradientView preset="header" style={styles.header}>
         <Text style={styles.headerTitle}>Mis rutas</Text>
-        <Text style={styles.headerSubtitle}>
-          Planea, guarda y revisa tus rodadas
-        </Text>
+        <Text style={styles.headerSubtitle}>Planea, guarda y revisa tus rodadas</Text>
       </GradientView>
 
       {viewModel.isRoutesLoading ? (
@@ -73,21 +71,13 @@ const RoutesScreen = observer(() => {
           renderItem={({ item }) => (
             <RouteRow
               row={item}
-              onPress={() =>
-                navigation.navigate('RouteDetail', { routeId: item.id })
-              }
-              onEdit={() =>
-                navigation.navigate('RoutePlanner', { routeId: item.id })
-              }
+              onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+              onEdit={() => navigation.navigate('RoutePlanner', { routeId: item.id })}
             />
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons
-                name="map-outline"
-                size={48}
-                color={Colors.base.iconMuted}
-              />
+              <Ionicons name="map-outline" size={48} color={Colors.base.iconMuted} />
               <Text style={styles.emptyTitle}>Aun no tienes rutas</Text>
               <Text style={styles.emptyText}>
                 Crea tu primera ruta tocando el mapa para marcar puntos.

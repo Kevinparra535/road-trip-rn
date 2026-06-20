@@ -62,9 +62,7 @@ export const EtaBreakdownCard = observer(
             <Text style={[styles.segmentValue, styles.segmentValueTotal]}>
               {fmt(etaWithStopsMin)}
             </Text>
-            <Text style={[styles.segmentLabel, styles.segmentLabelTotal]}>
-              Total
-            </Text>
+            <Text style={[styles.segmentLabel, styles.segmentLabelTotal]}>Total</Text>
           </View>
         </View>
       </View>

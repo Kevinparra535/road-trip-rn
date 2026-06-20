@@ -1,11 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import {
-  ChevronLeft,
-  LockKeyhole,
-  Map as MapIcon,
-  X,
-} from 'lucide-react-native';
+import { ChevronLeft, LockKeyhole, Map as MapIcon, X } from 'lucide-react-native';
 import { observer } from 'mobx-react-lite';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -49,9 +44,7 @@ export const PlannerMapCanvas = observer(
       ) : (
         <View style={styles.mapPlaceholder}>
           <MapIcon size={64} color={Colors.base.textMuted} />
-          <Text style={styles.placeholderLabel}>
-            Mapa (se renderiza en device)
-          </Text>
+          <Text style={styles.placeholderLabel}>Mapa (se renderiza en device)</Text>
         </View>
       )}
 

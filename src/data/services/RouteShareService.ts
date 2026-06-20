@@ -1,10 +1,4 @@
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { injectable } from 'inversify';
 
 import { RouteShareCodeModel } from '@/data/models/routeShareCodeModel';
@@ -47,9 +41,7 @@ export class RouteShareServiceImpl implements RouteShareService {
 
   async fetchByCode(code: string): Promise<RouteShareCodeModel | null> {
     const normalized = code.toUpperCase();
-    const snapshot = await getDoc(
-      doc(firestore, SHARE_CODES_COLLECTION, normalized),
-    );
+    const snapshot = await getDoc(doc(firestore, SHARE_CODES_COLLECTION, normalized));
     if (!snapshot.exists()) return null;
     return RouteShareCodeModel.fromJson({
       code: snapshot.id,

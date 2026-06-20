@@ -13,8 +13,7 @@ export function haversineKm(a: GeoPoint, b: GeoPoint): number {
   const lat1 = toRad(a.latitude);
   const lat2 = toRad(b.latitude);
   const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
 }
 
@@ -31,10 +30,7 @@ export function polylineLengthKm(geometry: GeoPoint[]): number {
  * Distancia acumulada (km) a lo largo de la polilinea hasta el vertice mas
  * cercano a `point`. Aproxima cuanto ha avanzado un punto sobre la ruta.
  */
-export function distanceAlongNearest(
-  geometry: GeoPoint[],
-  point: GeoPoint,
-): number {
+export function distanceAlongNearest(geometry: GeoPoint[], point: GeoPoint): number {
   if (geometry.length === 0) return 0;
   let accumulated = 0;
   let bestDistance = Infinity;
@@ -57,10 +53,7 @@ export function distanceAlongNearest(
  * Sirve para detectar de forma local —sin llamar a la API— si el conductor
  * se salio de la ruta trazada.
  */
-export function distanceToPolylineKm(
-  geometry: GeoPoint[],
-  point: GeoPoint,
-): number {
+export function distanceToPolylineKm(geometry: GeoPoint[], point: GeoPoint): number {
   let min = Infinity;
   for (let i = 0; i < geometry.length; i += 1) {
     const distance = haversineKm(geometry[i], point);
@@ -177,20 +170,14 @@ export function boundingBox(
  * Toma `sampleCount` puntos equiespaciados (por distancia) a lo largo de la
  * polilinea. Util para muestrear elevacion sin consultar cada vertice.
  */
-export function samplePolyline(
-  geometry: GeoPoint[],
-  sampleCount: number,
-): GeoPoint[] {
+export function samplePolyline(geometry: GeoPoint[], sampleCount: number): GeoPoint[] {
   if (geometry.length === 0 || sampleCount <= 0) return [];
   if (sampleCount === 1) return [geometry[0]];
 
   const total = polylineLengthKm(geometry);
   const samples: GeoPoint[] = [];
   for (let i = 0; i < sampleCount; i += 1) {
-    const point = pointAtDistanceAlong(
-      geometry,
-      (total * i) / (sampleCount - 1),
-    );
+    const point = pointAtDistanceAlong(geometry, (total * i) / (sampleCount - 1));
     if (point) samples.push(point);
   }
   return samples;
@@ -376,8 +363,7 @@ export function sampleAlongRouteWithAnchors(
     (sample) =>
       !anchorSamples.some(
         (anchor) =>
-          Math.abs(anchor.distanceAlongKm - sample.distanceAlongKm) <
-          dedupThresholdKm,
+          Math.abs(anchor.distanceAlongKm - sample.distanceAlongKm) < dedupThresholdKm,
       ),
   );
 

@@ -41,9 +41,7 @@ export class RouteFuelEstimate {
 
   /** Fraccion del alcance efectivo que consume la ruta (>1 = no alcanza). */
   get rangeUsedFraction(): number {
-    return this.effectiveRangeKm > 0
-      ? this.distanceKm / this.effectiveRangeKm
-      : 0;
+    return this.effectiveRangeKm > 0 ? this.distanceKm / this.effectiveRangeKm : 0;
   }
 
   /**

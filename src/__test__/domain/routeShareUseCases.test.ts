@@ -60,12 +60,8 @@ describe('GenerateRouteShareCodeUseCase', () => {
   it('lanza si falta routeId u ownerId', async () => {
     const repo = { create: jest.fn() };
     const useCase = new GenerateRouteShareCodeUseCase(repo as any);
-    await expect(useCase.run({ routeId: '', ownerId: 'u' })).rejects.toThrow(
-      /routeId/,
-    );
-    await expect(useCase.run({ routeId: 'r', ownerId: '' })).rejects.toThrow(
-      /ownerId/,
-    );
+    await expect(useCase.run({ routeId: '', ownerId: 'u' })).rejects.toThrow(/routeId/);
+    await expect(useCase.run({ routeId: 'r', ownerId: '' })).rejects.toThrow(/ownerId/);
   });
 });
 
@@ -80,17 +76,13 @@ describe('ResolveRouteShareCodeUseCase', () => {
       getByCode: jest
         .fn()
         .mockResolvedValue(
-          overrides.shareCode === undefined
-            ? makeShareCode()
-            : overrides.shareCode,
+          overrides.shareCode === undefined ? makeShareCode() : overrides.shareCode,
         ),
     };
     const getRoute = {
       run: jest
         .fn()
-        .mockResolvedValue(
-          overrides.route === undefined ? makeRoute() : overrides.route,
-        ),
+        .mockResolvedValue(overrides.route === undefined ? makeRoute() : overrides.route),
     };
     return {
       useCase: new ResolveRouteShareCodeUseCase(repo as any, getRoute as any),

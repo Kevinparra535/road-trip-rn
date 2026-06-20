@@ -167,12 +167,7 @@ describe('RouteDraftRepositoryImpl — get (merge no destructivo)', () => {
 
   it('devuelve solo-remoto cuando local no existe', async () => {
     const service = buildService({
-      fetchModel: remoteModel(
-        'rider-1',
-        null,
-        'solo-remoto',
-        '2026-06-18T00:00:00.000Z',
-      ),
+      fetchModel: remoteModel('rider-1', null, 'solo-remoto', '2026-06-18T00:00:00.000Z'),
     });
     const repo = makeRepo(service);
 
@@ -233,9 +228,7 @@ describe('RouteDraftRepositoryImpl — get (merge no destructivo)', () => {
     const result = await repo.get(key);
     expect(result?.name).toBe('remoto-nuevo');
     // El cache local fue refrescado con el draft remoto.
-    const rawLocal = JSON.parse(
-      (await AsyncStorage.getItem(localKey(key))) as string,
-    );
+    const rawLocal = JSON.parse((await AsyncStorage.getItem(localKey(key))) as string);
     expect(rawLocal.name).toBe('remoto-nuevo');
   });
 
@@ -270,9 +263,7 @@ describe('RouteDraftRepositoryImpl — get (merge no destructivo)', () => {
     const result = await repo.get(key);
     expect(result?.name).toBe('local-dirty');
     // No se debe haber pisado el local con el remoto.
-    const rawLocal = JSON.parse(
-      (await AsyncStorage.getItem(localKey(key))) as string,
-    );
+    const rawLocal = JSON.parse((await AsyncStorage.getItem(localKey(key))) as string);
     expect(rawLocal.name).toBe('local-dirty');
   });
 
@@ -367,9 +358,7 @@ describe('RouteDraftRepositoryImpl — clear', () => {
     const key: RouteDraftKey = { riderId: 'rider-1', routeId: 'r-7' };
     await AsyncStorage.setItem(
       localKey(key),
-      JSON.stringify(
-        RouteDraftModel.fromDomain(makeDraft({ routeId: 'r-7' })).toJson(),
-      ),
+      JSON.stringify(RouteDraftModel.fromDomain(makeDraft({ routeId: 'r-7' })).toJson()),
     );
 
     await repo.clear(key);

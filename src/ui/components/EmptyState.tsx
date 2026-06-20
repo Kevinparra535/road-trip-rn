@@ -33,11 +33,7 @@ const EmptyState = ({
 }: Props) => (
   <View style={styles.container}>
     <View style={styles.iconBox}>
-      <MaterialCommunityIcons
-        name={icon}
-        size={24}
-        color={Colors.base.textMuted}
-      />
+      <MaterialCommunityIcons name={icon} size={24} color={Colors.base.textMuted} />
     </View>
     <Text style={styles.title}>{title}</Text>
     <Text style={styles.message}>{message}</Text>

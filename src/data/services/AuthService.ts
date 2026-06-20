@@ -16,11 +16,7 @@ import { firebaseAuth, firestore } from '@/data/network/firebase';
 const RIDERS_COLLECTION = 'riders';
 
 export interface AuthService {
-  signUp(
-    email: string,
-    password: string,
-    displayName: string,
-  ): Promise<RiderModel>;
+  signUp(email: string, password: string, displayName: string): Promise<RiderModel>;
   signIn(email: string, password: string): Promise<RiderModel>;
   signOut(): Promise<void>;
   getCurrentRider(): Promise<RiderModel | null>;
@@ -48,20 +44,13 @@ export class AuthServiceImpl implements AuthService {
       photo_url: null,
       created_at: serverTimestamp(),
     };
-    await setDoc(
-      doc(firestore, RIDERS_COLLECTION, credential.user.uid),
-      profile,
-    );
+    await setDoc(doc(firestore, RIDERS_COLLECTION, credential.user.uid), profile);
 
     return RiderModel.fromJson({ ...profile, created_at: new Date() });
   }
 
   async signIn(email: string, password: string): Promise<RiderModel> {
-    const credential = await signInWithEmailAndPassword(
-      firebaseAuth,
-      email,
-      password,
-    );
+    const credential = await signInWithEmailAndPassword(firebaseAuth, email, password);
     return this.resolveRiderModel(credential.user);
   }
 

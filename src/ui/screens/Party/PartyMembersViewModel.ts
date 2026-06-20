@@ -140,9 +140,7 @@ export class PartyMembersViewModel {
 
   get canLeave(): boolean {
     return (
-      this.partyStore.hasActiveParty &&
-      this.currentRiderId !== null &&
-      !this.isLeaving
+      this.partyStore.hasActiveParty && this.currentRiderId !== null && !this.isLeaving
     );
   }
 
@@ -190,11 +188,7 @@ export class PartyMembersViewModel {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'load':

@@ -23,98 +23,86 @@ type ShareSheetModalProps = {
   viewModel: RouteDetailViewModel;
 };
 
-export const ShareSheetModal = observer(
-  ({ viewModel }: ShareSheetModalProps) => {
-    const shareCode = viewModel.shareCode;
-    const handleShare = async () => {
-      if (!shareCode) return;
-      try {
-        await Share.share({ message: viewModel.shareMessage });
-      } catch {
-        // Usuario cancelo el sheet del sistema; nada que hacer.
-      }
-    };
+export const ShareSheetModal = observer(({ viewModel }: ShareSheetModalProps) => {
+  const shareCode = viewModel.shareCode;
+  const handleShare = async () => {
+    if (!shareCode) return;
+    try {
+      await Share.share({ message: viewModel.shareMessage });
+    } catch {
+      // Usuario cancelo el sheet del sistema; nada que hacer.
+    }
+  };
 
-    return (
-      <Modal
-        visible={viewModel.isShareSheetOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => viewModel.closeShareSheet()}
-      >
-        <Pressable
-          style={styles.shareBackdrop}
-          onPress={() => viewModel.closeShareSheet()}
-        >
-          <Pressable style={styles.shareCard} onPress={() => {}}>
-            <View style={styles.shareHeader}>
-              <Text style={styles.shareTitle}>Compartir ruta</Text>
-              <TouchableOpacity
-                onPress={() => viewModel.closeShareSheet()}
-                hitSlop={8}
-              >
-                <Ionicons name="close" size={22} color={Colors.base.iconMuted} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.shareSub}>
-              Tus amigos pueden unirse pegando este codigo en &quot;Unirse a
-              ruta&quot;. Vence en 30 dias.
-            </Text>
-
-            <View style={styles.codeBox}>
-              {viewModel.isShareLoading && !shareCode ? (
-                <ActivityIndicator color={Colors.base.accent} />
-              ) : shareCode ? (
-                <Text style={styles.codeText} selectable>
-                  {shareCode.toDisplay()}
-                </Text>
-              ) : (
-                <Text style={styles.codePlaceholder}>—</Text>
-              )}
-            </View>
-
-            {viewModel.isShareError ? (
-              <Text style={styles.error}>{viewModel.isShareError}</Text>
-            ) : null}
-
-            <TouchableOpacity
-              style={[
-                styles.shareCta,
-                (!shareCode || viewModel.isShareLoading) && styles.shareCtaOff,
-              ]}
-              disabled={!shareCode || viewModel.isShareLoading}
-              onPress={handleShare}
-              activeOpacity={0.85}
-            >
-              <Ionicons
-                name="share-social"
-                size={18}
-                color={Colors.base.textPrimary}
-              />
-              <Text style={styles.shareCtaText}>Compartir</Text>
+  return (
+    <Modal
+      visible={viewModel.isShareSheetOpen}
+      transparent
+      animationType="fade"
+      onRequestClose={() => viewModel.closeShareSheet()}
+    >
+      <Pressable style={styles.shareBackdrop} onPress={() => viewModel.closeShareSheet()}>
+        <Pressable style={styles.shareCard} onPress={() => {}}>
+          <View style={styles.shareHeader}>
+            <Text style={styles.shareTitle}>Compartir ruta</Text>
+            <TouchableOpacity onPress={() => viewModel.closeShareSheet()} hitSlop={8}>
+              <Ionicons name="close" size={22} color={Colors.base.iconMuted} />
             </TouchableOpacity>
+          </View>
 
-            <TouchableOpacity
-              style={styles.shareRevoke}
-              onPress={() => void viewModel.revokeShareCode()}
-              disabled={!shareCode || viewModel.isShareLoading}
-            >
-              <Text
-                style={[
-                  styles.shareRevokeText,
-                  (!shareCode || viewModel.isShareLoading) && styles.shareOff,
-                ]}
-              >
-                Revocar codigo
+          <Text style={styles.shareSub}>
+            Tus amigos pueden unirse pegando este codigo en &quot;Unirse a ruta&quot;.
+            Vence en 30 dias.
+          </Text>
+
+          <View style={styles.codeBox}>
+            {viewModel.isShareLoading && !shareCode ? (
+              <ActivityIndicator color={Colors.base.accent} />
+            ) : shareCode ? (
+              <Text style={styles.codeText} selectable>
+                {shareCode.toDisplay()}
               </Text>
-            </TouchableOpacity>
-          </Pressable>
+            ) : (
+              <Text style={styles.codePlaceholder}>—</Text>
+            )}
+          </View>
+
+          {viewModel.isShareError ? (
+            <Text style={styles.error}>{viewModel.isShareError}</Text>
+          ) : null}
+
+          <TouchableOpacity
+            style={[
+              styles.shareCta,
+              (!shareCode || viewModel.isShareLoading) && styles.shareCtaOff,
+            ]}
+            disabled={!shareCode || viewModel.isShareLoading}
+            onPress={handleShare}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="share-social" size={18} color={Colors.base.textPrimary} />
+            <Text style={styles.shareCtaText}>Compartir</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.shareRevoke}
+            onPress={() => void viewModel.revokeShareCode()}
+            disabled={!shareCode || viewModel.isShareLoading}
+          >
+            <Text
+              style={[
+                styles.shareRevokeText,
+                (!shareCode || viewModel.isShareLoading) && styles.shareOff,
+              ]}
+            >
+              Revocar codigo
+            </Text>
+          </TouchableOpacity>
         </Pressable>
-      </Modal>
-    );
-  },
-);
+      </Pressable>
+    </Modal>
+  );
+});
 
 const styles = StyleSheet.create({
   shareBackdrop: {

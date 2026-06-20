@@ -250,9 +250,7 @@ describe('sampleAlongRouteWithAnchors', () => {
     expect(out.length).toBeGreaterThanOrEqual(3);
     // Ordenado por distancia.
     for (let i = 1; i < out.length; i += 1) {
-      expect(out[i].distanceAlongKm).toBeGreaterThanOrEqual(
-        out[i - 1].distanceAlongKm,
-      );
+      expect(out[i].distanceAlongKm).toBeGreaterThanOrEqual(out[i - 1].distanceAlongKm);
     }
   });
 
@@ -283,17 +281,13 @@ describe('sampleAlongRouteWithAnchors', () => {
     const totalKm = polylineLengthKm(longLine);
     const anchorAlong = totalKm / 2;
     // El ancla proyectada esta presente (snapped al trazado, lon ~ 0).
-    const anchorSample = out.find(
-      (s) => Math.abs(s.distanceAlongKm - anchorAlong) < 1,
-    );
+    const anchorSample = out.find((s) => Math.abs(s.distanceAlongKm - anchorAlong) < 1);
     expect(anchorSample).toBeDefined();
     expect(anchorSample?.point.longitude).toBeCloseTo(0, 3);
 
     // Dedup: no debe haber dos samples a < spacing/2 (15 km) de distancia.
     for (let i = 1; i < out.length; i += 1) {
-      expect(
-        out[i].distanceAlongKm - out[i - 1].distanceAlongKm,
-      ).toBeGreaterThan(0);
+      expect(out[i].distanceAlongKm - out[i - 1].distanceAlongKm).toBeGreaterThan(0);
     }
     const tooClose = out.some(
       (s) =>

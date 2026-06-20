@@ -30,10 +30,7 @@ type Props = {
  */
 const RideTypeSelector = ({ value, onChange, variant = 'wrap' }: Props) => (
   <View
-    style={[
-      styles.chips,
-      variant === 'compact' ? styles.chipsCompact : styles.chipsWrap,
-    ]}
+    style={[styles.chips, variant === 'compact' ? styles.chipsCompact : styles.chipsWrap]}
   >
     {RIDE_TYPES.map((meta) => {
       const active = value === meta.value;

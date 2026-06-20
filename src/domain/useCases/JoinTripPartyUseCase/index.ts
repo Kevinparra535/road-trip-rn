@@ -23,10 +23,7 @@ export type JoinTripPartyInput = {
  * rider ya esta, devuelve el party tal cual sin duplicar.
  */
 @injectable()
-export class JoinTripPartyUseCase implements UseCase<
-  JoinTripPartyInput,
-  TripParty
-> {
+export class JoinTripPartyUseCase implements UseCase<JoinTripPartyInput, TripParty> {
   constructor(
     @inject(TYPES.TripPartyRepository)
     private readonly repository: TripPartyRepository,

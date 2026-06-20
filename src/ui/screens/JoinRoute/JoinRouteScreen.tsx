@@ -64,11 +64,7 @@ const JoinRouteScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>Unirse a una ruta</Text>
         <View style={styles.navSpacer} />
@@ -80,11 +76,7 @@ const JoinRouteScreen = observer(() => {
       >
         <Text style={styles.sectionLabel}>Codigo de ruta</Text>
         <View style={styles.inputBox}>
-          <Ionicons
-            name="key-outline"
-            size={20}
-            color={Colors.base.iconMuted}
-          />
+          <Ionicons name="key-outline" size={20} color={Colors.base.iconMuted} />
           <TextInput
             style={styles.input}
             placeholder="XK4D-8MAB"
@@ -108,19 +100,13 @@ const JoinRouteScreen = observer(() => {
             <ActivityIndicator color={Colors.base.textPrimary} />
           ) : (
             <>
-              <Ionicons
-                name="search"
-                size={18}
-                color={Colors.base.textPrimary}
-              />
+              <Ionicons name="search" size={18} color={Colors.base.textPrimary} />
               <Text style={styles.ctaText}>Buscar ruta</Text>
             </>
           )}
         </TouchableOpacity>
 
-        {viewModel.isError ? (
-          <Text style={styles.error}>{viewModel.isError}</Text>
-        ) : null}
+        {viewModel.isError ? <Text style={styles.error}>{viewModel.isError}</Text> : null}
 
         {viewModel.showEmptyState ? (
           <View style={styles.emptyBox}>
@@ -131,8 +117,8 @@ const JoinRouteScreen = observer(() => {
             />
             <Text style={styles.emptyTitle}>Codigo no encontrado</Text>
             <Text style={styles.emptySub}>
-              Asegurate que esta bien escrito. Los codigos expiran a los 30 dias
-              de creados.
+              Asegurate que esta bien escrito. Los codigos expiran a los 30 dias de
+              creados.
             </Text>
           </View>
         ) : null}
@@ -150,14 +136,11 @@ const JoinRouteScreen = observer(() => {
               <>
                 {viewModel.myMotorcycles.length === 0 ? (
                   <Text style={styles.noMotos}>
-                    Necesitas registrar una moto en tu garaje para sumarte a una
-                    rodada.
+                    Necesitas registrar una moto en tu garaje para sumarte a una rodada.
                   </Text>
                 ) : (
                   <>
-                    <Text style={styles.motoLabel}>
-                      Tu moto para esta rodada
-                    </Text>
+                    <Text style={styles.motoLabel}>Tu moto para esta rodada</Text>
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -166,10 +149,7 @@ const JoinRouteScreen = observer(() => {
                       {viewModel.motorcycleRows.map((moto) => (
                         <TouchableOpacity
                           key={moto.id}
-                          style={[
-                            styles.motoChip,
-                            moto.active && styles.motoChipActive,
-                          ]}
+                          style={[styles.motoChip, moto.active && styles.motoChipActive]}
                           onPress={() => viewModel.selectMotorcycle(moto.id)}
                         >
                           <Text
@@ -201,11 +181,7 @@ const JoinRouteScreen = observer(() => {
                     <ActivityIndicator color={Colors.base.textPrimary} />
                   ) : (
                     <>
-                      <Ionicons
-                        name="people"
-                        size={18}
-                        color={Colors.base.textPrimary}
-                      />
+                      <Ionicons name="people" size={18} color={Colors.base.textPrimary} />
                       <Text style={styles.ctaText}>Sumarme a la rodada</Text>
                     </>
                   )}

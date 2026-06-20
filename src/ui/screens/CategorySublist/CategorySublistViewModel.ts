@@ -348,10 +348,8 @@ export class CategorySublistViewModel {
    */
   private expandBbox(points: GeoPoint[], factor: number): GeoPoint[] {
     if (points.length === 0) return points;
-    const centerLat =
-      points.reduce((sum, p) => sum + p.latitude, 0) / points.length;
-    const centerLng =
-      points.reduce((sum, p) => sum + p.longitude, 0) / points.length;
+    const centerLat = points.reduce((sum, p) => sum + p.latitude, 0) / points.length;
+    const centerLng = points.reduce((sum, p) => sum + p.longitude, 0) / points.length;
     return points.map((p) => ({
       latitude: centerLat + (p.latitude - centerLat) * factor,
       longitude: centerLng + (p.longitude - centerLng) * factor,
@@ -372,11 +370,7 @@ export class CategorySublistViewModel {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'search':

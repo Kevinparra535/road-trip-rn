@@ -55,9 +55,7 @@ describe('ProfileViewModel', () => {
 
   it('signOut delegates to the session store and returns its result', async () => {
     const signOut = jest.fn().mockResolvedValue(true);
-    const viewModel = new ProfileViewModel(
-      makeSessionStore({ signOut }) as never,
-    );
+    const viewModel = new ProfileViewModel(makeSessionStore({ signOut }) as never);
 
     await expect(viewModel.signOut()).resolves.toBe(true);
     expect(signOut).toHaveBeenCalledTimes(1);

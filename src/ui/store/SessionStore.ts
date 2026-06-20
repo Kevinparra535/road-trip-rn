@@ -77,11 +77,7 @@ export class SessionStore {
     this.unsubscribe = null;
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'session':

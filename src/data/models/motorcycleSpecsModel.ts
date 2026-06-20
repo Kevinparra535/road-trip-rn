@@ -53,9 +53,7 @@ export class MotorcycleSpecsModel {
       model: String(json.model ?? ''),
       year: Number(json.year ?? 0),
       tank_capacity_liters: Number(json.tank_capacity_liters ?? 0),
-      fuel_consumption_km_per_liter: Number(
-        json.fuel_consumption_km_per_liter ?? 0,
-      ),
+      fuel_consumption_km_per_liter: Number(json.fuel_consumption_km_per_liter ?? 0),
       engine_cc: json.engine_cc != null ? Number(json.engine_cc) : null,
       recommended_fuel_type: json.recommended_fuel_type ?? null,
       source: String(json.source ?? 'desconocida'),

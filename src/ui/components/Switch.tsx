@@ -26,12 +26,7 @@ const THUMB_TRAVEL = TRACK_WIDTH - TRACK_HEIGHT; // 20
  * Toggle animado que sigue los tokens del design system.
  * No usa el Switch nativo de react-native.
  */
-const Switch = ({
-  value,
-  onValueChange,
-  disabled = false,
-  testID,
-}: SwitchProps) => {
+const Switch = ({ value, onValueChange, disabled = false, testID }: SwitchProps) => {
   const progress = useDerivedValue(() =>
     withSpring(value ? 1 : 0, Motion.springs.snappy),
   );

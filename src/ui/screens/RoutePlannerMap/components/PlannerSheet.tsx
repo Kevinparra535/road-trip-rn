@@ -1,10 +1,4 @@
-import {
-  ElementRef,
-  forwardRef,
-  ReactNode,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { ElementRef, forwardRef, ReactNode, useImperativeHandle, useRef } from 'react';
 import { Keyboard, StyleSheet, View } from 'react-native';
 import BottomSheet, {
   BottomSheetBackgroundProps,

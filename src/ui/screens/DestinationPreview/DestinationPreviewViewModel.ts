@@ -260,11 +260,7 @@ export class DestinationPreviewViewModel {
 
   // ── Private helpers ───────────────────────────────────────────────────────
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'placeSummary':

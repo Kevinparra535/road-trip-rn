@@ -45,9 +45,7 @@ const JourneyBar = ({ totalKm, progressKm, stops }: Props) => {
       <View style={[styles.fill, { width: ratio(progressKm) * width }]} />
 
       <View style={[styles.endDot, styles.originDot]} />
-      <View
-        style={[styles.endDot, styles.destDot, { left: width - END_SIZE }]}
-      />
+      <View style={[styles.endDot, styles.destDot, { left: width - END_SIZE }]} />
 
       {stops.map((stop) => (
         <View
@@ -61,16 +59,12 @@ const JourneyBar = ({ totalKm, progressKm, stops }: Props) => {
           <MaterialCommunityIcons
             name="gas-station"
             size={13}
-            color={
-              stop.suggested ? Colors.base.accent : Colors.base.textSecondary
-            }
+            color={stop.suggested ? Colors.base.accent : Colors.base.textSecondary}
           />
         </View>
       ))}
 
-      <View
-        style={[styles.driver, { left: leftFor(progressKm, DRIVER_SIZE) }]}
-      />
+      <View style={[styles.driver, { left: leftFor(progressKm, DRIVER_SIZE) }]} />
     </View>
   );
 };

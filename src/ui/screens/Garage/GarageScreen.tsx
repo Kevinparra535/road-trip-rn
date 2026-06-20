@@ -1,11 +1,5 @@
 import { useEffect } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,9 +44,7 @@ const GarageScreen = observer(() => {
     >
       <GradientView preset="header" style={styles.header}>
         <Text style={styles.headerTitle}>Mi garaje</Text>
-        <Text style={styles.headerSubtitle}>
-          Tus motos y su autonomia teorica
-        </Text>
+        <Text style={styles.headerSubtitle}>Tus motos y su autonomia teorica</Text>
       </GradientView>
 
       {viewModel.isMotorcyclesLoading ? (
@@ -82,11 +74,7 @@ const GarageScreen = observer(() => {
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons
-                name="bicycle-outline"
-                size={48}
-                color={Colors.base.iconMuted}
-              />
+              <Ionicons name="bicycle-outline" size={48} color={Colors.base.iconMuted} />
               <Text style={styles.emptyTitle}>Aun no tienes motos</Text>
               <Text style={styles.emptyText}>
                 Registra tu moto para calcular autonomia en tus rutas.

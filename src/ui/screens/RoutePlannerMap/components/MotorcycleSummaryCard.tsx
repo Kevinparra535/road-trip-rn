@@ -29,11 +29,7 @@ const MotorcycleSummaryCard = ({ motorcycle, onPress }: Props) => {
     <View style={styles.card}>
       {/* Thumbnail */}
       <View style={styles.thumbnail}>
-        <MaterialCommunityIcons
-          name="motorbike"
-          size={28}
-          color={Colors.base.accent}
-        />
+        <MaterialCommunityIcons name="motorbike" size={28} color={Colors.base.accent} />
       </View>
 
       {/* Columna de texto */}
@@ -48,22 +44,14 @@ const MotorcycleSummaryCard = ({ motorcycle, onPress }: Props) => {
 
       {/* Chevron condicional */}
       {onPress !== undefined && (
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color={Colors.base.iconMuted}
-        />
+        <Ionicons name="chevron-forward" size={18} color={Colors.base.iconMuted} />
       )}
     </View>
   );
 
   if (onPress !== undefined) {
     return (
-      <TouchableOpacity
-        onPress={onPress}
-        activeOpacity={0.75}
-        style={iOSCornerStyle}
-      >
+      <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={iOSCornerStyle}>
         {inner}
       </TouchableOpacity>
     );

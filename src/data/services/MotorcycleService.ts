@@ -22,10 +22,7 @@ export interface MotorcycleService {
   fetchAllByRider(riderId: string): Promise<MotorcycleModel[]>;
   fetchById(id: string): Promise<MotorcycleModel | null>;
   create(payload: Record<string, unknown>): Promise<MotorcycleModel>;
-  update(
-    id: string,
-    payload: Record<string, unknown>,
-  ): Promise<MotorcycleModel>;
+  update(id: string, payload: Record<string, unknown>): Promise<MotorcycleModel>;
   delete(id: string): Promise<void>;
 }
 
@@ -38,9 +35,7 @@ export class MotorcycleServiceImpl implements MotorcycleService {
         where('rider_id', '==', riderId),
       ),
     );
-    return snapshot.docs.map((d) =>
-      MotorcycleModel.fromJson({ id: d.id, ...d.data() }),
-    );
+    return snapshot.docs.map((d) => MotorcycleModel.fromJson({ id: d.id, ...d.data() }));
   }
 
   async fetchById(id: string): Promise<MotorcycleModel | null> {
@@ -57,10 +52,7 @@ export class MotorcycleServiceImpl implements MotorcycleService {
     return MotorcycleModel.fromJson({ id: ref.id, ...payload });
   }
 
-  async update(
-    id: string,
-    payload: Record<string, unknown>,
-  ): Promise<MotorcycleModel> {
+  async update(id: string, payload: Record<string, unknown>): Promise<MotorcycleModel> {
     await updateDoc(doc(firestore, MOTORCYCLES_COLLECTION, id), payload);
     return MotorcycleModel.fromJson({ id, ...payload });
   }

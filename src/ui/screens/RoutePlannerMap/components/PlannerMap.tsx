@@ -47,9 +47,7 @@ const computeBounds = (
 };
 
 /** Feature LineString de la ruta para el `ShapeSource`. */
-const toLineFeature = (
-  geometry: GeoPoint[],
-): GeoJSON.Feature<GeoJSON.LineString> => ({
+const toLineFeature = (geometry: GeoPoint[]): GeoJSON.Feature<GeoJSON.LineString> => ({
   type: 'Feature',
   properties: {},
   geometry: {
@@ -108,12 +106,7 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
     if (focusPoints.length >= 2) {
       const bounds = computeBounds(focusPoints);
       if (!bounds) return;
-      cameraRef.current?.fitBounds(
-        bounds.ne,
-        bounds.sw,
-        [60, 60, inset + 40, 60],
-        600,
-      );
+      cameraRef.current?.fitBounds(bounds.ne, bounds.sw, [60, 60, inset + 40, 60], 600);
       return;
     }
     if (focusPoints.length === 1) {
@@ -159,8 +152,7 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
         styleURL={MAP_STYLE_URL}
         scaleBarEnabled={false}
         onPress={(feature) => {
-          const coords = (feature.geometry as GeoJSON.Point | undefined)
-            ?.coordinates;
+          const coords = (feature.geometry as GeoJSON.Point | undefined)?.coordinates;
           if (onMapPress && Array.isArray(coords)) {
             onMapPress({ longitude: coords[0], latitude: coords[1] });
           }
@@ -220,11 +212,7 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
                 allowOverlap
               >
                 <View style={styles.destinationDot}>
-                  <Ionicons
-                    name="flag"
-                    size={12}
-                    color={Colors.base.textPrimary}
-                  />
+                  <Ionicons name="flag" size={12} color={Colors.base.textPrimary} />
                 </View>
               </Mapbox.MarkerView>
             );

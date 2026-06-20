@@ -45,10 +45,7 @@ const TemplateSheet = observer(({ viewModel }: Props) => {
       onRequestClose={() => templates.closeTemplateSheet()}
     >
       {/* Backdrop — tap fuera cierra el sheet */}
-      <Pressable
-        style={styles.backdrop}
-        onPress={() => templates.closeTemplateSheet()}
-      >
+      <Pressable style={styles.backdrop} onPress={() => templates.closeTemplateSheet()}>
         {/* Sheet — inner Pressable absorbe taps para que no caigan al backdrop */}
         <Pressable style={styles.sheet} onPress={() => {}}>
           {/* Handle pill */}

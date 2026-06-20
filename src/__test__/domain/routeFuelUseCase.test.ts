@@ -39,9 +39,7 @@ describe('RouteFuelEstimate.refuelPointsKm', () => {
   });
 
   it('spaces a stop every half tank along a long route', () => {
-    expect(makeEstimate(450, 200).refuelPointsKm()).toEqual([
-      100, 200, 300, 400,
-    ]);
+    expect(makeEstimate(450, 200).refuelPointsKm()).toEqual([100, 200, 300, 400]);
   });
 });
 

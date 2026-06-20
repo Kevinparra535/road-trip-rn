@@ -29,14 +29,8 @@ export class CalculateDirectionsUseCase implements UseCase<
 
   async run(input: CalculateDirectionsInput): Promise<RouteDirections> {
     if (input.waypoints.length < 2) {
-      throw new Error(
-        'Agrega al menos un origen y un destino para calcular la ruta.',
-      );
+      throw new Error('Agrega al menos un origen y un destino para calcular la ruta.');
     }
-    return this.repository.getDirections(
-      input.waypoints,
-      input.rideType,
-      input.avoid,
-    );
+    return this.repository.getDirections(input.waypoints, input.rideType, input.avoid);
   }
 }

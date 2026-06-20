@@ -79,9 +79,7 @@ describe('PlaceCategorySearchRepositoryImpl', () => {
 
     const service = {
       // Cada sample devuelve TODO (el repo dedupea por id de todas formas).
-      searchByCategory: jest
-        .fn()
-        .mockResolvedValue([...denseStart, middle, end]),
+      searchByCategory: jest.fn().mockResolvedValue([...denseStart, middle, end]),
     };
     const repo = new PlaceCategorySearchRepositoryImpl(service as any);
     const out = await repo.searchByCategory({

@@ -34,5 +34,4 @@ export const STOP_KINDS: readonly StopKind[] = [
 
 /** Type guard: valida si un string arbitrario es un StopKind valido. */
 export const isStopKind = (value: unknown): value is StopKind =>
-  typeof value === 'string' &&
-  (STOP_KINDS as readonly string[]).includes(value);
+  typeof value === 'string' && (STOP_KINDS as readonly string[]).includes(value);

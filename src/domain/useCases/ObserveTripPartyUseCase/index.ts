@@ -41,10 +41,6 @@ export class ObserveTripPartyUseCase implements SubscriptionUseCase<
       // Devuelve un unsubscribe no-op para que el caller no diferencie.
       return () => undefined;
     }
-    return this.repository.observe(
-      input.partyId,
-      input.onChange,
-      input.onError,
-    );
+    return this.repository.observe(input.partyId, input.onChange, input.onError);
   }
 }

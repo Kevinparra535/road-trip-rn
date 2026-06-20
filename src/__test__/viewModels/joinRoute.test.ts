@@ -61,10 +61,9 @@ describe('JoinRouteViewModel', () => {
     const observePartyUseCase = {
       subscribe: jest.fn(() => () => undefined),
     };
-    const partyStore =
-      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
-        observePartyUseCase as any,
-      );
+    const partyStore = new (require('@/ui/store/TripPartyStore').TripPartyStore)(
+      observePartyUseCase as any,
+    );
     return {
       vm: new JoinRouteViewModel(
         resolve as any,
@@ -127,10 +126,9 @@ describe('JoinRouteViewModel', () => {
     const observePartyUseCase = {
       subscribe: jest.fn(() => () => undefined),
     };
-    const partyStore =
-      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
-        observePartyUseCase as any,
-      );
+    const partyStore = new (require('@/ui/store/TripPartyStore').TripPartyStore)(
+      observePartyUseCase as any,
+    );
     const vm = new JoinRouteViewModel(
       resolve as any,
       { run: jest.fn() } as any,

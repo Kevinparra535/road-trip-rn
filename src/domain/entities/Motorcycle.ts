@@ -91,8 +91,7 @@ export class Motorcycle {
     this.engineCc = params.engineCc ?? null;
     this.driverWeightKg = params.driverWeightKg ?? DEFAULT_DRIVER_WEIGHT_KG;
     this.hasPassenger = params.hasPassenger ?? false;
-    this.passengerWeightKg =
-      params.passengerWeightKg ?? DEFAULT_PASSENGER_WEIGHT_KG;
+    this.passengerWeightKg = params.passengerWeightKg ?? DEFAULT_PASSENGER_WEIGHT_KG;
     this.luggage = params.luggage ?? [];
     this.createdAt = params.createdAt ?? new Date();
 

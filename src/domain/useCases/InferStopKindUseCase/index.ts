@@ -36,9 +36,7 @@ const CATEGORY_RULES: { match: RegExp; kind: StopKind }[] = [
  *
  * Exportado para que solo HAYA UNA fuente de verdad de la regla de inferencia.
  */
-export const inferStopKindFromInput = (
-  input: InferStopKindInput,
-): StopKind | null => {
+export const inferStopKindFromInput = (input: InferStopKindInput): StopKind | null => {
   const category = input.mapboxCategory?.trim();
   if (category && category.length > 0) {
     for (const rule of CATEGORY_RULES) {

@@ -66,8 +66,8 @@ describe('GetRouteElevationUseCase', () => {
   it('propagates repository errors', async () => {
     const repo = makeRepo();
     repo.getProfile.mockRejectedValue(new Error('tilequery down'));
-    await expect(
-      new GetRouteElevationUseCase(repo).run(geometry),
-    ).rejects.toThrow('tilequery down');
+    await expect(new GetRouteElevationUseCase(repo).run(geometry)).rejects.toThrow(
+      'tilequery down',
+    );
   });
 });

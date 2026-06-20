@@ -70,8 +70,7 @@ describe('AddStopViewModel', () => {
 
   it('los tiles nuevos usan category + kind dedicados (town/lodging/cafe)', () => {
     const { vm } = build();
-    const byLabel = (label: string) =>
-      vm.categories.find((c) => c.label === label);
+    const byLabel = (label: string) => vm.categories.find((c) => c.label === label);
 
     expect(byLabel('Pueblos')).toMatchObject({
       category: 'town',

@@ -5,12 +5,7 @@ import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDay } from '@/domain/entities/RouteDay';
 
-import {
-  makeMotorcycle,
-  makeRider,
-  makeRoute,
-  makeWaypoint,
-} from '../factories';
+import { makeMotorcycle, makeRider, makeRoute, makeWaypoint } from '../factories';
 
 describe('Rider', () => {
   it('builds initials from display name', () => {
@@ -18,9 +13,7 @@ describe('Rider', () => {
   });
 
   it('falls back to email when name is empty', () => {
-    expect(
-      makeRider({ displayName: '   ', email: 'ab@x.com' }).initials(),
-    ).toBe('AB');
+    expect(makeRider({ displayName: '   ', email: 'ab@x.com' }).initials()).toBe('AB');
   });
 });
 
@@ -30,9 +23,7 @@ describe('Motorcycle', () => {
   });
 
   it('uses nickname for display name when present', () => {
-    expect(makeMotorcycle({ nickname: 'La Negra' }).displayName()).toBe(
-      'La Negra',
-    );
+    expect(makeMotorcycle({ nickname: 'La Negra' }).displayName()).toBe('La Negra');
   });
 
   it('builds display name from brand/model/year without nickname', () => {
@@ -54,12 +45,8 @@ describe('Route', () => {
   });
 
   it('formats duration label with and without hours', () => {
-    expect(makeRoute({ estimatedDurationMin: 45 }).durationLabel()).toBe(
-      '45 min',
-    );
-    expect(makeRoute({ estimatedDurationMin: 150 }).durationLabel()).toBe(
-      '2 h 30 min',
-    );
+    expect(makeRoute({ estimatedDurationMin: 45 }).durationLabel()).toBe('45 min');
+    expect(makeRoute({ estimatedDurationMin: 150 }).durationLabel()).toBe('2 h 30 min');
   });
 
   it('sums stop durations of intermediates only, ignoring start/destination', () => {
@@ -112,12 +99,8 @@ describe('Route', () => {
 
 describe('RouteDay', () => {
   it('counts the waypoints it spans (inclusive)', () => {
-    expect(
-      new RouteDay({ index: 0, startIdx: 0, endIdx: 2 }).waypointCount(),
-    ).toBe(3);
-    expect(
-      new RouteDay({ index: 1, startIdx: 3, endIdx: 3 }).waypointCount(),
-    ).toBe(1);
+    expect(new RouteDay({ index: 0, startIdx: 0, endIdx: 2 }).waypointCount()).toBe(3);
+    expect(new RouteDay({ index: 1, startIdx: 3, endIdx: 3 }).waypointCount()).toBe(1);
   });
 
   it('formats a 1-based day label', () => {
@@ -132,9 +115,7 @@ describe('RouteDay', () => {
 
 describe('Waypoint', () => {
   it('exposes lng/lat tuple', () => {
-    expect(makeWaypoint({ latitude: 1, longitude: 2 }).toLngLat()).toEqual([
-      2, 1,
-    ]);
+    expect(makeWaypoint({ latitude: 1, longitude: 2 }).toLngLat()).toEqual([2, 1]);
   });
 
   it('reports whether it has notes (trims whitespace-only)', () => {
@@ -146,15 +127,9 @@ describe('Waypoint', () => {
   it('formats stop duration label', () => {
     expect(makeWaypoint().stopDurationLabel()).toBe('');
     expect(makeWaypoint({ stopDurationMin: 0 }).stopDurationLabel()).toBe('');
-    expect(makeWaypoint({ stopDurationMin: 30 }).stopDurationLabel()).toBe(
-      '30 min',
-    );
-    expect(makeWaypoint({ stopDurationMin: 60 }).stopDurationLabel()).toBe(
-      '1 h',
-    );
-    expect(makeWaypoint({ stopDurationMin: 75 }).stopDurationLabel()).toBe(
-      '1 h 15 min',
-    );
+    expect(makeWaypoint({ stopDurationMin: 30 }).stopDurationLabel()).toBe('30 min');
+    expect(makeWaypoint({ stopDurationMin: 60 }).stopDurationLabel()).toBe('1 h');
+    expect(makeWaypoint({ stopDurationMin: 75 }).stopDurationLabel()).toBe('1 h 15 min');
   });
 });
 

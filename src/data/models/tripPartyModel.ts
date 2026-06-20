@@ -30,10 +30,7 @@ function toDate(value: unknown): Date {
   if (typeof value === 'string' || typeof value === 'number') {
     return new Date(value);
   }
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();
@@ -113,8 +110,7 @@ TripPartyModel.prototype.toDomain = function toDomain(): TripParty {
           ? {
               displayName: m.motorcycle_specs.display_name,
               tankCapacityLiters: m.motorcycle_specs.tank_capacity_liters,
-              fuelConsumptionKmPerLiter:
-                m.motorcycle_specs.fuel_consumption_km_per_liter,
+              fuelConsumptionKmPerLiter: m.motorcycle_specs.fuel_consumption_km_per_liter,
               loadKg: m.motorcycle_specs.load_kg,
             }
           : {
@@ -145,8 +141,7 @@ export function partyMemberToJson(member: PartyMember): PartyMemberJson {
     motorcycle_specs: {
       display_name: member.motorcycleSpecs.displayName,
       tank_capacity_liters: member.motorcycleSpecs.tankCapacityLiters,
-      fuel_consumption_km_per_liter:
-        member.motorcycleSpecs.fuelConsumptionKmPerLiter,
+      fuel_consumption_km_per_liter: member.motorcycleSpecs.fuelConsumptionKmPerLiter,
       load_kg: member.motorcycleSpecs.loadKg,
     },
     joined_at: member.joinedAt.toISOString(),

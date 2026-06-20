@@ -2,10 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
 
-import {
-  ElevationProfile,
-  ElevationSample,
-} from '@/domain/entities/ElevationProfile';
+import { ElevationProfile, ElevationSample } from '@/domain/entities/ElevationProfile';
 import { GeoPoint } from '@/domain/entities/Route';
 
 import { ElevationRepository } from '@/domain/repositories/ElevationRepository';
@@ -35,8 +32,7 @@ export class ElevationRepositoryImpl implements ElevationRepository {
     );
     const totalKm = polylineLengthKm(geometry);
     const samples: ElevationSample[] = points.map((point, index) => ({
-      distanceKm:
-        points.length > 1 ? (totalKm * index) / (points.length - 1) : 0,
+      distanceKm: points.length > 1 ? (totalKm * index) / (points.length - 1) : 0,
       elevationM: elevations[index] ?? 0,
       latitude: point.latitude,
       longitude: point.longitude,

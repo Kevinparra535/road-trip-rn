@@ -401,9 +401,7 @@ const RoutePlannerMapScreen = observer(() => {
                         <PinIcon
                           size={16}
                           color={
-                            item.isLast
-                              ? Colors.base.textPrimary
-                              : Colors.base.bgPrimary
+                            item.isLast ? Colors.base.textPrimary : Colors.base.bgPrimary
                           }
                         />
                       )}

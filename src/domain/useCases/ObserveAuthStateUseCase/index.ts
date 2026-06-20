@@ -12,10 +12,7 @@ type AuthStateListener = (rider: Rider | null) => void;
 type Unsubscribe = () => void;
 
 @injectable()
-export class ObserveAuthStateUseCase implements UseCase<
-  AuthStateListener,
-  Unsubscribe
-> {
+export class ObserveAuthStateUseCase implements UseCase<AuthStateListener, Unsubscribe> {
   constructor(
     @inject(TYPES.AuthRepository)
     private readonly repository: AuthRepository,

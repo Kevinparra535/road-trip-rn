@@ -14,10 +14,7 @@ function toDate(value: unknown): Date {
   if (typeof value === 'string' || typeof value === 'number') {
     return new Date(value);
   }
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();

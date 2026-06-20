@@ -23,8 +23,7 @@ describe('PlaceCategorySearchServiceImpl', () => {
     jest.restoreAllMocks();
   });
 
-  const newService = () =>
-    new PlaceCategorySearchServiceImpl(new FetchHttpManager());
+  const newService = () => new PlaceCategorySearchServiceImpl(new FetchHttpManager());
 
   describe('mapping de categorias (Search Box /category)', () => {
     it("mapea 'food' a /category/restaurant con token, proximity y language", async () => {
@@ -63,9 +62,7 @@ describe('PlaceCategorySearchServiceImpl', () => {
       await service.searchByCategory('lodging', [-74, 4.6]);
       await service.searchByCategory('cafe', [-74, 4.6]);
 
-      const urls = (global.fetch as jest.Mock).mock.calls.map(
-        (c) => c[0] as string,
-      );
+      const urls = (global.fetch as jest.Mock).mock.calls.map((c) => c[0] as string);
       expect(urls[0]).toContain('/category/hotel');
       expect(urls[1]).toContain('/category/cafe');
     });
@@ -87,9 +84,9 @@ describe('PlaceCategorySearchServiceImpl', () => {
     it('lanza cuando la respuesta de Search Box no es ok', async () => {
       global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 429 });
       const service = newService();
-      await expect(
-        service.searchByCategory('food', [-74, 4.6]),
-      ).rejects.toThrow('Mapbox Search Box respondio 429.');
+      await expect(service.searchByCategory('food', [-74, 4.6])).rejects.toThrow(
+        'Mapbox Search Box respondio 429.',
+      );
     });
   });
 
@@ -131,9 +128,9 @@ describe('PlaceCategorySearchServiceImpl', () => {
     it('lanza cuando geocoding no es ok', async () => {
       global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
       const service = newService();
-      await expect(
-        service.searchByCategory('town', [-74, 5.2]),
-      ).rejects.toThrow('Mapbox Geocoding respondio 500.');
+      await expect(service.searchByCategory('town', [-74, 5.2])).rejects.toThrow(
+        'Mapbox Geocoding respondio 500.',
+      );
     });
   });
 

@@ -23,10 +23,7 @@ export type CreateTripPartyInput = {
  * primer (y unico) miembro al crear.
  */
 @injectable()
-export class CreateTripPartyUseCase implements UseCase<
-  CreateTripPartyInput,
-  TripParty
-> {
+export class CreateTripPartyUseCase implements UseCase<CreateTripPartyInput, TripParty> {
   constructor(
     @inject(TYPES.TripPartyRepository)
     private readonly repository: TripPartyRepository,

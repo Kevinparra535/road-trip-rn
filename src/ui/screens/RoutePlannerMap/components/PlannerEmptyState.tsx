@@ -50,11 +50,7 @@ const PlannerEmptyState = ({
         />
       </View>
       <View style={styles.secondaryCol}>
-        <SecondaryButton
-          label="Dirección"
-          iconName="search-outline"
-          onPress={onSearch}
-        />
+        <SecondaryButton label="Dirección" iconName="search-outline" onPress={onSearch} />
       </View>
     </View>
 

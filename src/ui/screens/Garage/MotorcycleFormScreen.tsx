@@ -46,9 +46,7 @@ const MotorcycleFormScreen = observer(() => {
   const route = useRoute<Route>();
   const motorcycleId = route.params?.motorcycleId;
 
-  const viewModel = useViewModel<MotorcycleFormViewModel>(
-    TYPES.MotorcycleFormViewModel,
-  );
+  const viewModel = useViewModel<MotorcycleFormViewModel>(TYPES.MotorcycleFormViewModel);
 
   useEffect(() => {
     viewModel.initialize(motorcycleId);
@@ -65,11 +63,7 @@ const MotorcycleFormScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>{viewModel.title}</Text>
         <View style={styles.navSpacer} />
@@ -137,15 +131,10 @@ const MotorcycleFormScreen = observer(() => {
 
           {viewModel.specsResult ? (
             <View style={styles.specsBanner}>
-              <Ionicons
-                name="checkmark-circle"
-                size={18}
-                color={Colors.alerts.check}
-              />
+              <Ionicons name="checkmark-circle" size={18} color={Colors.alerts.check} />
               <Text style={styles.specsText}>
                 Stats encontradas ({viewModel.specsResult.source} · confianza{' '}
-                {viewModel.specsResult.confidence}). Revisa y ajusta si hace
-                falta.
+                {viewModel.specsResult.confidence}). Revisa y ajusta si hace falta.
               </Text>
             </View>
           ) : null}
@@ -172,17 +161,11 @@ const MotorcycleFormScreen = observer(() => {
             {viewModel.fuelOptions.map((option) => (
               <TouchableOpacity
                 key={option.value}
-                style={[
-                  styles.segmentItem,
-                  option.active && styles.segmentItemActive,
-                ]}
+                style={[styles.segmentItem, option.active && styles.segmentItemActive]}
                 onPress={() => viewModel.setFuelType(option.value)}
               >
                 <Text
-                  style={[
-                    styles.segmentText,
-                    option.active && styles.segmentTextActive,
-                  ]}
+                  style={[styles.segmentText, option.active && styles.segmentTextActive]}
                 >
                   {option.label}
                 </Text>
@@ -240,9 +223,7 @@ const MotorcycleFormScreen = observer(() => {
                 false: Colors.base.bgCard,
               }}
               thumbColor={
-                viewModel.hasPassenger
-                  ? Colors.base.accent
-                  : Colors.base.iconMuted
+                viewModel.hasPassenger ? Colors.base.accent : Colors.base.iconMuted
               }
             />
           </View>
@@ -260,9 +241,7 @@ const MotorcycleFormScreen = observer(() => {
           <View style={styles.switchRow}>
             <View style={styles.switchInfo}>
               <Text style={styles.switchTitle}>Maleteros</Text>
-              <Text style={styles.switchHint}>
-                Configura el peso de cada maletero.
-              </Text>
+              <Text style={styles.switchHint}>Configura el peso de cada maletero.</Text>
             </View>
             <Switch
               value={viewModel.luggageEnabled}
@@ -272,9 +251,7 @@ const MotorcycleFormScreen = observer(() => {
                 false: Colors.base.bgCard,
               }}
               thumbColor={
-                viewModel.luggageEnabled
-                  ? Colors.base.accent
-                  : Colors.base.iconMuted
+                viewModel.luggageEnabled ? Colors.base.accent : Colors.base.iconMuted
               }
             />
           </View>
@@ -291,9 +268,7 @@ const MotorcycleFormScreen = observer(() => {
                   value={row.weightKg}
                   min={0}
                   max={MAX_LUGGAGE_KG}
-                  onChange={(weight) =>
-                    viewModel.setLuggageWeight(row.position, weight)
-                  }
+                  onChange={(weight) => viewModel.setLuggageWeight(row.position, weight)}
                 />
               ))}
             </View>
@@ -302,12 +277,10 @@ const MotorcycleFormScreen = observer(() => {
           {viewModel.isValid ? (
             <View style={styles.rangeCard}>
               <Text style={styles.rangeLabel}>Autonomia con tu carga</Text>
-              <Text style={styles.rangeValue}>
-                {viewModel.loadAdjustedRangeKm} km
-              </Text>
+              <Text style={styles.rangeValue}>{viewModel.loadAdjustedRangeKm} km</Text>
               <Text style={styles.rangeHint}>
-                {viewModel.totalLoadKg} kg a bordo ·{' '}
-                {viewModel.estimatedRangeKm} km sin carga
+                {viewModel.totalLoadKg} kg a bordo · {viewModel.estimatedRangeKm} km sin
+                carga
               </Text>
             </View>
           ) : null}

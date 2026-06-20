@@ -17,9 +17,7 @@ import type { DirectionsService } from '@/data/services/DirectionsService';
  * dominio no conoce los tokens de Mapbox. `undefined` cuando no hay nada que
  * excluir, para no anexar un query param vacío.
  */
-export function avoidToExclude(
-  avoid?: RouteAvoidPreferences,
-): string | undefined {
+export function avoidToExclude(avoid?: RouteAvoidPreferences): string | undefined {
   if (!avoid || avoid.isEmpty) return undefined;
   const tokens: string[] = [];
   if (avoid.tolls) tokens.push('toll');

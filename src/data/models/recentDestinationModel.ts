@@ -19,10 +19,7 @@ function toDate(value: unknown): Date {
   if (typeof value === 'string' || typeof value === 'number') {
     return new Date(value);
   }
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();
@@ -68,8 +65,7 @@ export class RecentDestinationModel {
       full_name: String(json.full_name ?? json.name ?? ''),
       latitude: Number(json.latitude ?? 0),
       longitude: Number(json.longitude ?? 0),
-      place_type:
-        typeof json.place_type === 'string' ? json.place_type : undefined,
+      place_type: typeof json.place_type === 'string' ? json.place_type : undefined,
       category: typeof json.category === 'string' ? json.category : undefined,
       region: typeof json.region === 'string' ? json.region : undefined,
       country: typeof json.country === 'string' ? json.country : undefined,
@@ -116,19 +112,18 @@ declare module './recentDestinationModel' {
   }
 }
 
-RecentDestinationModel.prototype.toDomain =
-  function toDomain(): RecentDestination {
-    return new RecentDestination({
-      id: this.id,
-      placeId: this.place_id,
-      name: this.name,
-      fullName: this.full_name,
-      latitude: this.latitude,
-      longitude: this.longitude,
-      placeType: this.place_type,
-      category: this.category,
-      region: this.region,
-      country: this.country,
-      visitedAt: toDate(this.visited_at),
-    });
-  };
+RecentDestinationModel.prototype.toDomain = function toDomain(): RecentDestination {
+  return new RecentDestination({
+    id: this.id,
+    placeId: this.place_id,
+    name: this.name,
+    fullName: this.full_name,
+    latitude: this.latitude,
+    longitude: this.longitude,
+    placeType: this.place_type,
+    category: this.category,
+    region: this.region,
+    country: this.country,
+    visitedAt: toDate(this.visited_at),
+  });
+};

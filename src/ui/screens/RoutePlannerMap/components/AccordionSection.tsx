@@ -64,10 +64,7 @@ export const AccordionSection = ({
   const runAnimation = useCallback(
     (open: boolean) => {
       if (!hasMeasured.current) return;
-      animatedHeight.value = withTiming(
-        open ? measuredHeight.current : 0,
-        timingConfig,
-      );
+      animatedHeight.value = withTiming(open ? measuredHeight.current : 0, timingConfig);
       animatedOpacity.value = withTiming(open ? 1 : 0, timingConfig);
       chevronRotation.value = withTiming(open ? 180 : 0, timingConfig);
     },
@@ -117,11 +114,7 @@ export const AccordionSection = ({
   return (
     <View style={styles.card}>
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <TouchableOpacity
-        style={styles.header}
-        onPress={onToggle}
-        activeOpacity={0.75}
-      >
+      <TouchableOpacity style={styles.header} onPress={onToggle} activeOpacity={0.75}>
         {/* Icono principal */}
         <Ionicons name={iconName} size={20} color={resolvedIconColor} />
 
@@ -139,11 +132,7 @@ export const AccordionSection = ({
 
         {/* Chevron animado */}
         <Animated.View style={animatedChevronStyle}>
-          <Ionicons
-            name="chevron-down"
-            size={16}
-            color={Colors.base.iconMuted}
-          />
+          <Ionicons name="chevron-down" size={16} color={Colors.base.iconMuted} />
         </Animated.View>
       </TouchableOpacity>
 

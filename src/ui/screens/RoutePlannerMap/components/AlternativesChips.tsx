@@ -1,10 +1,4 @@
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
@@ -37,11 +31,7 @@ const AlternativesChips = observer(
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons
-            name="git-branch-outline"
-            size={14}
-            color={Colors.base.iconMuted}
-          />
+          <Ionicons name="git-branch-outline" size={14} color={Colors.base.iconMuted} />
           <Text style={styles.headerLabel}>Rutas disponibles</Text>
         </View>
 
@@ -57,10 +47,7 @@ const AlternativesChips = observer(
             return (
               <TouchableOpacity
                 key={index}
-                style={[
-                  styles.card,
-                  isActive ? styles.cardActive : styles.cardInactive,
-                ]}
+                style={[styles.card, isActive ? styles.cardActive : styles.cardInactive]}
                 onPress={() => viewModel.selectAlternative(index)}
                 activeOpacity={0.75}
                 testID={`route-alternatives-chip-${index}`}
@@ -78,9 +65,7 @@ const AlternativesChips = observer(
                   <Ionicons
                     name={isActive ? 'checkmark-circle' : 'radio-button-off'}
                     size={16}
-                    color={
-                      isActive ? Colors.base.accent : Colors.base.iconMuted
-                    }
+                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
                   />
                 </View>
 
@@ -89,9 +74,7 @@ const AlternativesChips = observer(
                   <Ionicons
                     name="navigate-outline"
                     size={12}
-                    color={
-                      isActive ? Colors.base.accent : Colors.base.iconMuted
-                    }
+                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
                   />
                   <Text
                     style={[
@@ -108,9 +91,7 @@ const AlternativesChips = observer(
                   <Ionicons
                     name="time-outline"
                     size={12}
-                    color={
-                      isActive ? Colors.base.accent : Colors.base.iconMuted
-                    }
+                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
                   />
                   <Text
                     style={[

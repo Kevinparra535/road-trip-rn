@@ -71,10 +71,7 @@ export function removeReturnClone(waypoints: Waypoint[]): Waypoint[] {
  * waypoint). Se ordenan, deduplican y se acotan a `[0, n-2]` — el último
  * waypoint no puede cerrar un día intermedio. `boundaries` vacío → un solo día.
  */
-export function splitIntoDays(
-  waypoints: Waypoint[],
-  boundaries: number[],
-): RouteDay[] {
+export function splitIntoDays(waypoints: Waypoint[], boundaries: number[]): RouteDay[] {
   if (waypoints.length === 0) return [];
   const lastIdx = waypoints.length - 1;
 

@@ -87,11 +87,7 @@ export const AutonomyCard = observer(
 
         {/* ── Badge de estado de alcance ────────────────────────────────── */}
         {reaches ? (
-          <Badge
-            tone="check"
-            label="Llegas sin tanquear"
-            iconName="checkmark-circle"
-          />
+          <Badge tone="check" label="Llegas sin tanquear" iconName="checkmark-circle" />
         ) : (
           <Badge
             tone="warning"
@@ -124,9 +120,7 @@ export const AutonomyCard = observer(
             label="Ritmo agresivo"
             iconName="flash-outline"
             active={insights.aggressiveRiding}
-            onPress={() =>
-              insights.toggleAggressiveRiding(!insights.aggressiveRiding)
-            }
+            onPress={() => insights.toggleAggressiveRiding(!insights.aggressiveRiding)}
             tone={insights.aggressiveRiding ? 'accent' : 'neutral'}
           />
         </View>

@@ -41,11 +41,7 @@ const HomeFeedItem = ({ item, onPress }: Props) => {
             {subtitle || place.fullName}
           </Text>
         </View>
-        <Ionicons
-          name="chevron-forward"
-          size={18}
-          color={Colors.base.iconMuted}
-        />
+        <Ionicons name="chevron-forward" size={18} color={Colors.base.iconMuted} />
       </TouchableOpacity>
     );
   }
@@ -75,11 +71,7 @@ const HomeFeedItem = ({ item, onPress }: Props) => {
           Ruta guardada · {totalStops} paradas
         </Text>
       </View>
-      <Ionicons
-        name="chevron-forward"
-        size={18}
-        color={Colors.base.iconMuted}
-      />
+      <Ionicons name="chevron-forward" size={18} color={Colors.base.iconMuted} />
     </TouchableOpacity>
   );
 };

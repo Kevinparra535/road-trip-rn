@@ -30,10 +30,7 @@ function toDate(value: unknown): Date {
   if (typeof value === 'string' || typeof value === 'number') {
     return new Date(value);
   }
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();
@@ -104,13 +101,9 @@ export class MotorcycleModel {
       nickname: json.nickname ?? null,
       fuel_type: String(json.fuel_type ?? 'corriente'),
       tank_capacity_liters: Number(json.tank_capacity_liters ?? 0),
-      fuel_consumption_km_per_liter: Number(
-        json.fuel_consumption_km_per_liter ?? 0,
-      ),
+      fuel_consumption_km_per_liter: Number(json.fuel_consumption_km_per_liter ?? 0),
       engine_cc: json.engine_cc != null ? Number(json.engine_cc) : null,
-      driver_weight_kg: Number(
-        json.driver_weight_kg ?? DEFAULT_DRIVER_WEIGHT_KG,
-      ),
+      driver_weight_kg: Number(json.driver_weight_kg ?? DEFAULT_DRIVER_WEIGHT_KG),
       has_passenger: Boolean(json.has_passenger ?? false),
       passenger_weight_kg: Number(
         json.passenger_weight_kg ?? DEFAULT_PASSENGER_WEIGHT_KG,

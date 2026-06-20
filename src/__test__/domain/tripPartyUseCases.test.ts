@@ -91,10 +91,7 @@ describe('JoinTripPartyUseCase', () => {
     });
     const updated = makeParty({ members: [...original.members, newMember] });
     const repo = {
-      getById: jest
-        .fn()
-        .mockResolvedValueOnce(original)
-        .mockResolvedValueOnce(updated),
+      getById: jest.fn().mockResolvedValueOnce(original).mockResolvedValueOnce(updated),
       addMember: jest.fn().mockResolvedValue(undefined),
     };
     const useCase = new JoinTripPartyUseCase(repo as any);

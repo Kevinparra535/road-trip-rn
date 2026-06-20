@@ -71,11 +71,7 @@ const FuelGaugeBar = ({ usedKm, rangeKm, reservePct = 12 }: Props) => {
       <View style={styles.track}>
         {/* Fill animado con gradiente naranja */}
         <Animated.View style={[styles.fillWrapper, animatedFill]}>
-          <GradientView
-            preset="accent"
-            direction="horizontal"
-            style={styles.fill}
-          />
+          <GradientView preset="accent" direction="horizontal" style={styles.fill} />
         </Animated.View>
 
         {/* Marca vertical de reserva */}

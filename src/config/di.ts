@@ -155,16 +155,10 @@ import 'reflect-metadata';
 export const container = new Container();
 
 // ── Managers: singleton ─────────────────────────────────────────────────────
-container
-  .bind<HttpManager>(TYPES.HttpManager)
-  .to(FetchHttpManager)
-  .inSingletonScope();
+container.bind<HttpManager>(TYPES.HttpManager).to(FetchHttpManager).inSingletonScope();
 
 // ── Services: singleton ────────────────────────────────────────────────────
-container
-  .bind<AuthService>(TYPES.AuthService)
-  .to(AuthServiceImpl)
-  .inSingletonScope();
+container.bind<AuthService>(TYPES.AuthService).to(AuthServiceImpl).inSingletonScope();
 container
   .bind<MotorcycleService>(TYPES.MotorcycleService)
   .to(MotorcycleServiceImpl)
@@ -173,10 +167,7 @@ container
   .bind<MotoStatsService>(TYPES.MotoStatsService)
   .to(MotoStatsServiceImpl)
   .inSingletonScope();
-container
-  .bind<RouteService>(TYPES.RouteService)
-  .to(RouteServiceImpl)
-  .inSingletonScope();
+container.bind<RouteService>(TYPES.RouteService).to(RouteServiceImpl).inSingletonScope();
 container
   .bind<DirectionsService>(TYPES.DirectionsService)
   .to(DirectionsServiceImpl)
@@ -317,9 +308,7 @@ container
 container
   .bind<GetAllMotorcyclesUseCase>(TYPES.GetAllMotorcyclesUseCase)
   .to(GetAllMotorcyclesUseCase);
-container
-  .bind<GetMotorcycleUseCase>(TYPES.GetMotorcycleUseCase)
-  .to(GetMotorcycleUseCase);
+container.bind<GetMotorcycleUseCase>(TYPES.GetMotorcycleUseCase).to(GetMotorcycleUseCase);
 container
   .bind<CreateMotorcycleUseCase>(TYPES.CreateMotorcycleUseCase)
   .to(CreateMotorcycleUseCase);
@@ -332,19 +321,11 @@ container
 container
   .bind<FetchMotorcycleSpecsUseCase>(TYPES.FetchMotorcycleSpecsUseCase)
   .to(FetchMotorcycleSpecsUseCase);
-container
-  .bind<GetAllRoutesUseCase>(TYPES.GetAllRoutesUseCase)
-  .to(GetAllRoutesUseCase);
+container.bind<GetAllRoutesUseCase>(TYPES.GetAllRoutesUseCase).to(GetAllRoutesUseCase);
 container.bind<GetRouteUseCase>(TYPES.GetRouteUseCase).to(GetRouteUseCase);
-container
-  .bind<CreateRouteUseCase>(TYPES.CreateRouteUseCase)
-  .to(CreateRouteUseCase);
-container
-  .bind<UpdateRouteUseCase>(TYPES.UpdateRouteUseCase)
-  .to(UpdateRouteUseCase);
-container
-  .bind<DeleteRouteUseCase>(TYPES.DeleteRouteUseCase)
-  .to(DeleteRouteUseCase);
+container.bind<CreateRouteUseCase>(TYPES.CreateRouteUseCase).to(CreateRouteUseCase);
+container.bind<UpdateRouteUseCase>(TYPES.UpdateRouteUseCase).to(UpdateRouteUseCase);
+container.bind<DeleteRouteUseCase>(TYPES.DeleteRouteUseCase).to(DeleteRouteUseCase);
 container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
@@ -355,22 +336,14 @@ container
   .bind<FindFuelStationsUseCase>(TYPES.FindFuelStationsUseCase)
   .to(FindFuelStationsUseCase);
 container
-  .bind<RequestLocationPermissionUseCase>(
-    TYPES.RequestLocationPermissionUseCase,
-  )
+  .bind<RequestLocationPermissionUseCase>(TYPES.RequestLocationPermissionUseCase)
   .to(RequestLocationPermissionUseCase);
 container
   .bind<GetCurrentLocationUseCase>(TYPES.GetCurrentLocationUseCase)
   .to(GetCurrentLocationUseCase);
-container
-  .bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase)
-  .to(WatchLocationUseCase);
-container
-  .bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase)
-  .to(WatchHeadingUseCase);
-container
-  .bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase)
-  .to(SearchPlacesUseCase);
+container.bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase).to(WatchLocationUseCase);
+container.bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase).to(WatchHeadingUseCase);
+container.bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase).to(SearchPlacesUseCase);
 container
   .bind<SearchPlacesByCategoryUseCase>(TYPES.SearchPlacesByCategoryUseCase)
   .to(SearchPlacesByCategoryUseCase);
@@ -386,9 +359,7 @@ container
 container
   .bind<CreateTripPartyUseCase>(TYPES.CreateTripPartyUseCase)
   .to(CreateTripPartyUseCase);
-container
-  .bind<JoinTripPartyUseCase>(TYPES.JoinTripPartyUseCase)
-  .to(JoinTripPartyUseCase);
+container.bind<JoinTripPartyUseCase>(TYPES.JoinTripPartyUseCase).to(JoinTripPartyUseCase);
 container
   .bind<LeaveTripPartyUseCase>(TYPES.LeaveTripPartyUseCase)
   .to(LeaveTripPartyUseCase);
@@ -416,9 +387,7 @@ container
 container
   .bind<ClearRecentDestinationsUseCase>(TYPES.ClearRecentDestinationsUseCase)
   .to(ClearRecentDestinationsUseCase);
-container
-  .bind<GetRouteDraftUseCase>(TYPES.GetRouteDraftUseCase)
-  .to(GetRouteDraftUseCase);
+container.bind<GetRouteDraftUseCase>(TYPES.GetRouteDraftUseCase).to(GetRouteDraftUseCase);
 container
   .bind<SaveRouteDraftUseCase>(TYPES.SaveRouteDraftUseCase)
   .to(SaveRouteDraftUseCase);
@@ -431,9 +400,7 @@ container
 container
   .bind<EstimateRouteFuelUseCase>(TYPES.EstimateRouteFuelUseCase)
   .to(EstimateRouteFuelUseCase);
-container
-  .bind<InferStopKindUseCase>(TYPES.InferStopKindUseCase)
-  .to(InferStopKindUseCase);
+container.bind<InferStopKindUseCase>(TYPES.InferStopKindUseCase).to(InferStopKindUseCase);
 container
   .bind<OptimizeRouteOrderUseCase>(TYPES.OptimizeRouteOrderUseCase)
   .to(OptimizeRouteOrderUseCase);
@@ -442,22 +409,13 @@ container
   .to(GetRouteTemplatesUseCase);
 
 // ── ViewModels ──────────────────────────────────────────────────────────────
-container
-  .bind<SessionStore>(TYPES.SessionStore)
-  .to(SessionStore)
-  .inSingletonScope();
-container
-  .bind<LocationStore>(TYPES.LocationStore)
-  .to(LocationStore)
-  .inSingletonScope();
+container.bind<SessionStore>(TYPES.SessionStore).to(SessionStore).inSingletonScope();
+container.bind<LocationStore>(TYPES.LocationStore).to(LocationStore).inSingletonScope();
 container
   .bind<TripPartyStore>(TYPES.TripPartyStore)
   .to(TripPartyStore)
   .inSingletonScope();
-container
-  .bind<PlannerStore>(TYPES.PlannerStore)
-  .to(PlannerStore)
-  .inSingletonScope();
+container.bind<PlannerStore>(TYPES.PlannerStore).to(PlannerStore).inSingletonScope();
 container
   .bind<NavigationStore>(TYPES.NavigationStore)
   .to(NavigationStore)
@@ -470,10 +428,7 @@ container
   .bind<PlannerTemplateController>(TYPES.PlannerTemplateController)
   .to(PlannerTemplateController)
   .inSingletonScope();
-container
-  .bind<NetworkStore>(TYPES.NetworkStore)
-  .to(NetworkStore)
-  .inSingletonScope();
+container.bind<NetworkStore>(TYPES.NetworkStore).to(NetworkStore).inSingletonScope();
 container
   .bind<SyncCoordinator>(TYPES.SyncCoordinator)
   .to(SyncCoordinator)
@@ -495,25 +450,18 @@ container.bind<RoutesViewModel>(TYPES.RoutesViewModel).to(RoutesViewModel);
 container
   .bind<RoutePlannerMapViewModel>(TYPES.RoutePlannerMapViewModel)
   .to(RoutePlannerMapViewModel);
-container
-  .bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel)
-  .to(RouteDetailViewModel);
+container.bind<RouteDetailViewModel>(TYPES.RouteDetailViewModel).to(RouteDetailViewModel);
 // Singleton: el handoff de preview/rideType con DestinationPreview ya vive en
 // el NavigationStore, pero HomeViewModel sigue siendo singleton porque
 // RoutePlannerMapScreen llama `startNavigationFromPlanner`
 // sobre ESTA misma instancia para arrancar la navegación que luego renderiza el
 // HomeScreen (destination/isRouteResponse/isNavigating viven en el VM). Si fuera
 // transient, esas pantallas mutarían una instancia distinta a la del Home.
-container
-  .bind<HomeViewModel>(TYPES.HomeViewModel)
-  .to(HomeViewModel)
-  .inSingletonScope();
+container.bind<HomeViewModel>(TYPES.HomeViewModel).to(HomeViewModel).inSingletonScope();
 container
   .bind<DestinationPreviewViewModel>(TYPES.DestinationPreviewViewModel)
   .to(DestinationPreviewViewModel);
-container
-  .bind<JoinRouteViewModel>(TYPES.JoinRouteViewModel)
-  .to(JoinRouteViewModel);
+container.bind<JoinRouteViewModel>(TYPES.JoinRouteViewModel).to(JoinRouteViewModel);
 container
   .bind<PartyMembersViewModel>(TYPES.PartyMembersViewModel)
   .to(PartyMembersViewModel);

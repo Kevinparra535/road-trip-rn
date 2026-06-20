@@ -28,9 +28,7 @@ export class OptimizationModel {
    * `RouteDirectionsModel` tratando `trips` como `routes`.
    */
   static fromMapboxJson(json: any): OptimizationModel {
-    const waypoints: any[] = Array.isArray(json?.waypoints)
-      ? json.waypoints
-      : [];
+    const waypoints: any[] = Array.isArray(json?.waypoints) ? json.waypoints : [];
     const waypointIndexes = waypoints.map((w, index) =>
       Number(w?.waypoint_index ?? index),
     );
@@ -58,9 +56,7 @@ OptimizationModel.prototype.toDomain = function toDomain(
     ordered[position] = waypoint.id;
   });
 
-  const waypointIds = ordered.filter(
-    (id): id is string => typeof id === 'string',
-  );
+  const waypointIds = ordered.filter((id): id is string => typeof id === 'string');
 
   return new OptimizedTrip({
     waypointIds,

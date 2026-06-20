@@ -66,11 +66,11 @@ export class PlaceCategorySearchRepositoryImpl implements PlaceCategorySearchRep
     const spacingKm = input.spacingKm ?? DEFAULT_SPACING_KM;
     const maxSamples = input.maxSamples ?? DEFAULT_MAX_SAMPLES;
 
-    const samples = sampleAlongRouteWithAnchors(
-      input.alongRoute,
-      input.anchors ?? [],
-      { spacingKm, minSamples: MIN_SAMPLES, maxSamples },
-    );
+    const samples = sampleAlongRouteWithAnchors(input.alongRoute, input.anchors ?? [], {
+      spacingKm,
+      minSamples: MIN_SAMPLES,
+      maxSamples,
+    });
     if (samples.length === 0) return [];
 
     const lngLatSamples: [number, number][] = samples.map((s) => [
@@ -79,9 +79,7 @@ export class PlaceCategorySearchRepositoryImpl implements PlaceCategorySearchRep
     ]);
 
     const batches = await runWithConcurrency(lngLatSamples, CONCURRENCY, (pt) =>
-      this.service
-        .searchByCategory(input.category, pt)
-        .catch((): PlaceModel[] => []),
+      this.service.searchByCategory(input.category, pt).catch((): PlaceModel[] => []),
     );
 
     // Dedup por id, proyectando cada POI sobre la ruta una sola vez.
@@ -103,11 +101,7 @@ export class PlaceCategorySearchRepositoryImpl implements PlaceCategorySearchRep
     }
 
     const maxResults = input.maxResults ?? DEFAULT_MAX_RESULTS;
-    return rankUniformCoverage(
-      Array.from(seen.values()),
-      input.alongRoute,
-      maxResults,
-    );
+    return rankUniformCoverage(Array.from(seen.values()), input.alongRoute, maxResults);
   }
 }
 
@@ -132,10 +126,7 @@ function rankUniformCoverage(
   const buckets: RankedPoi[][] = Array.from({ length: bucketCount }, () => []);
   for (const poi of pois) {
     const ratio = totalKm > 0 ? poi.alongKm / totalKm : 0;
-    const idx = Math.min(
-      bucketCount - 1,
-      Math.max(0, Math.floor(ratio * bucketCount)),
-    );
+    const idx = Math.min(bucketCount - 1, Math.max(0, Math.floor(ratio * bucketCount)));
     buckets[idx].push(poi);
   }
   for (const bucket of buckets) {

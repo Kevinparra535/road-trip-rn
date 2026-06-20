@@ -23,19 +23,10 @@ type Props = {
  * Celda de estadistica del sheet: icono + valor destacado + etiqueta. Se
  * compone en filas de 3 dentro de las tarjetas (ruta, autonomia).
  */
-const StatCell = ({
-  icon,
-  iconColor,
-  value,
-  label,
-  valueColor,
-  bordered,
-}: Props) => (
+const StatCell = ({ icon, iconColor, value, label, valueColor, bordered }: Props) => (
   <View style={[styles.cell, bordered && styles.bordered]}>
     <MaterialCommunityIcons name={icon} size={20} color={iconColor} />
-    <Text style={[styles.value, valueColor ? { color: valueColor } : null]}>
-      {value}
-    </Text>
+    <Text style={[styles.value, valueColor ? { color: valueColor } : null]}>{value}</Text>
     <Text style={styles.label}>{label}</Text>
   </View>
 );

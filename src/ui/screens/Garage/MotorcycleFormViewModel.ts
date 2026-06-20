@@ -147,9 +147,7 @@ export class MotorcycleFormViewModel {
    * maleteros). Usa el mismo modelo de peso que el estimador de ruta.
    */
   get loadAdjustedRangeKm(): number {
-    return Math.round(
-      this.estimatedRangeKm * loadConsumptionFactor(this.totalLoadKg),
-    );
+    return Math.round(this.estimatedRangeKm * loadConsumptionFactor(this.totalLoadKg));
   }
 
   /** Opciones de combustible con su estado activo segun el tipo seleccionado. */
@@ -407,9 +405,7 @@ export class MotorcycleFormViewModel {
       this.fuelType = motorcycle.fuelType;
       this.tankCapacityText = String(motorcycle.tankCapacityLiters);
       this.consumptionText = String(motorcycle.fuelConsumptionKmPerLiter);
-      this.engineCcText = motorcycle.engineCc
-        ? String(motorcycle.engineCc)
-        : '';
+      this.engineCcText = motorcycle.engineCc ? String(motorcycle.engineCc) : '';
       this.driverWeightKg = motorcycle.driverWeightKg;
       this.hasPassenger = motorcycle.hasPassenger;
       this.passengerWeightKg = motorcycle.passengerWeightKg;
@@ -444,11 +440,7 @@ export class MotorcycleFormViewModel {
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'load':

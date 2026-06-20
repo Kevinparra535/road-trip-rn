@@ -263,11 +263,7 @@ describe('RouteModel', () => {
     }).toDomain();
 
     expect(route.stops()).toHaveLength(3);
-    expect(route.stops().map((w) => w.kind)).toEqual([
-      'food',
-      'fuel',
-      'tourism',
-    ]);
+    expect(route.stops().map((w) => w.kind)).toEqual(['food', 'fuel', 'tourism']);
   });
 
   it('parsea avoid/round_trip/days y notes/stop_duration_min del waypoint', () => {
@@ -635,9 +631,7 @@ describe('FuelStationModel', () => {
   });
 
   it('returns null when the feature has no coordinates', () => {
-    expect(
-      FuelStationModel.fromMapboxFeature({ properties: { name: 'x' } }),
-    ).toBeNull();
+    expect(FuelStationModel.fromMapboxFeature({ properties: { name: 'x' } })).toBeNull();
   });
 });
 
@@ -673,9 +667,7 @@ describe('OptimizationModel', () => {
       makeWaypoint({ id: 'C', order: 2 }),
     ];
     const trip =
-      OptimizationModel.fromMapboxJson(optimizationResponse).toDomain(
-        originals,
-      );
+      OptimizationModel.fromMapboxJson(optimizationResponse).toDomain(originals);
 
     expect(trip.waypointIds).toEqual(['A', 'C', 'B']);
     expect(trip.directions.distanceKm).toBe(1);

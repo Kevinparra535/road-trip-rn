@@ -39,9 +39,7 @@ const RouteDetailScreen = observer(() => {
   const navigation = useNavigation<Nav>();
   const params = useRoute<Route>().params;
 
-  const viewModel = useViewModel<RouteDetailViewModel>(
-    TYPES.RouteDetailViewModel,
-  );
+  const viewModel = useViewModel<RouteDetailViewModel>(TYPES.RouteDetailViewModel);
 
   useEffect(() => {
     viewModel.initialize(params.routeId);
@@ -79,39 +77,22 @@ const RouteDetailScreen = observer(() => {
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.navTitle} numberOfLines={1}>
           {route.name}
         </Text>
         <View style={styles.navActions}>
           <PartyAction viewModel={viewModel} navigation={navigation} />
-          <TouchableOpacity
-            onPress={() => void viewModel.openShareSheet()}
-            hitSlop={8}
-          >
-            <Ionicons
-              name="share-outline"
-              size={22}
-              color={Colors.base.accent}
-            />
+          <TouchableOpacity onPress={() => void viewModel.openShareSheet()} hitSlop={8}>
+            <Ionicons name="share-outline" size={22} color={Colors.base.accent} />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('RoutePlanner', { routeId: route.id })
-            }
+            onPress={() => navigation.navigate('RoutePlanner', { routeId: route.id })}
             hitSlop={8}
             testID="route-detail-edit-btn"
           >
-            <Ionicons
-              name="create-outline"
-              size={22}
-              color={Colors.base.accent}
-            />
+            <Ionicons name="create-outline" size={22} color={Colors.base.accent} />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
@@ -123,18 +104,10 @@ const RouteDetailScreen = observer(() => {
             hitSlop={8}
             testID="route-detail-duplicate-btn"
           >
-            <Ionicons
-              name="copy-outline"
-              size={22}
-              color={Colors.base.textSecondary}
-            />
+            <Ionicons name="copy-outline" size={22} color={Colors.base.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => viewModel.deleteRoute()} hitSlop={8}>
-            <Ionicons
-              name="trash-outline"
-              size={22}
-              color={Colors.alerts.error}
-            />
+            <Ionicons name="trash-outline" size={22} color={Colors.alerts.error} />
           </TouchableOpacity>
         </View>
       </View>
@@ -176,11 +149,7 @@ const RouteDetailScreen = observer(() => {
                 coordinate={[stop.location.longitude, stop.location.latitude]}
               >
                 <View style={styles.fuelMarker}>
-                  <Ionicons
-                    name="water"
-                    size={12}
-                    color={Colors.base.textPrimary}
-                  />
+                  <Ionicons name="water" size={12} color={Colors.base.textPrimary} />
                 </View>
               </Mapbox.PointAnnotation>
             ))}
@@ -209,10 +178,7 @@ const RouteDetailScreen = observer(() => {
                   onPress={() => viewModel.selectMotorcycle(moto.id)}
                 >
                   <Text
-                    style={[
-                      styles.motoChipText,
-                      active && styles.motoChipTextActive,
-                    ]}
+                    style={[styles.motoChipText, active && styles.motoChipTextActive]}
                   >
                     {moto.displayName()}
                   </Text>
@@ -260,11 +226,7 @@ const RouteDetailScreen = observer(() => {
             <ActivityIndicator color={Colors.base.accent} />
           ) : (
             <>
-              <Ionicons
-                name="speedometer"
-                size={18}
-                color={Colors.base.accent}
-              />
+              <Ionicons name="speedometer" size={18} color={Colors.base.accent} />
               <Text style={styles.estimateBtnText}>Estimar autonomia</Text>
             </>
           )}
@@ -283,9 +245,7 @@ const RouteDetailScreen = observer(() => {
               ]}
             >
               <Ionicons
-                name={
-                  estimate.reachesWithoutRefuel ? 'checkmark-circle' : 'warning'
-                }
+                name={estimate.reachesWithoutRefuel ? 'checkmark-circle' : 'warning'}
                 size={20}
                 color={
                   estimate.reachesWithoutRefuel
@@ -301,16 +261,11 @@ const RouteDetailScreen = observer(() => {
             </View>
 
             <View style={styles.estimateGrid}>
-              <Stat
-                label="Autonomia real"
-                value={viewModel.effectiveRangeLabel}
-              />
+              <Stat label="Autonomia real" value={viewModel.effectiveRangeLabel} />
               <Stat label="Reserva" value={viewModel.safetyReserveLabel} />
               <Stat label="Combustible" value={viewModel.totalFuelLabel} />
             </View>
-            <Text style={styles.conditionsSummary}>
-              {estimate.conditionsSummary}
-            </Text>
+            <Text style={styles.conditionsSummary}>{estimate.conditionsSummary}</Text>
 
             {estimate.fuelStops.map((stop) => (
               <View key={stop.id} style={styles.stopRow}>
@@ -322,34 +277,23 @@ const RouteDetailScreen = observer(() => {
         ) : null}
 
         {viewModel.isStationsLoading ? (
-          <ActivityIndicator
-            color={Colors.base.accent}
-            style={styles.stationsLoading}
-          />
+          <ActivityIndicator color={Colors.base.accent} style={styles.stationsLoading} />
         ) : null}
 
         {viewModel.fuelStations.length > 0 ? (
           <>
-            <Text style={styles.sectionTitle}>
-              Estaciones cerca de tus paradas
-            </Text>
+            <Text style={styles.sectionTitle}>Estaciones cerca de tus paradas</Text>
             {viewModel.fuelStations.map((station) => (
               <View key={station.id} style={styles.stationCard}>
-                <Ionicons
-                  name="business"
-                  size={20}
-                  color={Colors.base.accent}
-                />
+                <Ionicons name="business" size={20} color={Colors.base.accent} />
                 <View style={styles.stationBody}>
                   <Text style={styles.stationName}>{station.name}</Text>
                   {station.brand ? (
                     <Text style={styles.stationBrand}>{station.brand}</Text>
                   ) : null}
                   <Text style={styles.stationPrice}>
-                    Corriente ~${viewModel.priceLabel(
-                      station.referencePriceCorriente,
-                    )}{' '}
-                    · Extra ~$
+                    Corriente ~${viewModel.priceLabel(station.referencePriceCorriente)} ·
+                    Extra ~$
                     {viewModel.priceLabel(station.referencePriceExtra)}
                   </Text>
                   <Text style={styles.stationNote}>

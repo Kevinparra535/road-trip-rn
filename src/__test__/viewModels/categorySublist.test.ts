@@ -252,9 +252,7 @@ describe('CategorySublistViewModel', () => {
   });
 
   it('F6: calculateDirections que falla no rompe la busqueda', async () => {
-    const calculateDirections = jest
-      .fn()
-      .mockRejectedValue(new Error('directions 500'));
+    const calculateDirections = jest.fn().mockRejectedValue(new Error('directions 500'));
     const { vm, search } = build({
       planner: buildPlanner({
         geometry: [],

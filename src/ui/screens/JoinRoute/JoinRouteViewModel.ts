@@ -65,10 +65,7 @@ export class JoinRouteViewModel {
   }
 
   get canResolve(): boolean {
-    return (
-      joinRouteCodeSchema.safeParse({ code: this.code }).success &&
-      !this.isLoading
-    );
+    return joinRouteCodeSchema.safeParse({ code: this.code }).success && !this.isLoading;
   }
 
   /** `true` cuando el codigo resuelto trae partyId — invita a una rodada. */
@@ -111,9 +108,7 @@ export class JoinRouteViewModel {
 
   get canJoinParty(): boolean {
     return (
-      this.resolvedHasParty &&
-      this.selectedMotorcycleId !== null &&
-      !this.isJoiningParty
+      this.resolvedHasParty && this.selectedMotorcycleId !== null && !this.isJoiningParty
     );
   }
 
@@ -242,18 +237,12 @@ export class JoinRouteViewModel {
       });
     } catch (error) {
       this.logger.warn(
-        `No pude cargar motos: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        `No pude cargar motos: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'resolve':

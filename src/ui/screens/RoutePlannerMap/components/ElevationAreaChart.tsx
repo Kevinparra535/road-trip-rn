@@ -84,13 +84,7 @@ interface AnimatedBarProps {
   total: number;
 }
 
-const AnimatedBar = ({
-  fraction,
-  isPeak,
-  progress,
-  index,
-  total,
-}: AnimatedBarProps) => {
+const AnimatedBar = ({ fraction, isPeak, progress, index, total }: AnimatedBarProps) => {
   // Each bar animates in slightly after the previous one (stagger 0–0.6 of the
   // total 0-1 progress range), then fully grown by progress=1.
   const staggerStart = total > 1 ? (index / (total - 1)) * 0.5 : 0;
@@ -123,9 +117,7 @@ const AnimatedBar = ({
         {/* 1 px top line */}
         <View style={styles.topLine} />
         {/* Filled area body */}
-        <View
-          style={[styles.barBody, { backgroundColor: areaFillColor(fraction) }]}
-        />
+        <View style={[styles.barBody, { backgroundColor: areaFillColor(fraction) }]} />
       </Animated.View>
     </View>
   );
@@ -226,11 +218,7 @@ const ElevationAreaChart = ({
         <View style={styles.statDivider} />
 
         <View style={styles.statItem}>
-          <Ionicons
-            name="chevron-down"
-            size={12}
-            color={Colors.elevation.high}
-          />
+          <Ionicons name="chevron-down" size={12} color={Colors.elevation.high} />
           <Text style={styles.statValue}>{Math.round(descentM)} m</Text>
           <Text style={styles.statLabel}>bajada</Text>
         </View>
@@ -269,10 +257,7 @@ const ElevationAreaChart = ({
         <Text style={styles.axisPeak} numberOfLines={1}>
           max {Math.round(maxM)} m
         </Text>
-        <Text
-          style={[styles.axisLabel, styles.axisLabelRight]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.axisLabel, styles.axisLabelRight]} numberOfLines={1}>
           {endLabel ?? ''}
         </Text>
       </View>

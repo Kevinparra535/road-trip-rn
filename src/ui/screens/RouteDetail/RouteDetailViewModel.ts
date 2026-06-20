@@ -99,9 +99,7 @@ export class RouteDetailViewModel {
   // ── Computed ────────────────────────────────────────────────────────────
 
   get selectedMotorcycle(): Motorcycle | null {
-    return (
-      this.motorcycles.find((m) => m.id === this.selectedMotorcycleId) ?? null
-    );
+    return this.motorcycles.find((m) => m.id === this.selectedMotorcycleId) ?? null;
   }
 
   get hasMotorcycles(): boolean {
@@ -122,10 +120,7 @@ export class RouteDetailViewModel {
       properties: {},
       geometry: {
         type: 'LineString',
-        coordinates: (route?.geometry ?? []).map((p) => [
-          p.longitude,
-          p.latitude,
-        ]),
+        coordinates: (route?.geometry ?? []).map((p) => [p.longitude, p.latitude]),
       },
     };
   }
@@ -505,11 +500,7 @@ export class RouteDetailViewModel {
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'route':

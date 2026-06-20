@@ -28,13 +28,7 @@ type Props = {
  * con la altitud actual del rider; recibe el `ratio` ya normalizado para
  * mantener al componente puramente presentacional.
  */
-const ElevationStrip = ({
-  maxLabel,
-  minLabel,
-  currentLabel,
-  ratio,
-  onClose,
-}: Props) => {
+const ElevationStrip = ({ maxLabel, minLabel, currentLabel, ratio, onClose }: Props) => {
   // El degradado del Pencil va de verde (abajo) a rojo (arriba). En RN el
   // LinearGradient por defecto pinta de arriba hacia abajo, asi que pasamos
   // los colores en orden peak -> low para que el rojo quede arriba.

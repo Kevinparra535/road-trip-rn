@@ -55,11 +55,7 @@ export const EmptyState = ({
         activeOpacity={0.85}
         testID="category-sublist-expand-btn"
       >
-        <Ionicons
-          name="globe-outline"
-          size={16}
-          color={Colors.base.textPrimary}
-        />
+        <Ionicons name="globe-outline" size={16} color={Colors.base.textPrimary} />
         <Text style={styles.expandBtnText}>Ver todos, no solo en la ruta</Text>
       </TouchableOpacity>
     ) : null}

@@ -7,8 +7,7 @@ module.exports = ({ config }) => ({
   ...config,
   extra: {
     ...config.extra,
-    mapboxPublicToken:
-      process.env.MAPBOX_PUBLIC_TOKEN || 'SET_MAPBOX_PUBLIC_TOKEN',
+    mapboxPublicToken: process.env.MAPBOX_PUBLIC_TOKEN || 'SET_MAPBOX_PUBLIC_TOKEN',
     MAP_STYLE_URL:
       process.env.MAP_STYLE_URL || 'mapbox://styles/mapbox/navigation-night-v1',
     placeSummaryBaseUrl:
@@ -16,14 +15,11 @@ module.exports = ({ config }) => ({
       'https://es.wikipedia.org/api/rest_v1/page/summary',
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || 'SET_FIREBASE_API_KEY',
-      authDomain:
-        process.env.FIREBASE_AUTH_DOMAIN || 'SET_FIREBASE_AUTH_DOMAIN',
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN || 'SET_FIREBASE_AUTH_DOMAIN',
       projectId: process.env.FIREBASE_PROJECT_ID || 'SET_FIREBASE_PROJECT_ID',
-      storageBucket:
-        process.env.FIREBASE_STORAGE_BUCKET || 'SET_FIREBASE_STORAGE_BUCKET',
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'SET_FIREBASE_STORAGE_BUCKET',
       messagingSenderId:
-        process.env.FIREBASE_MESSAGING_SENDER_ID ||
-        'SET_FIREBASE_MESSAGING_SENDER_ID',
+        process.env.FIREBASE_MESSAGING_SENDER_ID || 'SET_FIREBASE_MESSAGING_SENDER_ID',
       appId: process.env.FIREBASE_APP_ID || 'SET_FIREBASE_APP_ID',
       measurementId: process.env.FIREBASE_MEASUREMENT_ID,
     },

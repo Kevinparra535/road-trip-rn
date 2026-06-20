@@ -16,18 +16,12 @@ describe('avoidToExclude', () => {
   });
 
   it('maps each flag to its Mapbox token', () => {
-    expect(avoidToExclude(new RouteAvoidPreferences({ tolls: true }))).toBe(
-      'toll',
-    );
+    expect(avoidToExclude(new RouteAvoidPreferences({ tolls: true }))).toBe('toll');
     expect(avoidToExclude(new RouteAvoidPreferences({ highways: true }))).toBe(
       'motorway',
     );
-    expect(avoidToExclude(new RouteAvoidPreferences({ ferries: true }))).toBe(
-      'ferry',
-    );
-    expect(avoidToExclude(new RouteAvoidPreferences({ unpaved: true }))).toBe(
-      'unpaved',
-    );
+    expect(avoidToExclude(new RouteAvoidPreferences({ ferries: true }))).toBe('ferry');
+    expect(avoidToExclude(new RouteAvoidPreferences({ unpaved: true }))).toBe('unpaved');
   });
 
   it('joins multiple flags with comma in a fixed order', () => {
@@ -76,10 +70,6 @@ describe('DirectionsRepositoryImpl.getDirections', () => {
   it('passes undefined options when avoid is empty or absent', async () => {
     const { repo, fetchDirections } = build();
     await repo.getDirections(waypoints, 'highway');
-    expect(fetchDirections).toHaveBeenCalledWith(
-      expect.any(Array),
-      'highway',
-      undefined,
-    );
+    expect(fetchDirections).toHaveBeenCalledWith(expect.any(Array), 'highway', undefined);
   });
 });

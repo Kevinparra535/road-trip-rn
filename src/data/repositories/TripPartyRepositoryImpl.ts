@@ -14,10 +14,7 @@ import {
 
 import type { TripPartyService } from '@/data/services/TripPartyService';
 
-import {
-  PartyMemberJson,
-  partyMemberToJson,
-} from '@/data/models/tripPartyModel';
+import { PartyMemberJson, partyMemberToJson } from '@/data/models/tripPartyModel';
 
 @injectable()
 export class TripPartyRepositoryImpl implements TripPartyRepository {
@@ -26,10 +23,7 @@ export class TripPartyRepositoryImpl implements TripPartyRepository {
     private readonly service: TripPartyService,
   ) {}
 
-  async create(input: {
-    routeId: string;
-    owner: PartyMember;
-  }): Promise<TripParty> {
+  async create(input: { routeId: string; owner: PartyMember }): Promise<TripParty> {
     const model = await this.service.create({
       route_id: input.routeId,
       owner_id: input.owner.riderId,
@@ -66,23 +60,15 @@ export class TripPartyRepositoryImpl implements TripPartyRepository {
     const model = await this.service.fetchById(partyId);
     if (!model) throw new Error('Party no existe.');
     if (model.members.some((m) => m.rider_id === member.riderId)) return;
-    const next: PartyMemberJson[] = [
-      ...model.members,
-      partyMemberToJson(member),
-    ];
+    const next: PartyMemberJson[] = [...model.members, partyMemberToJson(member)];
     await this.service.updateMembers(partyId, { members: next });
   }
 
-  async removeMember(
-    partyId: string,
-    riderId: string,
-  ): Promise<TripParty | null> {
+  async removeMember(partyId: string, riderId: string): Promise<TripParty | null> {
     const model = await this.service.fetchById(partyId);
     if (!model) return null;
 
-    const wasOwner = model.members.some(
-      (m) => m.rider_id === riderId && m.is_owner,
-    );
+    const wasOwner = model.members.some((m) => m.rider_id === riderId && m.is_owner);
     const remaining = model.members.filter((m) => m.rider_id !== riderId);
 
     if (remaining.length === 0) {

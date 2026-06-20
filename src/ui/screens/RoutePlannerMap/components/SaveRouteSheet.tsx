@@ -48,7 +48,10 @@ export const SaveRouteSheet = observer(
         animationType="slide"
         onRequestClose={() => viewModel.closeSaveSheet()}
       >
-        <Pressable style={styles.modalBackdrop} onPress={() => viewModel.closeSaveSheet()}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => viewModel.closeSaveSheet()}
+        >
           <Pressable style={styles.saveSheetCard} onPress={() => {}}>
             <View style={styles.saveSheetHeader}>
               <TouchableOpacity onPress={() => viewModel.closeSaveSheet()} hitSlop={8}>

@@ -76,11 +76,7 @@ const AppTextInput = ({
 
         {showClear ? (
           <TouchableOpacity onPress={onClear} hitSlop={8}>
-            <Ionicons
-              name="close-circle"
-              size={18}
-              color={Colors.base.iconMuted}
-            />
+            <Ionicons name="close-circle" size={18} color={Colors.base.iconMuted} />
           </TouchableOpacity>
         ) : null}
       </View>

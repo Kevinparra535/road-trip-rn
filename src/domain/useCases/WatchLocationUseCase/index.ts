@@ -13,10 +13,7 @@ type Unsubscribe = () => void;
 
 /** Se suscribe a los cambios de ubicacion del GPS en vivo. */
 @injectable()
-export class WatchLocationUseCase implements UseCase<
-  LocationListener,
-  Unsubscribe
-> {
+export class WatchLocationUseCase implements UseCase<LocationListener, Unsubscribe> {
   constructor(
     @inject(TYPES.LocationRepository)
     private readonly repository: LocationRepository,

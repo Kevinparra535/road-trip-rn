@@ -49,16 +49,11 @@ export class MotorcycleRepositoryImpl implements MotorcycleRepository {
 
   async update(motorcycle: Motorcycle): Promise<Motorcycle> {
     if (DEV_FLAGS.mockGarage) {
-      const index = this.mockGarage.findIndex(
-        (moto) => moto.id === motorcycle.id,
-      );
+      const index = this.mockGarage.findIndex((moto) => moto.id === motorcycle.id);
       if (index >= 0) this.mockGarage[index] = motorcycle;
       return motorcycle;
     }
-    const model = await this.service.update(
-      motorcycle.id,
-      this.toPayload(motorcycle),
-    );
+    const model = await this.service.update(motorcycle.id, this.toPayload(motorcycle));
     return model.toDomain();
   }
 

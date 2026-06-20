@@ -26,9 +26,7 @@ describe('ElevationRepositoryImpl', () => {
 
   it('returns an empty profile for empty geometry', async () => {
     const service = { fetchElevations: jest.fn() };
-    const profile = await new ElevationRepositoryImpl(
-      service as any,
-    ).getProfile([]);
+    const profile = await new ElevationRepositoryImpl(service as any).getProfile([]);
     expect(profile.isEmpty).toBe(true);
     expect(service.fetchElevations).not.toHaveBeenCalled();
   });

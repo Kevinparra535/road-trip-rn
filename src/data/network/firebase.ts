@@ -1,10 +1,6 @@
 import { getApps, initializeApp } from 'firebase/app';
 import { Auth, getAuth, initializeAuth } from 'firebase/auth';
-import {
-  Firestore,
-  getFirestore,
-  initializeFirestore,
-} from 'firebase/firestore';
+import { Firestore, getFirestore, initializeFirestore } from 'firebase/firestore';
 
 import { firebaseConfig } from '@/config/firebase.config';
 
