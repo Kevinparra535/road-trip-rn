@@ -13,6 +13,14 @@ import Logger from '@/ui/utils/Logger';
 
 type ICalls = 'motorcycles' | 'delete';
 
+/** Datos listos para render de una fila de moto en el garaje. */
+export type MotorcycleRowData = {
+  id: string;
+  name: string;
+  meta: string;
+  autonomyLabel: string;
+};
+
 @injectable()
 export class GarageViewModel {
   isMotorcyclesLoading: boolean = false;
@@ -41,6 +49,20 @@ export class GarageViewModel {
 
   get isEmpty(): boolean {
     return this.isLoaded && (this.isMotorcyclesResponse?.length ?? 0) === 0;
+  }
+
+  /**
+   * Filas listas para render del listado de motos: nombre, meta
+   * (tanque · consumo · combustible) y autonomia teorica ya formateada. La
+   * pantalla solo consume estos textos; no toca la entidad Motorcycle.
+   */
+  get motorcycleRows(): MotorcycleRowData[] {
+    return (this.isMotorcyclesResponse ?? []).map((motorcycle) => ({
+      id: motorcycle.id,
+      name: motorcycle.displayName(),
+      meta: `${motorcycle.tankCapacityLiters} L · ${motorcycle.fuelConsumptionKmPerLiter} km/L · ${motorcycle.fuelType}`,
+      autonomyLabel: `Autonomia ~${Math.round(motorcycle.fullTankRangeKm())} km`,
+    }));
   }
 
   async initialize(): Promise<void> {
@@ -86,11 +108,7 @@ export class GarageViewModel {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'motorcycles':

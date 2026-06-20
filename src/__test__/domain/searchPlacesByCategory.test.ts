@@ -61,4 +61,42 @@ describe('SearchPlacesByCategoryUseCase', () => {
     });
     expect(out).toEqual(places);
   });
+
+  it('pasa anchors, maxSamples y spacingKm al repo (passthrough)', async () => {
+    const { useCase, repo } = build([]);
+    const anchors = [
+      { latitude: 4.65, longitude: -74.05 },
+      { latitude: 4.75, longitude: -74.15 },
+    ];
+    await useCase.run({
+      category: 'food',
+      alongRoute: [
+        { latitude: 4.6, longitude: -74 },
+        { latitude: 4.8, longitude: -74.2 },
+      ],
+      anchors,
+      maxSamples: 8,
+      spacingKm: 25,
+    });
+    expect(repo.searchByCategory).toHaveBeenCalledWith(
+      expect.objectContaining({
+        anchors,
+        maxSamples: 8,
+        spacingKm: 25,
+        maxResults: DEFAULT_CATEGORY_RESULTS,
+      }),
+    );
+  });
+
+  it("permite la categoria 'town' (geocoding de localidades)", async () => {
+    const { useCase, repo } = build([makePlace('t1', 5.2, -74.7)]);
+    const out = await useCase.run({
+      category: 'town',
+      alongRoute: [{ latitude: 5.2, longitude: -74.7 }],
+    });
+    expect(out).toHaveLength(1);
+    expect(repo.searchByCategory).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'town' }),
+    );
+  });
 });

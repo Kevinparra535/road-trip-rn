@@ -2,10 +2,7 @@ import { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import {
-  ManeuverModifier,
-  ManeuverType,
-} from '@/domain/entities/NavigationStep';
+import { ManeuverModifier, ManeuverType } from '@/domain/entities/NavigationStep';
 
 import GradientView from '@/ui/components/GradientView';
 
@@ -76,11 +73,7 @@ const TurnBanner = ({
   maneuverModifier,
 }: Props) => (
   <View style={styles.banner}>
-    <GradientView
-      preset="accent"
-      direction="horizontal"
-      style={styles.iconWrap}
-    >
+    <GradientView preset="accent" direction="horizontal" style={styles.iconWrap}>
       <MaterialCommunityIcons
         name={iconForManeuver(maneuverType, maneuverModifier)}
         size={56}

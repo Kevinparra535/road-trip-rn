@@ -12,6 +12,9 @@ export type StopKind =
   | 'fuel' // Tanqueo
   | 'tourism' // Turismo / visita / atraccion
   | 'rest' // Descanso / mirador / parador
+  | 'lodging' // Alojamiento / hospedaje
+  | 'cafe' // Cafe / break corto
+  | 'town' // Pueblo / localidad de paso (geocoding)
   | 'other' // Parada generica sin categoria definida — UX gap fix
   | 'destination'; // Punto final
 
@@ -22,11 +25,13 @@ export const STOP_KINDS: readonly StopKind[] = [
   'fuel',
   'tourism',
   'rest',
+  'lodging',
+  'cafe',
+  'town',
   'other',
   'destination',
 ] as const;
 
 /** Type guard: valida si un string arbitrario es un StopKind valido. */
 export const isStopKind = (value: unknown): value is StopKind =>
-  typeof value === 'string' &&
-  (STOP_KINDS as readonly string[]).includes(value);
+  typeof value === 'string' && (STOP_KINDS as readonly string[]).includes(value);

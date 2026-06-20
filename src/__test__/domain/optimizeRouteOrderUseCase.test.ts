@@ -18,17 +18,17 @@ const build = () => {
 describe('OptimizeRouteOrderUseCase', () => {
   it('rejects fewer than 3 waypoints (no intermediate to optimize)', async () => {
     const { uc, optimize } = build();
-    await expect(
-      uc.run({ waypoints: wps(2), rideType: 'highway' }),
-    ).rejects.toThrow('parada intermedia');
+    await expect(uc.run({ waypoints: wps(2), rideType: 'highway' })).rejects.toThrow(
+      'parada intermedia',
+    );
     expect(optimize).not.toHaveBeenCalled();
   });
 
   it('rejects more than 12 waypoints', async () => {
     const { uc, optimize } = build();
-    await expect(
-      uc.run({ waypoints: wps(13), rideType: 'highway' }),
-    ).rejects.toThrow('12 paradas');
+    await expect(uc.run({ waypoints: wps(13), rideType: 'highway' })).rejects.toThrow(
+      '12 paradas',
+    );
     expect(optimize).not.toHaveBeenCalled();
   });
 
@@ -50,8 +50,8 @@ describe('OptimizeRouteOrderUseCase', () => {
   it('propagates repository errors', async () => {
     const { uc, optimize } = build();
     optimize.mockRejectedValue(new Error('boom'));
-    await expect(
-      uc.run({ waypoints: wps(3), rideType: 'highway' }),
-    ).rejects.toThrow('boom');
+    await expect(uc.run({ waypoints: wps(3), rideType: 'highway' })).rejects.toThrow(
+      'boom',
+    );
   });
 });

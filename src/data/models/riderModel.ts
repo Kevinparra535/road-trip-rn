@@ -14,10 +14,7 @@ function toDate(value: unknown): Date {
     return new Date(value);
   }
   // Firestore Timestamp expone toDate().
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();

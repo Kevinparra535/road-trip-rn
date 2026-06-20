@@ -36,8 +36,7 @@ const draftKey = (key: RouteDraftKey): string =>
   key.routeId == null ? 'current' : `route_${key.routeId}`;
 
 /** Identidad serializable de una key, para la cola de pendientes. */
-const queueId = (key: RouteDraftKey): string =>
-  `${key.riderId}::${key.routeId ?? ''}`;
+const queueId = (key: RouteDraftKey): string => `${key.riderId}::${key.routeId ?? ''}`;
 
 /**
  * Persiste el draft del Planner. Offline-first:
@@ -138,10 +137,7 @@ export class RouteDraftRepositoryImpl implements RouteDraftRepository {
    * ventana, encola la key (para que `flushPending` la recoja luego) sin
    * llamar a la red. En éxito la saca de la cola; en error la encola.
    */
-  private async pushRemote(
-    key: RouteDraftKey,
-    model: RouteDraftModel,
-  ): Promise<void> {
+  private async pushRemote(key: RouteDraftKey, model: RouteDraftModel): Promise<void> {
     const dk = draftKey(key);
     const last = this.lastPushAt.get(dk) ?? 0;
     const now = Date.now();
@@ -159,9 +155,7 @@ export class RouteDraftRepositoryImpl implements RouteDraftRepository {
     }
   }
 
-  private async readRemote(
-    key: RouteDraftKey,
-  ): Promise<RouteDraftModel | null> {
+  private async readRemote(key: RouteDraftKey): Promise<RouteDraftModel | null> {
     try {
       return await this.service.fetch(key.riderId, draftKey(key));
     } catch {
@@ -185,10 +179,7 @@ export class RouteDraftRepositoryImpl implements RouteDraftRepository {
     }
   }
 
-  private async writeLocal(
-    key: RouteDraftKey,
-    model: RouteDraftModel,
-  ): Promise<void> {
+  private async writeLocal(key: RouteDraftKey, model: RouteDraftModel): Promise<void> {
     await AsyncStorage.setItem(localKey(key), JSON.stringify(model.toJson()));
   }
 
@@ -211,9 +202,7 @@ export class RouteDraftRepositoryImpl implements RouteDraftRepository {
         .map((e) => ({
           riderId: String(e.riderId),
           routeId:
-            typeof e.routeId === 'string' && e.routeId.length > 0
-              ? e.routeId
-              : null,
+            typeof e.routeId === 'string' && e.routeId.length > 0 ? e.routeId : null,
         }));
     } catch {
       return [];

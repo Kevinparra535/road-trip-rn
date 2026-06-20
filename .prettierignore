@@ -9,3 +9,5 @@ assets/
 # Skills sincronizadas desde clean-architecture-stack: se mantienen verbatim
 # (su fuente de verdad es el repo upstream, no este proyecto).
 .claude/skills/
+# Docs de skills vendoreadas (Firebase AI): fuente de verdad upstream, verbatim.
+.agents/

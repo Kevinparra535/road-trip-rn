@@ -45,9 +45,7 @@ describe('Motorcycle CRUD use cases', () => {
   it('rejects creating a motorcycle with no tank capacity', async () => {
     const repo = makeRepo();
     await expect(
-      new CreateMotorcycleUseCase(repo).run(
-        makeMotorcycle({ tankCapacityLiters: 0 }),
-      ),
+      new CreateMotorcycleUseCase(repo).run(makeMotorcycle({ tankCapacityLiters: 0 })),
     ).rejects.toThrow('tanque');
   });
 

@@ -8,10 +8,10 @@ import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 import { RouteTemplate } from '@/domain/entities/RouteTemplate';
 
-import { RouteDetailViewModel } from '@/ui/screens/Routes/RouteDetailViewModel';
-import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
+import { RouteDetailViewModel } from '@/ui/screens/RouteDetail/RouteDetailViewModel';
 import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
+import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
 
 import {
@@ -29,11 +29,7 @@ describe('RoutesViewModel', () => {
     const getAll = { run: jest.fn().mockResolvedValue(routes) };
     const del = { run: jest.fn().mockResolvedValue(undefined) };
     return {
-      vm: new RoutesViewModel(
-        getCurrentRider as any,
-        getAll as any,
-        del as any,
-      ),
+      vm: new RoutesViewModel(getCurrentRider as any, getAll as any, del as any),
       del,
     };
   };
@@ -78,10 +74,7 @@ describe('RoutesViewModel', () => {
     });
 
     it('exito: la fila permanece fuera y retorna true', async () => {
-      const { vm } = build([
-        makeRoute({ id: 'route-1' }),
-        makeRoute({ id: 'route-2' }),
-      ]);
+      const { vm } = build([makeRoute({ id: 'route-1' }), makeRoute({ id: 'route-2' })]);
       await vm.initialize();
 
       const ok = await vm.delete('route-1');
@@ -165,7 +158,7 @@ describe('RouteDetailViewModel', () => {
   });
 });
 
-describe('RoutePlannerViewModel', () => {
+describe('PlannerStore', () => {
   const build = (
     overrides: {
       searchResults?: Place[];
@@ -264,15 +257,14 @@ describe('RoutePlannerViewModel', () => {
     };
     const templates = new PlannerTemplateController(getTemplates as any);
 
-    const partyStore =
-      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
-        observePartyUseCase as any,
-      );
+    const partyStore = new (require('@/ui/store/TripPartyStore').TripPartyStore)(
+      observePartyUseCase as any,
+    );
     const locationStore = {
       hasLocation: false,
       isLocationResponse: null,
     };
-    const vm = new RoutePlannerViewModel(
+    const vm = new PlannerStore(
       getCurrentRider as any,
       getRoute as any,
       getDraft as any,
@@ -409,9 +401,7 @@ describe('RoutePlannerViewModel', () => {
     vm.moveStop(bId, 'down'); // [A, C, B]
     expect(vm.waypoints.at(-1)!.id).toBe(bId);
     expect(vm.waypoints.at(-1)!.kind).toBe('destination');
-    expect(vm.waypoints.find((w) => w.id === cId)!.kind).not.toBe(
-      'destination',
-    );
+    expect(vm.waypoints.find((w) => w.id === cId)!.kind).not.toBe('destination');
 
     // Hacer que C sea el INICIO: subirlo al tope.
     vm.moveStop(cId, 'up'); // [C, A, B]
@@ -1519,8 +1509,7 @@ describe('RoutePlannerViewModel', () => {
       await flush800();
 
       expect(calculate.run).toHaveBeenCalled();
-      const lastArg =
-        calculate.run.mock.calls[calculate.run.mock.calls.length - 1][0];
+      const lastArg = calculate.run.mock.calls[calculate.run.mock.calls.length - 1][0];
       expect(lastArg.avoid.tolls).toBe(true);
     });
 
@@ -1606,11 +1595,7 @@ describe('RoutePlannerViewModel', () => {
 
       vm.reverseRoute();
 
-      expect(vm.waypoints.map((w) => w.id)).toEqual([
-        before[2],
-        before[1],
-        before[0],
-      ]);
+      expect(vm.waypoints.map((w) => w.id)).toEqual([before[2], before[1], before[0]]);
       expect(vm.waypoints[0].kind).toBe('start');
       expect(vm.waypoints[2].kind).toBe('destination');
     });
@@ -1728,8 +1713,7 @@ describe('RoutePlannerViewModel', () => {
     };
 
     it('recomputes insights tras calcular directions (con moto)', async () => {
-      const { vm, getAllMotorcycles, insightsElevation, insightsAutonomy } =
-        build();
+      const { vm, getAllMotorcycles, insightsElevation, insightsAutonomy } = build();
       getAllMotorcycles.run.mockResolvedValue([makeMotorcycle()]);
       await vm.initialize();
       vm.addWaypoint(4.6, -74.08);
@@ -1805,9 +1789,7 @@ describe('RoutePlannerViewModel', () => {
       expect(vm.isRoundTrip).toBe(true);
       expect(vm.waypoints.some((w) => w.isReturnClone)).toBe(true);
       // duración sugerida aplicada al intermedio sin duración previa.
-      expect(vm.waypoints.find((w) => w.name === 'B')?.stopDurationMin).toBe(
-        30,
-      );
+      expect(vm.waypoints.find((w) => w.name === 'B')?.stopDurationMin).toBe(30);
       expect(vm.templates.isTemplateSheetOpen).toBe(false);
     });
 
@@ -2222,10 +2204,9 @@ describe('RouteDetailViewModel', () => {
     const observePartyUseCase = {
       subscribe: jest.fn(() => () => undefined),
     };
-    const partyStore =
-      new (require('@/ui/store/TripPartyStore').TripPartyStore)(
-        observePartyUseCase as any,
-      );
+    const partyStore = new (require('@/ui/store/TripPartyStore').TripPartyStore)(
+      observePartyUseCase as any,
+    );
     const vm = new RouteDetailViewModel(
       getRoute as any,
       getCurrentRider as any,
@@ -2268,9 +2249,7 @@ describe('RouteDetailViewModel', () => {
     expect(payload).not.toBeNull();
     expect(payload!.name).toBe(makeRoute().name);
     expect(payload!.waypoints).toHaveLength(makeRoute().waypoints.length);
-    expect(['group', 'offroad', 'highway', 'longtrip']).toContain(
-      payload!.rideType,
-    );
+    expect(['group', 'offroad', 'highway', 'longtrip']).toContain(payload!.rideType);
     // Waypoints planos (sin métodos) para que el navigation param sea serializable.
     payload!.waypoints.forEach((w) => {
       expect(typeof w.latitude).toBe('number');

@@ -4,11 +4,7 @@ import { OptimizationServiceImpl } from '@/data/services/OptimizationService';
 
 const sampleJson = {
   code: 'Ok',
-  waypoints: [
-    { waypoint_index: 0 },
-    { waypoint_index: 1 },
-    { waypoint_index: 2 },
-  ],
+  waypoints: [{ waypoint_index: 0 }, { waypoint_index: 1 }, { waypoint_index: 2 }],
   trips: [{ distance: 1000, duration: 600, geometry: { coordinates: [] } }],
 };
 
@@ -61,9 +57,7 @@ describe('OptimizationServiceImpl', () => {
   it('throws when Mapbox returns a non-Ok code', async () => {
     const get = jest
       .fn()
-      .mockResolvedValue(
-        okResponse({ code: 'NoTrips', waypoints: [], trips: [] }),
-      );
+      .mockResolvedValue(okResponse({ code: 'NoTrips', waypoints: [], trips: [] }));
     await expect(
       new OptimizationServiceImpl({ get } as unknown as HttpManager).optimize(
         coords,

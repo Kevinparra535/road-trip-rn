@@ -52,9 +52,7 @@ export class RouteDirectionsModel {
       duration_seconds: Number(json?.duration_seconds ?? 0),
       coordinates: Array.isArray(json?.coordinates) ? json.coordinates : [],
       alternatives: Array.isArray(json?.alternatives)
-        ? json.alternatives.map((alt: any) =>
-            RouteDirectionsModel.fromJson(alt),
-          )
+        ? json.alternatives.map((alt: any) => RouteDirectionsModel.fromJson(alt))
         : [],
       steps: Array.isArray(json?.steps) ? json.steps : [],
     });
@@ -110,18 +108,14 @@ export class RouteDirectionsModel {
     route: any,
     options: { includeSteps: boolean },
   ): RouteDirectionsModel {
-    const coords: [number, number][] = Array.isArray(
-      route?.geometry?.coordinates,
-    )
+    const coords: [number, number][] = Array.isArray(route?.geometry?.coordinates)
       ? route.geometry.coordinates
       : [];
     return new RouteDirectionsModel({
       distance_meters: Number(route?.distance ?? 0),
       duration_seconds: Number(route?.duration ?? 0),
       coordinates: coords,
-      steps: options.includeSteps
-        ? RouteDirectionsModel.extractSteps(route)
-        : [],
+      steps: options.includeSteps ? RouteDirectionsModel.extractSteps(route) : [],
     });
   }
 
@@ -157,9 +151,7 @@ const toGeoPoint = ([lng, lat]: [number, number]): GeoPoint => ({
 });
 
 /** Convierte los steps planos del modelo en entidades con distancia acumulada. */
-const buildDomainSteps = (
-  steps: NavigationStepModelParams[],
-): NavigationStep[] => {
+const buildDomainSteps = (steps: NavigationStepModelParams[]): NavigationStep[] => {
   let cumulativeKm = 0;
   return steps.map((step) => {
     const distanceKm = step.distance_meters / 1000;

@@ -3,6 +3,11 @@ import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
+import {
+  ROUTE_ALT_WIDTH,
+  ROUTE_CORE_WIDTH_NAV,
+  ROUTE_CORE_WIDTH_PLANNING,
+} from '@/config/routeLineWidths';
 import { TYPES } from '@/config/types';
 
 import { ElevationProfile } from '@/domain/entities/ElevationProfile';
@@ -19,21 +24,18 @@ import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
-import { RouteDraft } from '@/domain/entities/RouteDraft';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
-import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
-import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   inferStopKindFromInput,
@@ -57,8 +59,9 @@ import {
 import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
-import { RoutePlannerViewModel } from '@/ui/screens/Routes/RoutePlannerViewModel';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationStore, PlannerNavPayload } from '@/ui/store/NavigationStore';
+import { PlannerStore } from '@/ui/store/PlannerStore';
 
 // ── Constantes de presentacion del mapa ─────────────────────────────────────
 // Centro por defecto: Bogota, Colombia.
@@ -155,11 +158,7 @@ const elevationColor = (ratio: number): string => {
   const segments = ELEVATION_RAMP.length - 1;
   const scaled = clamped * segments;
   const index = Math.min(segments - 1, Math.floor(scaled));
-  return lerpHexColor(
-    ELEVATION_RAMP[index],
-    ELEVATION_RAMP[index + 1],
-    scaled - index,
-  );
+  return lerpHexColor(ELEVATION_RAMP[index], ELEVATION_RAMP[index + 1], scaled - index);
 };
 
 /** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
@@ -248,15 +247,10 @@ export class HomeViewModel {
   isSearchResponse: Place[] | null = null;
 
   // ── State: ruta A->B (+ paradas intermedias) ──
-  rideType: RideType = DEFAULT_RIDE_TYPE;
+  // `rideType` y `previewPlace` ya no son state propio: viven en el
+  // `NavigationStore` (compartido con DestinationPreview). Aquí solo se exponen
+  // como getters delegados (ver más abajo) para que el HomeScreen no cambie.
   destination: Place | null = null;
-  /**
-   * Lugar previsualizado (formSheet "DestinationPreview"): el rider eligió un
-   * resultado del buscador pero aún no confirmó. El mapa enfoca este punto
-   * y el sheet de preview lee `previewPlace` para mostrar info + CTA. Al
-   * aceptar pasa a `destination` (y dispara la ruta); al cancelar se descarta.
-   */
-  previewPlace: Place | null = null;
   /**
    * Paradas intermedias entre el origen y el destino, en el orden en que el
    * rider quiere visitarlas. Se chainean a Mapbox como waypoints; el primero
@@ -281,15 +275,6 @@ export class HomeViewModel {
 
   // ── State: rider (perfil) ──
   rider: Rider | null = null;
-
-  // ── State: draft del Planner (E3 flow brief) ──
-  /**
-   * Draft del Planner detectado en AsyncStorage al iniciar. Si no es null,
-   * el HomeScreen muestra el sheet "Continúa donde quedaste". El sheet se
-   * cierra con `consumePendingDraft()` (continuar) o `dismissPendingDraft()`
-   * (empezar de nuevo — borra el draft).
-   */
-  pendingDraft: RouteDraft | null = null;
 
   // ── State: moto y estimacion de gasolina ──
   motorcycle: Motorcycle | null = null;
@@ -342,6 +327,10 @@ export class HomeViewModel {
   selectedSavedRouteId: string | null = null;
 
   private searchDisposer: (() => void) | null = null;
+  /** Disposer de la reaccion que aplica el destino confirmado del navStore. */
+  private confirmReactionDisposer: (() => void) | null = null;
+  /** Disposer de la reaccion que arranca la nav desde el handoff del Planner. */
+  private plannerNavReactionDisposer: (() => void) | null = null;
   private navTimer: ReturnType<typeof setInterval> | null = null;
   /** Disposer de la reaccion que escucha el avance del GPS real. */
   private navReactionDisposer: (() => void) | null = null;
@@ -375,12 +364,10 @@ export class HomeViewModel {
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
     @inject(TYPES.InferStopKindUseCase)
     private readonly inferStopKindUseCase: InferStopKindUseCase,
-    @inject(TYPES.RoutePlannerViewModel)
-    private readonly plannerViewModel: RoutePlannerViewModel,
-    @inject(TYPES.GetRouteDraftUseCase)
-    private readonly getRouteDraftUseCase: GetRouteDraftUseCase,
-    @inject(TYPES.ClearRouteDraftUseCase)
-    private readonly clearRouteDraftUseCase: ClearRouteDraftUseCase,
+    @inject(TYPES.PlannerStore)
+    private readonly plannerStore: PlannerStore,
+    @inject(TYPES.NavigationStore)
+    private readonly navStore: NavigationStore,
   ) {
     makeAutoObservable(this);
     // Debounce: la busqueda se dispara 400ms tras la ultima tecla.
@@ -390,6 +377,30 @@ export class HomeViewModel {
         void this.runSearch(query);
       },
       { delay: SEARCH_DEBOUNCE_MS },
+    );
+    // El sheet de DestinationPreview confirma a través del `NavigationStore`
+    // (señal `confirmedPlace`). El Home reacciona aquí: aplica el destino real
+    // (traza la ruta), lo registra en recientes y consume la señal.
+    this.confirmReactionDisposer = reaction(
+      () => this.navStore.confirmedPlace,
+      (place) => {
+        if (!place) return;
+        this.selectDestination(place);
+        void this.recordRecentDestination(place);
+        this.navStore.consumeConfirmed();
+      },
+    );
+    // El RoutePlannerMapViewModel emite el handoff Planner -> navegación a
+    // través del `NavigationStore` (señal `pendingPlannerNav`). El Home
+    // reacciona aquí: arranca la nav live sobre ESTA instancia singleton (que
+    // el HomeScreen renderiza) y consume la señal.
+    this.plannerNavReactionDisposer = reaction(
+      () => this.navStore.pendingPlannerNav,
+      (payload) => {
+        if (!payload) return;
+        this.startNavigationFromPlanner(payload);
+        this.navStore.consumePlannerNav();
+      },
     );
   }
 
@@ -435,9 +446,7 @@ export class HomeViewModel {
 
   /** El triangulo de rumbo se muestra solo con zoom y rumbo suficientes. */
   get isHeadingMarkerVisible(): boolean {
-    return (
-      this.currentZoom >= HEADING_MARKER_MIN_ZOOM && this.headingShape !== null
-    );
+    return this.currentZoom >= HEADING_MARKER_MIN_ZOOM && this.headingShape !== null;
   }
 
   /** El punto simple se muestra cuando hay ubicacion pero no triangulo. */
@@ -526,6 +535,14 @@ export class HomeViewModel {
     return this.destination ? this.destination.toLngLat() : null;
   }
 
+  /**
+   * Id del destino actual (o `null`). El screen lo usa como clave para
+   * encuadrar la camara una sola vez por destino calculado.
+   */
+  get destinationId(): string | null {
+    return this.destination?.id ?? null;
+  }
+
   /** Gasolineras halladas a lo largo de la ruta, listas para el mapa. */
   get fuelStationMarkers(): { id: string; coordinate: [number, number] }[] {
     return (this.isFuelStopResponse ?? []).map((station) => ({
@@ -583,6 +600,26 @@ export class HomeViewModel {
       }
     }
     return lines;
+  }
+
+  /**
+   * Ancho de trazado del nucleo para una linea de ruta segun su rol y el modo
+   * actual: alternativas finas; principal mas gruesa navegando ("flecha 3D")
+   * que planeando. Centraliza la seleccion que antes vivia inline en el screen.
+   */
+  coreWidthFor(line: RouteLine): number {
+    if (!line.isPrimary) return ROUTE_ALT_WIDTH;
+    return this.isNavigating ? ROUTE_CORE_WIDTH_NAV : ROUTE_CORE_WIDTH_PLANNING;
+  }
+
+  /**
+   * `true` si la linea del Planner es la recta punteada de feedback inmediato
+   * (sin directions calculadas). Lee la propiedad `isDashed` del shape GeoJSON.
+   */
+  isPlannerLineDashed(line: RouteLine): boolean {
+    return (
+      (line.shape.properties as Record<string, unknown> | undefined)?.isDashed === true
+    );
   }
 
   /**
@@ -685,7 +722,7 @@ export class HomeViewModel {
 
   /** `true` si hay datos del Planner para overlay en el mapa global. */
   get isPlannerPreviewVisible(): boolean {
-    return this.plannerViewModel.waypoints.length > 0;
+    return this.plannerStore.waypoints.length > 0;
   }
 
   /**
@@ -703,7 +740,7 @@ export class HomeViewModel {
     isFirst: boolean;
     isLast: boolean;
   }[] {
-    const wps = this.plannerViewModel.waypoints;
+    const wps = this.plannerStore.waypoints;
     if (wps.length === 0) return [];
     return wps.map((w, index) => ({
       id: w.id,
@@ -725,8 +762,8 @@ export class HomeViewModel {
    * — feedback visual mientras Mapbox aun no respondio.
    */
   get plannerRouteLines(): RouteLine[] {
-    const wps = this.plannerViewModel.waypoints;
-    const directions = this.plannerViewModel.directions;
+    const wps = this.plannerStore.waypoints;
+    const directions = this.plannerStore.directions;
     if (wps.length < 2) return [];
 
     // Con directions calculadas: usar la geometria real con sub-segmentos.
@@ -736,9 +773,7 @@ export class HomeViewModel {
 
     // Sin directions: linea recta punteada entre pins (feedback inmediato
     // pre-calculo). El consumidor del shape la pinta con `lineDasharray`.
-    const coords = wps.map(
-      (w) => [w.longitude, w.latitude] as [number, number],
-    );
+    const coords = wps.map((w) => [w.longitude, w.latitude] as [number, number]);
     const shape: GeoJSON.Feature<GeoJSON.LineString> = {
       type: 'Feature',
       properties: { isDashed: true },
@@ -760,7 +795,7 @@ export class HomeViewModel {
    * solo, devuelve `null` (no hay rectangulo posible).
    */
   get plannerBounds(): MapBounds | null {
-    const wps = this.plannerViewModel.waypoints;
+    const wps = this.plannerStore.waypoints;
     if (wps.length < 2) return null;
     const points: GeoPoint[] = wps.map((w) => ({
       latitude: w.latitude,
@@ -772,6 +807,18 @@ export class HomeViewModel {
       ne: [box.northEast.longitude, box.northEast.latitude],
       sw: [box.southWest.longitude, box.southWest.latitude],
     };
+  }
+
+  /**
+   * Fingerprint de coordenadas del `plannerBounds` (o `null`). El effect del
+   * screen reacciona a este string en vez de a la referencia del objeto —
+   * sino dispararia cada vez que MobX re-evalua el computed.
+   */
+  get plannerBoundsKey(): string | null {
+    const bounds = this.plannerBounds;
+    return bounds
+      ? `${bounds.ne[0]},${bounds.ne[1]},${bounds.sw[0]},${bounds.sw[1]}`
+      : null;
   }
 
   /**
@@ -861,9 +908,7 @@ export class HomeViewModel {
     const count = profile.samples.length;
     return profile.samples.map((sample, index) => ({
       progress: index / (count - 1),
-      color: elevationColor(
-        range === 0 ? 0 : (sample.elevationM - min) / range,
-      ),
+      color: elevationColor(range === 0 ? 0 : (sample.elevationM - min) / range),
     }));
   }
 
@@ -927,9 +972,7 @@ export class HomeViewModel {
       consumption: `${estimate.effectiveConsumptionKmPerLiter.toFixed(1)} km/L`,
       load: `${Math.round(estimate.loadKg)} kg`,
       reaches: estimate.reachesWithoutRefuel,
-      rangeUsedPercent: Math.round(
-        Math.min(1.5, estimate.rangeUsedFraction) * 100,
-      ),
+      rangeUsedPercent: Math.round(Math.min(1.5, estimate.rangeUsedFraction) * 100),
     };
   }
 
@@ -1033,9 +1076,7 @@ export class HomeViewModel {
    * sobre la polyline.
    */
   get navProgressKm(): number {
-    return this.isSimulatedNavigation
-      ? this.simulatedDistanceKm
-      : this.routeProgressKm;
+    return this.isSimulatedNavigation ? this.simulatedDistanceKm : this.routeProgressKm;
   }
 
   /**
@@ -1083,8 +1124,7 @@ export class HomeViewModel {
     const dLon = toRad(lookAhead.longitude - rider.longitude);
     const y = Math.sin(dLon) * Math.cos(lat2);
     const x =
-      Math.cos(lat1) * Math.sin(lat2) -
-      Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+      Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
     if (x === 0 && y === 0) return null;
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
   }
@@ -1127,6 +1167,30 @@ export class HomeViewModel {
       ascentSoFarM: profile.ascentUpToKm(km),
       ratio: Math.max(0, Math.min(1, ratio)),
     };
+  }
+
+  /**
+   * Altitud actual ya redondeada para los overlays de navegacion (strip 6b y
+   * chip 6a). `null` cuando no hay elevacion disponible.
+   */
+  get navElevationCurrentLabel(): number | null {
+    const elevation = this.currentNavElevation;
+    return elevation ? Math.round(elevation.currentM) : null;
+  }
+
+  /** Ascenso acumulado ya redondeado para el chip "glance" (6a). */
+  get navElevationAscentLabel(): number | null {
+    const elevation = this.currentNavElevation;
+    return elevation ? Math.round(elevation.ascentSoFarM) : null;
+  }
+
+  /**
+   * Velocidad instantanea ya redondeada para el velocimetro de la barra de
+   * navegacion. `null` cuando no hay velocidad que mostrar.
+   */
+  get navSpeedLabel(): number | null {
+    const speed = this.navSpeedKmh;
+    return speed === null ? null : Math.round(speed);
   }
 
   /**
@@ -1240,85 +1304,47 @@ export class HomeViewModel {
     void this.loadMotorcycle();
     void this.loadHomeFeed();
     // E3 flow brief: detectar draft del Planner para mostrar el sheet
-    // "Continúa donde quedaste". Errores silenciados (no rompe el Home).
-    void this.loadPendingDraft();
+    // "Continúa donde quedaste". El flow vive en el PlannerStore (singleton);
+    // el Home solo lo dispara y lee `pendingDraft` vía delegadores.
+    void this.plannerStore.loadPendingDraft();
     await this.locationStore.initialize();
   }
 
-  /**
-   * Carga el draft del Planner desde AsyncStorage (si hay uno del rider
-   * actual). Espera a que el rider este cargado para conocer su id.
-   */
-  private async loadPendingDraft(): Promise<void> {
-    try {
-      // Asegurarse de tener el rider antes de buscar el draft (key por-rider).
-      let rider = this.rider;
-      if (!rider) {
-        rider = await this.getCurrentRiderUseCase.run();
-        if (rider) {
-          runInAction(() => {
-            this.rider = rider;
-          });
-        }
-      }
-      if (!rider) return;
-      // Draft de CREACIÓN del Home: routeId null (ruta nueva, no edición).
-      const draft = await this.getRouteDraftUseCase.run({
-        riderId: rider.id,
-        routeId: null,
-      });
-      // Solo lo mostramos si tiene al menos 1 waypoint — sino no hay nada
-      // que recuperar.
-      if (!draft || draft.waypoints.length === 0) return;
-      runInAction(() => {
-        this.pendingDraft = draft;
-      });
-    } catch (error) {
-      this.logger.error(
-        `Error cargando draft pendiente: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
+  // ── Delegadores del flow "Continúa donde quedaste" (E3) ──────────────────
+  // El estado/lógica del pending draft vive en el PlannerStore; el HomeScreen
+  // sigue leyendo `viewModel.pendingDraft` y llamando estos métodos sin cambios.
+
+  get pendingDraft() {
+    return this.plannerStore.pendingDraft;
   }
 
   /**
-   * El rider tappeo "Continuar planeando" — hidratamos el plannerVM
-   * (singleton compartido) con el draft + limpiamos el sheet. El HomeScreen
-   * solo tiene que navegar al Planner; sus waypoints ya van a estar
-   * cargados gracias a este metodo.
+   * Filas display-ready del sheet "Continúa donde quedaste": cada waypoint del
+   * draft con su color de StopKind ya resuelto (fallback gris muted) y el flag
+   * `isStrong` para los extremos (start/destination). El componente solo pinta.
    */
+  get draftRecoveryRows(): {
+    id: string;
+    name: string;
+    color: string;
+    isStrong: boolean;
+  }[] {
+    const draft = this.plannerStore.pendingDraft;
+    if (!draft) return [];
+    return draft.waypoints.map((w) => ({
+      id: w.id,
+      name: w.name,
+      color: Colors.stopKind[w.kind as StopKind] ?? Colors.base.iconMuted,
+      isStrong: w.kind === 'start' || w.kind === 'destination',
+    }));
+  }
+
   continuePlanningDraft(): void {
-    const draft = this.pendingDraft;
-    if (!draft) return;
-    this.plannerViewModel.initializeFromDraft(draft);
-    runInAction(() => {
-      this.pendingDraft = null;
-    });
+    this.plannerStore.continuePlanningDraft();
   }
 
-  /**
-   * El rider tappeo "Empezar de nuevo" — borra el draft de AsyncStorage y
-   * cierra el sheet.
-   */
-  async dismissPendingDraft(): Promise<void> {
-    const draft = this.pendingDraft;
-    runInAction(() => {
-      this.pendingDraft = null;
-    });
-    if (!draft) return;
-    try {
-      await this.clearRouteDraftUseCase.run({
-        riderId: draft.riderId,
-        routeId: draft.routeId,
-      });
-    } catch (error) {
-      this.logger.error(
-        `Error descartando draft: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
+  dismissPendingDraft(): Promise<void> {
+    return this.plannerStore.dismissPendingDraft();
   }
 
   /** Reintenta el permiso de ubicacion y arranca el seguimiento si se concede. */
@@ -1342,6 +1368,10 @@ export class HomeViewModel {
   dispose(): void {
     this.searchDisposer?.();
     this.searchDisposer = null;
+    this.confirmReactionDisposer?.();
+    this.confirmReactionDisposer = null;
+    this.plannerNavReactionDisposer?.();
+    this.plannerNavReactionDisposer = null;
     this.clearNavTimer();
     Speech.stop();
     this.locationStore.dispose();
@@ -1383,10 +1413,15 @@ export class HomeViewModel {
     this.searchQuery = query;
   }
 
+  /** Tipo de rodada activo. Fuente de verdad: `NavigationStore` (compartido). */
+  get rideType(): RideType {
+    return this.navStore.rideType;
+  }
+
   /** Cambia el tipo de rodada; recalcula la ruta si ya hay destino. */
   setRideType(rideType: RideType): void {
-    if (this.rideType === rideType) return;
-    this.rideType = rideType;
+    if (this.navStore.rideType === rideType) return;
+    this.navStore.setRideType(rideType);
     if (this.destination) void this.computeRoute();
   }
 
@@ -1412,10 +1447,11 @@ export class HomeViewModel {
   }
 
   /**
-   * Arranca navegacion live usando el state del `RoutePlannerViewModel`
-   * (cuando el rider tappea "Iniciar" en el footer del Planner o
-   * "Iniciar navegacion ahora" en el sheet "Ruta guardada"). Cierra el
-   * loop end-to-end: planear → guardar → iniciar.
+   * Arranca navegacion live usando el payload de handoff del Planner
+   * (`PlannerNavPayload`, emitido vía `NavigationStore.startFromPlanner` cuando
+   * el rider tappea "Iniciar" en el footer del Planner o "Iniciar navegacion
+   * ahora" en el sheet "Ruta guardada"). Cierra el loop end-to-end:
+   * planear → guardar → iniciar.
    *
    * Reusa las `directions` ya calculadas del Planner — NO re-llama Mapbox.
    * Convierte waypoints intermedios y destino a `Place[]` para alimentar
@@ -1426,7 +1462,7 @@ export class HomeViewModel {
    * directions, sin destino claro). El caller decide que hacer con el
    * fallo — tipicamente Alert "Calcula la ruta primero".
    */
-  startNavigationFromPlanner(planner: RoutePlannerViewModel): boolean {
+  startNavigationFromPlanner(planner: PlannerNavPayload): boolean {
     const directions = planner.directions;
     if (!directions) return false;
     if (planner.waypoints.length < 2) return false;
@@ -1445,14 +1481,14 @@ export class HomeViewModel {
         category: w.mapboxCategory,
       });
 
+    this.navStore.setRideType(planner.rideType);
+    this.navStore.cancelPreview();
     runInAction(() => {
       this.destination = toPlace(last);
       this.intermediateStops = middle.map(toPlace);
-      this.rideType = planner.rideType;
       // Directions YA calculadas: pegamos directo, evitamos roundtrip a
       // Mapbox + skeleton inutil.
       this.isRouteResponse = directions;
-      this.previewPlace = null;
       this.searchQuery = '';
       this.isSearchResponse = null;
       this.searchMode = 'destination';
@@ -1473,8 +1509,10 @@ export class HomeViewModel {
    * punto. El destino real (y la ruta) se aplican solo al confirmar.
    */
   setPreviewPlace(place: Place): void {
+    // El lugar previsualizado vive en el `NavigationStore` (compartido con el
+    // sheet de preview). El Home limpia además su propia búsqueda.
+    this.navStore.setPreviewPlace(place);
     runInAction(() => {
-      this.previewPlace = place;
       // Limpiamos la búsqueda para que al volver al Home no quede el listado
       // de resultados arriba — el rider ya eligió uno.
       this.searchQuery = '';
@@ -1483,19 +1521,12 @@ export class HomeViewModel {
   }
 
   /**
-   * Confirma el preview: pasa el lugar a `destination` y dispara cómputo de
-   * ruta vía `selectDestination`. Si estábamos en modo "agregar parada", lo
-   * apila a la cadena en vez de reemplazar el destino.
+   * Confirma el preview: emite la señal `confirmedPlace` en el `NavigationStore`.
+   * La reaction del constructor reacciona a esa señal (selectDestination +
+   * recordRecent), así que aquí no llamamos `selectDestination` directamente.
    */
   confirmPreview(): void {
-    const place = this.previewPlace;
-    if (!place) return;
-    runInAction(() => {
-      this.previewPlace = null;
-    });
-    this.selectDestination(place);
-    // Registra en background: si falla no rompe la confirmacion del rider.
-    void this.recordRecentDestination(place);
+    this.navStore.confirmPreview();
   }
 
   /**
@@ -1586,14 +1617,20 @@ export class HomeViewModel {
 
   /** Descarta el preview sin tocar el destino actual ni la ruta existente. */
   cancelPreview(): void {
-    runInAction(() => {
-      this.previewPlace = null;
-    });
+    this.navStore.cancelPreview();
+  }
+
+  /**
+   * Lugar previsualizado (formSheet "DestinationPreview"). Fuente de verdad:
+   * `NavigationStore` (compartido con el sheet de preview).
+   */
+  get previewPlace(): Place | null {
+    return this.navStore.previewPlace;
   }
 
   /** Coordenada [lng, lat] del lugar previsualizado, para enfocar la cámara. */
   get previewCoordinate(): [number, number] | null {
-    return this.previewPlace ? this.previewPlace.toLngLat() : null;
+    return this.navStore.previewCoordinate;
   }
 
   /** Activa el modo "agregar parada": el proximo lugar buscado sera waypoint. */
@@ -1788,8 +1825,7 @@ export class HomeViewModel {
     const progressKm = this.navProgressKm;
     for (const step of route.steps) {
       for (const voice of step.voiceInstructions) {
-        const triggerKm =
-          step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
+        const triggerKm = step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
         if (progressKm < triggerKm) continue;
         const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
         if (this.spokenVoiceIds.has(key)) continue;
@@ -1896,7 +1932,6 @@ export class HomeViewModel {
       this.simulatedDistanceKm = 0;
       this.offRouteTicks = 0;
       this.destination = null;
-      this.previewPlace = null;
       this.intermediateStops = [];
       this.searchMode = 'destination';
       this.isRouteResponse = null;
@@ -1915,6 +1950,8 @@ export class HomeViewModel {
       this.searchQuery = '';
       this.isSearchResponse = null;
     });
+    // `previewPlace` vive en el navStore — limpiarlo fuera del runInAction.
+    this.navStore.cancelPreview();
   }
 
   reset(): void {
@@ -1936,9 +1973,7 @@ export class HomeViewModel {
       this.isSearchLoading = false;
       this.isSearchError = null;
       this.isSearchResponse = null;
-      this.rideType = DEFAULT_RIDE_TYPE;
       this.destination = null;
-      this.previewPlace = null;
       this.intermediateStops = [];
       this.searchMode = 'destination';
       this.isRouteLoading = false;
@@ -1964,6 +1999,10 @@ export class HomeViewModel {
       this.isSavedRoutesResponse = null;
       this.selectedSavedRouteId = null;
     });
+    // `previewPlace` y `rideType` viven en el navStore — resetearlos fuera del
+    // runInAction (cada setter del store tiene su propio runInAction).
+    this.navStore.cancelPreview();
+    this.navStore.setRideType(DEFAULT_RIDE_TYPE);
   }
 
   // ── Private helpers ──────────────────────────────────────────────────────────
@@ -2191,10 +2230,7 @@ export class HomeViewModel {
     // (b) Gasolineras a lo largo de TODA la ruta, para pintarlas en el mapa.
     //     Se buscan una sola vez por ruta (no en cada recarga de la moto).
     if (this.isFuelStopResponse !== null || route.geometry.length < 2) return;
-    const searchStops = samplePolyline(
-      route.geometry,
-      ROUTE_STATION_SAMPLES,
-    ).map(
+    const searchStops = samplePolyline(route.geometry, ROUTE_STATION_SAMPLES).map(
       (location, index) =>
         new FuelStop({
           id: `sample-${index}`,
@@ -2210,9 +2246,7 @@ export class HomeViewModel {
     try {
       const stations = await this.findFuelStationsUseCase.run(searchStops);
       // Quita estaciones repetidas halladas cerca de varias muestras.
-      const unique = Array.from(
-        new Map(stations.map((s) => [s.id, s])).values(),
-      );
+      const unique = Array.from(new Map(stations.map((s) => [s.id, s])).values());
       runInAction(() => {
         this.isFuelStopResponse = unique;
       });
@@ -2279,11 +2313,7 @@ export class HomeViewModel {
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'search':

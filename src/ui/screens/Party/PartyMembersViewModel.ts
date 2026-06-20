@@ -17,10 +17,18 @@ import { TripPartyStore } from '@/ui/store/TripPartyStore';
 type ICalls = 'load' | 'leave';
 
 /**
- * Item de la lista de miembros con metadata visual (moto resuelta).
+ * Item de la lista de miembros con metadata visual ya resuelta para render:
+ * iniciales del avatar y label ("(Tu)" incluido) listos para pintar, sin que
+ * la UI tenga que reconsultar la entidad de dominio.
  */
 export type PartyMemberRow = {
-  member: PartyMember;
+  /** Clave estable para la lista. */
+  id: string;
+  /** Iniciales del avatar — "Diego Lopez" -> "DL". */
+  initials: string;
+  /** Nombre a mostrar, con sufijo " (Tu)" cuando es el usuario actual. */
+  label: string;
+  /** Texto de la moto resuelta. */
   motorcycleLabel: string;
   isMe: boolean;
   isOwner: boolean;
@@ -80,19 +88,59 @@ export class PartyMembersViewModel {
     const party = this.partyStore.activeParty;
     if (!party) return [];
     const myId = this.currentRiderId;
-    return party.members.map((member) => ({
-      member,
-      motorcycleLabel: this.resolveMotorcycleLabel(member),
-      isMe: member.riderId === myId,
-      isOwner: member.isOwner,
-    }));
+    return party.members.map((member) => {
+      const isMe = member.riderId === myId;
+      return {
+        id: member.riderId,
+        initials: member.initials(),
+        label: `${member.displayName}${isMe ? ' (Tu)' : ''}`,
+        motorcycleLabel: this.resolveMotorcycleLabel(member),
+        isMe,
+        isOwner: member.isOwner,
+      };
+    });
+  }
+
+  /** Alias display-ready de `rows` consumido por la pantalla. */
+  get memberRows(): PartyMemberRow[] {
+    return this.rows;
+  }
+
+  /** `true` si hay un party activo (proxy del store para la UI). */
+  get hasActiveParty(): boolean {
+    return this.partyStore.hasActiveParty;
+  }
+
+  /** Cantidad de miembros del party activo (proxy del store para la UI). */
+  get memberCount(): number {
+    return this.partyStore.memberCount;
+  }
+
+  /** `true` si el usuario actual es el owner del party activo. */
+  get isOwner(): boolean {
+    return this.partyStore.isOwner(this.currentRiderId ?? '');
+  }
+
+  /**
+   * Mensaje de confirmacion para "Salir de la rodada". Ramifica segun si el
+   * usuario es owner y cuantos miembros quedarian:
+   * - owner con otros miembros: se promueve al siguiente.
+   * - owner ultimo miembro: la rodada se cierra.
+   * - no owner: simplemente deja la rodada.
+   */
+  get leaveConfirmMessage(): string {
+    const otherCount = this.memberCount - 1;
+    if (this.isOwner) {
+      return otherCount > 0
+        ? `Quedaran ${otherCount} miembro(s) en la rodada y se promovera al siguiente.`
+        : 'La rodada se cerrara porque eres el ultimo miembro.';
+    }
+    return 'Vas a dejar la rodada. Podes volver a unirte con el codigo.';
   }
 
   get canLeave(): boolean {
     return (
-      this.partyStore.hasActiveParty &&
-      this.currentRiderId !== null &&
-      !this.isLeaving
+      this.partyStore.hasActiveParty && this.currentRiderId !== null && !this.isLeaving
     );
   }
 
@@ -140,11 +188,7 @@ export class PartyMembersViewModel {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'load':

@@ -30,14 +30,9 @@ export interface RouteService {
 export class RouteServiceImpl implements RouteService {
   async fetchAllByRider(riderId: string): Promise<RouteModel[]> {
     const snapshot = await getDocs(
-      query(
-        collection(firestore, ROUTES_COLLECTION),
-        where('rider_id', '==', riderId),
-      ),
+      query(collection(firestore, ROUTES_COLLECTION), where('rider_id', '==', riderId)),
     );
-    return snapshot.docs.map((d) =>
-      RouteModel.fromJson({ id: d.id, ...d.data() }),
-    );
+    return snapshot.docs.map((d) => RouteModel.fromJson({ id: d.id, ...d.data() }));
   }
 
   async fetchById(id: string): Promise<RouteModel | null> {
@@ -54,10 +49,7 @@ export class RouteServiceImpl implements RouteService {
     return RouteModel.fromJson({ id: ref.id, ...payload });
   }
 
-  async update(
-    id: string,
-    payload: Record<string, unknown>,
-  ): Promise<RouteModel> {
+  async update(id: string, payload: Record<string, unknown>): Promise<RouteModel> {
     await updateDoc(doc(firestore, ROUTES_COLLECTION, id), payload);
     return RouteModel.fromJson({ id, ...payload });
   }

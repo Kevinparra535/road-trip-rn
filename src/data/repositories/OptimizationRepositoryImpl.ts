@@ -17,10 +17,7 @@ export class OptimizationRepositoryImpl implements OptimizationRepository {
     private readonly service: OptimizationService,
   ) {}
 
-  async optimize(
-    waypoints: Waypoint[],
-    rideType: RideType,
-  ): Promise<OptimizedTrip> {
+  async optimize(waypoints: Waypoint[], rideType: RideType): Promise<OptimizedTrip> {
     // Ordenamos por `order` y enviamos en ese orden; `toDomain` usa el mismo
     // array para mapear `waypoint_index` → id real.
     const ordered = [...waypoints].sort((a, b) => a.order - b.order);

@@ -71,9 +71,7 @@ export class PlaceModel {
     if (Array.isArray(feature?.context)) {
       for (const ctx of feature.context) {
         const ctxId: string = String(ctx?.id ?? '');
-        const text: string | undefined = ctx?.text
-          ? String(ctx.text)
-          : undefined;
+        const text: string | undefined = ctx?.text ? String(ctx.text) : undefined;
         if (!text) continue;
         if (ctxId.startsWith('region')) region = text;
         else if (ctxId.startsWith('country')) country = text;
@@ -90,9 +88,7 @@ export class PlaceModel {
       category: feature?.properties?.category
         ? String(feature.properties.category)
         : undefined,
-      maki: feature?.properties?.maki
-        ? String(feature.properties.maki)
-        : undefined,
+      maki: feature?.properties?.maki ? String(feature.properties.maki) : undefined,
       region,
       country,
     });
@@ -108,17 +104,13 @@ export class PlaceModel {
     const props = feature?.properties ?? {};
     const coordsObj = props?.coordinates;
     const geomCoords = feature?.geometry?.coordinates;
-    const longitude: number | null =
-      coordsObj?.longitude ?? geomCoords?.[0] ?? null;
-    const latitude: number | null =
-      coordsObj?.latitude ?? geomCoords?.[1] ?? null;
+    const longitude: number | null = coordsObj?.longitude ?? geomCoords?.[0] ?? null;
+    const latitude: number | null = coordsObj?.latitude ?? geomCoords?.[1] ?? null;
     if (typeof longitude !== 'number' || typeof latitude !== 'number') {
       return null;
     }
 
-    const name = String(
-      props?.name ?? props?.name_preferred ?? feature?.text ?? 'Lugar',
-    );
+    const name = String(props?.name ?? props?.name_preferred ?? feature?.text ?? 'Lugar');
     const fullName = String(
       props?.full_address ?? props?.place_formatted ?? props?.address ?? name,
     );

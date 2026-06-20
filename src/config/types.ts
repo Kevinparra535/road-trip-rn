@@ -61,9 +61,7 @@ export const TYPES = {
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
   EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
   FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
-  RequestLocationPermissionUseCase: Symbol.for(
-    'RequestLocationPermissionUseCase',
-  ),
+  RequestLocationPermissionUseCase: Symbol.for('RequestLocationPermissionUseCase'),
   GetCurrentLocationUseCase: Symbol.for('GetCurrentLocationUseCase'),
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
@@ -93,11 +91,10 @@ export const TYPES = {
   FlushPendingDraftsUseCase: Symbol.for('FlushPendingDraftsUseCase'),
 
   // ── ViewModels (capa ui) ──
-  AuthViewModel: Symbol.for('AuthViewModel'),
   GarageViewModel: Symbol.for('GarageViewModel'),
   MotorcycleFormViewModel: Symbol.for('MotorcycleFormViewModel'),
   RoutesViewModel: Symbol.for('RoutesViewModel'),
-  RoutePlannerViewModel: Symbol.for('RoutePlannerViewModel'),
+  RoutePlannerMapViewModel: Symbol.for('RoutePlannerMapViewModel'),
   RouteDetailViewModel: Symbol.for('RouteDetailViewModel'),
   HomeViewModel: Symbol.for('HomeViewModel'),
   DestinationPreviewViewModel: Symbol.for('DestinationPreviewViewModel'),
@@ -105,11 +102,16 @@ export const TYPES = {
   PartyMembersViewModel: Symbol.for('PartyMembersViewModel'),
   AddStopViewModel: Symbol.for('AddStopViewModel'),
   CategorySublistViewModel: Symbol.for('CategorySublistViewModel'),
+  ProfileViewModel: Symbol.for('ProfileViewModel'),
+  SignInViewModel: Symbol.for('SignInViewModel'),
+  SignUpViewModel: Symbol.for('SignUpViewModel'),
 
   // ── Stores globales (singletons, capa ui) ──
   SessionStore: Symbol.for('SessionStore'),
   LocationStore: Symbol.for('LocationStore'),
   TripPartyStore: Symbol.for('TripPartyStore'),
+  PlannerStore: Symbol.for('PlannerStore'),
+  NavigationStore: Symbol.for('NavigationStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),
   NetworkStore: Symbol.for('NetworkStore'),

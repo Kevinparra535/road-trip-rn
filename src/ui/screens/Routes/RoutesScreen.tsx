@@ -15,8 +15,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
-import { Route } from '@/domain/entities/Route';
-
 import GradientView from '@/ui/components/GradientView';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 
@@ -25,61 +23,15 @@ import { RoutesStackParamList } from '@/ui/navigation/types';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
 import { RoutesViewModel } from './RoutesViewModel';
 
-import { rideTypeMeta } from './rideTypeMeta';
+import { RouteRow } from './components/RouteRow';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutesList'>;
-
-const RouteRow = ({
-  route,
-  onPress,
-  onEdit,
-}: {
-  route: Route;
-  onPress: () => void;
-  onEdit: () => void;
-}) => {
-  const meta = rideTypeMeta(route.rideType);
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={styles.card}
-    >
-      <View style={[styles.cardIcon, { borderColor: meta.color }]}>
-        <Ionicons name={meta.icon} size={22} color={meta.color} />
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardTitle}>{route.name}</Text>
-        <Text style={styles.cardMeta}>
-          {meta.label} · {Math.round(route.distanceKm)} km ·{' '}
-          {route.durationLabel()}
-        </Text>
-        <Text style={styles.cardSub}>
-          {route.waypoints.length} puntos · {route.stops().length} paradas
-        </Text>
-      </View>
-      <TouchableOpacity
-        onPress={onEdit}
-        hitSlop={8}
-        testID="route-row-edit-btn"
-      >
-        <Ionicons name="create-outline" size={20} color={Colors.base.accent} />
-      </TouchableOpacity>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={Colors.base.iconMuted}
-      />
-    </TouchableOpacity>
-  );
-};
 
 const RoutesScreen = observer(() => {
   const navigation = useNavigation<Nav>();
@@ -100,9 +52,7 @@ const RoutesScreen = observer(() => {
     >
       <GradientView preset="header" style={styles.header}>
         <Text style={styles.headerTitle}>Mis rutas</Text>
-        <Text style={styles.headerSubtitle}>
-          Planea, guarda y revisa tus rodadas
-        </Text>
+        <Text style={styles.headerSubtitle}>Planea, guarda y revisa tus rodadas</Text>
       </GradientView>
 
       {viewModel.isRoutesLoading ? (
@@ -115,27 +65,19 @@ const RoutesScreen = observer(() => {
         </View>
       ) : (
         <FlatList
-          data={viewModel.isRoutesResponse ?? []}
+          data={viewModel.routeRows}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => (
             <RouteRow
-              route={item}
-              onPress={() =>
-                navigation.navigate('RouteDetail', { routeId: item.id })
-              }
-              onEdit={() =>
-                navigation.navigate('RoutePlanner', { routeId: item.id })
-              }
+              row={item}
+              onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })}
+              onEdit={() => navigation.navigate('RoutePlanner', { routeId: item.id })}
             />
           )}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons
-                name="map-outline"
-                size={48}
-                color={Colors.base.iconMuted}
-              />
+              <Ionicons name="map-outline" size={48} color={Colors.base.iconMuted} />
               <Text style={styles.emptyTitle}>Aun no tienes rutas</Text>
               <Text style={styles.emptyText}>
                 Crea tu primera ruta tocando el mapa para marcar puntos.
@@ -197,43 +139,6 @@ const styles = StyleSheet.create({
     padding: Spacings.spacex2,
     gap: Spacings.md,
     flexGrow: 1,
-  },
-  card: {
-    padding: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.md,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-    ...Shadows.bankCard,
-  },
-  cardIcon: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.bgInfoCard,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-  },
-  cardBody: {
-    flex: 1,
-  },
-  cardTitle: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  cardMeta: {
-    marginTop: Spacings.xs,
-    ...Fonts.smallBodyText,
-    color: Colors.base.textSecondary,
-  },
-  cardSub: {
-    marginTop: Spacings.xs,
-    ...Fonts.links,
-    color: Colors.base.textMuted,
   },
   empty: {
     flex: 1,

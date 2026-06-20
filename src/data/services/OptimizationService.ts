@@ -9,16 +9,12 @@ import { HttpManager } from '@/domain/services/HttpManager';
 
 import { OptimizationModel } from '@/data/models/optimizationModel';
 
-const MAPBOX_OPTIMIZATION_URL =
-  'https://api.mapbox.com/optimized-trips/v1/mapbox';
+const MAPBOX_OPTIMIZATION_URL = 'https://api.mapbox.com/optimized-trips/v1/mapbox';
 
 type LngLat = [number, number];
 
 export interface OptimizationService {
-  optimize(
-    coordinates: LngLat[],
-    rideType: RideType,
-  ): Promise<OptimizationModel>;
+  optimize(coordinates: LngLat[], rideType: RideType): Promise<OptimizationModel>;
 }
 
 @injectable()
@@ -28,10 +24,7 @@ export class OptimizationServiceImpl implements OptimizationService {
     private readonly http: HttpManager,
   ) {}
 
-  async optimize(
-    coordinates: LngLat[],
-    rideType: RideType,
-  ): Promise<OptimizationModel> {
+  async optimize(coordinates: LngLat[], rideType: RideType): Promise<OptimizationModel> {
     const profile = this.resolveProfile(rideType);
     const path = coordinates.map(([lng, lat]) => `${lng},${lat}`).join(';');
     const params = new URLSearchParams({

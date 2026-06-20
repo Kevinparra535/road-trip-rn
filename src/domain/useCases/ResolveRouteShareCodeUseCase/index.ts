@@ -41,9 +41,7 @@ export class ResolveRouteShareCodeUseCase implements UseCase<
     private readonly getRouteUseCase: GetRouteUseCase,
   ) {}
 
-  async run(
-    input: ResolveRouteShareCodeInput,
-  ): Promise<ResolvedRouteShare | null> {
+  async run(input: ResolveRouteShareCodeInput): Promise<ResolvedRouteShare | null> {
     const normalized = normalizeCode(input.code);
     if (!normalized) return null;
 

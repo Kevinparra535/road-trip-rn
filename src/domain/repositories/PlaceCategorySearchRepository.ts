@@ -5,8 +5,19 @@ import { GeoPoint } from '@/domain/entities/Route';
  * Categorias buscables como POIs cerca de una ruta. Subset de `StopKind`
  * que excluye los kinds posicionales (`start` / `destination`) — esos no
  * tiene sentido buscarlos por categoria.
+ *
+ * `'town'` es especial: no es una categoria de la Search Box API sino una
+ * busqueda de localidades via geocoding (`mapbox.places` + `types=place,
+ * locality`). El service decide la ruta segun la categoria.
  */
-export type SearchableCategory = 'food' | 'fuel' | 'tourism' | 'rest';
+export type SearchableCategory =
+  | 'food'
+  | 'fuel'
+  | 'tourism'
+  | 'rest'
+  | 'lodging'
+  | 'cafe'
+  | 'town';
 
 /**
  * Input del search por categoria. `alongRoute` puede ser la lista de
@@ -16,6 +27,15 @@ export type SearchableCategory = 'food' | 'fuel' | 'tourism' | 'rest';
 export type SearchByCategoryInput = {
   category: SearchableCategory;
   alongRoute: GeoPoint[];
+  /**
+   * Puntos de anclaje (tipicamente las paradas intermedias) que siempre se
+   * muestrean, ademas del muestreo equiespaciado de la ruta.
+   */
+  anchors?: GeoPoint[];
+  /** Tope duro de samples a lo largo de la ruta (presupuesto de API). */
+  maxSamples?: number;
+  /** Separacion objetivo entre samples equiespaciados (km). */
+  spacingKm?: number;
   /** Limite duro de resultados a devolver tras dedup + ranking. */
   maxResults?: number;
 };

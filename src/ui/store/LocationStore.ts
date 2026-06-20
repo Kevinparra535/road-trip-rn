@@ -65,10 +65,7 @@ export class LocationStore {
 
   /** El permiso ya se consulto y NO quedo concedido. */
   get permissionDenied(): boolean {
-    return (
-      this.isPermissionResponse !== null &&
-      this.isPermissionResponse !== 'granted'
-    );
+    return this.isPermissionResponse !== null && this.isPermissionResponse !== 'granted';
   }
 
   get hasLocation(): boolean {
@@ -160,13 +157,11 @@ export class LocationStore {
 
   private async startWatchingLocation(): Promise<void> {
     try {
-      this.unsubscribeLocation = await this.watchLocationUseCase.run(
-        (location) => {
-          runInAction(() => {
-            this.isLocationResponse = location;
-          });
-        },
-      );
+      this.unsubscribeLocation = await this.watchLocationUseCase.run((location) => {
+        runInAction(() => {
+          this.isLocationResponse = location;
+        });
+      });
     } catch (error) {
       this.handleError(error, 'location');
     }
@@ -197,11 +192,7 @@ export class LocationStore {
     });
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'permission':

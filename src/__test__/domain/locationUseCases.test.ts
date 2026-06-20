@@ -26,9 +26,9 @@ describe('RequestLocationPermissionUseCase', () => {
   it('propagates repository errors', async () => {
     const repo = makeRepo();
     repo.requestPermission.mockRejectedValue(new Error('no gps'));
-    await expect(
-      new RequestLocationPermissionUseCase(repo).run(),
-    ).rejects.toThrow('no gps');
+    await expect(new RequestLocationPermissionUseCase(repo).run()).rejects.toThrow(
+      'no gps',
+    );
   });
 });
 
@@ -44,9 +44,7 @@ describe('GetCurrentLocationUseCase', () => {
   it('propagates repository errors', async () => {
     const repo = makeRepo();
     repo.getCurrentLocation.mockRejectedValue(new Error('timeout'));
-    await expect(new GetCurrentLocationUseCase(repo).run()).rejects.toThrow(
-      'timeout',
-    );
+    await expect(new GetCurrentLocationUseCase(repo).run()).rejects.toThrow('timeout');
   });
 });
 

@@ -43,21 +43,13 @@ const PrimaryButton = ({
       onPress={onPress}
       style={[styles.wrapper, !isInteractive && styles.disabled, style]}
     >
-      <GradientView
-        preset="accent"
-        direction="horizontal"
-        style={styles.gradient}
-      >
+      <GradientView preset="accent" direction="horizontal" style={styles.gradient}>
         {loading ? (
           <ActivityIndicator color={Colors.base.textPrimary} />
         ) : (
           <View style={styles.content}>
             {iconName ? (
-              <Ionicons
-                name={iconName}
-                size={20}
-                color={Colors.base.textPrimary}
-              />
+              <Ionicons name={iconName} size={20} color={Colors.base.textPrimary} />
             ) : null}
             <Text style={styles.label}>{label}</Text>
           </View>

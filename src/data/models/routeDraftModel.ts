@@ -1,10 +1,7 @@
 import { RideType } from '@/domain/entities/Route';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDay } from '@/domain/entities/RouteDay';
-import {
-  RouteDraft,
-  RouteDraftConstructorParams,
-} from '@/domain/entities/RouteDraft';
+import { RouteDraft, RouteDraftConstructorParams } from '@/domain/entities/RouteDraft';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 /**
@@ -76,9 +73,7 @@ function toDate(value: unknown): Date {
   }
   if (hasToDate(value)) {
     const parsed = value.toDate();
-    return parsed instanceof Date && !isNaN(parsed.getTime())
-      ? parsed
-      : new Date();
+    return parsed instanceof Date && !isNaN(parsed.getTime()) ? parsed : new Date();
   }
   if (typeof value === 'string' || typeof value === 'number') {
     const parsed = new Date(value);
@@ -115,8 +110,7 @@ function readDays(raw: any): RouteDayJson[] | undefined {
     index: Number(d.index ?? index),
     start_idx: Number(d.start_idx ?? 0),
     end_idx: Number(d.end_idx ?? 0),
-    overnight_name:
-      typeof d.overnight_name === 'string' ? d.overnight_name : undefined,
+    overnight_name: typeof d.overnight_name === 'string' ? d.overnight_name : undefined,
   }));
 }
 
@@ -169,22 +163,15 @@ export class RouteDraftModel {
         mapbox_category:
           typeof w.mapbox_category === 'string' ? w.mapbox_category : undefined,
         user_override_kind:
-          typeof w.user_override_kind === 'boolean'
-            ? w.user_override_kind
-            : undefined,
+          typeof w.user_override_kind === 'boolean' ? w.user_override_kind : undefined,
         notes: typeof w.notes === 'string' ? w.notes : undefined,
         stop_duration_min:
-          typeof w.stop_duration_min === 'number'
-            ? w.stop_duration_min
-            : undefined,
+          typeof w.stop_duration_min === 'number' ? w.stop_duration_min : undefined,
         is_return_clone:
-          typeof w.is_return_clone === 'boolean'
-            ? w.is_return_clone
-            : undefined,
+          typeof w.is_return_clone === 'boolean' ? w.is_return_clone : undefined,
       })),
       avoid: readAvoid(json.avoid),
-      round_trip:
-        typeof json.round_trip === 'boolean' ? json.round_trip : undefined,
+      round_trip: typeof json.round_trip === 'boolean' ? json.round_trip : undefined,
       days: readDays(json.days),
       updated_at: json.updated_at ?? new Date().toISOString(),
     });
@@ -209,9 +196,7 @@ export class RouteDraftModel {
         user_override_kind: w.userOverrideKind,
         notes: w.hasNotes() ? w.notes : undefined,
         stop_duration_min:
-          w.stopDurationMin && w.stopDurationMin > 0
-            ? w.stopDurationMin
-            : undefined,
+          w.stopDurationMin && w.stopDurationMin > 0 ? w.stopDurationMin : undefined,
         is_return_clone: w.isReturnClone ? true : undefined,
       })),
       avoid: entity.avoid.isEmpty

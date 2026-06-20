@@ -1,11 +1,5 @@
 import { useEffect } from 'react';
-import {
-  DimensionValue,
-  StyleProp,
-  StyleSheet,
-  View,
-  ViewStyle,
-} from 'react-native';
+import { DimensionValue, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,

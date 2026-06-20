@@ -32,9 +32,7 @@ describe('Route CRUD use cases', () => {
   it('gets one route', async () => {
     const repo = makeRouteRepo();
     repo.getById.mockResolvedValue(makeRoute());
-    expect((await new GetRouteUseCase(repo).run('route-1'))?.id).toBe(
-      'route-1',
-    );
+    expect((await new GetRouteUseCase(repo).run('route-1'))?.id).toBe('route-1');
   });
 
   it('creates a valid route', async () => {
@@ -55,17 +53,15 @@ describe('Route CRUD use cases', () => {
   it('rejects a route with fewer than two waypoints', async () => {
     const repo = makeRouteRepo();
     await expect(
-      new CreateRouteUseCase(repo).run(
-        makeRoute({ waypoints: [makeWaypoint()] }),
-      ),
+      new CreateRouteUseCase(repo).run(makeRoute({ waypoints: [makeWaypoint()] })),
     ).rejects.toThrow('origen y un destino');
   });
 
   it('rejects updating a route without id', async () => {
     const repo = makeRouteRepo();
-    await expect(
-      new UpdateRouteUseCase(repo).run(makeRoute({ id: '' })),
-    ).rejects.toThrow('id');
+    await expect(new UpdateRouteUseCase(repo).run(makeRoute({ id: '' }))).rejects.toThrow(
+      'id',
+    );
   });
 
   it('updates a route', async () => {

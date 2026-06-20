@@ -105,10 +105,7 @@ export class EstimateAutonomyUseCase implements UseCase<
       default:
         break;
     }
-    return Math.min(
-      MAX_CONDITION_FACTOR,
-      Math.max(MIN_CONDITION_FACTOR, factor),
-    );
+    return Math.min(MAX_CONDITION_FACTOR, Math.max(MIN_CONDITION_FACTOR, factor));
   }
 
   private buildFuelStops(
@@ -122,8 +119,7 @@ export class EstimateAutonomyUseCase implements UseCase<
     let order = 1;
     let distance = effectiveRangeKm;
     while (distance < totalDistanceKm && stops.length < MAX_FUEL_STOPS) {
-      const location =
-        pointAtDistanceAlong(geometry, distance) ?? geometry[0] ?? null;
+      const location = pointAtDistanceAlong(geometry, distance) ?? geometry[0] ?? null;
       if (location) {
         stops.push(
           new FuelStop({
@@ -141,10 +137,7 @@ export class EstimateAutonomyUseCase implements UseCase<
     return stops;
   }
 
-  private conditionsSummary(
-    conditions: RidingConditions,
-    route: Route,
-  ): string {
+  private conditionsSummary(conditions: RidingConditions, route: Route): string {
     const parts: string[] = [];
     parts.push(conditions.hasPassenger ? 'acompanado' : 'solo');
     if (conditions.hasLuggage) parts.push('con maletas');

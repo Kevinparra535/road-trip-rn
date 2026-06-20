@@ -36,9 +36,7 @@ export class WikipediaSummaryService implements PlaceSummaryService {
         title: String(json?.title ?? name),
         extract: typeof json?.extract === 'string' ? json.extract : undefined,
         thumbnailUrl:
-          typeof json?.thumbnail?.source === 'string'
-            ? json.thumbnail.source
-            : undefined,
+          typeof json?.thumbnail?.source === 'string' ? json.thumbnail.source : undefined,
         sourceUrl:
           typeof json?.content_urls?.desktop?.page === 'string'
             ? json.content_urls.desktop.page

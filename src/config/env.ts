@@ -16,10 +16,7 @@ const firebaseSchema = z.object({
   authDomain: z.string().min(1).default('SET_FIREBASE_AUTH_DOMAIN'),
   projectId: z.string().min(1).default('SET_FIREBASE_PROJECT_ID'),
   storageBucket: z.string().min(1).default('SET_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: z
-    .string()
-    .min(1)
-    .default('SET_FIREBASE_MESSAGING_SENDER_ID'),
+  messagingSenderId: z.string().min(1).default('SET_FIREBASE_MESSAGING_SENDER_ID'),
   appId: z.string().min(1).default('SET_FIREBASE_APP_ID'),
   measurementId: z.string().optional(),
 });

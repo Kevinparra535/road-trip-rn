@@ -53,9 +53,7 @@ function transformColor(value) {
 
     // Preserva blancos/casi-blancos (etiquetas, halos claros)
     if (l >= 85) {
-      return alpha !== null
-        ? `hsla(0, 0%, 100%, ${alpha})`
-        : `hsl(0, 0%, 100%)`;
+      return alpha !== null ? `hsla(0, 0%, 100%, ${alpha})` : `hsl(0, 0%, 100%)`;
     }
 
     // Resto: olive shift
@@ -110,35 +108,26 @@ function applyLayerOverrides(layers) {
 
     // Motorway / Trunk (autopistas)
     if (/motorway|trunk/.test(id) && !/case|shield|label/.test(id)) {
-      if ('line-color' in layer.paint)
-        layer.paint['line-color'] = PENCIL.roadMotorway;
+      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadMotorway;
     }
     // Casing layers (perfilado)
     if (/-case/.test(id)) {
-      if ('line-color' in layer.paint)
-        layer.paint['line-color'] = PENCIL.roadCasing;
+      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadCasing;
     }
     // Primary / Secondary / Tertiary
-    if (
-      /primary|secondary|tertiary/.test(id) &&
-      !/case|shield|label/.test(id)
-    ) {
-      if ('line-color' in layer.paint)
-        layer.paint['line-color'] = PENCIL.roadPrimary;
+    if (/primary|secondary|tertiary/.test(id) && !/case|shield|label/.test(id)) {
+      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadPrimary;
     }
     // Street / minor
     if (/street|minor/.test(id) && !/case|shield|label/.test(id)) {
-      if ('line-color' in layer.paint)
-        layer.paint['line-color'] = PENCIL.roadStreet;
+      if ('line-color' in layer.paint) layer.paint['line-color'] = PENCIL.roadStreet;
     }
 
     // Labels: blanco translucido con halo oscuro
     if (layer.type === 'symbol' && /label/.test(id)) {
       if (layer.paint['text-color']) {
         const isMain = /country|state|settlement-major/.test(id);
-        layer.paint['text-color'] = isMain
-          ? PENCIL.labelMain
-          : PENCIL.labelSecondary;
+        layer.paint['text-color'] = isMain ? PENCIL.labelMain : PENCIL.labelSecondary;
       }
       if (layer.paint['text-halo-color'])
         layer.paint['text-halo-color'] = PENCIL.labelHalo;

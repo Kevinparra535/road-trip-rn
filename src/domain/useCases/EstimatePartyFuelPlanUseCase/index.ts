@@ -107,9 +107,7 @@ export class EstimatePartyFuelPlanUseCase implements UseCase<
     }
 
     // 2) Identificar weakest / strongest.
-    const sorted = [...ranges].sort(
-      (a, b) => a.effectiveRangeKm - b.effectiveRangeKm,
-    );
+    const sorted = [...ranges].sort((a, b) => a.effectiveRangeKm - b.effectiveRangeKm);
     const weakest = sorted[0];
     const strongest = sorted[sorted.length - 1];
 
@@ -149,10 +147,7 @@ export class EstimatePartyFuelPlanUseCase implements UseCase<
     let traveledKm = 0;
     let stopIndex = 0;
 
-    while (
-      traveledKm + usableRange < route.distanceKm &&
-      stops.length < MAX_FUEL_STOPS
-    ) {
+    while (traveledKm + usableRange < route.distanceKm && stops.length < MAX_FUEL_STOPS) {
       const nextStopKm = traveledKm + usableRange;
       const location =
         pointAtDistanceAlong(route.geometry, nextStopKm) ??

@@ -4,10 +4,7 @@ import { TYPES } from '@/config/types';
 
 import { Rider } from '@/domain/entities/Rider';
 
-import {
-  AuthRepository,
-  SignInInput,
-} from '@/domain/repositories/AuthRepository';
+import { AuthRepository, SignInInput } from '@/domain/repositories/AuthRepository';
 
 import { UseCase } from '@/domain/useCases/UseCase';
 

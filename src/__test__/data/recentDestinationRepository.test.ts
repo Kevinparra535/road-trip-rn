@@ -117,10 +117,7 @@ describe('RecentDestinationRepositoryImpl', () => {
   });
 
   it('JSON corrupto en storage devuelve [] sin romper', async () => {
-    await AsyncStorage.setItem(
-      '@road-trip/recent-destinations/v1',
-      'not json {{{',
-    );
+    await AsyncStorage.setItem('@road-trip/recent-destinations/v1', 'not json {{{');
     const repo = new RecentDestinationRepositoryImpl();
 
     expect(await repo.getAll()).toEqual([]);
@@ -162,8 +159,6 @@ describe('RecentDestinationRepositoryImpl', () => {
 
     const result = await repo.getAll();
     expect(result).toHaveLength(3);
-    expect(new Set(result.map((r) => r.placeId))).toEqual(
-      new Set(['p1', 'p2', 'p3']),
-    );
+    expect(new Set(result.map((r) => r.placeId))).toEqual(new Set(['p1', 'p2', 'p3']));
   });
 });

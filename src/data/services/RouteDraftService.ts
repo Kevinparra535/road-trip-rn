@@ -1,10 +1,4 @@
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-} from 'firebase/firestore';
+import { deleteDoc, doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { injectable } from 'inversify';
 
 import { RouteDraftModel } from '@/data/models/routeDraftModel';
@@ -35,18 +29,9 @@ export interface RouteDraftService {
 
 @injectable()
 export class RouteDraftServiceImpl implements RouteDraftService {
-  async fetch(
-    riderId: string,
-    draftKey: string,
-  ): Promise<RouteDraftModel | null> {
+  async fetch(riderId: string, draftKey: string): Promise<RouteDraftModel | null> {
     const snapshot = await getDoc(
-      doc(
-        firestore,
-        RIDERS_COLLECTION,
-        riderId,
-        DRAFTS_SUBCOLLECTION,
-        draftKey,
-      ),
+      doc(firestore, RIDERS_COLLECTION, riderId, DRAFTS_SUBCOLLECTION, draftKey),
     );
     if (!snapshot.exists()) return null;
     return RouteDraftModel.fromJson({ id: draftKey, ...snapshot.data() });
@@ -64,22 +49,12 @@ export class RouteDraftServiceImpl implements RouteDraftService {
       DRAFTS_SUBCOLLECTION,
       draftKey,
     );
-    await setDoc(
-      ref,
-      { ...payload, updated_at: serverTimestamp() },
-      { merge: true },
-    );
+    await setDoc(ref, { ...payload, updated_at: serverTimestamp() }, { merge: true });
   }
 
   async delete(riderId: string, draftKey: string): Promise<void> {
     await deleteDoc(
-      doc(
-        firestore,
-        RIDERS_COLLECTION,
-        riderId,
-        DRAFTS_SUBCOLLECTION,
-        draftKey,
-      ),
+      doc(firestore, RIDERS_COLLECTION, riderId, DRAFTS_SUBCOLLECTION, draftKey),
     );
   }
 }

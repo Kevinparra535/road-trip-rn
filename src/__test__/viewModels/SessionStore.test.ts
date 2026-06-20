@@ -4,10 +4,7 @@ import { makeRider } from '../factories';
 
 describe('SessionStore', () => {
   it('starts not bootstrapped and unauthenticated', () => {
-    const vm = new SessionStore(
-      { run: jest.fn() } as any,
-      { run: jest.fn() } as any,
-    );
+    const vm = new SessionStore({ run: jest.fn() } as any, { run: jest.fn() } as any);
     expect(vm.isBootstrapped).toBe(false);
     expect(vm.isAuthenticated).toBe(false);
   });

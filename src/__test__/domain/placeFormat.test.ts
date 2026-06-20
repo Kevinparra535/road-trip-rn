@@ -33,18 +33,14 @@ describe('placeTypeLabel', () => {
 
 describe('placeContextLine', () => {
   it('devuelve "region, pais" cuando ambos existen', () => {
-    expect(
-      placeContextLine(makePlace({ region: 'Boyaca', country: 'Colombia' })),
-    ).toBe('Boyaca, Colombia');
+    expect(placeContextLine(makePlace({ region: 'Boyaca', country: 'Colombia' }))).toBe(
+      'Boyaca, Colombia',
+    );
   });
 
   it('devuelve solo lo presente cuando uno falta', () => {
-    expect(placeContextLine(makePlace({ country: 'Colombia' }))).toBe(
-      'Colombia',
-    );
-    expect(placeContextLine(makePlace({ region: 'Cundinamarca' }))).toBe(
-      'Cundinamarca',
-    );
+    expect(placeContextLine(makePlace({ country: 'Colombia' }))).toBe('Colombia');
+    expect(placeContextLine(makePlace({ region: 'Cundinamarca' }))).toBe('Cundinamarca');
   });
 
   it('devuelve cadena vacia si no hay contexto', () => {

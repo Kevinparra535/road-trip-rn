@@ -70,10 +70,7 @@ function toDate(value: unknown): Date {
   if (typeof value === 'string' || typeof value === 'number') {
     return new Date(value);
   }
-  if (
-    value &&
-    typeof (value as { toDate?: () => Date }).toDate === 'function'
-  ) {
+  if (value && typeof (value as { toDate?: () => Date }).toDate === 'function') {
     return (value as { toDate: () => Date }).toDate();
   }
   return new Date();
@@ -153,8 +150,7 @@ function readDays(raw: any): RouteDayJson[] | undefined {
     index: Number(d.index ?? index),
     start_idx: Number(d.start_idx ?? 0),
     end_idx: Number(d.end_idx ?? 0),
-    overnight_name:
-      typeof d.overnight_name === 'string' ? d.overnight_name : undefined,
+    overnight_name: typeof d.overnight_name === 'string' ? d.overnight_name : undefined,
   }));
 }
 
@@ -205,22 +201,16 @@ export class RouteModel {
             kind: String(w.kind ?? 'stop'),
             order: Number(w.order ?? index),
             mapbox_category:
-              typeof w.mapbox_category === 'string'
-                ? w.mapbox_category
-                : undefined,
+              typeof w.mapbox_category === 'string' ? w.mapbox_category : undefined,
             user_override_kind:
               typeof w.user_override_kind === 'boolean'
                 ? w.user_override_kind
                 : undefined,
             notes: typeof w.notes === 'string' ? w.notes : undefined,
             stop_duration_min:
-              typeof w.stop_duration_min === 'number'
-                ? w.stop_duration_min
-                : undefined,
+              typeof w.stop_duration_min === 'number' ? w.stop_duration_min : undefined,
             is_return_clone:
-              typeof w.is_return_clone === 'boolean'
-                ? w.is_return_clone
-                : undefined,
+              typeof w.is_return_clone === 'boolean' ? w.is_return_clone : undefined,
           }))
         : [],
       geometry: readGeometry(json.geometry),
@@ -228,8 +218,7 @@ export class RouteModel {
       estimated_duration_min: Number(json.estimated_duration_min ?? 0),
       notes: typeof json.notes === 'string' ? json.notes : undefined,
       avoid: readAvoid(json.avoid),
-      round_trip:
-        typeof json.round_trip === 'boolean' ? json.round_trip : undefined,
+      round_trip: typeof json.round_trip === 'boolean' ? json.round_trip : undefined,
       days: readDays(json.days),
       created_at: json.created_at ?? new Date().toISOString(),
     });
@@ -257,16 +246,13 @@ export class RouteModel {
         user_override_kind: w.userOverrideKind,
         notes: w.hasNotes() ? w.notes : undefined,
         stop_duration_min:
-          w.stopDurationMin && w.stopDurationMin > 0
-            ? w.stopDurationMin
-            : undefined,
+          w.stopDurationMin && w.stopDurationMin > 0 ? w.stopDurationMin : undefined,
         is_return_clone: w.isReturnClone ? true : undefined,
       })),
       geometry: encodePolyline(route.geometry),
       distance_km: route.distanceKm,
       estimated_duration_min: route.estimatedDurationMin,
-      notes:
-        route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
+      notes: route.notes && route.notes.trim().length > 0 ? route.notes : undefined,
       // Solo serializar cuando hay algo que guardar (no inflar el doc).
       avoid: route.avoid.isEmpty
         ? undefined

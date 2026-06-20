@@ -42,9 +42,7 @@ describe('Route draft use cases', () => {
     it('lanza si el draft no tiene riderId', async () => {
       const repo = makeRepo();
       const draft = { riderId: '' } as never;
-      await expect(
-        new SaveRouteDraftUseCase(repo as never).run(draft),
-      ).rejects.toThrow();
+      await expect(new SaveRouteDraftUseCase(repo as never).run(draft)).rejects.toThrow();
       expect(repo.save).not.toHaveBeenCalled();
     });
   });

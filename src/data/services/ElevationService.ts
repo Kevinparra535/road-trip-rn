@@ -5,8 +5,7 @@ import { TYPES } from '@/config/types';
 
 import { HttpManager } from '@/domain/services/HttpManager';
 
-const TILEQUERY_URL =
-  'https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery';
+const TILEQUERY_URL = 'https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery';
 
 type LngLat = [number, number];
 
@@ -36,9 +35,7 @@ export class ElevationServiceImpl implements ElevationService {
       limit: '50',
       access_token: ENV.mapboxPublicToken,
     });
-    const response = await this.http.get(
-      `${TILEQUERY_URL}/${lng},${lat}.json?${params}`,
-    );
+    const response = await this.http.get(`${TILEQUERY_URL}/${lng},${lat}.json?${params}`);
     if (!response.ok) {
       throw new Error(`Mapbox Tilequery respondio ${response.status}.`);
     }

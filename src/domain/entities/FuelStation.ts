@@ -46,8 +46,6 @@ export class FuelStation {
   }
 
   priceFor(fuelType: FuelType): number | null {
-    return fuelType === 'extra'
-      ? this.referencePriceExtra
-      : this.referencePriceCorriente;
+    return fuelType === 'extra' ? this.referencePriceExtra : this.referencePriceCorriente;
   }
 }

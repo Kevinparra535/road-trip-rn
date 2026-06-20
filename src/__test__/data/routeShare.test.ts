@@ -94,17 +94,14 @@ describe('RouteShareRepositoryImpl', () => {
     const gen = buildGen(['A', 'B', 'C', 'D', 'E']);
     const repo = new RouteShareRepositoryImpl(service as any, gen as any);
 
-    await expect(
-      repo.create({ routeId: 'r-1', ownerId: 'u-1' }),
-    ).rejects.toThrow(/codigo unico/);
+    await expect(repo.create({ routeId: 'r-1', ownerId: 'u-1' })).rejects.toThrow(
+      /codigo unico/,
+    );
   });
 
   it('getByCode devuelve null si el codigo no existe', async () => {
     const service = buildService({ fetchModel: null });
-    const repo = new RouteShareRepositoryImpl(
-      service as any,
-      buildGen([]) as any,
-    );
+    const repo = new RouteShareRepositoryImpl(service as any, buildGen([]) as any);
     expect(await repo.getByCode('XYZ12345')).toBeNull();
   });
 
@@ -117,10 +114,7 @@ describe('RouteShareRepositoryImpl', () => {
       expires_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     });
     const service = buildService({ fetchModel: expiredModel });
-    const repo = new RouteShareRepositoryImpl(
-      service as any,
-      buildGen([]) as any,
-    );
+    const repo = new RouteShareRepositoryImpl(service as any, buildGen([]) as any);
     expect(await repo.getByCode('EXPIRED1')).toBeNull();
   });
 
@@ -133,10 +127,7 @@ describe('RouteShareRepositoryImpl', () => {
       expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
     const service = buildService({ fetchModel: validModel });
-    const repo = new RouteShareRepositoryImpl(
-      service as any,
-      buildGen([]) as any,
-    );
+    const repo = new RouteShareRepositoryImpl(service as any, buildGen([]) as any);
     const result = await repo.getByCode('VALID234');
     expect(result).not.toBeNull();
     expect(result?.code).toBe('VALID234');

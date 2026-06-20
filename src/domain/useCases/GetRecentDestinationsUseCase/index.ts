@@ -9,10 +9,7 @@ import { RecentDestinationRepository } from '@/domain/repositories/RecentDestina
 import { UseCase } from '@/domain/useCases/UseCase';
 
 @injectable()
-export class GetRecentDestinationsUseCase implements UseCase<
-  void,
-  RecentDestination[]
-> {
+export class GetRecentDestinationsUseCase implements UseCase<void, RecentDestination[]> {
   constructor(
     @inject(TYPES.RecentDestinationRepository)
     private readonly repository: RecentDestinationRepository,

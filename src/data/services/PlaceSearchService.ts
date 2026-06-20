@@ -7,8 +7,7 @@ import { HttpManager } from '@/domain/services/HttpManager';
 
 import { PlaceModel } from '@/data/models/placeModel';
 
-const MAPBOX_GEOCODING_URL =
-  'https://api.mapbox.com/geocoding/v5/mapbox.places';
+const MAPBOX_GEOCODING_URL = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
 const RESULT_LIMIT = 5;
 
 type LngLat = [number, number];

@@ -70,9 +70,9 @@ describe('AddRecentDestinationUseCase', () => {
     const repo = makeRepo();
     repo.add.mockRejectedValue(new Error('disk full'));
 
-    await expect(
-      new AddRecentDestinationUseCase(repo).run(makePlace()),
-    ).rejects.toThrow('disk full');
+    await expect(new AddRecentDestinationUseCase(repo).run(makePlace())).rejects.toThrow(
+      'disk full',
+    );
   });
 });
 

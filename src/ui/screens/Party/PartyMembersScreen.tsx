@@ -25,7 +25,9 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { PartyMemberRow, PartyMembersViewModel } from './PartyMembersViewModel';
+import { PartyMembersViewModel } from './PartyMembersViewModel';
+
+import { MemberRow } from './components/MemberRow';
 
 type Nav = NativeStackNavigationProp<RoutesStackParamList, 'PartyMembers'>;
 
@@ -41,9 +43,7 @@ type Nav = NativeStackNavigationProp<RoutesStackParamList, 'PartyMembers'>;
 const PartyMembersScreen = observer(() => {
   const navigation = useNavigation<Nav>();
 
-  const viewModel = useViewModel<PartyMembersViewModel>(
-    TYPES.PartyMembersViewModel,
-  );
+  const viewModel = useViewModel<PartyMembersViewModel>(TYPES.PartyMembersViewModel);
 
   useEffect(() => {
     void viewModel.initialize();
@@ -58,16 +58,7 @@ const PartyMembersScreen = observer(() => {
   }, [viewModel, viewModel.hasLeftSuccessfully, navigation]);
 
   const handleLeave = () => {
-    const isOwner = viewModel.partyStore.isOwner(
-      viewModel.currentRiderId ?? '',
-    );
-    const otherCount = viewModel.partyStore.memberCount - 1;
-    const message = isOwner
-      ? otherCount > 0
-        ? `Quedaran ${otherCount} miembro(s) en la rodada y se promovera al siguiente.`
-        : 'La rodada se cerrara porque eres el ultimo miembro.'
-      : 'Vas a dejar la rodada. Podes volver a unirte con el codigo.';
-    Alert.alert('Salir de la rodada', message, [
+    Alert.alert('Salir de la rodada', viewModel.leaveConfirmMessage, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Salir',
@@ -77,37 +68,25 @@ const PartyMembersScreen = observer(() => {
     ]);
   };
 
-  const party = viewModel.partyStore.activeParty;
+  const hasParty = viewModel.hasActiveParty;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
         <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color={Colors.base.textPrimary}
-          />
+          <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.navTitle}>Miembros de la rodada</Text>
         <View style={styles.navSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {viewModel.isLoading ? (
-          <ActivityIndicator color={Colors.base.accent} />
-        ) : null}
-        {viewModel.isError ? (
-          <Text style={styles.error}>{viewModel.isError}</Text>
-        ) : null}
+        {viewModel.isLoading ? <ActivityIndicator color={Colors.base.accent} /> : null}
+        {viewModel.isError ? <Text style={styles.error}>{viewModel.isError}</Text> : null}
 
-        {!party && !viewModel.isLoading ? (
+        {!hasParty && !viewModel.isLoading ? (
           <View style={styles.empty}>
-            <Ionicons
-              name="people-outline"
-              size={48}
-              color={Colors.base.iconMuted}
-            />
+            <Ionicons name="people-outline" size={48} color={Colors.base.iconMuted} />
             <Text style={styles.emptyTitle}>No estas en una rodada</Text>
             <Text style={styles.emptySub}>
               Cuando crees o te unas a una rodada, los miembros apareceran aca.
@@ -115,11 +94,11 @@ const PartyMembersScreen = observer(() => {
           </View>
         ) : null}
 
-        {viewModel.rows.map((row) => (
-          <MemberRow key={row.member.riderId} row={row} />
+        {viewModel.memberRows.map((row) => (
+          <MemberRow key={row.id} row={row} />
         ))}
 
-        {party ? (
+        {hasParty ? (
           <TouchableOpacity
             style={[styles.leaveBtn, !viewModel.canLeave && styles.leaveBtnOff]}
             disabled={!viewModel.canLeave}
@@ -130,11 +109,7 @@ const PartyMembersScreen = observer(() => {
               <ActivityIndicator color={Colors.alerts.error} />
             ) : (
               <>
-                <Ionicons
-                  name="exit-outline"
-                  size={18}
-                  color={Colors.alerts.error}
-                />
+                <Ionicons name="exit-outline" size={18} color={Colors.alerts.error} />
                 <Text style={styles.leaveBtnText}>Salir de la rodada</Text>
               </>
             )}
@@ -144,31 +119,6 @@ const PartyMembersScreen = observer(() => {
     </SafeAreaView>
   );
 });
-
-const MemberRow = ({ row }: { row: PartyMemberRow }) => (
-  <View style={[styles.memberCard, row.isMe && styles.memberCardMe]}>
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{row.member.initials()}</Text>
-    </View>
-    <View style={styles.memberBody}>
-      <View style={styles.memberHeader}>
-        <Text style={styles.memberName} numberOfLines={1}>
-          {row.member.displayName}
-          {row.isMe ? ' (Tu)' : ''}
-        </Text>
-        {row.isOwner ? (
-          <View style={styles.ownerBadge}>
-            <Ionicons name="star" size={11} color={Colors.base.accent} />
-            <Text style={styles.ownerBadgeText}>OWNER</Text>
-          </View>
-        ) : null}
-      </View>
-      <Text style={styles.memberSub} numberOfLines={1}>
-        {row.motorcycleLabel}
-      </Text>
-    </View>
-  </View>
-);
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -214,67 +164,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
-  },
-  memberCard: {
-    padding: Spacings.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.md,
-    backgroundColor: Colors.base.bgCard,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  memberCardMe: {
-    borderColor: Colors.base.accentDimBorder,
-  },
-  avatar: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.bgInfoCard,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    borderColor: Colors.base.cardBorder,
-  },
-  avatarText: {
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  memberBody: {
-    flex: 1,
-  },
-  memberHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacings.sm,
-  },
-  memberName: {
-    flex: 1,
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
-  },
-  ownerBadge: {
-    paddingHorizontal: Spacings.sm,
-    paddingVertical: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.base.accentDimBorder,
-  },
-  ownerBadgeText: {
-    ...Fonts.links,
-    color: Colors.base.accent,
-    letterSpacing: 0.5,
-  },
-  memberSub: {
-    marginTop: 2,
-    ...Fonts.links,
-    color: Colors.base.textMuted,
   },
   leaveBtn: {
     marginTop: Spacings.lg,

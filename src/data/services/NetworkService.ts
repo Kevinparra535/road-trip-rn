@@ -28,9 +28,7 @@ export class NetworkServiceImpl implements NetworkService {
         // Offline = no conectado, o conectado pero internet inalcanzable.
         // `isInternetReachable` puede ser `null` (aun no determinado): lo
         // tratamos como alcanzable para no marcar offline en falso al inicio.
-        const isOffline = !(
-          state.isConnected && state.isInternetReachable !== false
-        );
+        const isOffline = !(state.isConnected && state.isInternetReachable !== false);
         onChange(isOffline);
       });
     } catch {

@@ -12,9 +12,7 @@ export const motorcycleSpecsSearchSchema = z.object({
   model: z.string().trim().min(1, 'El modelo es obligatorio'),
   year: z.number().int().positive('El año debe ser válido'),
 });
-export type MotorcycleSpecsSearchForm = z.infer<
-  typeof motorcycleSpecsSearchSchema
->;
+export type MotorcycleSpecsSearchForm = z.infer<typeof motorcycleSpecsSearchSchema>;
 
 /** Formulario completo para crear/editar una moto. */
 export const motorcycleFormSchema = motorcycleSpecsSearchSchema.extend({

@@ -11,6 +11,18 @@ const makeModel = (id: string, lat: number, lng: number): PlaceModel =>
     longitude: lng,
   });
 
+// Ruta larga sobre el meridiano: ~444 km (lat 0 -> 4), buena para forzar varios
+// samples y verificar cobertura uniforme.
+const LONG_ROUTE = [
+  { latitude: 0, longitude: 0 },
+  { latitude: 4, longitude: 0 },
+];
+
+const SHORT_ROUTE = [
+  { latitude: 4.6, longitude: -74 },
+  { latitude: 4.8, longitude: -74.2 },
+];
+
 describe('PlaceCategorySearchRepositoryImpl', () => {
   it('devuelve [] cuando alongRoute esta vacio', async () => {
     const service = { searchByCategory: jest.fn() };
@@ -23,52 +35,78 @@ describe('PlaceCategorySearchRepositoryImpl', () => {
     expect(service.searchByCategory).not.toHaveBeenCalled();
   });
 
-  it('hace una llamada por sample y forwards proximity en formato [lng, lat]', async () => {
+  it('hace una llamada por sample unico (rango acotado por largo de ruta)', async () => {
     const service = {
       searchByCategory: jest.fn().mockResolvedValue([]),
     };
     const repo = new PlaceCategorySearchRepositoryImpl(service as any);
     await repo.searchByCategory({
       category: 'food',
-      alongRoute: [
-        { latitude: 4.6, longitude: -74 },
-        { latitude: 4.8, longitude: -74.2 },
-      ],
+      alongRoute: LONG_ROUTE,
+      spacingKm: 30,
+      maxSamples: 12,
     });
-    expect(service.searchByCategory).toHaveBeenCalledTimes(2);
-    expect(service.searchByCategory).toHaveBeenNthCalledWith(
-      1,
-      'food',
-      [-74, 4.6],
-    );
-    expect(service.searchByCategory).toHaveBeenNthCalledWith(
-      2,
-      'food',
-      [-74.2, 4.8],
-    );
+    // ~444 km / 30 = 15 -> clamp a 12.
+    expect(service.searchByCategory).toHaveBeenCalledTimes(12);
+    // El proximity siempre viaja como [lng, lat].
+    const firstCall = service.searchByCategory.mock.calls[0];
+    expect(firstCall[0]).toBe('food');
+    expect(firstCall[1][0]).toBeCloseTo(0, 5); // lng
+    expect(firstCall[1][1]).toBeCloseTo(0, 5); // lat
   });
 
-  it('dedupea por place.id y rankea por distancia al sample mas cercano', async () => {
-    // El POI "a" aparece en ambos samples, su distancia minima es al sample 2.
-    // El POI "b" solo aparece en el primer sample, MUY cerca de el (< 0.2 km).
-    const poiA = makeModel('a', 4.79, -74.19); // ~1.5 km del sample 2
-    const poiB = makeModel('b', 4.6005, -74.0005); // ~70 m del sample 1
+  it('respeta minSamples en una ruta corta', async () => {
+    const service = { searchByCategory: jest.fn().mockResolvedValue([]) };
+    const repo = new PlaceCategorySearchRepositoryImpl(service as any);
+    await repo.searchByCategory({
+      category: 'food',
+      alongRoute: SHORT_ROUTE,
+      spacingKm: 30,
+    });
+    // Ruta corta (~31 km) -> clamp a minSamples (3).
+    expect(service.searchByCategory).toHaveBeenCalledTimes(3);
+  });
+
+  it('cobertura uniforme: el medio aparece aunque un extremo este saturado', async () => {
+    // Cluster denso al inicio (lat ~0) + un POI en el medio (lat ~2) + uno al
+    // final (lat ~4). Con ranking por "distancia al sample mas cercano" el
+    // medio quedaria sepultado; el bucketing lo rescata.
+    const denseStart = Array.from({ length: 30 }, (_, i) =>
+      makeModel(`s${i}`, 0.001 * i, 0.0),
+    );
+    const middle = makeModel('mid', 2.0, 0.0);
+    const end = makeModel('end', 4.0, 0.0);
+
     const service = {
-      searchByCategory: jest
-        .fn()
-        .mockResolvedValueOnce([poiB, poiA]) // sample 1
-        .mockResolvedValueOnce([poiA]), // sample 2
+      // Cada sample devuelve TODO (el repo dedupea por id de todas formas).
+      searchByCategory: jest.fn().mockResolvedValue([...denseStart, middle, end]),
     };
     const repo = new PlaceCategorySearchRepositoryImpl(service as any);
     const out = await repo.searchByCategory({
       category: 'tourism',
-      alongRoute: [
-        { latitude: 4.6, longitude: -74 },
-        { latitude: 4.8, longitude: -74.2 },
-      ],
+      alongRoute: LONG_ROUTE,
+      maxResults: 6,
     });
-    // Dedup -> 2 unicos, rankeados por minKm (b mas cerca de su sample que a)
-    expect(out.map((p) => p.id)).toEqual(['b', 'a']);
+
+    const ids = out.map((p) => p.id);
+    expect(ids).toContain('mid');
+    expect(ids).toContain('end');
+    expect(out).toHaveLength(6);
+  });
+
+  it('dedupea por place.id (mismo POI en varios samples cuenta una vez)', async () => {
+    const poi = makeModel('dup', 2.0, 0.0);
+    const service = {
+      searchByCategory: jest.fn().mockResolvedValue([poi]),
+    };
+    const repo = new PlaceCategorySearchRepositoryImpl(service as any);
+    const out = await repo.searchByCategory({
+      category: 'rest',
+      alongRoute: LONG_ROUTE,
+      maxResults: 10,
+    });
+    expect(out).toHaveLength(1);
+    expect(out[0].id).toBe('dup');
   });
 
   it('respeta maxResults limitando el output final', async () => {
@@ -76,36 +114,71 @@ describe('PlaceCategorySearchRepositoryImpl', () => {
       searchByCategory: jest
         .fn()
         .mockResolvedValue([
-          makeModel('a', 4.6, -74),
-          makeModel('b', 4.7, -74.1),
-          makeModel('c', 4.8, -74.2),
+          makeModel('a', 0.5, 0),
+          makeModel('b', 1.5, 0),
+          makeModel('c', 2.5, 0),
+          makeModel('d', 3.5, 0),
         ]),
     };
     const repo = new PlaceCategorySearchRepositoryImpl(service as any);
     const out = await repo.searchByCategory({
       category: 'rest',
-      alongRoute: [{ latitude: 4.6, longitude: -74 }],
+      alongRoute: LONG_ROUTE,
       maxResults: 2,
     });
     expect(out).toHaveLength(2);
   });
 
-  it('si un sample falla, el resto sigue (no aborta toda la busqueda)', async () => {
+  it('resiliencia: un sample 429 no aborta la busqueda', async () => {
     const service = {
       searchByCategory: jest
         .fn()
         .mockRejectedValueOnce(new Error('429 rate limit'))
-        .mockResolvedValueOnce([makeModel('a', 4.6, -74)]),
+        .mockResolvedValue([makeModel('ok', 2.0, 0.0)]),
     };
     const repo = new PlaceCategorySearchRepositoryImpl(service as any);
     const out = await repo.searchByCategory({
       category: 'food',
-      alongRoute: [
-        { latitude: 4.6, longitude: -74 },
-        { latitude: 4.8, longitude: -74.2 },
-      ],
+      alongRoute: LONG_ROUTE,
+      maxResults: 5,
     });
-    expect(out).toHaveLength(1);
-    expect(out[0].id).toBe('a');
+    expect(out.map((p) => p.id)).toContain('ok');
+  });
+
+  it('inserta anclas (paradas) como samples adicionales', async () => {
+    const service = { searchByCategory: jest.fn().mockResolvedValue([]) };
+    const repo = new PlaceCategorySearchRepositoryImpl(service as any);
+    await repo.searchByCategory({
+      category: 'fuel',
+      alongRoute: LONG_ROUTE,
+      anchors: [{ latitude: 2.0, longitude: 0.05 }],
+      spacingKm: 30,
+      maxSamples: 12,
+    });
+    // Algun sample debe estar muy cerca del ancla proyectada (lng ~0, lat ~2).
+    const calls = service.searchByCategory.mock.calls;
+    const nearAnchor = calls.some(
+      ([, pt]: [string, [number, number]]) =>
+        Math.abs(pt[0]) < 0.01 && Math.abs(pt[1] - 2.0) < 0.01,
+    );
+    expect(nearAnchor).toBe(true);
+  });
+
+  it("category 'town' usa la misma maquinaria de sampling/ranking", async () => {
+    const town = makeModel('town-1', 2.0, 0.0);
+    const service = {
+      searchByCategory: jest.fn().mockResolvedValue([town]),
+    };
+    const repo = new PlaceCategorySearchRepositoryImpl(service as any);
+    const out = await repo.searchByCategory({
+      category: 'town',
+      alongRoute: LONG_ROUTE,
+      maxResults: 5,
+    });
+    // El repo delega en el service con category 'town' (el branch geocoding
+    // vive en el service); aca solo verificamos passthrough de la categoria.
+    expect(service.searchByCategory).toHaveBeenCalled();
+    expect(service.searchByCategory.mock.calls[0][0]).toBe('town');
+    expect(out.map((p) => p.id)).toContain('town-1');
   });
 });

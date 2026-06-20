@@ -46,17 +46,15 @@ describe('WikipediaSummaryService', () => {
     expect(result!.title).toBe('Villa de Leyva');
     expect(result!.extract).toBe('Pueblo colonial...');
     expect(result!.thumbnailUrl).toBe('https://example.com/v.jpg');
-    expect(result!.sourceUrl).toBe(
-      'https://es.wikipedia.org/wiki/Villa_de_Leyva',
-    );
+    expect(result!.sourceUrl).toBe('https://es.wikipedia.org/wiki/Villa_de_Leyva');
   });
 
   it('devuelve null cuando la respuesta no es ok (404)', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false });
 
-    const result = await new WikipediaSummaryService(
-      new FetchHttpManager(),
-    ).fetch('Inexistente');
+    const result = await new WikipediaSummaryService(new FetchHttpManager()).fetch(
+      'Inexistente',
+    );
 
     expect(result).toBeNull();
   });
@@ -71,9 +69,9 @@ describe('WikipediaSummaryService', () => {
       }),
     });
 
-    const result = await new WikipediaSummaryService(
-      new FetchHttpManager(),
-    ).fetch('Cali');
+    const result = await new WikipediaSummaryService(new FetchHttpManager()).fetch(
+      'Cali',
+    );
 
     expect(result).toBeNull();
   });
@@ -89,9 +87,9 @@ describe('WikipediaSummaryService', () => {
       }),
     });
 
-    const result = await new WikipediaSummaryService(
-      new FetchHttpManager(),
-    ).fetch('Solo titulo');
+    const result = await new WikipediaSummaryService(new FetchHttpManager()).fetch(
+      'Solo titulo',
+    );
 
     expect(result).not.toBeNull();
     expect(result!.title).toBe('Solo titulo');
@@ -103,9 +101,9 @@ describe('WikipediaSummaryService', () => {
   it('captura errores de red y devuelve null (no rompe la UX)', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('network'));
 
-    const result = await new WikipediaSummaryService(
-      new FetchHttpManager(),
-    ).fetch('Bogota');
+    const result = await new WikipediaSummaryService(new FetchHttpManager()).fetch(
+      'Bogota',
+    );
 
     expect(result).toBeNull();
   });

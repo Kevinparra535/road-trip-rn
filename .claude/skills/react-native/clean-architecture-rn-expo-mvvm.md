@@ -11,12 +11,11 @@ framework leakage. It is the architectural baseline every other RN skill builds 
 </purpose>
 
 <when_to_use>
-
 - Adding a new screen/feature module.
 - Creating or refactoring ViewModels, UseCases, repositories, or services.
 - Touching DI (`src/config/di.ts`, `src/config/types.ts`).
 - Needing folder placement conventions or dependency-direction rules.
-  </when_to_use>
+</when_to_use>
 
 <rules>
 
@@ -24,11 +23,14 @@ framework leakage. It is the architectural baseline every other RN skill builds 
 
 - UI/View depends on ViewModel only.
 - ViewModel depends on UseCases, not repositories directly.
+- ViewModels do not depend on other ViewModels. Shared behavior/state is extracted to UseCases or Stores.
 - UseCases depend on domain contracts (interfaces), not data implementations.
 - Data layer implements repositories/services and talks to Firebase/network.
 - Domain layer stays free of framework/infrastructure.
 - ViewModel is UI-agnostic: no React hooks, no navigation calls, no Alert/toast/snackbar APIs, no component imports — so the same ViewModel is portable and unit-testable without a renderer.
 - UI screens stay thin: bind inputs, call ViewModel actions, render ViewModel state.
+- Screens are visual composition only: no private subcomponents, no top-level config constants
+  except `StyleSheet`, and no data transformation/business branching.
 
 ### SOLID (golden rule — apply whenever it applies)
 
@@ -42,8 +44,13 @@ SOLID is, alongside the dependency direction, the other golden rule of this stac
 
 ### Folder placement
 
-- UI screens + components: `src/ui/...`
-- ViewModels: colocated next to screens (e.g. `src/ui/screens/<Feature>/<Feature>ViewModel.ts`)
+- Screen folders: `src/ui/screens/<Feature>/`
+- Screen files: `src/ui/screens/<Feature>/<Feature>Screen.tsx`
+- ViewModels: colocated next to screens (`src/ui/screens/<Feature>/<Feature>ViewModel.ts`)
+- Screen-private components: `src/ui/screens/<Feature>/components/` (only for components used by that screen)
+- Shared UI components: `src/ui/components/`
+- Design tokens: `src/ui/styles/`
+- Global config/constants: `src/config/` (env, DI, and reusable UI config such as `src/config/ui.ts`)
 - Use cases: `src/domain/useCases/<UseCaseName>/index.ts` (one folder per use case)
 - Domain entities: `src/domain/entities/`
 - Repository contracts: `src/domain/repositories/`
@@ -93,6 +100,16 @@ SOLID is, alongside the dependency direction, the other golden rule of this stac
 - Prefer singleton for services/managers; transient for UseCases and ViewModels unless specified.
 - Adding a new module: (1) add `TYPES.<NewThing>` in `types.ts`; (2) bind in `di.ts` — Manager/Service `.inSingletonScope()` if shared, UseCases transient, ViewModel transient (singleton only if truly global).
 
+### Screen boundary (mandatory)
+
+- Every screen lives in its own `src/ui/screens/<Feature>/` folder with a colocated `<Feature>ViewModel.ts`; no flat `screens/<Feature>Screen.tsx` files.
+- `<Feature>Screen.tsx` contains composition only: `observer`, `useViewModel`, lifecycle wiring, typed navigation, JSX, and `StyleSheet`.
+- `<Feature>Screen.tsx` may import/consume only its colocated `./<Feature>ViewModel`; never import or resolve another screen's ViewModel or `TYPES.<OtherFeature>ViewModel`.
+- Do not declare subcomponents inside `<Feature>Screen.tsx`. Move screen-only pieces to `src/ui/screens/<Feature>/components/`; move reused pieces to `src/ui/components/`.
+- Do not declare top-level config constants in `<Feature>Screen.tsx` except the `StyleSheet`. Visual values become design tokens; reusable UI options and runtime/env config live in `src/config`.
+- Do not filter/map/sort/domain-transform data in the Screen. Expose derived values, form defaults, permission flags, and display-ready collections from the ViewModel.
+- Event handlers in the Screen only forward UI events to the ViewModel or perform typed navigation from a ViewModel result. They must not decide business flow.
+
 ### ViewModel pattern (MobX)
 
 - Call `makeAutoObservable(this)` in the constructor.
@@ -100,6 +117,7 @@ SOLID is, alongside the dependency direction, the other golden rule of this stac
 - Prefer `reaction(...)` for autosave side effects (with debounce).
 - Keep business-flow decisions in the ViewModel (create vs update, initialize/load, mapping form values to domain entities); Firebase calls go through UseCases, never in UI components.
 - UI carries no branching business flow beyond simple event wiring (`onPress`, `onChange`, `useEffect` bridge).
+- If a screen needs behavior/state from another ViewModel, extract a UseCase, a `Store`, a shared UI component, or config instead of importing that ViewModel.
 
 #### ViewModel naming standard
 
@@ -179,16 +197,15 @@ done — lives in [[unit-testing-clean-architecture]]. Apply it for every featur
 export type XxxConstructorParams = { id: string; [key: string]: any };
 
 export class Xxx {
-[key: string]: any;
-id: string;
+  [key: string]: any;
+  id: string;
 
-constructor(params: XxxConstructorParams) {
-this.id = params.id;
-Object.assign(this, params);
+  constructor(params: XxxConstructorParams) {
+    this.id = params.id;
+    Object.assign(this, params);
+  }
 }
-}
-
-````
+```
 
 ```ts
 export class XxxModel {
@@ -210,8 +227,7 @@ declare module './xxxModel' {
 XxxModel.prototype.toDomain = function toDomain(): Xxx {
    return new Xxx({ ... });
 };
-````
-
+```
 </example>
 
 <example name="Env config + validation (Zod)">
@@ -220,16 +236,15 @@ XxxModel.prototype.toDomain = function toDomain(): Xxx {
 import { z } from 'zod';
 
 const schema = z.object({
-EXPO_PUBLIC_API_BASE_URL: z.string().url(),
-EXPO_PUBLIC_API_KEY: z.string().min(1),
+  EXPO_PUBLIC_API_BASE_URL: z.string().url(),
+  EXPO_PUBLIC_API_KEY: z.string().min(1),
 });
 
 export const env = schema.parse({
-EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
-EXPO_PUBLIC_API_KEY: process.env.EXPO_PUBLIC_API_KEY,
+  EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL,
+  EXPO_PUBLIC_API_KEY: process.env.EXPO_PUBLIC_API_KEY,
 });
-
-````
+```
 </example>
 
 <example name="useViewModel hook + screen wiring">
@@ -243,18 +258,15 @@ export function useViewModel<T>(type: symbol): T {
   // empty deps: transient ViewModel instantiated once per screen mount
   return useMemo(() => container.get<T>(type), [type]);
 }
-````
+```
 
 ```tsx
 const ClientsScreen = observer(() => {
   const viewModel = useViewModel<ClientsViewModel>(TYPES.ClientsViewModel);
-  useEffect(() => {
-    viewModel.loadAll();
-  }, [viewModel]);
+  useEffect(() => { viewModel.loadAll(); }, [viewModel]);
   // …
 });
 ```
-
 </example>
 
 </examples>
@@ -267,7 +279,7 @@ When implementing a request:
 - Provide minimal diffs or clear code blocks per file.
 - Update DI bindings if new classes are added.
 - Include the unit test files/cases added and how to run them (`npm test` or a targeted jest command).
-  </output_format>
+</output_format>
 
 <see_also>
 This project's reference stack: React Native (Expo) + MVVM, MobX for state, Inversify for DI, a
@@ -278,4 +290,4 @@ UseCases layer per action, and a data layer (RepositoryImpl → Service → Mana
 - [[design-system-rn]] — UI/component conventions.
 - [[feature-scaffold-rn]] — scaffolding a new feature module end to end.
 - [[pr-checklist-clean-architecture]] — review gate enforcing these conventions.
-  </see_also>
+</see_also>

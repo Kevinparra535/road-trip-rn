@@ -169,10 +169,7 @@ export class PlannerInsightsStore {
   }
 
   /** Carga el perfil de elevación y devuelve el ascenso acumulado (0 si falla). */
-  private async recomputeElevation(
-    route: Route,
-    generation: number,
-  ): Promise<number> {
+  private async recomputeElevation(route: Route, generation: number): Promise<number> {
     this.updateLoadingState(true, null, 'elevation');
     try {
       const profile = await this.getRouteElevationUseCase.run(route.geometry);
@@ -242,10 +239,7 @@ export class PlannerInsightsStore {
    * los mismos toggles que ajustan la autonomía también ajustan el combustible.
    */
   private loadKgFor(motorcycle: Motorcycle): number {
-    const luggageKg = motorcycle.luggage.reduce(
-      (sum, item) => sum + item.weightKg,
-      0,
-    );
+    const luggageKg = motorcycle.luggage.reduce((sum, item) => sum + item.weightKg, 0);
     return (
       motorcycle.driverWeightKg +
       (this.hasPassenger ? motorcycle.passengerWeightKg : 0) +
@@ -330,20 +324,13 @@ export class PlannerInsightsStore {
 
   // ── Private helpers ───────────────────────────────────────────────────────
 
-  private withoutKey(
-    record: Record<string, true>,
-    key: string,
-  ): Record<string, true> {
+  private withoutKey(record: Record<string, true>, key: string): Record<string, true> {
     const next = { ...record };
     delete next[key];
     return next;
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'elevation':

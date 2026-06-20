@@ -10,10 +10,7 @@ import { UseCase } from '@/domain/useCases/UseCase';
 
 /** Devuelve el catálogo de plantillas de ruta curadas. */
 @injectable()
-export class GetRouteTemplatesUseCase implements UseCase<
-  void,
-  RouteTemplate[]
-> {
+export class GetRouteTemplatesUseCase implements UseCase<void, RouteTemplate[]> {
   constructor(
     @inject(TYPES.RouteTemplateRepository)
     private readonly repository: RouteTemplateRepository,

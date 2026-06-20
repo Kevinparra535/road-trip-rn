@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import DestinationPreviewScreen from '@/ui/screens/Home/DestinationPreviewScreen';
+import DestinationPreviewScreen from '@/ui/screens/DestinationPreview/DestinationPreviewScreen';
 import HomeScreen from '@/ui/screens/Home/HomeScreen';
 
 import { HomeStackParamList } from './types';

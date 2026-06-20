@@ -7,10 +7,7 @@ import { HttpManager } from '@/domain/services/HttpManager';
 
 import { MotorcycleSpecsModel } from '@/data/models/motorcycleSpecsModel';
 
-import {
-  MOTO_STATS_DATASET,
-  MotoStatsEntry,
-} from '@/data/datasets/motoStatsDataset';
+import { MOTO_STATS_DATASET, MotoStatsEntry } from '@/data/datasets/motoStatsDataset';
 
 /**
  * Endpoint de busqueda de fichas tecnicas. Vacio por defecto: el backend de
@@ -66,9 +63,7 @@ export class MotoStatsServiceImpl implements MotoStatsService {
 
   private matchFromDataset(query: MotoStatsQuery): MotorcycleSpecsModel | null {
     const queryBrand = this.normalize(query.brand);
-    const queryModelTokens = this.normalize(query.model)
-      .split(/\s+/)
-      .filter(Boolean);
+    const queryModelTokens = this.normalize(query.model).split(/\s+/).filter(Boolean);
 
     let best: MotoStatsEntry | null = null;
     let bestScore = 0;

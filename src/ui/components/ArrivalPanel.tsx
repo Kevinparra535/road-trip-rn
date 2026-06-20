@@ -45,12 +45,7 @@ const PANEL_FADE_LOCATIONS = [0, 0.08, 0.2] as const;
  * check verde, titulo, subtitulo (destino + hora) y tres metricas. El boton
  * "Finalizar" cierra el panel y limpia la ruta.
  */
-const ArrivalPanel = ({
-  destinationName,
-  arrivalTime,
-  stats,
-  onFinish,
-}: Props) => (
+const ArrivalPanel = ({ destinationName, arrivalTime, stats, onFinish }: Props) => (
   <View style={styles.root} pointerEvents="box-none">
     <View style={styles.dim} pointerEvents="auto" />
     <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
@@ -60,11 +55,7 @@ const ArrivalPanel = ({
         style={styles.panel}
       >
         <View style={styles.checkCircle}>
-          <Ionicons
-            name="checkmark"
-            size={48}
-            color={Colors.semantic.text.primaryDark}
-          />
+          <Ionicons name="checkmark" size={48} color={Colors.semantic.text.primaryDark} />
         </View>
 
         <Text style={styles.title}>Llegaste a tu destino</Text>
@@ -90,11 +81,7 @@ const ArrivalPanel = ({
           accessibilityLabel="Finalizar viaje"
           onPress={onFinish}
         >
-          <GradientView
-            preset="accent"
-            direction="vertical"
-            style={styles.finishBtn}
-          >
+          <GradientView preset="accent" direction="vertical" style={styles.finishBtn}>
             <Ionicons
               name="checkmark"
               size={20}

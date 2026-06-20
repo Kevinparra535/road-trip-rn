@@ -13,10 +13,7 @@ type Unsubscribe = () => void;
 
 /** Se suscribe a la orientacion (brujula) del dispositivo en vivo. */
 @injectable()
-export class WatchHeadingUseCase implements UseCase<
-  HeadingListener,
-  Unsubscribe
-> {
+export class WatchHeadingUseCase implements UseCase<HeadingListener, Unsubscribe> {
   constructor(
     @inject(TYPES.LocationRepository)
     private readonly repository: LocationRepository,

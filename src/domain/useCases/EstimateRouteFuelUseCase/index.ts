@@ -71,9 +71,7 @@ export class EstimateRouteFuelUseCase implements UseCase<
   private speedFactor(distanceKm: number, durationMin: number): number {
     if (durationMin <= 0) return 1;
     const avgSpeedKmh = distanceKm / (durationMin / 60);
-    return (
-      1 - Math.abs(avgSpeedKmh - OPTIMAL_SPEED_KMH) * SPEED_PENALTY_PER_KMH
-    );
+    return 1 - Math.abs(avgSpeedKmh - OPTIMAL_SPEED_KMH) * SPEED_PENALTY_PER_KMH;
   }
 
   /** Penaliza el desnivel de subida acumulado por kilometro. */

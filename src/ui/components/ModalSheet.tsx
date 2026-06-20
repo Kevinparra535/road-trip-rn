@@ -25,19 +25,8 @@ type Props = {
  * backdrop semitransparente que cierra al tocar, Pressable interior
  * que absorbe taps, handle pill opcional y titulo centrado en header3.
  */
-const ModalSheet = ({
-  visible,
-  onClose,
-  title,
-  showHandle = true,
-  children,
-}: Props) => (
-  <Modal
-    transparent
-    visible={visible}
-    animationType="slide"
-    onRequestClose={onClose}
-  >
+const ModalSheet = ({ visible, onClose, title, showHandle = true, children }: Props) => (
+  <Modal transparent visible={visible} animationType="slide" onRequestClose={onClose}>
     {/* Backdrop — tap fuera cierra el sheet */}
     <Pressable style={styles.backdrop} onPress={onClose}>
       {/* Sheet — inner Pressable absorbe taps para que no caigan al backdrop */}

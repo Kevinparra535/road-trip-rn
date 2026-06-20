@@ -1,6 +1,11 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
+import {
+  FUEL_OPTIONS,
+  LUGGAGE_LABEL,
+  LUGGAGE_POSITIONS,
+} from '@/config/motorcycleFormOptions';
 import { TYPES } from '@/config/types';
 
 import {
@@ -142,9 +147,29 @@ export class MotorcycleFormViewModel {
    * maleteros). Usa el mismo modelo de peso que el estimador de ruta.
    */
   get loadAdjustedRangeKm(): number {
-    return Math.round(
-      this.estimatedRangeKm * loadConsumptionFactor(this.totalLoadKg),
-    );
+    return Math.round(this.estimatedRangeKm * loadConsumptionFactor(this.totalLoadKg));
+  }
+
+  /** Opciones de combustible con su estado activo segun el tipo seleccionado. */
+  get fuelOptions(): { value: FuelType; label: string; active: boolean }[] {
+    return FUEL_OPTIONS.map((value) => ({
+      value,
+      label: value,
+      active: value === this.fuelType,
+    }));
+  }
+
+  /** Filas de maleteros con etiqueta en espanol y peso configurado. */
+  get luggageRows(): {
+    position: LuggagePosition;
+    label: string;
+    weightKg: number;
+  }[] {
+    return LUGGAGE_POSITIONS.map((position) => ({
+      position,
+      label: LUGGAGE_LABEL[position],
+      weightKg: this.luggageWeights[position],
+    }));
   }
 
   private get parsedYear(): number {
@@ -380,9 +405,7 @@ export class MotorcycleFormViewModel {
       this.fuelType = motorcycle.fuelType;
       this.tankCapacityText = String(motorcycle.tankCapacityLiters);
       this.consumptionText = String(motorcycle.fuelConsumptionKmPerLiter);
-      this.engineCcText = motorcycle.engineCc
-        ? String(motorcycle.engineCc)
-        : '';
+      this.engineCcText = motorcycle.engineCc ? String(motorcycle.engineCc) : '';
       this.driverWeightKg = motorcycle.driverWeightKg;
       this.hasPassenger = motorcycle.hasPassenger;
       this.passengerWeightKg = motorcycle.passengerWeightKg;
@@ -417,11 +440,7 @@ export class MotorcycleFormViewModel {
     }
   }
 
-  private updateLoadingState(
-    isLoading: boolean,
-    error: string | null,
-    type: ICalls,
-  ) {
+  private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {
     runInAction(() => {
       switch (type) {
         case 'load':

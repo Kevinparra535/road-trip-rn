@@ -28,13 +28,13 @@ import Spacings from '@/ui/styles/Spacings';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
-import { AuthViewModel } from './AuthViewModel';
+import { SignUpViewModel } from './SignUpViewModel';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
 
 const SignUpScreen = observer(() => {
   const navigation = useNavigation<Nav>();
-  const viewModel = useViewModel<AuthViewModel>(TYPES.AuthViewModel);
+  const viewModel = useViewModel<SignUpViewModel>(TYPES.SignUpViewModel);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -43,15 +43,8 @@ const SignUpScreen = observer(() => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll}>
-          <TouchableOpacity
-            style={styles.back}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={Colors.base.textPrimary}
-            />
+          <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color={Colors.base.textPrimary} />
             <Text style={styles.backText}>Volver</Text>
           </TouchableOpacity>
 

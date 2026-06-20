@@ -1,5 +1,7 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
 
+import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRepository';
+
 export type AuthStackParamList = {
   SignIn: undefined;
   SignUp: undefined;
@@ -76,7 +78,7 @@ export type RoutesStackParamList = {
   /** Pantalla dedicada para agregar parada por categoría. UX gap fix. */
   AddStop: undefined;
   /** Sub-listado de POIs filtrados por categoría. UX gap fix. */
-  CategorySublist: { category: 'food' | 'fuel' | 'tourism' | 'rest' };
+  CategorySublist: { category: SearchableCategory };
 };
 
 export type GarageStackParamList = {

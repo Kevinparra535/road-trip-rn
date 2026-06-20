@@ -19,10 +19,7 @@ export const MIN_PLACE_QUERY_LENGTH = 3;
 
 /** Busca lugares por texto; ignora consultas demasiado cortas. */
 @injectable()
-export class SearchPlacesUseCase implements UseCase<
-  SearchPlacesInput,
-  Place[]
-> {
+export class SearchPlacesUseCase implements UseCase<SearchPlacesInput, Place[]> {
   constructor(
     @inject(TYPES.PlaceSearchRepository)
     private readonly repository: PlaceSearchRepository,
