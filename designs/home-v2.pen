@@ -24969,7 +24969,7 @@
             "blur": 32
           },
           "layout": "vertical",
-          "gap": 16,
+          "gap": "$spacing-lg",
           "padding": [
             12,
             16,
@@ -25016,7 +25016,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": 22,
+                  "cornerRadius": "$radius-pill",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25047,7 +25047,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": 22,
+                  "cornerRadius": "$radius-pill",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25070,8 +25070,8 @@
               "name": "summary",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": 14,
-              "gap": 12,
+              "cornerRadius": "$radius-lg",
+              "gap": "$spacing-md",
               "padding": [
                 12,
                 14
@@ -25085,7 +25085,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$accentDim",
-                  "cornerRadius": 22,
+                  "cornerRadius": "$radius-pill",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25136,7 +25136,7 @@
               "name": "nameSection",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 8,
+              "gap": "$spacing-sm",
               "children": [
                 {
                   "type": "text",
@@ -25155,7 +25155,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": 14,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -25196,7 +25196,7 @@
               "name": "rideTypeSection",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 8,
+              "gap": "$spacing-sm",
               "children": [
                 {
                   "type": "text",
@@ -25213,7 +25213,7 @@
                   "id": "YetC2",
                   "name": "chipsRow",
                   "width": "fill_container",
-                  "gap": 8,
+                  "gap": "$spacing-sm",
                   "children": [
                     {
                       "type": "frame",
@@ -25222,7 +25222,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$accentDim",
-                      "cornerRadius": 999,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$accent",
                       "strokeWidth": 2,
                       "strokeAlignment": "inner",
@@ -25261,7 +25261,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$bgCard",
-                      "cornerRadius": 999,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25300,7 +25300,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$bgCard",
-                      "cornerRadius": 999,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25338,11 +25338,164 @@
             },
             {
               "type": "frame",
+              "id": "ofhT2",
+              "name": "visibilitySection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": "$spacing-sm",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "dEbzp",
+                  "name": "label",
+                  "fill": "$textMuted",
+                  "content": "VISIBILIDAD",
+                  "fontFamily": "Poppins",
+                  "fontSize": 11,
+                  "fontWeight": "700",
+                  "letterSpacing": 1.5
+                },
+                {
+                  "type": "frame",
+                  "id": "khYaW",
+                  "name": "chipsRow",
+                  "width": "fill_container",
+                  "gap": "$spacing-sm",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "t3exq",
+                      "name": "chip_Privada",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$bgCard",
+                      "cornerRadius": "$radius-pill",
+                      "stroke": "$cardBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "b2EVfi",
+                          "name": "ic",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "lock",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "d6hH8",
+                          "name": "lbl",
+                          "fill": "$textSecondary",
+                          "content": "Privada",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "t34ii",
+                      "name": "chip_Grupo",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$accentDim",
+                      "cornerRadius": "$radius-pill",
+                      "stroke": "$accent",
+                      "strokeWidth": 2,
+                      "strokeAlignment": "inner",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "h2j76P",
+                          "name": "ic",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "users",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        },
+                        {
+                          "type": "text",
+                          "id": "vn1sV",
+                          "name": "lbl",
+                          "fill": "$accent",
+                          "content": "Grupo",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "H3gC8l",
+                      "name": "chip_Pública",
+                      "width": "fill_container",
+                      "height": 44,
+                      "fill": "$bgCard",
+                      "cornerRadius": "$radius-pill",
+                      "stroke": "$cardBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "gap": 6,
+                      "padding": [
+                        0,
+                        10
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "iby1G",
+                          "name": "ic",
+                          "width": 14,
+                          "height": 14,
+                          "icon": "globe",
+                          "library": "lucide",
+                          "fill": "$iconMuted"
+                        },
+                        {
+                          "type": "text",
+                          "id": "A9vpp",
+                          "name": "lbl",
+                          "fill": "$textSecondary",
+                          "content": "Pública",
+                          "fontFamily": "Poppins",
+                          "fontSize": 12,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
               "id": "CyKpL",
               "name": "notesSection",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 8,
+              "gap": "$spacing-sm",
               "children": [
                 {
                   "type": "text",
@@ -25361,7 +25514,7 @@
                   "width": "fill_container",
                   "height": 80,
                   "fill": "$bgCard",
-                  "cornerRadius": 14,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25390,18 +25543,22 @@
               "name": "ctaRow",
               "width": "fill_container",
               "gap": 10,
+              "alignItems": "center",
               "children": [
                 {
                   "type": "frame",
                   "id": "tzbqz",
                   "name": "skipBtn",
-                  "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": 16,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
+                  "padding": [
+                    0,
+                    24
+                  ],
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25441,7 +25598,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": 16,
+                  "cornerRadius": "$radius-lg",
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -25635,12 +25792,12 @@
             "blur": 32
           },
           "layout": "vertical",
-          "gap": 14,
+          "gap": "$spacing-md",
           "padding": [
-            12,
-            16,
-            28,
-            16
+            "$spacing-md",
+            "$spacing-lg",
+            "$spacing-xl",
+            "$spacing-lg"
           ],
           "children": [
             {
@@ -25682,7 +25839,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": 22,
+                  "cornerRadius": "$radius-pill",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25732,7 +25889,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": 22,
+                  "cornerRadius": "$radius-pill",
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25754,22 +25911,23 @@
               "id": "GdglW",
               "name": "categoryChips",
               "width": "fill_container",
-              "gap": 6,
+              "gap": "$spacing-sm",
               "children": [
                 {
                   "type": "frame",
                   "id": "h14Rb",
                   "name": "chip_food",
+                  "width": "fill_container",
                   "height": 36,
                   "fill": "$accentDim",
-                  "cornerRadius": 999,
+                  "cornerRadius": "$radius-pill",
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
-                  "gap": 5,
+                  "gap": "$spacing-xs",
                   "padding": [
                     0,
-                    12
+                    "$spacing-sm"
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -25777,8 +25935,8 @@
                     {
                       "type": "icon",
                       "id": "M2ITU",
-                      "width": 13,
-                      "height": 13,
+                      "width": 12,
+                      "height": 12,
                       "icon": "utensils",
                       "library": "lucide",
                       "fill": "$accent"
@@ -25789,7 +25947,7 @@
                       "fill": "$accent",
                       "content": "Comida",
                       "fontFamily": "Poppins",
-                      "fontSize": 12,
+                      "fontSize": 11,
                       "fontWeight": "700"
                     }
                   ]
@@ -25798,16 +25956,17 @@
                   "type": "frame",
                   "id": "nHq4t",
                   "name": "chip_fuel",
+                  "width": "fill_container",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": 999,
+                  "cornerRadius": "$radius-pill",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 5,
+                  "gap": "$spacing-xs",
                   "padding": [
                     0,
-                    12
+                    "$spacing-sm"
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -25815,8 +25974,8 @@
                     {
                       "type": "icon",
                       "id": "gT8Ep",
-                      "width": 13,
-                      "height": 13,
+                      "width": 12,
+                      "height": 12,
                       "icon": "fuel",
                       "library": "lucide",
                       "fill": "$iconMuted"
@@ -25827,7 +25986,7 @@
                       "fill": "$textSecondary",
                       "content": "Gasolinera",
                       "fontFamily": "Poppins",
-                      "fontSize": 12,
+                      "fontSize": 11,
                       "fontWeight": "700"
                     }
                   ]
@@ -25836,16 +25995,17 @@
                   "type": "frame",
                   "id": "x0cl8N",
                   "name": "chip_tour",
+                  "width": "fill_container",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": 999,
+                  "cornerRadius": "$radius-pill",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 5,
+                  "gap": "$spacing-xs",
                   "padding": [
                     0,
-                    12
+                    "$spacing-sm"
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -25853,8 +26013,8 @@
                     {
                       "type": "icon",
                       "id": "bs2nU",
-                      "width": 13,
-                      "height": 13,
+                      "width": 12,
+                      "height": 12,
                       "icon": "landmark",
                       "library": "lucide",
                       "fill": "$iconMuted"
@@ -25865,7 +26025,7 @@
                       "fill": "$textSecondary",
                       "content": "Turismo",
                       "fontFamily": "Poppins",
-                      "fontSize": 12,
+                      "fontSize": 11,
                       "fontWeight": "700"
                     }
                   ]
@@ -25874,16 +26034,17 @@
                   "type": "frame",
                   "id": "am1fE",
                   "name": "chip_rest",
+                  "width": "fill_container",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": 999,
+                  "cornerRadius": "$radius-pill",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 5,
+                  "gap": "$spacing-xs",
                   "padding": [
                     0,
-                    12
+                    "$spacing-sm"
                   ],
                   "justifyContent": "center",
                   "alignItems": "center",
@@ -25891,8 +26052,8 @@
                     {
                       "type": "icon",
                       "id": "i8icu0",
-                      "width": 13,
-                      "height": 13,
+                      "width": 12,
+                      "height": 12,
                       "icon": "mountain",
                       "library": "lucide",
                       "fill": "$iconMuted"
@@ -25903,8 +26064,61 @@
                       "fill": "$textSecondary",
                       "content": "Mirador",
                       "fontFamily": "Poppins",
-                      "fontSize": 12,
+                      "fontSize": 11,
                       "fontWeight": "700"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "RaPwr",
+              "name": "resultsBar",
+              "width": "fill_container",
+              "padding": [
+                0,
+                "$spacing-xs"
+              ],
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "x3Bnb",
+                  "name": "count",
+                  "fill": "$textSecondary",
+                  "content": "4 lugares sobre tu ruta",
+                  "fontFamily": "Poppins",
+                  "fontSize": 12,
+                  "fontWeight": "600"
+                },
+                {
+                  "type": "frame",
+                  "id": "y1qCI3",
+                  "name": "sortBtn",
+                  "gap": "$spacing-xs",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon",
+                      "id": "pIjyb",
+                      "name": "sortIcon",
+                      "width": 13,
+                      "height": 13,
+                      "icon": "arrow-down-narrow-wide",
+                      "library": "lucide",
+                      "fill": "$accent"
+                    },
+                    {
+                      "type": "text",
+                      "id": "fQGQF",
+                      "name": "sortLabel",
+                      "fill": "$accent",
+                      "content": "Por cercanía",
+                      "fontFamily": "Poppins",
+                      "fontSize": 12,
+                      "fontWeight": "600"
                     }
                   ]
                 }
@@ -25916,7 +26130,7 @@
               "name": "poiList",
               "width": "fill_container",
               "layout": "vertical",
-              "gap": 8,
+              "gap": "$spacing-sm",
               "children": [
                 {
                   "type": "frame",
@@ -25924,15 +26138,12 @@
                   "name": "poi_Andrés",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": 16,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 12,
-                  "padding": [
-                    12,
-                    14
-                  ],
+                  "gap": "$spacing-md",
+                  "padding": "$spacing-md",
                   "alignItems": "center",
                   "children": [
                     {
@@ -25942,7 +26153,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": 20,
+                      "cornerRadius": "$radius-xl",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -25985,47 +26196,128 @@
                         },
                         {
                           "type": "frame",
-                          "id": "Thriq",
+                          "id": "U9kEgu",
                           "name": "metaRow",
                           "width": "fill_container",
-                          "gap": 8,
+                          "gap": "$spacing-sm",
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "AMbg6",
-                              "width": 11,
-                              "height": 11,
-                              "icon": "map-pin",
-                              "library": "lucide",
-                              "fill": "$textSecondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "ApUEs",
-                              "fill": "$textSecondary",
-                              "content": "8 km",
-                              "fontFamily": "Poppins",
-                              "fontSize": 11,
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "woipU",
+                              "name": "leftMeta",
+                              "gap": "$spacing-sm",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "a1iaDe",
+                                  "name": "rating",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "OzdK4",
+                                      "name": "star",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "star",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "jgdHY",
+                                      "name": "ratingVal",
+                                      "fill": "$textSecondary",
+                                      "content": "4.6",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "lBCev",
+                                  "name": "distance",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "A1vJr",
+                                      "name": "pin",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "map-pin",
+                                      "library": "lucide",
+                                      "fill": "$textSecondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "UIUis",
+                                      "name": "distVal",
+                                      "fill": "$textSecondary",
+                                      "content": "8 km",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "ZMwzw",
+                                  "name": "time",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "hstiq",
+                                      "name": "clock",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "clock",
+                                      "library": "lucide",
+                                      "fill": "$textMuted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "h1MeP3",
+                                      "name": "timeVal",
+                                      "fill": "$textMuted",
+                                      "content": "12 min",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
                             },
                             {
                               "type": "frame",
-                              "id": "nv7uN",
-                              "name": "onRoute",
+                              "id": "vUrGP",
+                              "name": "badge_route",
                               "fill": "#00000000",
-                              "cornerRadius": 999,
+                              "cornerRadius": "$radius-pill",
                               "stroke": "$check",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
                               "padding": [
-                                1,
+                                2,
                                 6
                               ],
+                              "alignItems": "center",
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "eJ9qV",
+                                  "id": "yxEHp",
+                                  "name": "badgeTxt",
                                   "fill": "$check",
                                   "content": "EN LA RUTA",
                                   "fontFamily": "Poppins",
@@ -26046,7 +26338,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": 18,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -26072,15 +26364,12 @@
                   "name": "poi_La",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": 16,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 12,
-                  "padding": [
-                    12,
-                    14
-                  ],
+                  "gap": "$spacing-md",
+                  "padding": "$spacing-md",
                   "alignItems": "center",
                   "children": [
                     {
@@ -26090,7 +26379,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": 20,
+                      "cornerRadius": "$radius-xl",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -26133,38 +26422,147 @@
                         },
                         {
                           "type": "frame",
-                          "id": "t85AHQ",
+                          "id": "gTnoz",
                           "name": "metaRow",
                           "width": "fill_container",
-                          "gap": 8,
+                          "gap": "$spacing-sm",
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "b7rs7h",
-                              "width": 11,
-                              "height": 11,
-                              "icon": "map-pin",
-                              "library": "lucide",
-                              "fill": "$textSecondary"
+                              "type": "frame",
+                              "id": "FjUiK",
+                              "name": "leftMeta",
+                              "gap": "$spacing-sm",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "g4smX",
+                                  "name": "rating",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "REZJ3",
+                                      "name": "star",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "star",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "NUDy8",
+                                      "name": "ratingVal",
+                                      "fill": "$textSecondary",
+                                      "content": "4.4",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "v8U9y",
+                                  "name": "distance",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "AQXzv",
+                                      "name": "pin",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "map-pin",
+                                      "library": "lucide",
+                                      "fill": "$textSecondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "w5reK",
+                                      "name": "distVal",
+                                      "fill": "$textSecondary",
+                                      "content": "32 km",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "LYnao",
+                                  "name": "time",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "t0dq5",
+                                      "name": "clock",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "clock",
+                                      "library": "lucide",
+                                      "fill": "$textMuted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "C0skM",
+                                      "name": "timeVal",
+                                      "fill": "$textMuted",
+                                      "content": "28 min",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
                             },
                             {
-                              "type": "text",
-                              "id": "q7dUs",
-                              "fill": "$textSecondary",
-                              "content": "32 km",
-                              "fontFamily": "Poppins",
-                              "fontSize": 11,
-                              "fontWeight": "700"
-                            },
-                            {
-                              "type": "text",
-                              "id": "VEQRC",
-                              "fill": "$textMuted",
-                              "content": "· desvío 1.2 km",
-                              "fontFamily": "Poppins",
-                              "fontSize": 11,
-                              "fontWeight": "500"
+                              "type": "frame",
+                              "id": "NDNnO",
+                              "name": "badge_detour",
+                              "fill": "$accentDim",
+                              "cornerRadius": "$radius-pill",
+                              "stroke": "$accentDimBorder",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "gap": 3,
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "icon",
+                                  "id": "wCX2d",
+                                  "name": "detourIcon",
+                                  "width": 9,
+                                  "height": 9,
+                                  "icon": "corner-up-right",
+                                  "library": "lucide",
+                                  "fill": "$accent"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "boywS",
+                                  "name": "badgeTxt",
+                                  "fill": "$accent",
+                                  "content": "DESVÍO 1.2 KM",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 8,
+                                  "fontWeight": "800",
+                                  "letterSpacing": 0.5
+                                }
+                              ]
                             }
                           ]
                         }
@@ -26177,7 +26575,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": 18,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -26203,15 +26601,12 @@
                   "name": "poi_Trattoria",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": 16,
+                  "cornerRadius": "$radius-lg",
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
-                  "gap": 12,
-                  "padding": [
-                    12,
-                    14
-                  ],
+                  "gap": "$spacing-md",
+                  "padding": "$spacing-md",
                   "alignItems": "center",
                   "children": [
                     {
@@ -26221,7 +26616,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": 20,
+                      "cornerRadius": "$radius-xl",
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -26264,47 +26659,128 @@
                         },
                         {
                           "type": "frame",
-                          "id": "hloaG",
+                          "id": "xy1IY",
                           "name": "metaRow",
                           "width": "fill_container",
-                          "gap": 8,
+                          "gap": "$spacing-sm",
+                          "justifyContent": "space_between",
                           "alignItems": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "id": "w9vE58",
-                              "width": 11,
-                              "height": 11,
-                              "icon": "map-pin",
-                              "library": "lucide",
-                              "fill": "$textSecondary"
-                            },
-                            {
-                              "type": "text",
-                              "id": "T0vcnf",
-                              "fill": "$textSecondary",
-                              "content": "65 km",
-                              "fontFamily": "Poppins",
-                              "fontSize": 11,
-                              "fontWeight": "700"
+                              "type": "frame",
+                              "id": "FIpFg",
+                              "name": "leftMeta",
+                              "gap": "$spacing-sm",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "aq8uP",
+                                  "name": "rating",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "d8YYD8",
+                                      "name": "star",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "star",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "hsBwD",
+                                      "name": "ratingVal",
+                                      "fill": "$textSecondary",
+                                      "content": "4.8",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "m3mYEV",
+                                  "name": "distance",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "e0aEOZ",
+                                      "name": "pin",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "map-pin",
+                                      "library": "lucide",
+                                      "fill": "$textSecondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "AOcmo",
+                                      "name": "distVal",
+                                      "fill": "$textSecondary",
+                                      "content": "65 km",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Vu70P",
+                                  "name": "time",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "yDy8g",
+                                      "name": "clock",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "clock",
+                                      "library": "lucide",
+                                      "fill": "$textMuted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "BSV6T",
+                                      "name": "timeVal",
+                                      "fill": "$textMuted",
+                                      "content": "55 min",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
                             },
                             {
                               "type": "frame",
-                              "id": "Q3Cmw",
-                              "name": "onRoute",
+                              "id": "GSKB9",
+                              "name": "badge_route",
                               "fill": "#00000000",
-                              "cornerRadius": 999,
+                              "cornerRadius": "$radius-pill",
                               "stroke": "$check",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
                               "padding": [
-                                1,
+                                2,
                                 6
                               ],
+                              "alignItems": "center",
                               "children": [
                                 {
                                   "type": "text",
-                                  "id": "ic9AF",
+                                  "id": "V87OO",
+                                  "name": "badgeTxt",
                                   "fill": "$check",
                                   "content": "EN LA RUTA",
                                   "fontFamily": "Poppins",
@@ -26325,7 +26801,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": 18,
+                      "cornerRadius": "$radius-pill",
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -26335,6 +26811,232 @@
                         {
                           "type": "icon",
                           "id": "TRuBG",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "plus",
+                          "library": "lucide",
+                          "fill": "$accent"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "u9EneX",
+                  "name": "poi_Rancho",
+                  "width": "fill_container",
+                  "fill": "$bgCard",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$cardBorder",
+                  "strokeWidth": 1,
+                  "strokeAlignment": "inner",
+                  "gap": "$spacing-md",
+                  "padding": "$spacing-md",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ox1Nk",
+                      "name": "iconBox",
+                      "width": 40,
+                      "height": 40,
+                      "fill": "$accentDim",
+                      "cornerRadius": "$radius-xl",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "n3S2H",
+                          "width": 18,
+                          "height": 18,
+                          "icon": "utensils",
+                          "library": "lucide",
+                          "fill": "$stopFood"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Rvq1i",
+                      "name": "txt",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 3,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "H20WR",
+                          "fill": "$textPrimary",
+                          "content": "El Rancho de Jonás",
+                          "fontFamily": "Poppins",
+                          "fontSize": 14,
+                          "fontWeight": "700"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bTj4l",
+                          "fill": "$textMuted",
+                          "content": "Vía Briceño · Tocancipá",
+                          "fontFamily": "Poppins",
+                          "fontSize": 11,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "jP59b",
+                          "name": "metaRow",
+                          "width": "fill_container",
+                          "gap": "$spacing-sm",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "jraUr",
+                              "name": "leftMeta",
+                              "gap": "$spacing-sm",
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "frame",
+                                  "id": "r7Rat3",
+                                  "name": "rating",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "ewyQL",
+                                      "name": "star",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "star",
+                                      "library": "lucide",
+                                      "fill": "$accent"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "V9zEy",
+                                      "name": "ratingVal",
+                                      "fill": "$textSecondary",
+                                      "content": "4.2",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "Xi143",
+                                  "name": "distance",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "NDb3O",
+                                      "name": "pin",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "map-pin",
+                                      "library": "lucide",
+                                      "fill": "$textSecondary"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "Yg52Y",
+                                      "name": "distVal",
+                                      "fill": "$textSecondary",
+                                      "content": "48 km",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "700"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "type": "frame",
+                                  "id": "L9CXrv",
+                                  "name": "time",
+                                  "gap": 3,
+                                  "alignItems": "center",
+                                  "children": [
+                                    {
+                                      "type": "icon",
+                                      "id": "Zsp4h",
+                                      "name": "clock",
+                                      "width": 11,
+                                      "height": 11,
+                                      "icon": "clock",
+                                      "library": "lucide",
+                                      "fill": "$textMuted"
+                                    },
+                                    {
+                                      "type": "text",
+                                      "id": "y8SJil",
+                                      "name": "timeVal",
+                                      "fill": "$textMuted",
+                                      "content": "41 min",
+                                      "fontFamily": "Poppins",
+                                      "fontSize": 11,
+                                      "fontWeight": "600"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "knhTX",
+                              "name": "badge_route",
+                              "fill": "#00000000",
+                              "cornerRadius": "$radius-pill",
+                              "stroke": "$check",
+                              "strokeWidth": 1,
+                              "strokeAlignment": "inner",
+                              "padding": [
+                                2,
+                                6
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "j834ew",
+                                  "name": "badgeTxt",
+                                  "fill": "$check",
+                                  "content": "EN LA RUTA",
+                                  "fontFamily": "Poppins",
+                                  "fontSize": 8,
+                                  "fontWeight": "800",
+                                  "letterSpacing": 0.5
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "qtvV2",
+                      "name": "addBtn",
+                      "width": 36,
+                      "height": 36,
+                      "fill": "$accentDim",
+                      "cornerRadius": "$radius-pill",
+                      "stroke": "$accentDimBorder",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon",
+                          "id": "nA3Ll",
                           "width": 18,
                           "height": 18,
                           "icon": "plus",
