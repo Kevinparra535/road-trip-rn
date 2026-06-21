@@ -1,15 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Motion from '@/ui/styles/Motion';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
@@ -46,21 +42,6 @@ const Chip = ({
   testID,
 }: ChipProps) => {
   const isAccent = active || tone === 'accent';
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    if (!onPress || disabled) return;
-    scale.value = withSpring(0.94, Motion.springs.snappy);
-  };
-
-  const handlePressOut = () => {
-    if (!onPress || disabled) return;
-    scale.value = withSpring(1, Motion.springs.snappy);
-  };
 
   const inner = (
     <View
@@ -94,27 +75,22 @@ const Chip = ({
   );
 
   if (!onPress) {
-    return (
-      <Animated.View style={animatedStyle} testID={testID}>
-        {inner}
-      </Animated.View>
-    );
+    return <View testID={testID}>{inner}</View>;
   }
 
   return (
-    <Animated.View style={animatedStyle} testID={testID}>
-      <Pressable
-        onPress={disabled ? undefined : onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={disabled}
-        accessibilityRole="button"
-        accessibilityState={{ selected: isAccent, disabled }}
-        accessibilityLabel={sub ? `${label}, ${sub}` : label}
-      >
-        {inner}
-      </Pressable>
-    </Animated.View>
+    <MotionPressable
+      accessibilityLabel={sub ? `${label}, ${sub}` : label}
+      accessibilityRole="button"
+      accessibilityState={{ selected: isAccent }}
+      activeScale={0.94}
+      disabled={disabled}
+      haptic="selection"
+      onPress={onPress}
+      testID={testID}
+    >
+      {inner}
+    </MotionPressable>
   );
 };
 

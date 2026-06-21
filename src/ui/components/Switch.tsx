@@ -1,10 +1,12 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedStyle,
   useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -44,18 +46,19 @@ const Switch = ({ value, onValueChange, disabled = false, testID }: SwitchProps)
   }));
 
   return (
-    <Pressable
+    <MotionPressable
       testID={testID}
       disabled={disabled}
+      haptic="selection"
       onPress={() => onValueChange(!value)}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled }}
+      accessibilityState={{ checked: value }}
       style={[styles.pressable, disabled && styles.disabled]}
     >
       <Animated.View style={[styles.track, trackStyle]}>
         <Animated.View style={[styles.thumb, thumbStyle]} />
       </Animated.View>
-    </Pressable>
+    </MotionPressable>
   );
 };
 

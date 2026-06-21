@@ -1,5 +1,7 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { ChevronDown, ChevronUp, Flag, Pencil, SquarePen, X } from 'lucide-react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { ChevronDown, ChevronUp, Flag, Pencil, X } from 'lucide-react-native';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -42,6 +44,13 @@ export function PlannerTimelineRow({
   // círculo lleno con flag blanca; intermedia = círculo lleno con icono oscuro
   // del kind.
   const PinIcon = item.isLast ? Flag : meta.lucideIcon;
+  const hasDetails = !!(item.notes || item.stopDurationMin);
+
+  // Un solo lápiz (como el diseño): en paradas intermedias abre el sheet de
+  // detalle (notas/duración + cambiar lugar); en los extremos va directo a
+  // elegir lugar.
+  const handleEditPress = () =>
+    item.isIntermediate ? onEditDetail(item.id) : onEditPlace(item.id);
 
   const handleRemovePress = () => {
     if (item.isIntermediate) {
@@ -63,109 +72,124 @@ export function PlannerTimelineRow({
   };
 
   return (
-    <View style={styles.stopRow}>
-      <TouchableOpacity
-        onPress={() => canEditKind && onEditKind(item.id)}
-        disabled={!canEditKind}
-        style={[
-          styles.stopPin,
-          item.isFirst
-            ? [styles.stopPinRing, { borderColor: meta.color }]
-            : { backgroundColor: meta.color },
-        ]}
-        hitSlop={8}
-      >
-        {item.isFirst ? null : (
-          <PinIcon
-            size={16}
-            color={item.isLast ? Colors.base.textPrimary : Colors.base.bgPrimary}
-          />
-        )}
-      </TouchableOpacity>
-      <View style={styles.stopBody}>
-        <View style={styles.stopHeader}>
+    <View style={styles.rowWrapper}>
+      <View style={styles.stopRow}>
+        <MotionPressable
+          onPress={() => canEditKind && onEditKind(item.id)}
+          disabled={!canEditKind}
+          haptic="selection"
+          style={[
+            styles.stopPin,
+            item.isFirst
+              ? [styles.stopPinRing, { borderColor: meta.color }]
+              : { backgroundColor: meta.color },
+          ]}
+          hitSlop={8}
+        >
+          {item.isFirst ? null : (
+            <PinIcon
+              size={16}
+              color={item.isLast ? Colors.base.textPrimary : Colors.base.bgPrimary}
+            />
+          )}
+        </MotionPressable>
+        <View style={styles.stopBody}>
           <Text style={styles.stopName} numberOfLines={1}>
             {item.name}
           </Text>
-          <View style={[styles.kindChip, { borderColor: hexToRgba(meta.color, 0.4) }]}>
-            <Text style={[styles.kindChipText, { color: meta.color }]}>{meta.label}</Text>
+          <View style={styles.stopSubRow}>
+            <Text style={styles.stopSub} numberOfLines={1}>
+              {item.sub}
+            </Text>
+            <View
+              style={[
+                styles.kindChip,
+                {
+                  backgroundColor: hexToRgba(meta.color, 0.12),
+                  borderColor: hexToRgba(meta.color, 0.31),
+                },
+              ]}
+            >
+              <Text style={[styles.kindChipText, { color: meta.color }]}>
+                {meta.label}
+              </Text>
+            </View>
           </View>
         </View>
-        <Text style={styles.stopSub} numberOfLines={1}>
-          {item.sub}
-        </Text>
-      </View>
-      <View style={styles.stopActions}>
-        {!readOnly && item.isIntermediate ? (
-          <TouchableOpacity
-            onPress={() => onEditDetail(item.id)}
-            hitSlop={6}
-            style={styles.editBtn}
-            testID={`waypoint-${item.id}-details`}
-          >
-            <SquarePen
-              size={16}
-              color={
-                item.notes || item.stopDurationMin
-                  ? Colors.base.accent
-                  : Colors.base.iconMuted
-              }
-            />
-          </TouchableOpacity>
-        ) : null}
         {!readOnly ? (
-          <TouchableOpacity
-            onPress={() => onEditPlace(item.id)}
-            hitSlop={6}
-            style={styles.editBtn}
-            testID={`waypoint-${item.id}-edit`}
-          >
-            <Pencil size={16} color={Colors.base.iconMuted} />
-          </TouchableOpacity>
-        ) : null}
-        {!readOnly && (item.canMoveUp || item.canMoveDown) ? (
-          <View style={styles.reorderColumn}>
-            <TouchableOpacity
-              onPress={() => onMoveUp(item.id)}
-              disabled={!item.canMoveUp}
+          <View style={styles.stopActions}>
+            <MotionPressable
+              onPress={handleEditPress}
+              haptic="selection"
               hitSlop={6}
-              style={styles.reorderBtn}
+              style={styles.actionBtn}
+              testID={`waypoint-${item.id}-edit`}
             >
-              <ChevronUp
-                size={14}
-                color={item.canMoveUp ? Colors.base.iconMuted : Colors.base.textMuted}
+              <Pencil
+                size={16}
+                color={hasDetails ? Colors.base.accent : Colors.base.iconMuted}
               />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => onMoveDown(item.id)}
-              disabled={!item.canMoveDown}
-              hitSlop={6}
-              style={styles.reorderBtn}
-            >
-              <ChevronDown
-                size={14}
-                color={item.canMoveDown ? Colors.base.iconMuted : Colors.base.textMuted}
-              />
-            </TouchableOpacity>
+            </MotionPressable>
+            {item.canMoveUp || item.canMoveDown ? (
+              <View style={styles.reorderColumn}>
+                <MotionPressable
+                  onPress={() => onMoveUp(item.id)}
+                  disabled={!item.canMoveUp}
+                  haptic="selection"
+                  hitSlop={6}
+                  style={styles.reorderBtn}
+                >
+                  <ChevronUp
+                    size={14}
+                    color={item.canMoveUp ? Colors.base.iconMuted : Colors.base.textMuted}
+                  />
+                </MotionPressable>
+                <MotionPressable
+                  onPress={() => onMoveDown(item.id)}
+                  disabled={!item.canMoveDown}
+                  haptic="selection"
+                  hitSlop={6}
+                  style={styles.reorderBtn}
+                >
+                  <ChevronDown
+                    size={14}
+                    color={
+                      item.canMoveDown ? Colors.base.iconMuted : Colors.base.textMuted
+                    }
+                  />
+                </MotionPressable>
+              </View>
+            ) : null}
           </View>
         ) : null}
-        {!readOnly ? (
-          <TouchableOpacity
-            onPress={handleRemovePress}
-            hitSlop={8}
-            style={styles.removeBtn}
-          >
-            <X size={18} color={Colors.base.iconMuted} />
-          </TouchableOpacity>
-        ) : null}
       </View>
+
+      {!readOnly ? (
+        <MotionPressable
+          onPress={handleRemovePress}
+          haptic="warning"
+          hitSlop={8}
+          style={styles.removeBtn}
+          testID={`waypoint-${item.id}-remove`}
+        >
+          <X size={18} color={Colors.base.iconMuted} />
+        </MotionPressable>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // Fila = card (flex) + botón eliminar afuera a la derecha (diseño Pencil).
+  rowWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
   stopRow: {
-    padding: Spacings.md,
+    paddingVertical: Spacings.md,
+    paddingHorizontal: Spacings.lg,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.md,
@@ -189,16 +213,22 @@ const styles = StyleSheet.create({
   },
   stopBody: {
     flex: 1,
+    gap: 3,
   },
-  stopHeader: {
+  stopName: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  // Fila inferior de la card: subtítulo + badge del kind (diseño Pencil).
+  stopSubRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.sm,
   },
-  stopName: {
-    flex: 1,
-    ...Fonts.bodyTextBold,
-    color: Colors.base.textPrimary,
+  stopSub: {
+    flexShrink: 1,
+    ...Fonts.links,
+    color: Colors.base.textMuted,
   },
   kindChip: {
     paddingHorizontal: Spacings.sm,
@@ -210,27 +240,22 @@ const styles = StyleSheet.create({
     ...Fonts.links,
     letterSpacing: 0.5,
   },
-  stopSub: {
-    marginTop: 2,
-    ...Fonts.links,
-    color: Colors.base.textMuted,
-  },
   removeBtn: {
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  editBtn: {
-    width: 28,
-    height: 32,
+  actionBtn: {
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stopActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: Spacings.xs,
   },
   reorderColumn: {
     flexDirection: 'column',

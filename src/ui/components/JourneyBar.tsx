@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
+import Motion from '@/ui/styles/Motion';
 
 type JourneyStop = { id: string; km: number; suggested: boolean };
 
@@ -28,6 +34,7 @@ const END_SIZE = 12;
  */
 const JourneyBar = ({ totalKm, progressKm, stops }: Props) => {
   const [width, setWidth] = useState(0);
+  const progress = useSharedValue(0);
 
   const ratio = (km: number) =>
     totalKm > 0 ? Math.min(1, Math.max(0, km / totalKm)) : 0;
@@ -36,13 +43,25 @@ const JourneyBar = ({ totalKm, progressKm, stops }: Props) => {
   const leftFor = (km: number, size: number) =>
     Math.max(0, Math.min(width - size, ratio(km) * width - size / 2));
 
+  useEffect(() => {
+    progress.value = withTiming(ratio(progressKm), {
+      duration: Motion.durations.slow,
+      easing: Motion.easings.standard,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [progressKm, totalKm]);
+
+  const fillStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: -width + width * progress.value }],
+  }));
+
   return (
     <View
       style={styles.container}
       onLayout={(e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width)}
     >
       <View style={styles.track} />
-      <View style={[styles.fill, { width: ratio(progressKm) * width }]} />
+      <Animated.View style={[styles.fill, { width }, fillStyle]} />
 
       <View style={[styles.endDot, styles.originDot]} />
       <View style={[styles.endDot, styles.destDot, { left: width - END_SIZE }]} />
@@ -72,6 +91,7 @@ const JourneyBar = ({ totalKm, progressKm, stops }: Props) => {
 const styles = StyleSheet.create({
   container: {
     height: HEIGHT,
+    overflow: 'hidden',
   },
   track: {
     position: 'absolute',

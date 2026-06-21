@@ -1,17 +1,12 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import MotionPressable from '@/ui/components/MotionPressable';
 import Skeleton from '@/ui/components/Skeleton';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Motion from '@/ui/styles/Motion';
 import Spacings from '@/ui/styles/Spacings';
 
 type Props = {
@@ -33,22 +28,6 @@ type Props = {
  *   label Fonts.linksBold textPrimary.
  */
 const SummaryChip = ({ iconName, label, onPress, loading, testID }: Props) => {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  const handlePressIn = () => {
-    if (!onPress) return;
-    scale.value = withSpring(0.93, Motion.springs.snappy);
-  };
-
-  const handlePressOut = () => {
-    if (!onPress) return;
-    scale.value = withSpring(1, Motion.springs.snappy);
-  };
-
   if (loading) {
     return (
       <Skeleton
@@ -71,25 +50,24 @@ const SummaryChip = ({ iconName, label, onPress, loading, testID }: Props) => {
 
   if (!onPress) {
     return (
-      <Animated.View style={[styles.chip, animatedStyle]} testID={testID}>
+      <View style={styles.chip} testID={testID}>
         {inner}
-      </Animated.View>
+      </View>
     );
   }
 
   return (
-    <Animated.View style={animatedStyle} testID={testID}>
-      <Pressable
-        style={styles.chip}
-        onPress={onPress}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        accessibilityRole="button"
-        accessibilityLabel={label}
-      >
-        {inner}
-      </Pressable>
-    </Animated.View>
+    <MotionPressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      activeScale={0.93}
+      haptic="selection"
+      onPress={onPress}
+      style={styles.chip}
+      testID={testID}
+    >
+      {inner}
+    </MotionPressable>
   );
 };
 

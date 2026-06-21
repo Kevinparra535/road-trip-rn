@@ -1,15 +1,11 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Motion from '@/ui/styles/Motion';
 import Spacings from '@/ui/styles/Spacings';
 
 type SecondaryButtonProps = {
@@ -44,48 +40,29 @@ const SecondaryButton = ({
   testID,
 }: SecondaryButtonProps) => {
   const isInteractive = !loading && !disabled;
-  const scale = useSharedValue(1);
-
-  const handlePressIn = () => {
-    if (!isInteractive) return;
-    scale.value = withSpring(0.95, Motion.springs.snappy);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(1, Motion.springs.snappy);
-  };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   const isDestructive = tone === 'destructive';
   const isGhost = variant === 'ghost';
 
   const contentColor = isDestructive ? Colors.alerts.error : Colors.base.textPrimary;
 
   return (
-    <Animated.View
+    <MotionPressable
+      accessibilityLabel={label}
+      accessibilityRole="button"
+      accessibilityState={{ busy: loading }}
+      disabled={!isInteractive}
+      haptic={isDestructive ? 'warning' : 'impactLight'}
+      onPress={onPress}
       style={[
         styles.wrapper,
         isGhost ? styles.ghost : styles.solid,
         isDestructive && styles.destructiveBorder,
         !isInteractive && styles.disabled,
-        animatedStyle,
         iOSCornerStyle,
       ]}
       testID={testID}
     >
-      <Pressable
-        onPress={isInteractive ? onPress : undefined}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        disabled={!isInteractive}
-        accessibilityRole="button"
-        accessibilityState={{ disabled: !isInteractive, busy: loading }}
-        accessibilityLabel={label}
-        style={styles.pressable}
-      >
+      <View style={styles.content}>
         {loading ? (
           <ActivityIndicator color={contentColor} />
         ) : (
@@ -96,8 +73,8 @@ const SecondaryButton = ({
             <Text style={[styles.label, { color: contentColor }]}>{label}</Text>
           </>
         )}
-      </Pressable>
-    </Animated.View>
+      </View>
+    </MotionPressable>
   );
 };
 
@@ -123,7 +100,7 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.5,
   },
-  pressable: {
+  content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

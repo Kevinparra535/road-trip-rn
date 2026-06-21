@@ -220,7 +220,7 @@
           "width": 48,
           "height": 48,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 24,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -257,7 +257,7 @@
           "width": 393,
           "height": 362,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -291,7 +291,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "roSp6",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -307,7 +307,7 @@
               "width": "fill_container",
               "height": 44,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "gap": 10,
               "padding": [
                 0,
@@ -360,7 +360,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 14,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -391,7 +391,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -408,7 +408,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -442,7 +442,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -459,7 +459,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -493,7 +493,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -510,7 +510,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -598,7 +598,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -889,7 +889,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 2,
                   "id": "TvZHW",
                   "name": "handlePill",
                   "fill": "$hairline",
@@ -980,7 +980,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -1020,7 +1020,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -1079,7 +1079,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -1152,7 +1152,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -1225,7 +1225,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -1298,7 +1298,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -1559,7 +1559,7 @@
           "width": 48,
           "height": 48,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 24,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -1595,7 +1595,7 @@
           "name": "BottomSheet Stops",
           "width": 393,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -1629,7 +1629,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "suKQl",
                   "fill": "$hairline",
                   "width": 40,
@@ -1682,7 +1682,7 @@
                   "id": "zWIVU",
                   "name": "typeChip",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     6,
@@ -2287,7 +2287,7 @@
                   "name": "Agregar Parada",
                   "width": 356,
                   "fill": "#00000000",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -2305,7 +2305,7 @@
                       "width": 32,
                       "height": 32,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 16,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -2379,7 +2379,7 @@
                   "name": "Varios Dias Row",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -2448,7 +2448,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "effect": {
                         "type": "shadow",
                         "shadowType": "outer",
@@ -3186,7 +3186,7 @@
           "width": 361,
           "height": 148,
           "fill": "#0D0D0DF2",
-          "cornerRadius": "$radius-xl",
+          "cornerRadius": 22,
           "stroke": "$hairline",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -3229,7 +3229,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -3297,7 +3297,7 @@
           "width": 36,
           "height": 36,
           "fill": "$accentDim",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
@@ -3308,7 +3308,7 @@
               "width": 30,
               "height": 30,
               "fill": "$accent",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 15,
               "stroke": "$textPrimary",
               "strokeWidth": 2,
               "strokeAlignment": "outer",
@@ -3337,7 +3337,7 @@
           "width": 152,
           "height": 32,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 999,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -3404,7 +3404,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -3441,7 +3441,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -3479,8 +3479,8 @@
           "height": 140,
           "fill": "$bgPrimary",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -3506,7 +3506,7 @@
               "width": 80,
               "height": 80,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -3608,7 +3608,7 @@
               "width": 80,
               "height": 80,
               "fill": "$error",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -3832,7 +3832,7 @@
           "width": 36,
           "height": 36,
           "fill": "#FF98001F",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
@@ -3849,7 +3849,7 @@
               "width": 30,
               "height": 30,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 15,
               "stroke": "#FFFFFF",
               "strokeWidth": 2,
               "strokeAlignment": "outer",
@@ -3948,8 +3948,8 @@
           "height": 140,
           "fill": "#0D0D0DF2",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -3983,7 +3983,7 @@
               "width": 80,
               "height": 80,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -4084,7 +4084,7 @@
               "width": 80,
               "height": 80,
               "fill": "#F44336",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -4120,7 +4120,7 @@
           "width": 361,
           "height": 108,
           "fill": "#0D0D0DF2",
-          "cornerRadius": "$radius-xl",
+          "cornerRadius": 22,
           "stroke": "#FF9800",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -4236,7 +4236,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -4273,7 +4273,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -4454,7 +4454,7 @@
               "width": 24,
               "height": 24,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 12,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -4561,7 +4561,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "JzolN",
               "x": 20,
               "y": 250,
@@ -4572,7 +4572,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "jHdJQ",
               "x": 280,
               "y": 400,
@@ -4583,7 +4583,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "j3Dbh",
               "x": 160,
               "y": 500,
@@ -4720,7 +4720,7 @@
           "width": 36,
           "height": 36,
           "fill": "#4CAF50",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
@@ -4751,7 +4751,7 @@
           "width": 360,
           "height": 380,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -4777,7 +4777,7 @@
               "width": 72,
               "height": 72,
               "fill": "#4CAF5022",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 36,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -4823,7 +4823,7 @@
               "name": "Stats Grid",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-md",
+              "cornerRadius": 10,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -4965,7 +4965,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-md",
+              "cornerRadius": 10,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -5146,7 +5146,7 @@
               "width": 24,
               "height": 24,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 12,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -5253,7 +5253,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "J26880",
               "x": 20,
               "y": 250,
@@ -5264,7 +5264,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "s7opK",
               "x": 280,
               "y": 400,
@@ -5275,7 +5275,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "W1PHs",
               "x": 160,
               "y": 500,
@@ -5382,7 +5382,7 @@
           "width": 393,
           "height": 272,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -5416,7 +5416,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "Vj3Dg",
                   "fill": "$hairline",
                   "width": 40,
@@ -5492,7 +5492,7 @@
               "width": "fill_container",
               "height": 56,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 999,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -5666,7 +5666,7 @@
               "width": 24,
               "height": 24,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 12,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -5773,7 +5773,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "woTPL",
               "x": 20,
               "y": 250,
@@ -5784,7 +5784,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "YnUM1",
               "x": 280,
               "y": 400,
@@ -5795,7 +5795,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "rBMDR",
               "x": 160,
               "y": 500,
@@ -5937,7 +5937,7 @@
               "width": 72,
               "height": 72,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 36,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -6193,7 +6193,7 @@
               "width": 24,
               "height": 24,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 12,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -6300,7 +6300,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "IAuCd",
               "x": 20,
               "y": 250,
@@ -6311,7 +6311,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "EeZDF",
               "x": 280,
               "y": 400,
@@ -6322,7 +6322,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-xs",
+              "cornerRadius": 2,
               "id": "Cl1gZ",
               "x": 160,
               "y": 500,
@@ -6585,7 +6585,7 @@
                       "width": 28,
                       "height": 28,
                       "fill": "#242424",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 14,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -6866,7 +6866,7 @@
                   "width": 64,
                   "height": 64,
                   "fill": "#FF98001A",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 32,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -7159,7 +7159,7 @@
           "width": 40,
           "height": 40,
           "fill": "#1A1A1A",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 20,
           "stroke": "#2A2A2A",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -7222,7 +7222,7 @@
               "width": 36,
               "height": 36,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -7274,7 +7274,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 16,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -7314,7 +7314,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -7429,7 +7429,7 @@
           "width": 361,
           "height": 148,
           "fill": "#0D0D0DF2",
-          "cornerRadius": "$radius-xl",
+          "cornerRadius": 22,
           "stroke": "$hairline",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -7472,7 +7472,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -7540,7 +7540,7 @@
           "width": 36,
           "height": 36,
           "fill": "$accentDim",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
@@ -7551,7 +7551,7 @@
               "width": 30,
               "height": 30,
               "fill": "$accent",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 15,
               "stroke": "$textPrimary",
               "strokeWidth": 2,
               "strokeAlignment": "outer",
@@ -7580,7 +7580,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -7617,7 +7617,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -7655,8 +7655,8 @@
           "height": 140,
           "fill": "$bgPrimary",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -7682,7 +7682,7 @@
               "width": 80,
               "height": 80,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -7784,7 +7784,7 @@
               "width": 80,
               "height": 80,
               "fill": "$error",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -7820,7 +7820,7 @@
           "width": 52,
           "height": 300,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -7852,7 +7852,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 4,
               "id": "vTjLd",
               "x": 22,
               "y": 34,
@@ -7889,7 +7889,7 @@
             },
             {
               "type": "rectangle",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 2,
               "id": "f1XBG",
               "x": 14,
               "y": 140,
@@ -7907,7 +7907,7 @@
               "width": 44,
               "height": 22,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-sm",
+              "cornerRadius": 6,
               "stroke": "$accent",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -7948,7 +7948,7 @@
               "width": 18,
               "height": 18,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 9,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -8151,7 +8151,7 @@
           "width": 36,
           "height": 36,
           "fill": "#FF98001F",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "effect": {
             "type": "shadow",
             "shadowType": "outer",
@@ -8168,7 +8168,7 @@
               "width": 30,
               "height": 30,
               "fill": "#FF9800",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 15,
               "stroke": "#FFFFFF",
               "strokeWidth": 2,
               "strokeAlignment": "outer",
@@ -8266,7 +8266,7 @@
           "width": 361,
           "height": 148,
           "fill": "#0D0D0DF2",
-          "cornerRadius": "$radius-xl",
+          "cornerRadius": 22,
           "stroke": "#3A3A3A",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -8309,7 +8309,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -8378,8 +8378,8 @@
           "height": 140,
           "fill": "#0D0D0DF2",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -8413,7 +8413,7 @@
               "width": 80,
               "height": 80,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -8514,7 +8514,7 @@
               "width": 80,
               "height": 80,
               "fill": "#F44336",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -8794,7 +8794,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -8831,7 +8831,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -10480,7 +10480,7 @@
                   "children": [
                     {
                       "type": "rectangle",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "id": "k20dgi",
                       "fill": "$bgCard",
                       "width": 80,
@@ -10847,7 +10847,7 @@
                   "name": "rule1",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -10893,7 +10893,7 @@
                   "name": "rule2",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -10939,7 +10939,7 @@
                   "name": "rule3",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -10994,7 +10994,7 @@
                   "name": "rule4",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -11040,7 +11040,7 @@
                   "name": "rule5",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -11086,7 +11086,7 @@
                   "name": "rule6",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -11201,7 +11201,7 @@
                               }
                             ]
                           },
-                          "cornerRadius": "$radius-xl",
+                          "cornerRadius": 20,
                           "effect": {
                             "type": "shadow",
                             "shadowType": "outer",
@@ -11263,7 +11263,7 @@
                           "width": "fill_container",
                           "height": 96,
                           "fill": "$bgCard",
-                          "cornerRadius": "$radius-xl",
+                          "cornerRadius": 18,
                           "stroke": "$cardBorder",
                           "strokeWidth": 1,
                           "strokeAlignment": "inner",
@@ -11280,7 +11280,7 @@
                               "width": 40,
                               "height": 40,
                               "fill": "$accentDim",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 20,
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -11334,7 +11334,7 @@
                           "width": 56,
                           "height": 56,
                           "fill": "$bgGradientEnd",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 28,
                           "stroke": "$cardBorder",
                           "strokeWidth": 1,
                           "strokeAlignment": "inner",
@@ -11389,7 +11389,7 @@
                           "width": 80,
                           "height": 80,
                           "fill": "$error",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 40,
                           "effect": {
                             "type": "shadow",
                             "shadowType": "outer",
@@ -11443,7 +11443,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "gap": 10,
                       "padding": [
                         0,
@@ -11496,7 +11496,7 @@
                               }
                             ]
                           },
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 14,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -12064,7 +12064,7 @@
           "width": 48,
           "height": 48,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 24,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -12101,7 +12101,7 @@
           "width": 393,
           "height": 592,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -12135,7 +12135,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "Pk9F3",
                   "fill": "$hairline",
                   "width": 40,
@@ -12150,7 +12150,7 @@
               "width": "fill_container",
               "height": 44,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "gap": 10,
               "padding": [
                 0,
@@ -12203,7 +12203,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 14,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -12234,7 +12234,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -12251,7 +12251,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -12285,7 +12285,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -12302,7 +12302,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -12336,7 +12336,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -12353,7 +12353,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -12432,7 +12432,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -12501,7 +12501,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -12570,7 +12570,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -12752,7 +12752,7 @@
           "width": 393,
           "height": 732,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -12786,7 +12786,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "P8lYLu",
                   "fill": "$hairline",
                   "width": 40,
@@ -12809,7 +12809,7 @@
                   "width": "fill_container",
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -12847,7 +12847,7 @@
                       "width": 20,
                       "height": 20,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 10,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -12881,7 +12881,7 @@
               "name": "Results",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "layout": "vertical",
               "children": [
                 {
@@ -12904,7 +12904,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -12976,7 +12976,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -13048,7 +13048,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -13120,7 +13120,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -13240,8 +13240,8 @@
           "height": 672,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -13277,7 +13277,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 2,
                   "id": "HWPaf",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -13324,7 +13324,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 28,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -13375,7 +13375,7 @@
                   "width": 32,
                   "height": 32,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -13412,7 +13412,7 @@
                   "name": "Card 1",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -13435,7 +13435,7 @@
                           "width": 32,
                           "height": 32,
                           "fill": "$accentDim",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 16,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -13603,7 +13603,7 @@
                   "name": "Card 2",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -13626,7 +13626,7 @@
                           "width": 32,
                           "height": 32,
                           "fill": "$accentDim",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 16,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -13794,7 +13794,7 @@
                   "name": "Card 3",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -13817,7 +13817,7 @@
                           "width": 32,
                           "height": 32,
                           "fill": "$accentDim",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 16,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -14031,7 +14031,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -14106,7 +14106,7 @@
               "width": 36,
               "height": 36,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -14161,7 +14161,7 @@
               "name": "Card Identificacion",
               "width": "fill_container",
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -14186,7 +14186,7 @@
                   "width": "fill_container",
                   "height": 48,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "padding": [
                     0,
                     14
@@ -14211,7 +14211,7 @@
                   "width": "fill_container",
                   "height": 48,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "padding": [
                     0,
                     14
@@ -14243,7 +14243,7 @@
                       "width": "fill_container",
                       "height": 48,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "padding": [
                         0,
                         14
@@ -14268,7 +14268,7 @@
                       "width": "fill_container",
                       "height": 48,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "padding": [
                         0,
                         14
@@ -14295,7 +14295,7 @@
                   "width": "fill_container",
                   "height": 44,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$accentDimBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -14331,7 +14331,7 @@
               "name": "Card Combustible",
               "width": "fill_container",
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -14355,7 +14355,7 @@
                   "name": "segCtl",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "padding": 4,
                   "children": [
                     {
@@ -14365,7 +14365,7 @@
                       "width": "fill_container",
                       "height": 36,
                       "fill": "$accent",
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": 8,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -14386,7 +14386,7 @@
                       "name": "segB",
                       "width": "fill_container",
                       "height": 36,
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": 8,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -14417,7 +14417,7 @@
                       "width": "fill_container",
                       "height": 48,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "padding": [
                         0,
                         14
@@ -14442,7 +14442,7 @@
                       "width": "fill_container",
                       "height": 48,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "padding": [
                         0,
                         14
@@ -14469,7 +14469,7 @@
                   "width": "fill_container",
                   "height": 48,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "padding": [
                     0,
                     14
@@ -14495,7 +14495,7 @@
               "name": "Card Carga",
               "width": "fill_container",
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -14519,7 +14519,7 @@
                   "name": "Slider Piloto",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "layout": "vertical",
                   "gap": 8,
                   "padding": [
@@ -14549,7 +14549,7 @@
                               "width": 36,
                               "height": 20,
                               "fill": "$accent",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 10,
                               "padding": [
                                 0,
                                 2
@@ -14595,12 +14595,12 @@
                       "width": "fill_container",
                       "height": 4,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-xs",
+                      "cornerRadius": 2,
                       "layout": "none",
                       "children": [
                         {
                           "type": "rectangle",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 2,
                           "id": "hbWBU",
                           "x": 0,
                           "y": 0,
@@ -14627,7 +14627,7 @@
                   "name": "Slider Copiloto",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "layout": "vertical",
                   "gap": 8,
                   "padding": [
@@ -14657,7 +14657,7 @@
                               "width": 36,
                               "height": 20,
                               "fill": "$cardBorder",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 10,
                               "padding": [
                                 0,
                                 2
@@ -14703,7 +14703,7 @@
                   "name": "Slider Maletero",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "layout": "vertical",
                   "gap": 8,
                   "padding": [
@@ -14733,7 +14733,7 @@
                               "width": 36,
                               "height": 20,
                               "fill": "$accent",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 10,
                               "padding": [
                                 0,
                                 2
@@ -14779,12 +14779,12 @@
                       "width": "fill_container",
                       "height": 4,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-xs",
+                      "cornerRadius": 2,
                       "layout": "none",
                       "children": [
                         {
                           "type": "rectangle",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 2,
                           "id": "yKRbp",
                           "x": 0,
                           "y": 0,
@@ -14811,7 +14811,7 @@
                   "name": "Card Autonomia",
                   "width": "fill_container",
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$accentDimBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -14923,7 +14923,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -14993,8 +14993,8 @@
           "height": 712,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -15030,7 +15030,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 2,
                   "id": "vtuJV",
                   "fill": "$hairline",
                   "width": 40,
@@ -15066,7 +15066,7 @@
                       "width": 32,
                       "height": 32,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 16,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -15109,7 +15109,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 48,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -15177,7 +15177,7 @@
                   "name": "Card Cuenta",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -15290,7 +15290,7 @@
                           "id": "orEnP",
                           "name": "planBadge",
                           "fill": "$accentDim",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 999,
                           "padding": [
                             4,
                             10
@@ -15319,7 +15319,7 @@
                   "name": "Card Preferencias",
                   "width": "fill_container",
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -15569,7 +15569,7 @@
                       "width": "fill_container",
                       "height": 56,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "stroke": "$error",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -15675,7 +15675,7 @@
           "width": 393,
           "height": 680,
           "fill": "$bgPrimary",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 24,
           "stroke": "$hairline",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -15738,7 +15738,7 @@
               "width": 393,
               "height": 520,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -15771,7 +15771,7 @@
                   "children": [
                     {
                       "type": "rectangle",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 2,
                       "id": "RoCOM",
                       "fill": "$hairline",
                       "width": 36,
@@ -15802,7 +15802,7 @@
               "width": 393,
               "height": 410,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -15835,7 +15835,7 @@
                   "children": [
                     {
                       "type": "rectangle",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 2,
                       "id": "t7pVRP",
                       "fill": "$hairline",
                       "width": 36,
@@ -15866,7 +15866,7 @@
               "width": 393,
               "height": 290,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -15899,7 +15899,7 @@
                   "children": [
                     {
                       "type": "rectangle",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 2,
                       "id": "fCofB",
                       "fill": "$accent",
                       "width": 36,
@@ -15965,7 +15965,7 @@
           "width": 300,
           "height": 530,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -16109,7 +16109,7 @@
               "name": "note",
               "width": "fill_container",
               "fill": "$accentDim",
-              "cornerRadius": "$radius-md",
+              "cornerRadius": 10,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -16231,7 +16231,7 @@
           "width": 393,
           "height": 572,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -16264,7 +16264,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "YDfgs",
                   "fill": "$hairline",
                   "width": 40,
@@ -16286,7 +16286,7 @@
                   "width": 56,
                   "height": 56,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -16337,7 +16337,7 @@
                   "width": 32,
                   "height": 32,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -16361,7 +16361,7 @@
               "width": "fill_container",
               "height": 140,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "layout": "none",
               "children": [
                 {
@@ -16414,7 +16414,7 @@
               "name": "stats2",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "padding": [
                 12,
                 8
@@ -16543,7 +16543,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -16578,7 +16578,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -16633,7 +16633,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -16703,8 +16703,8 @@
           "height": 552,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -16737,7 +16737,7 @@
                   "children": [
                     {
                       "type": "rectangle",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 2,
                       "id": "Y5MZd",
                       "fill": "$hairline",
                       "width": 40,
@@ -16783,7 +16783,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 28,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -16834,7 +16834,7 @@
                       "width": 32,
                       "height": 32,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 16,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -16871,7 +16871,7 @@
                       "name": "card3a",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-xl",
+                      "cornerRadius": 20,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -16894,7 +16894,7 @@
                               "width": 40,
                               "height": 40,
                               "fill": "$accentDim",
-                              "cornerRadius": "$radius-lg",
+                              "cornerRadius": 12,
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -17131,7 +17131,7 @@
                               "id": "u8vn2J",
                               "name": "c3afc",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$cardBorder",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -17163,7 +17163,7 @@
                       "name": "card3b",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-xl",
+                      "cornerRadius": 20,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -17186,7 +17186,7 @@
                               "width": 40,
                               "height": 40,
                               "fill": "$accentDim",
-                              "cornerRadius": "$radius-lg",
+                              "cornerRadius": 12,
                               "justifyContent": "center",
                               "alignItems": "center",
                               "children": [
@@ -17423,7 +17423,7 @@
                               "id": "BAayp",
                               "name": "c3bfc",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$cardBorder",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -17496,7 +17496,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -17803,7 +17803,7 @@
       "name": "Notes · Add Stop UX",
       "width": 380,
       "fill": "$bgGradientEnd",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "$cardBorder",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -18284,8 +18284,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -18322,7 +18322,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "fORXK",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -18350,7 +18350,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -18381,7 +18381,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -18404,7 +18404,7 @@
               "name": "codeSection",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -18438,7 +18438,7 @@
                   "id": "w3Yoz",
                   "name": "copyBtn",
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$accentDimBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -18477,7 +18477,7 @@
               "name": "qrSection",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -18493,7 +18493,7 @@
                   "width": 140,
                   "height": 140,
                   "fill": "#FFFFFF",
-                  "cornerRadius": "$radius-md",
+                  "cornerRadius": 8,
                   "layout": "none",
                   "children": [
                     {
@@ -18875,7 +18875,7 @@
                   "width": "fill_container",
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 12,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -18889,7 +18889,7 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "#00000000",
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": 8,
                       "stroke": "#00000000",
                       "strokeAlignment": "inner",
                       "gap": 6,
@@ -18923,7 +18923,7 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": 8,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -18981,7 +18981,7 @@
                   "width": "fill_container",
                   "height": 52,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -19034,7 +19034,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -19209,8 +19209,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -19247,7 +19247,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "EPPPJ",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -19275,7 +19275,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -19325,7 +19325,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -19348,7 +19348,7 @@
               "name": "banner",
               "width": "fill_container",
               "fill": "$accentDim",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -19366,7 +19366,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgPrimary",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -19425,7 +19425,7 @@
                   "name": "member_KP",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -19461,7 +19461,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 22,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -19506,7 +19506,7 @@
                               "id": "jjEzX",
                               "name": "roleBadge",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$accent",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -19594,7 +19594,7 @@
                   "name": "member_DG",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -19630,7 +19630,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 22,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -19675,7 +19675,7 @@
                               "id": "jPwFn",
                               "name": "roleBadge",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$iconMuted",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -19747,7 +19747,7 @@
                               "id": "JM1er",
                               "name": "weakBadge",
                               "fill": "$accentDim",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$accent",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -19800,7 +19800,7 @@
                   "name": "member_JS",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -19836,7 +19836,7 @@
                           }
                         ]
                       },
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 22,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -19881,7 +19881,7 @@
                               "id": "MhNfW",
                               "name": "roleBadge",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$iconMuted",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -19972,7 +19972,7 @@
               "width": "fill_container",
               "height": 56,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 999,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -20138,8 +20138,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -20176,7 +20176,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "OI81T",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -20204,7 +20204,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -20235,7 +20235,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -20287,7 +20287,7 @@
                   "name": "card_highway",
                   "width": "fill_container",
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -20305,7 +20305,7 @@
                       "width": 48,
                       "height": 48,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 24,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -20365,7 +20365,7 @@
                   "name": "card_offroad",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -20383,7 +20383,7 @@
                       "width": 48,
                       "height": 48,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 24,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -20443,7 +20443,7 @@
                   "name": "card_longtrip",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -20461,7 +20461,7 @@
                       "width": 48,
                       "height": 48,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 24,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -20542,7 +20542,7 @@
                   "width": "fill_container",
                   "height": 60,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -20556,7 +20556,7 @@
                       "width": "fill_container",
                       "height": "fill_container",
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-md",
+                      "cornerRadius": 10,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -20657,7 +20657,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -20816,7 +20816,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -20869,7 +20869,7 @@
                   "width": 72,
                   "height": 72,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 36,
                   "stroke": "$accentDimBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -20937,7 +20937,7 @@
                   "width": "fill_container",
                   "height": 64,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -20974,7 +20974,7 @@
                       "id": "P9eXxM",
                       "name": "pasteBtn",
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -21049,7 +21049,7 @@
               "width": "fill_container",
               "height": 56,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -21121,7 +21121,7 @@
                       "name": "moto_XTZ 250",
                       "width": "fill_container",
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "stroke": "$accent",
                       "strokeWidth": 2,
                       "strokeAlignment": "inner",
@@ -21139,7 +21139,7 @@
                           "width": 40,
                           "height": 40,
                           "fill": "$bgGradientEnd",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 20,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -21199,7 +21199,7 @@
                       "name": "moto_Duke 390",
                       "width": "fill_container",
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 14,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -21217,7 +21217,7 @@
                           "width": 40,
                           "height": 40,
                           "fill": "$bgGradientEnd",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 20,
                           "justifyContent": "center",
                           "alignItems": "center",
                           "children": [
@@ -21300,7 +21300,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -21473,8 +21473,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -21511,7 +21511,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "vlhnW",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -21539,7 +21539,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -21589,7 +21589,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -21612,7 +21612,7 @@
               "name": "weakBanner",
               "width": "fill_container",
               "fill": "$accentDim",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$accent",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -21630,7 +21630,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgPrimary",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -21699,7 +21699,7 @@
                   "name": "stop_125",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -21717,7 +21717,7 @@
                       "width": 60,
                       "height": 60,
                       "fill": "$stopFuel",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 12,
                       "layout": "vertical",
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -21826,7 +21826,7 @@
                   "name": "stop_260",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -21844,7 +21844,7 @@
                       "width": 60,
                       "height": 60,
                       "fill": "$stopFuel",
-                      "cornerRadius": "$radius-lg",
+                      "cornerRadius": 12,
                       "layout": "vertical",
                       "justifyContent": "center",
                       "alignItems": "center",
@@ -21955,7 +21955,7 @@
               "name": "stretchSummary",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -21973,7 +21973,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgGradientEnd",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -22043,7 +22043,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -22168,7 +22168,7 @@
           "width": 393,
           "height": 572,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -22201,7 +22201,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "zITK9",
                   "fill": "$hairline",
                   "width": 40,
@@ -22223,7 +22223,7 @@
                   "width": 56,
                   "height": 56,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -22274,7 +22274,7 @@
                   "width": 32,
                   "height": 32,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 16,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -22298,7 +22298,7 @@
               "width": "fill_container",
               "height": 140,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "layout": "none",
               "children": [
                 {
@@ -22351,7 +22351,7 @@
               "name": "stats2",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "padding": [
                 12,
                 8
@@ -22479,7 +22479,7 @@
                   "name": "partyBanner",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$accentDimBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -22530,7 +22530,7 @@
                           "id": "N2PjqZ",
                           "name": "shareLink",
                           "fill": "$accentDim",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 999,
                           "stroke": "$accentDimBorder",
                           "strokeWidth": 1,
                           "strokeAlignment": "inner",
@@ -22603,7 +22603,7 @@
                                   }
                                 ]
                               },
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 16,
                               "stroke": "$bgCard",
                               "strokeWidth": 2,
                               "strokeAlignment": "outer",
@@ -22646,7 +22646,7 @@
                                   }
                                 ]
                               },
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 16,
                               "stroke": "$bgCard",
                               "strokeWidth": 2,
                               "strokeAlignment": "outer",
@@ -22689,7 +22689,7 @@
                                   }
                                 ]
                               },
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 16,
                               "stroke": "$bgCard",
                               "strokeWidth": 2,
                               "strokeAlignment": "outer",
@@ -22714,7 +22714,7 @@
                               "width": 32,
                               "height": 32,
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 16,
                               "stroke": "$bgCard",
                               "strokeWidth": 2,
                               "strokeAlignment": "outer",
@@ -22765,7 +22765,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -22820,7 +22820,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -23040,7 +23040,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-2xl",
+                  "cornerRadius": 28,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -23100,7 +23100,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -23140,7 +23140,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -23227,7 +23227,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -23453,7 +23453,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -23516,7 +23516,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -23556,7 +23556,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -23596,7 +23596,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -23659,7 +23659,7 @@
                   "width": 22,
                   "height": 22,
                   "fill": "$accent",
-                  "cornerRadius": "$radius-sm",
+                  "cornerRadius": 6,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -23713,7 +23713,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -23967,7 +23967,7 @@
           "width": 48,
           "height": 48,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 24,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -24004,7 +24004,7 @@
           "width": 393,
           "height": 592,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -24038,7 +24038,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "t45XDy",
                   "fill": "$hairline",
                   "width": 40,
@@ -24053,7 +24053,7 @@
               "width": "fill_container",
               "height": 44,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "gap": 10,
               "padding": [
                 0,
@@ -24106,7 +24106,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 14,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24137,7 +24137,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -24154,7 +24154,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -24188,7 +24188,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -24205,7 +24205,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -24239,7 +24239,7 @@
                   "width": "fill_container",
                   "height": 96,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 18,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -24256,7 +24256,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -24335,7 +24335,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24404,7 +24404,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24473,7 +24473,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 20,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24533,7 +24533,7 @@
               "name": "joinPartyBanner",
               "width": "fill_container",
               "fill": "$accentDim",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -24551,7 +24551,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgPrimary",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24743,8 +24743,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -24781,7 +24781,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "JrCjX",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -24809,7 +24809,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24840,7 +24840,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24863,7 +24863,7 @@
               "name": "summary",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "gap": 12,
               "padding": [
                 12,
@@ -24878,7 +24878,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -24948,7 +24948,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -25015,7 +25015,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$accent",
                       "strokeWidth": 2,
                       "strokeAlignment": "inner",
@@ -25054,7 +25054,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25093,7 +25093,7 @@
                       "width": "fill_container",
                       "height": 44,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25154,7 +25154,7 @@
                   "width": "fill_container",
                   "height": 80,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25191,7 +25191,7 @@
                   "width": "fill_container",
                   "height": 56,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25234,7 +25234,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -25409,8 +25409,8 @@
           "height": 720,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -25447,7 +25447,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "cqr1W",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -25475,7 +25475,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25525,7 +25525,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -25555,7 +25555,7 @@
                   "name": "chip_food",
                   "height": 36,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$accent",
                   "strokeWidth": 2,
                   "strokeAlignment": "inner",
@@ -25593,7 +25593,7 @@
                   "name": "chip_fuel",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25631,7 +25631,7 @@
                   "name": "chip_tour",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25669,7 +25669,7 @@
                   "name": "chip_rest",
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25717,7 +25717,7 @@
                   "name": "poi_Andrés",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25735,7 +25735,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -25807,7 +25807,7 @@
                               "id": "nv7uN",
                               "name": "onRoute",
                               "fill": "#00000000",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$check",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -25839,7 +25839,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25865,7 +25865,7 @@
                   "name": "poi_La",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -25883,7 +25883,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -25970,7 +25970,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -25996,7 +25996,7 @@
                   "name": "poi_Trattoria",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -26014,7 +26014,7 @@
                       "width": 40,
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 20,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -26086,7 +26086,7 @@
                               "id": "Q3Cmw",
                               "name": "onRoute",
                               "fill": "#00000000",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$check",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -26118,7 +26118,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -26276,7 +26276,7 @@
           "name": "modal",
           "width": 340,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 24,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -26307,7 +26307,7 @@
               "width": 80,
               "height": 80,
               "fill": "$check",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -26361,7 +26361,7 @@
               "name": "routePreview",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 16,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -26387,7 +26387,7 @@
                       "width": 36,
                       "height": 36,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 18,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -26472,7 +26472,7 @@
                               }
                             ]
                           },
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 12,
                           "stroke": "$bgCard",
                           "strokeWidth": 2,
                           "strokeAlignment": "outer",
@@ -26515,7 +26515,7 @@
                               }
                             ]
                           },
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 12,
                           "stroke": "$bgCard",
                           "strokeWidth": 2,
                           "strokeAlignment": "outer",
@@ -26558,7 +26558,7 @@
                               }
                             ]
                           },
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 12,
                           "stroke": "$bgCard",
                           "strokeWidth": 2,
                           "strokeAlignment": "outer",
@@ -26626,7 +26626,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 16,
                   "effect": {
                     "type": "shadow",
                     "shadowType": "outer",
@@ -26841,8 +26841,8 @@
           "height": 652,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -26878,7 +26878,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "hczu5",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -26906,7 +26906,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -26943,7 +26943,7 @@
                       "id": "O6u78W",
                       "name": "partyChip",
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$accentDimBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -26984,7 +26984,7 @@
                   "width": 44,
                   "height": 44,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 22,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -27015,7 +27015,7 @@
                   "name": "wpStart",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "gap": 12,
                   "padding": [
                     12,
@@ -27064,7 +27064,7 @@
                               "id": "C68Ifp",
                               "name": "kindChip",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$stopStart",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -27116,7 +27116,7 @@
                   "name": "wpFood",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "gap": 12,
                   "padding": [
                     12,
@@ -27165,7 +27165,7 @@
                               "id": "m8h1p",
                               "name": "kindChip",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$stopFood",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -27219,7 +27219,7 @@
                       "width": 28,
                       "height": 28,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 14,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -27242,7 +27242,7 @@
                   "name": "wpFuel",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "gap": 12,
                   "padding": [
                     12,
@@ -27291,7 +27291,7 @@
                               "id": "VGL4k",
                               "name": "kindChip",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$stopFuel",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -27345,7 +27345,7 @@
                       "width": 28,
                       "height": 28,
                       "fill": "$bgGradientEnd",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 14,
                       "justifyContent": "center",
                       "alignItems": "center",
                       "children": [
@@ -27368,7 +27368,7 @@
                   "name": "wpDest",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-xl",
+                  "cornerRadius": 20,
                   "gap": 12,
                   "padding": [
                     12,
@@ -27417,7 +27417,7 @@
                               "id": "a8k6gL",
                               "name": "kindChip",
                               "fill": "$bgGradientEnd",
-                              "cornerRadius": "$radius-pill",
+                              "cornerRadius": 999,
                               "stroke": "$stopDestination",
                               "strokeWidth": 1,
                               "strokeAlignment": "inner",
@@ -27475,7 +27475,7 @@
               "width": "fill_container(361)",
               "height": 56,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 999,
               "stroke": "$accentDimBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -27509,7 +27509,7 @@
               "name": "stats",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "padding": [
                 12,
                 8
@@ -27630,7 +27630,7 @@
               "width": "fill_container",
               "height": 64,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -27670,7 +27670,7 @@
               "name": "readOnlyBanner",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 12,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -27799,7 +27799,7 @@
           "width": 361,
           "height": 148,
           "fill": "#0D0D0DF2",
-          "cornerRadius": "$radius-xl",
+          "cornerRadius": 22,
           "stroke": "$hairline",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -27842,7 +27842,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -27910,7 +27910,7 @@
           "width": 36,
           "height": 36,
           "fill": "$accentDim",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 18,
           "justifyContent": "center",
           "alignItems": "center",
           "children": [
@@ -27921,7 +27921,7 @@
               "width": 30,
               "height": 30,
               "fill": "$accent",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 15,
               "stroke": "$textPrimary",
               "strokeWidth": 2,
               "strokeAlignment": "outer",
@@ -27950,7 +27950,7 @@
           "width": 152,
           "height": 32,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 999,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28017,7 +28017,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28054,7 +28054,7 @@
           "width": 56,
           "height": 56,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28092,8 +28092,8 @@
           "height": 136,
           "fill": "$bgPrimary",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -28119,7 +28119,7 @@
               "width": 80,
               "height": 80,
               "fill": "$bgGradientEnd",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 18,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -28221,7 +28221,7 @@
               "width": 80,
               "height": 80,
               "fill": "$error",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 40,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",
@@ -28257,7 +28257,7 @@
           "width": 361,
           "height": 40,
           "fill": "$accentDim",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 999,
           "stroke": "$accent",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28317,7 +28317,7 @@
           "name": "partyMiniBadge",
           "height": 36,
           "fill": "#0D0D0DEE",
-          "cornerRadius": "$radius-pill",
+          "cornerRadius": 999,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28372,7 +28372,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 12,
                   "stroke": "#0D0D0DEE",
                   "strokeWidth": 2,
                   "strokeAlignment": "outer",
@@ -28415,7 +28415,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 12,
                   "stroke": "#0D0D0DEE",
                   "strokeWidth": 2,
                   "strokeAlignment": "outer",
@@ -28458,7 +28458,7 @@
                       }
                     ]
                   },
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 12,
                   "stroke": "#0D0D0DEE",
                   "strokeWidth": 2,
                   "strokeAlignment": "outer",
@@ -28629,7 +28629,7 @@
       "width": 2200,
       "height": 1200,
       "fill": "$bgPrimary",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "$cardBorder",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -28674,7 +28674,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28689,7 +28689,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -28737,7 +28737,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28752,7 +28752,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -28800,7 +28800,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28815,7 +28815,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -28863,7 +28863,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28878,7 +28878,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -28926,7 +28926,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -28941,7 +28941,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -28989,7 +28989,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29004,7 +29004,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29052,7 +29052,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29067,7 +29067,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29115,7 +29115,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29130,7 +29130,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29178,7 +29178,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29193,7 +29193,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29241,7 +29241,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29256,7 +29256,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29304,7 +29304,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29319,7 +29319,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29367,7 +29367,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$check",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29382,7 +29382,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29430,7 +29430,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$error",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29445,7 +29445,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29493,7 +29493,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$accent",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29508,7 +29508,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29556,7 +29556,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29571,7 +29571,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29619,7 +29619,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29634,7 +29634,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29682,7 +29682,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29697,7 +29697,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29745,7 +29745,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29760,7 +29760,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -29808,7 +29808,7 @@
           "width": 160,
           "height": 100,
           "fill": "$bgCard",
-          "cornerRadius": "$radius-lg",
+          "cornerRadius": 14,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -29823,7 +29823,7 @@
               "width": 36,
               "height": 36,
               "fill": "$accentDim",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 18,
               "justifyContent": "center",
               "alignItems": "center",
               "children": [
@@ -30022,7 +30022,7 @@
           "name": "Legend",
           "width": 220,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-md",
+          "cornerRadius": 10,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -30049,7 +30049,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "RpF3s",
                   "fill": "$accent",
                   "width": 24,
@@ -30109,7 +30109,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "DMpbG",
                   "fill": "$error",
                   "width": 24,
@@ -30135,7 +30135,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "XZyoS",
                   "fill": "$check",
                   "width": 24,
@@ -30521,7 +30521,7 @@
           "name": "Leyenda",
           "width": 220,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-md",
+          "cornerRadius": 10,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -30549,7 +30549,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "wXdzp",
                   "fill": "$accent",
                   "width": 24,
@@ -30611,7 +30611,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "z6KIji",
                   "fill": "$error",
                   "width": 24,
@@ -30638,7 +30638,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 1,
                   "id": "UNhXA",
                   "fill": "$check",
                   "width": 24,
@@ -30668,7 +30668,7 @@
       "clip": true,
       "width": 1560,
       "fill": "$bgPrimary",
-      "cornerRadius": "$radius-2xl",
+      "cornerRadius": 24,
       "layout": "vertical",
       "gap": 24,
       "padding": 32,
@@ -30716,7 +30716,7 @@
               "width": "fill_container",
               "height": 480,
               "fill": "#121212",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -31245,7 +31245,7 @@
               "width": "fill_container",
               "height": 480,
               "fill": "#121212",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -31571,7 +31571,7 @@
               "width": "fill_container",
               "height": 480,
               "fill": "#121212",
-              "cornerRadius": "$radius-xl",
+              "cornerRadius": 20,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -31651,7 +31651,7 @@
                               "children": [
                                 {
                                   "type": "rectangle",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 6,
                                   "id": "Z0wPE",
                                   "x": 0,
                                   "y": 0,
@@ -31662,7 +31662,7 @@
                                 },
                                 {
                                   "type": "rectangle",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 3,
                                   "id": "ldc0m",
                                   "x": 2,
                                   "y": 3,
@@ -31845,7 +31845,7 @@
                               "children": [
                                 {
                                   "type": "rectangle",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 3,
                                   "id": "A6wtu",
                                   "x": 2,
                                   "y": 3,
@@ -31924,7 +31924,7 @@
                                   "width": 26,
                                   "height": 26,
                                   "fill": "$stopRest",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 13,
                                   "stroke": "$bgPrimary",
                                   "strokeWidth": 2,
                                   "strokeAlignment": "inner",
@@ -31952,7 +31952,7 @@
                                   "width": 26,
                                   "height": 26,
                                   "fill": "$stopStart",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 13,
                                   "stroke": "$bgPrimary",
                                   "strokeWidth": 2,
                                   "strokeAlignment": "inner",
@@ -31980,7 +31980,7 @@
                                   "width": 26,
                                   "height": 26,
                                   "fill": "$stopFuel",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 13,
                                   "stroke": "$bgPrimary",
                                   "strokeWidth": 2,
                                   "strokeAlignment": "inner",
@@ -32053,7 +32053,7 @@
       "width": 44,
       "height": 44,
       "fill": "#FF98001F",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "#FF98004F",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -32082,7 +32082,7 @@
       "width": 44,
       "height": 44,
       "fill": "#9B59B61F",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "#9B59B64F",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -32111,7 +32111,7 @@
       "width": 44,
       "height": 44,
       "fill": "#3DA5D91F",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "#3DA5D94F",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -32140,7 +32140,7 @@
       "width": 44,
       "height": 44,
       "fill": "#E744461F",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "#E744464F",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -32169,7 +32169,7 @@
       "width": 44,
       "height": 44,
       "fill": "#E8A0301F",
-      "cornerRadius": "$radius-lg",
+      "cornerRadius": 14,
       "stroke": "#E8A0304F",
       "strokeWidth": 1,
       "strokeAlignment": "inner",
@@ -32310,7 +32310,7 @@
               "width": 44,
               "height": 44,
               "fill": "#242424CC",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 22,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -32340,7 +32340,7 @@
           "clip": true,
           "width": 393,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -32374,7 +32374,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "heUyY",
                   "name": "bar",
                   "fill": "$hairline",
@@ -32435,7 +32435,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -32467,7 +32467,7 @@
                   "name": "pill 248 km",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -32504,7 +32504,7 @@
                   "name": "pill 4h 10",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -32541,7 +32541,7 @@
                   "name": "pill ×1",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -32578,7 +32578,7 @@
                   "name": "pill +1200",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -32935,7 +32935,7 @@
                                       }
                                     ]
                                   },
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 999,
                                   "padding": 3,
                                   "justifyContent": "end",
                                   "alignItems": "center",
@@ -32989,7 +32989,7 @@
                                   "width": 46,
                                   "height": 28,
                                   "fill": "$hairline",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 999,
                                   "padding": 3,
                                   "alignItems": "center",
                                   "children": [
@@ -33042,7 +33042,7 @@
                                   "width": 46,
                                   "height": 28,
                                   "fill": "$hairline",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 999,
                                   "padding": 3,
                                   "alignItems": "center",
                                   "children": [
@@ -33095,7 +33095,7 @@
                                   "width": 46,
                                   "height": 28,
                                   "fill": "$hairline",
-                                  "cornerRadius": "$radius-pill",
+                                  "cornerRadius": 999,
                                   "padding": 3,
                                   "alignItems": "center",
                                   "children": [
@@ -33532,7 +33532,7 @@
               "width": 44,
               "height": 44,
               "fill": "#242424CC",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 22,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -33562,7 +33562,7 @@
           "clip": true,
           "width": 393,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -33596,7 +33596,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "QqjBC",
                   "name": "bar",
                   "fill": "$hairline",
@@ -33657,7 +33657,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -33689,7 +33689,7 @@
                   "name": "pill 248 km",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -33726,7 +33726,7 @@
                   "name": "pill 4h 10",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -33763,7 +33763,7 @@
                   "name": "pill ×1",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -33800,7 +33800,7 @@
                   "name": "pill +1200",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -34187,16 +34187,16 @@
                           "width": "fill_container",
                           "height": 12,
                           "fill": "$hairline",
-                          "cornerRadius": "$radius-pill",
+                          "cornerRadius": 999,
                           "layout": "none",
                           "children": [
                             {
                               "type": "rectangle",
                               "cornerRadius": [
-                                "$radius-sm",
+                                6,
                                 0,
                                 0,
-                                "$radius-sm"
+                                6
                               ],
                               "id": "AfmV3",
                               "x": 0,
@@ -34608,7 +34608,7 @@
               "width": 44,
               "height": 44,
               "fill": "#242424CC",
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 22,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -34638,7 +34638,7 @@
           "clip": true,
           "width": 393,
           "fill": "$bgGradientEnd",
-          "cornerRadius": "$radius-2xl",
+          "cornerRadius": 28,
           "stroke": "$cardBorder",
           "strokeWidth": 1,
           "strokeAlignment": "inner",
@@ -34672,7 +34672,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 3,
                   "id": "CotdG",
                   "name": "bar",
                   "fill": "$hairline",
@@ -34733,7 +34733,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -34765,7 +34765,7 @@
                   "name": "pill 248 km",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -34802,7 +34802,7 @@
                   "name": "pill 4h 10",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -34839,7 +34839,7 @@
                   "name": "pill ×1",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -34876,7 +34876,7 @@
                   "name": "pill +1200",
                   "width": "fill_container",
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "gap": 6,
                   "padding": [
                     7,
@@ -35684,7 +35684,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -35719,7 +35719,7 @@
               "width": "fill_container",
               "height": 52,
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -36408,8 +36408,8 @@
           "height": 678,
           "fill": "$bgGradientEnd",
           "cornerRadius": [
-            "$radius-2xl",
-            "$radius-2xl",
+            28,
+            28,
             0,
             0
           ],
@@ -36446,7 +36446,7 @@
               "children": [
                 {
                   "type": "rectangle",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 999,
                   "id": "OYdmg",
                   "name": "grabber",
                   "fill": "$hairline",
@@ -36517,7 +36517,7 @@
                   "width": 36,
                   "height": 36,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-pill",
+                  "cornerRadius": 18,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -36541,7 +36541,7 @@
               "name": "changePlace",
               "width": "fill_container",
               "fill": "$bgCard",
-              "cornerRadius": "$radius-lg",
+              "cornerRadius": 14,
               "stroke": "$cardBorder",
               "strokeWidth": 1,
               "strokeAlignment": "inner",
@@ -36556,7 +36556,7 @@
                   "width": 40,
                   "height": 40,
                   "fill": "$accentDim",
-                  "cornerRadius": "$radius-md",
+                  "cornerRadius": 10,
                   "justifyContent": "center",
                   "alignItems": "center",
                   "children": [
@@ -36649,7 +36649,7 @@
                       "name": "Tanqueo",
                       "height": 42,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$accent",
                       "strokeWidth": 2,
                       "strokeAlignment": "inner",
@@ -36689,7 +36689,7 @@
                       "name": "Comida",
                       "height": 42,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -36729,7 +36729,7 @@
                       "name": "Turismo",
                       "height": 42,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -36778,7 +36778,7 @@
                       "name": "Descanso",
                       "height": 42,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -36841,7 +36841,7 @@
                   "width": "fill_container",
                   "height": 52,
                   "fill": "$bgCard",
-                  "cornerRadius": "$radius-lg",
+                  "cornerRadius": 14,
                   "stroke": "$cardBorder",
                   "strokeWidth": 1,
                   "strokeAlignment": "inner",
@@ -36898,7 +36898,7 @@
                       "name": "Sin pausa",
                       "height": 40,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -36927,7 +36927,7 @@
                       "name": "15 min",
                       "height": 40,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -36956,7 +36956,7 @@
                       "name": "30 min",
                       "height": 40,
                       "fill": "$accentDim",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$accent",
                       "strokeWidth": 2,
                       "strokeAlignment": "inner",
@@ -36985,7 +36985,7 @@
                       "name": "45 min",
                       "height": 40,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -37023,7 +37023,7 @@
                       "name": "60 min",
                       "height": 40,
                       "fill": "$bgCard",
-                      "cornerRadius": "$radius-pill",
+                      "cornerRadius": 999,
                       "stroke": "$cardBorder",
                       "strokeWidth": 1,
                       "strokeAlignment": "inner",
@@ -37075,7 +37075,7 @@
                   }
                 ]
               },
-              "cornerRadius": "$radius-pill",
+              "cornerRadius": 999,
               "effect": {
                 "type": "shadow",
                 "shadowType": "outer",

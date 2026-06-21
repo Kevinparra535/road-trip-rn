@@ -29,12 +29,14 @@ import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import ArrivalPanel from '@/ui/components/ArrivalPanel';
 import BottomSheet, { type BottomSheetHandle } from '@/ui/components/BottomSheet';
 import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
+import MotionPressable from '@/ui/components/MotionPressable';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
@@ -440,30 +442,30 @@ const HomeScreen = observer(() => {
       </Mapbox.MapView>
 
       {DEV_FLAGS.mockDestination && !viewModel.hasDestination && viewModel.hasLocation ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
+        <MotionPressable
           style={styles.testRouteButton}
           testID="home-test-route-fab"
           accessibilityRole="button"
           accessibilityLabel="Trazar ruta de prueba"
+          haptic="selection"
           onPress={() => viewModel.selectDestination(DEV_FAKE_DESTINATION)}
         >
           <Ionicons name="flask" size={15} color={Colors.base.accent} />
           <Text style={styles.testRouteText}>Ruta de prueba</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       ) : null}
 
       {!viewModel.hasDestination && viewModel.hasLocation ? (
-        <TouchableOpacity
-          activeOpacity={0.9}
+        <MotionPressable
           style={styles.locateButton}
           testID="home-locate-fab"
           accessibilityRole="button"
           accessibilityLabel="Centrar en mi ubicación"
+          haptic="selection"
           onPress={recenterOnUser}
         >
           <Ionicons name="locate" size={24} color={Colors.base.accent} />
-        </TouchableOpacity>
+        </MotionPressable>
       ) : null}
 
       <RouteDraftRecoveryModal
@@ -535,13 +537,13 @@ const HomeScreen = observer(() => {
           ) : null}
 
           {/* Boton flotante de silenciar voz turn-by-turn. */}
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <MotionPressable
             style={styles.navMute}
             accessibilityRole="button"
             accessibilityLabel={
               viewModel.isMuted ? 'Activar anuncios de voz' : 'Silenciar anuncios de voz'
             }
+            haptic="selection"
             onPress={() => viewModel.toggleMute()}
           >
             <Ionicons
@@ -549,15 +551,15 @@ const HomeScreen = observer(() => {
               size={22}
               color={viewModel.isMuted ? Colors.base.textMuted : Colors.base.accent}
             />
-          </TouchableOpacity>
+          </MotionPressable>
 
           {/* Boton flotante de recentrar: vuelve a seguir al rider (heading-up)
               tras pan-mover el mapa. Siempre visible durante la navegacion. */}
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <MotionPressable
             style={styles.navRecenter}
             accessibilityRole="button"
             accessibilityLabel="Recentrar en mi posición"
+            haptic="selection"
             onPress={() => {
               const target = viewModel.navCameraTarget;
               if (target) {
@@ -569,12 +571,12 @@ const HomeScreen = observer(() => {
             }}
           >
             <Ionicons name="locate" size={22} color={Colors.base.textPrimary} />
-          </TouchableOpacity>
+          </MotionPressable>
 
           {/* Panel inferior grande (compartido por 6a y 6b). */}
           {viewModel.navRemaining ? (
             <SafeAreaView edges={['bottom']} style={styles.navBarSafe}>
-              <View style={styles.navBar}>
+              <AnimatedListItem style={styles.navBar}>
                 {viewModel.navSpeedLabel !== null ? (
                   <View style={styles.navSpeedBox}>
                     <Text style={styles.navSpeedValue}>{viewModel.navSpeedLabel}</Text>
@@ -599,16 +601,16 @@ const HomeScreen = observer(() => {
                     </Text>
                   </View>
                 </View>
-                <TouchableOpacity
-                  activeOpacity={0.9}
+                <MotionPressable
                   style={styles.navFinish}
                   accessibilityRole="button"
                   accessibilityLabel="Finalizar navegación"
+                  haptic="warning"
                   onPress={() => viewModel.stopNavigation()}
                 >
                   <Ionicons name="stop" size={28} color={Colors.base.textPrimary} />
-                </TouchableOpacity>
-              </View>
+                </MotionPressable>
+              </AnimatedListItem>
             </SafeAreaView>
           ) : null}
         </>
@@ -659,22 +661,22 @@ const HomeScreen = observer(() => {
             ) : viewModel.isSearchActive ? (
               // Pencil "Home Idle - Busqueda activa": cuando hay query, el
               // boton de voz + avatar se reemplazan por un "Cancelar" iOS.
-              <TouchableOpacity
-                activeOpacity={0.7}
+              <MotionPressable
                 hitSlop={8}
                 accessibilityRole="button"
                 accessibilityLabel="Cancelar busqueda"
+                haptic="selection"
                 onPress={handleCancelSearch}
               >
                 <Text style={styles.cancelSearchText}>Cancelar</Text>
-              </TouchableOpacity>
+              </MotionPressable>
             ) : (
               <>
-                <TouchableOpacity
-                  activeOpacity={0.85}
+                <MotionPressable
                   hitSlop={8}
                   accessibilityRole="button"
                   accessibilityLabel="Buscar por voz"
+                  haptic="selection"
                   onPress={() => {}}
                 >
                   <GradientView
@@ -688,13 +690,13 @@ const HomeScreen = observer(() => {
                       color={Colors.semantic.text.primaryDark}
                     />
                   </GradientView>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.85}
+                </MotionPressable>
+                <MotionPressable
                   hitSlop={8}
                   testID="home-profile-button"
                   accessibilityRole="button"
                   accessibilityLabel="Abrir perfil"
+                  haptic="selection"
                   onPress={() => navigation.navigate('ProfileTab')}
                 >
                   <GradientView
@@ -704,36 +706,36 @@ const HomeScreen = observer(() => {
                   >
                     <Text style={styles.profileInitials}>{viewModel.riderInitials}</Text>
                   </GradientView>
-                </TouchableOpacity>
+                </MotionPressable>
               </>
             )}
           </View>
         }
       >
         {viewModel.searchMode === 'addStop' ? (
-          <TouchableOpacity
-            activeOpacity={0.85}
+          <MotionPressable
             style={styles.addStopHint}
             accessibilityRole="button"
             accessibilityLabel="Cancelar agregar parada"
+            haptic="selection"
             onPress={() => viewModel.cancelAddingStop()}
           >
             <Ionicons name="close-circle" size={16} color={Colors.base.accent} />
             <Text style={styles.addStopHintText}>
               Buscá la parada que querés agregar al viaje. Tap para cancelar.
             </Text>
-          </TouchableOpacity>
+          </MotionPressable>
         ) : null}
 
         {viewModel.isSearchActive ? (
           viewModel.hasSearchResults ? (
             <SheetCard style={styles.resultsCard}>
               {viewModel.searchResults.map((place, index) => (
-                <View key={place.id}>
+                <AnimatedListItem key={place.id} index={index}>
                   {index > 0 ? <View style={styles.resultDivider} /> : null}
-                  <TouchableOpacity
-                    activeOpacity={0.7}
+                  <MotionPressable
                     style={[styles.resultRow, index === 0 && styles.resultRowPrimary]}
+                    haptic="selection"
                     onPress={() => handleSelectPlace(place)}
                   >
                     <View
@@ -756,14 +758,16 @@ const HomeScreen = observer(() => {
                         {place.fullName}
                       </Text>
                     </View>
-                  </TouchableOpacity>
-                </View>
+                  </MotionPressable>
+                </AnimatedListItem>
               ))}
             </SheetCard>
           ) : viewModel.isSearchError ? (
-            <SheetCard style={styles.resultsCardError}>
-              <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
-            </SheetCard>
+            <AnimatedListItem>
+              <SheetCard style={styles.resultsCardError}>
+                <Text style={styles.errorText}>{viewModel.isSearchError}</Text>
+              </SheetCard>
+            </AnimatedListItem>
           ) : null
         ) : viewModel.hasDestination ? (
           <>
@@ -782,11 +786,11 @@ const HomeScreen = observer(() => {
             </View>
 
             {/* CTA principal: degradado naranja, visible aun con el panel asomado. */}
-            <TouchableOpacity
-              activeOpacity={0.9}
+            <MotionPressable
               testID="home-start-route-btn"
               accessibilityRole="button"
               accessibilityLabel="Iniciar ruta"
+              haptic="impactMedium"
               onPress={() => viewModel.startNavigation()}
             >
               <GradientView
@@ -801,166 +805,169 @@ const HomeScreen = observer(() => {
                 />
                 <Text style={styles.startButtonText}>Iniciar ruta</Text>
               </GradientView>
-            </TouchableOpacity>
+            </MotionPressable>
 
             {/* ── Tarjeta de Ruta ─────────────────────────────────────────────── */}
-            <SheetCard style={styles.routeCard}>
-              <View style={styles.routeHeader}>
-                <Text style={styles.routeTitle}>Ruta activa</Text>
-                <Text style={styles.routeDistance} numberOfLines={1}>
-                  {viewModel.routeSummary
-                    ? `${viewModel.routeSummary.distance} · ${viewModel.routeSummary.duration}`
-                    : viewModel.isRouteError
-                      ? 'Sin ruta'
-                      : 'Calculando…'}
-                </Text>
-                <TouchableOpacity
-                  style={styles.routeOptions}
-                  hitSlop={8}
-                  testID="home-close-route-btn"
-                  accessibilityRole="button"
-                  accessibilityLabel="Cerrar ruta"
-                  onPress={handleClearRoute}
-                >
-                  <Ionicons name="close" size={15} color={Colors.base.iconMuted} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.routePoints}>
-                <View style={styles.timeline}>
-                  <View style={[styles.timelineDot, styles.timelineDotOrigin]} />
-                  {viewModel.intermediateStops.map((stop) => (
-                    <Fragment key={`tl-${stop.id}`}>
-                      <View style={styles.timelineLine} />
-                      <View
-                        style={[styles.timelineDot, styles.timelineDotIntermediate]}
-                      />
-                    </Fragment>
-                  ))}
-                  <View style={styles.timelineLine} />
-                  <View style={[styles.timelineDot, styles.timelineDotDest]} />
-                </View>
-                <View style={styles.routeLabels}>
-                  <Text style={styles.routeLabel} numberOfLines={1}>
-                    Mi ubicación
+            <AnimatedListItem>
+              <SheetCard style={styles.routeCard}>
+                <View style={styles.routeHeader}>
+                  <Text style={styles.routeTitle}>Ruta activa</Text>
+                  <Text style={styles.routeDistance} numberOfLines={1}>
+                    {viewModel.routeSummary
+                      ? `${viewModel.routeSummary.distance} · ${viewModel.routeSummary.duration}`
+                      : viewModel.isRouteError
+                        ? 'Sin ruta'
+                        : 'Calculando…'}
                   </Text>
-                  {viewModel.intermediateStops.map((stop) => (
-                    <View key={`lbl-${stop.id}`} style={styles.stopLabelRow}>
+                  <MotionPressable
+                    style={styles.routeOptions}
+                    hitSlop={8}
+                    testID="home-close-route-btn"
+                    accessibilityRole="button"
+                    accessibilityLabel="Cerrar ruta"
+                    haptic="selection"
+                    onPress={handleClearRoute}
+                  >
+                    <Ionicons name="close" size={15} color={Colors.base.iconMuted} />
+                  </MotionPressable>
+                </View>
+
+                <View style={styles.routePoints}>
+                  <View style={styles.timeline}>
+                    <View style={[styles.timelineDot, styles.timelineDotOrigin]} />
+                    {viewModel.intermediateStops.map((stop) => (
+                      <Fragment key={`tl-${stop.id}`}>
+                        <View style={styles.timelineLine} />
+                        <View
+                          style={[styles.timelineDot, styles.timelineDotIntermediate]}
+                        />
+                      </Fragment>
+                    ))}
+                    <View style={styles.timelineLine} />
+                    <View style={[styles.timelineDot, styles.timelineDotDest]} />
+                  </View>
+                  <View style={styles.routeLabels}>
+                    <Text style={styles.routeLabel} numberOfLines={1}>
+                      Mi ubicación
+                    </Text>
+                    {viewModel.intermediateStops.map((stop) => (
+                      <View key={`lbl-${stop.id}`} style={styles.stopLabelRow}>
+                        <Text
+                          style={[styles.routeLabel, styles.stopLabelText]}
+                          numberOfLines={1}
+                        >
+                          {stop.name}
+                        </Text>
+                        <TouchableOpacity
+                          hitSlop={6}
+                          style={styles.stopActionBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Subir ${stop.name}`}
+                          onPress={() => viewModel.moveStopUp(stop.id)}
+                        >
+                          <Ionicons
+                            name="arrow-up"
+                            size={16}
+                            color={Colors.base.iconMuted}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          hitSlop={6}
+                          style={styles.stopActionBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Bajar ${stop.name}`}
+                          onPress={() => viewModel.moveStopDown(stop.id)}
+                        >
+                          <Ionicons
+                            name="arrow-down"
+                            size={16}
+                            color={Colors.base.iconMuted}
+                          />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          hitSlop={6}
+                          style={styles.stopActionBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Quitar ${stop.name}`}
+                          onPress={() => viewModel.removeStop(stop.id)}
+                        >
+                          <Ionicons
+                            name="close-circle"
+                            size={18}
+                            color={Colors.base.iconMuted}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                    <View style={styles.stopLabelRow}>
                       <Text
                         style={[styles.routeLabel, styles.stopLabelText]}
                         numberOfLines={1}
                       >
-                        {stop.name}
+                        {viewModel.destination?.name}
                       </Text>
-                      <TouchableOpacity
-                        hitSlop={6}
-                        style={styles.stopActionBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Subir ${stop.name}`}
-                        onPress={() => viewModel.moveStopUp(stop.id)}
-                      >
-                        <Ionicons
-                          name="arrow-up"
-                          size={16}
-                          color={Colors.base.iconMuted}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        hitSlop={6}
-                        style={styles.stopActionBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Bajar ${stop.name}`}
-                        onPress={() => viewModel.moveStopDown(stop.id)}
-                      >
-                        <Ionicons
-                          name="arrow-down"
-                          size={16}
-                          color={Colors.base.iconMuted}
-                        />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        hitSlop={6}
-                        style={styles.stopActionBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Quitar ${stop.name}`}
-                        onPress={() => viewModel.removeStop(stop.id)}
-                      >
-                        <Ionicons
-                          name="close-circle"
-                          size={18}
-                          color={Colors.base.iconMuted}
-                        />
-                      </TouchableOpacity>
+                      {viewModel.intermediateStops.length > 0 && viewModel.destination ? (
+                        <TouchableOpacity
+                          hitSlop={6}
+                          style={styles.stopActionBtn}
+                          accessibilityRole="button"
+                          accessibilityLabel="Subir destino"
+                          onPress={() => viewModel.moveStopUp(viewModel.destination!.id)}
+                        >
+                          <Ionicons
+                            name="arrow-up"
+                            size={16}
+                            color={Colors.base.iconMuted}
+                          />
+                        </TouchableOpacity>
+                      ) : null}
                     </View>
-                  ))}
-                  <View style={styles.stopLabelRow}>
-                    <Text
-                      style={[styles.routeLabel, styles.stopLabelText]}
-                      numberOfLines={1}
-                    >
-                      {viewModel.destination?.name}
-                    </Text>
-                    {viewModel.intermediateStops.length > 0 && viewModel.destination ? (
-                      <TouchableOpacity
-                        hitSlop={6}
-                        style={styles.stopActionBtn}
-                        accessibilityRole="button"
-                        accessibilityLabel="Subir destino"
-                        onPress={() => viewModel.moveStopUp(viewModel.destination!.id)}
-                      >
-                        <Ionicons
-                          name="arrow-up"
-                          size={16}
-                          color={Colors.base.iconMuted}
-                        />
-                      </TouchableOpacity>
-                    ) : null}
                   </View>
                 </View>
-              </View>
 
-              <TouchableOpacity
-                activeOpacity={0.85}
-                style={styles.addStopButton}
-                testID="home-add-stop-btn"
-                accessibilityRole="button"
-                accessibilityLabel="Agregar parada"
-                onPress={handleStartAddStop}
-              >
-                <Ionicons name="add-circle" size={18} color={Colors.base.accent} />
-                <Text style={styles.addStopText}>Agregar parada</Text>
-              </TouchableOpacity>
+                <MotionPressable
+                  style={styles.addStopButton}
+                  testID="home-add-stop-btn"
+                  accessibilityRole="button"
+                  accessibilityLabel="Agregar parada"
+                  haptic="selection"
+                  onPress={handleStartAddStop}
+                >
+                  <Ionicons name="add-circle" size={18} color={Colors.base.accent} />
+                  <Text style={styles.addStopText}>Agregar parada</Text>
+                </MotionPressable>
 
-              <View style={styles.divider} />
+                <View style={styles.divider} />
 
-              {viewModel.isRouteError ? (
-                <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
-              ) : (
-                <View style={styles.statsRow}>
-                  <StatCell
-                    icon="gas-station"
-                    iconColor={Colors.base.accent}
-                    value={fuel?.fuelNeeded ?? '—'}
-                    valueColor={fuelReachFails ? Colors.alerts.error : undefined}
-                    label="Combustible est."
-                  />
-                  <StatCell
-                    bordered
-                    icon="image-filter-hdr"
-                    iconColor={Colors.base.iconGroupRide}
-                    value={elevation?.max ?? '—'}
-                    label="Elevación máx."
-                  />
-                  <StatCell
-                    bordered
-                    icon="speedometer"
-                    iconColor={Colors.base.iconHighway}
-                    value={viewModel.routeSummary?.avgSpeed ?? '—'}
-                    label="Vel. promedio"
-                  />
-                </View>
-              )}
-            </SheetCard>
+                {viewModel.isRouteError ? (
+                  <Text style={styles.errorText}>{viewModel.isRouteError}</Text>
+                ) : (
+                  <View style={styles.statsRow}>
+                    <StatCell
+                      icon="gas-station"
+                      iconColor={Colors.base.accent}
+                      value={fuel?.fuelNeeded ?? '—'}
+                      valueColor={fuelReachFails ? Colors.alerts.error : undefined}
+                      label="Combustible est."
+                    />
+                    <StatCell
+                      bordered
+                      icon="image-filter-hdr"
+                      iconColor={Colors.base.iconGroupRide}
+                      value={elevation?.max ?? '—'}
+                      label="Elevación máx."
+                    />
+                    <StatCell
+                      bordered
+                      icon="speedometer"
+                      iconColor={Colors.base.iconHighway}
+                      value={viewModel.routeSummary?.avgSpeed ?? '—'}
+                      label="Vel. promedio"
+                    />
+                  </View>
+                )}
+              </SheetCard>
+            </AnimatedListItem>
 
             {/* ── Tarjeta de Autonomía ────────────────────────────────────────── */}
             {autonomy && journey ? (

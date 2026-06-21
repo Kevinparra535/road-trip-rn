@@ -1,105 +1,126 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeInUp, ZoomIn } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import GradientView from '@/ui/components/GradientView';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
+import Motion from '@/ui/styles/Motion';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
+import { useReduceMotionPreference } from '@/ui/hooks/useReduceMotionPreference';
+
 type Stat = {
-  /** Valor grande (ej. "245", "3h 22m", "12 L"). */
   value: string;
-  /** Etiqueta en mayusculas debajo del valor (ej. "KM"). */
   label: string;
 };
 
 type Props = {
-  /** Nombre del destino al que se llego. */
   destinationName: string;
-  /** Hora de llegada formateada (ej. "11:42"). */
   arrivalTime: string;
-  /** Tres metricas del viaje en orden: distancia, tiempo, combustible. */
   stats: [Stat, Stat, Stat];
-  /** Cierra el panel y limpia la ruta (regresa al Home vacio). */
   onFinish: () => void;
 };
 
-// Fundido del panel inferior (igual semantica que el BottomSheet del Home):
-// transparente arriba para que el mapa se siga viendo y solido abajo para que
-// el contenido sea legible.
 const PANEL_FADE_COLORS = [
   hexToRgba(Colors.base.bgPrimary, 0),
   hexToRgba(Colors.base.bgPrimary, 0.92),
   Colors.base.bgPrimary,
 ] as const;
+
 const PANEL_FADE_LOCATIONS = [0, 0.08, 0.2] as const;
 
-/**
- * Pantalla de llegada (frame "8 - Home Llegada" del Pencil). Es un overlay
- * que oscurece el mapa con una capa dim y ancla un panel inferior con:
- * check verde, titulo, subtitulo (destino + hora) y tres metricas. El boton
- * "Finalizar" cierra el panel y limpia la ruta.
- */
-const ArrivalPanel = ({ destinationName, arrivalTime, stats, onFinish }: Props) => (
-  <View style={styles.root} pointerEvents="box-none">
-    <View style={styles.dim} pointerEvents="auto" />
-    <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
-      <GradientView
-        colors={[...PANEL_FADE_COLORS]}
-        locations={[...PANEL_FADE_LOCATIONS]}
-        style={styles.panel}
-      >
-        <View style={styles.checkCircle}>
-          <Ionicons name="checkmark" size={48} color={Colors.semantic.text.primaryDark} />
-        </View>
+const ArrivalPanel = ({ destinationName, arrivalTime, stats, onFinish }: Props) => {
+  const reduceMotion = useReduceMotionPreference();
 
-        <Text style={styles.title}>Llegaste a tu destino</Text>
-        <Text style={styles.subtitle} numberOfLines={1}>
-          {destinationName} · {arrivalTime}
-        </Text>
-
-        <View style={styles.statsCard}>
-          {stats.map((stat, index) => (
-            <View key={stat.label} style={styles.statRow}>
-              {index > 0 ? <View style={styles.statSeparator} /> : null}
-              <View style={styles.statCell}>
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.9}
-          accessibilityRole="button"
-          accessibilityLabel="Finalizar viaje"
-          onPress={onFinish}
+  return (
+    <View style={styles.root} pointerEvents="box-none">
+      <Animated.View
+        entering={reduceMotion ? undefined : FadeIn.duration(Motion.durations.base)}
+        style={styles.dim}
+        pointerEvents="auto"
+      />
+      <SafeAreaView edges={['bottom']} style={styles.panelSafe}>
+        <Animated.View
+          entering={
+            reduceMotion
+              ? undefined
+              : FadeInUp.duration(Motion.durations.slow).easing(Motion.easings.decelerate)
+          }
         >
-          <GradientView preset="accent" direction="vertical" style={styles.finishBtn}>
-            <Ionicons
-              name="checkmark"
-              size={20}
-              color={Colors.semantic.text.primaryDark}
-            />
-            <Text style={styles.finishText}>Finalizar</Text>
+          <GradientView
+            colors={[...PANEL_FADE_COLORS]}
+            locations={[...PANEL_FADE_LOCATIONS]}
+            style={styles.panel}
+          >
+            <Animated.View
+              entering={
+                reduceMotion
+                  ? undefined
+                  : ZoomIn.duration(Motion.durations.base)
+                      .delay(Motion.stagger(1))
+                      .springify()
+                      .damping(Motion.springs.success.damping)
+                      .stiffness(Motion.springs.success.stiffness)
+              }
+              style={styles.checkCircle}
+            >
+              <Ionicons
+                name="checkmark"
+                size={48}
+                color={Colors.semantic.text.primaryDark}
+              />
+            </Animated.View>
+
+            <Text style={styles.title}>Llegaste a tu destino</Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {destinationName} - {arrivalTime}
+            </Text>
+
+            <View style={styles.statsCard}>
+              {stats.map((stat, index) => (
+                <View key={stat.label} style={styles.statRow}>
+                  {index > 0 ? <View style={styles.statSeparator} /> : null}
+                  <View style={styles.statCell}>
+                    <Text style={styles.statValue}>{stat.value}</Text>
+                    <Text style={styles.statLabel}>{stat.label}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+
+            <MotionPressable
+              accessibilityRole="button"
+              accessibilityLabel="Finalizar viaje"
+              haptic="success"
+              onPress={onFinish}
+            >
+              <GradientView preset="accent" direction="vertical" style={styles.finishBtn}>
+                <Ionicons
+                  name="checkmark"
+                  size={20}
+                  color={Colors.semantic.text.primaryDark}
+                />
+                <Text style={styles.finishText}>Finalizar</Text>
+              </GradientView>
+            </MotionPressable>
           </GradientView>
-        </TouchableOpacity>
-      </GradientView>
-    </SafeAreaView>
-  </View>
-);
+        </Animated.View>
+      </SafeAreaView>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   root: {
     ...StyleSheet.absoluteFillObject,
   },
-  // Capa oscura sobre el mapa (#0D0D0D55 = 33% del Pencil).
   dim: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: hexToRgba(Colors.base.bgPrimary, 0.33),
@@ -137,14 +158,13 @@ const styles = StyleSheet.create({
     color: Colors.base.textSecondary,
     textAlign: 'center',
   },
-  // Card de 3 metricas con separadores verticales del Pencil.
   statsCard: {
+    paddingVertical: 18,
+    paddingHorizontal: Spacings.sm,
     flexDirection: 'row',
     alignSelf: 'stretch',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 18,
-    paddingHorizontal: Spacings.sm,
     backgroundColor: Colors.base.bgGradientEnd,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
