@@ -72,14 +72,13 @@ const AppDrawer = () => (
       component={RoutePlannerMapScreen}
       options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
     />
-    <Stack.Screen
-      name="RouteDetail"
-      component={RouteDetailScreen}
-      options={{
-        presentation: 'formSheet',
-        sheetAllowedDetents: [0.5, 1],
-      }}
-    />
+    {/*
+     * Detalle rico (mapa + estimaciones + lista de estaciones): va como card a
+     * pantalla completa, igual que `MotorcycleForm`. Como `formSheet`, en iOS el
+     * ScrollView interno no scrollea porque el contenido del sheet no queda
+     * acotado a una altura — el resultado de "Estimar autonomia" no se alcanza.
+     */}
+    <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
     <Stack.Screen
       name="GarageTab"
       component={GarageScreen}

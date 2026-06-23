@@ -414,6 +414,76 @@ describe('PlannerStore', () => {
     expect(vm.waypoints[0].id).toBe(cId);
   });
 
+  it('reorderStops mueve una parada varias posiciones y reasigna inicio/destino', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A'); // start
+    vm.addWaypoint(4.7, -74.1, 'B'); // intermedio
+    vm.addWaypoint(4.8, -74.2, 'C'); // intermedio
+    vm.addWaypoint(4.9, -74.3, 'D'); // destino
+
+    const ids = vm.waypoints.map((w) => w.id);
+    // Drag del destino (index 3) hasta el inicio (index 0): D pasa a 'start'.
+    vm.reorderStops(3, 0);
+
+    expect(vm.waypoints.map((w) => w.id)).toEqual([ids[3], ids[0], ids[1], ids[2]]);
+    expect(vm.waypoints[0].kind).toBe('start'); // D ahora es inicio
+    expect(vm.waypoints[3].kind).toBe('destination'); // C ahora es destino
+    expect(vm.directions).toBeNull(); // geometría obsoleta tras reordenar
+    vm.dispose();
+  });
+
+  it('reorderStops con índices fuera de rango es no-op', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.8, -74.2, 'B');
+    const before = vm.waypoints.map((w) => w.id);
+
+    vm.reorderStops(0, 5);
+    vm.reorderStops(-1, 1);
+    vm.reorderStops(1, 1);
+
+    expect(vm.waypoints.map((w) => w.id)).toEqual(before);
+    vm.dispose();
+  });
+
+  it('preserva la categoría al mover una parada a un extremo y de vuelta', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A'); // start
+    vm.addWaypoint(4.7, -74.1, 'B'); // intermedio
+    vm.addWaypoint(4.8, -74.2, 'C'); // destino
+    const bId = vm.waypoints[1].id;
+    vm.setStopKind(bId, 'rest');
+    expect(vm.waypoints.find((w) => w.id === bId)!.kind).toBe('rest');
+
+    // Mover B al final (destino): kind toma el rol posicional.
+    vm.reorderStops(1, 2);
+    expect(vm.waypoints.find((w) => w.id === bId)!.kind).toBe('destination');
+
+    // Volver B a intermedio: recupera la categoría 'rest' (no cae a 'other').
+    vm.reorderStops(2, 1);
+    expect(vm.waypoints.find((w) => w.id === bId)!.kind).toBe('rest');
+    vm.dispose();
+  });
+
+  it('preserva la categoría también pasando por el arranque (pos 0)', async () => {
+    const { vm } = build();
+    await vm.initialize();
+    vm.addWaypoint(4.6, -74.08, 'A');
+    vm.addWaypoint(4.7, -74.1, 'B');
+    vm.addWaypoint(4.8, -74.2, 'C');
+    const bId = vm.waypoints[1].id;
+    vm.setStopKind(bId, 'fuel');
+
+    vm.reorderStops(1, 0); // B → arranque
+    expect(vm.waypoints.find((w) => w.id === bId)!.kind).toBe('start');
+    vm.reorderStops(0, 1); // B → intermedio de nuevo
+    expect(vm.waypoints.find((w) => w.id === bId)!.kind).toBe('fuel');
+    vm.dispose();
+  });
+
   it('timelineItems setea canMoveUp/canMoveDown segun la posicion', async () => {
     const { vm } = build();
     await vm.initialize();

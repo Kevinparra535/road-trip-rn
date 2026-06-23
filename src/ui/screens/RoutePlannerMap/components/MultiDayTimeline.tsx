@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -10,8 +10,10 @@ import { observer } from 'mobx-react-lite';
 
 import { RouteDay } from '@/domain/entities/RouteDay';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import AppTextInput from '@/ui/components/AppTextInput';
 import ModalSheet from '@/ui/components/ModalSheet';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -171,10 +173,10 @@ const OvernightBlock = ({
         />
 
         {/* Remove end-of-day button */}
-        <TouchableOpacity
+        <MotionPressable
           style={styles.overnightRemoveBtn}
           onPress={handleUnmark}
-          activeOpacity={0.8}
+          haptic="selection"
           testID={`multiday-unmark-day-${dayIdx}`}
         >
           <Ionicons
@@ -183,7 +185,7 @@ const OvernightBlock = ({
             color={Colors.base.textSecondary}
           />
           <Text style={styles.overnightRemoveText}>Quitar fin de día</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
     </View>
   );
@@ -220,38 +222,39 @@ const MarkEndOfDayModal = ({ visible, viewModel, onDismiss }: MarkEndModalProps)
         </Text>
       ) : (
         <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
-          {candidates.map((item) => {
+          {candidates.map((item, index) => {
             const meta = stopKindMeta(item.kind);
             return (
-              <TouchableOpacity
-                key={item.id}
-                style={styles.modalRow}
-                onPress={() => handlePick(item.order)}
-                activeOpacity={0.8}
-                testID={`multiday-mark-end-${item.id}`}
-              >
-                <View style={[styles.modalRowDot, { backgroundColor: meta.color }]} />
-                <Text style={styles.modalRowName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Ionicons
-                  name="chevron-forward"
-                  size={16}
-                  color={Colors.base.iconMuted}
-                />
-              </TouchableOpacity>
+              <AnimatedListItem key={item.id} index={index}>
+                <MotionPressable
+                  style={styles.modalRow}
+                  onPress={() => handlePick(item.order)}
+                  haptic="selection"
+                  testID={`multiday-mark-end-${item.id}`}
+                >
+                  <View style={[styles.modalRowDot, { backgroundColor: meta.color }]} />
+                  <Text style={styles.modalRowName} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={16}
+                    color={Colors.base.iconMuted}
+                  />
+                </MotionPressable>
+              </AnimatedListItem>
             );
           })}
         </ScrollView>
       )}
 
-      <TouchableOpacity
+      <MotionPressable
         style={styles.modalCancelBtn}
         onPress={onDismiss}
-        activeOpacity={0.85}
+        haptic="selection"
       >
         <Text style={styles.modalCancelText}>Cancelar</Text>
-      </TouchableOpacity>
+      </MotionPressable>
     </ModalSheet>
   );
 };
@@ -274,15 +277,15 @@ const MultiDayTimeline = observer(({ viewModel }: Props) => {
         <Text style={styles.headerLabel}>
           {daysCount} día{daysCount !== 1 ? 's' : ''}
         </Text>
-        <TouchableOpacity
+        <MotionPressable
           style={styles.markEndBtn}
           onPress={() => setMarkModalVisible(true)}
-          activeOpacity={0.85}
+          haptic="selection"
           testID="multiday-mark-end-of-day-btn"
         >
           <Ionicons name="cut-outline" size={14} color={Colors.base.accent} />
           <Text style={styles.markEndBtnText}>Marcar fin de día</Text>
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       {/* Days */}

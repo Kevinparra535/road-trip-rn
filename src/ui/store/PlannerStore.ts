@@ -44,6 +44,7 @@ import {
 import { SerializedDuplicateRoute } from '@/ui/navigation/types';
 
 import Logger from '@/ui/utils/Logger';
+import { reorderArray } from '@/ui/utils/reorder';
 
 import { LocationStore } from '@/ui/store/LocationStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
@@ -1054,6 +1055,7 @@ export class PlannerStore {
             kind: w.kind as WaypointKind,
             order: w.order,
             mapboxCategory: w.mapboxCategory,
+            categoryKind: w.categoryKind as WaypointKind | undefined,
             notes: w.notes,
             stopDurationMin: w.stopDurationMin,
             isReturnClone: w.isReturnClone,
@@ -1220,6 +1222,12 @@ export class PlannerStore {
                 kind: args.kind ?? w.kind,
                 mapboxCategory: args.mapboxCategory ?? w.mapboxCategory,
                 userOverrideKind: args.kind !== undefined,
+                // Actualiza la categoria recordada si el rider eligio una nueva
+                // (no posicional); sino conserva la previa.
+                categoryKind:
+                  args.kind && args.kind !== 'start' && args.kind !== 'destination'
+                    ? args.kind
+                    : w.categoryKind,
               })
             : w,
         ),
@@ -1338,6 +1346,7 @@ export class PlannerStore {
   }): void {
     runInAction(() => {
       this.waypointSeq += 1;
+      const isPositional = args.kind === 'start' || args.kind === 'destination';
       const waypoint = new Waypoint({
         id: `wp-${this.waypointSeq}`,
         name: args.name,
@@ -1347,8 +1356,10 @@ export class PlannerStore {
         order: 0, // se reasigna en normalize
         mapboxCategory: args.mapboxCategory,
         userOverrideKind: true,
+        // Recordar la categoria (no el rol posicional) para restaurarla si la
+        // parada pasa por un extremo y vuelve a ser intermedia.
+        categoryKind: isPositional ? undefined : args.kind,
       });
-      const isPositional = args.kind === 'start' || args.kind === 'destination';
       const shouldInsertBeforeEnd = !isPositional && this.waypoints.length >= 2;
       const next = shouldInsertBeforeEnd
         ? [
@@ -1377,7 +1388,9 @@ export class PlannerStore {
       if (kind === 'start' || kind === 'destination') return;
 
       this.waypoints = this.waypoints.map((w) =>
-        w.id === waypointId ? new Waypoint({ ...w, kind, userOverrideKind: true }) : w,
+        w.id === waypointId
+          ? new Waypoint({ ...w, kind, userOverrideKind: true, categoryKind: kind })
+          : w,
       );
       // El kind no afecta la geometria pero si los colores del trazado.
       // No invalidamos directions: el rider ya pago el calculo.
@@ -1436,6 +1449,31 @@ export class PlannerStore {
       [swapped[idx], swapped[newIdx]] = [swapped[newIdx], swapped[idx]];
       this.waypoints = this.normalizeWaypoints(swapped);
       // Geometry calculada queda obsoleta tras reorder.
+      this.directions = null;
+    });
+  }
+
+  /**
+   * Reordena una parada de la posición `fromIndex` a `toIndex` (índices del
+   * timeline visual, ordenado por `order`). A diferencia de `moveStop` (swaps
+   * adyacentes para las flechas), esto soporta mover varias posiciones de una
+   * — lo usa el drag-and-drop del timeline. `normalizeWaypoints` reasigna
+   * start/destination según la nueva posición, así que arrastrar a un extremo
+   * cambia el inicio/destino. Invalida el trazado (geometría obsoleta).
+   */
+  reorderStops(fromIndex: number, toIndex: number): void {
+    runInAction(() => {
+      const ordered = [...this.waypoints].sort((a, b) => a.order - b.order);
+      if (
+        fromIndex < 0 ||
+        fromIndex >= ordered.length ||
+        toIndex < 0 ||
+        toIndex >= ordered.length ||
+        fromIndex === toIndex
+      ) {
+        return;
+      }
+      this.waypoints = this.normalizeWaypoints(reorderArray(ordered, fromIndex, toIndex));
       this.directions = null;
     });
   }
@@ -2046,14 +2084,20 @@ export class PlannerStore {
         kind = 'start';
       } else if (index === list.length - 1 && list.length > 1) {
         kind = 'destination';
+      } else if (w.categoryKind) {
+        // Parada intermedia con categoria recordada: restaurarla (sobrevive a
+        // haber pasado por start/destination y volver).
+        kind = w.categoryKind;
       } else if (w.kind === 'start' || w.kind === 'destination') {
-        // Era start/destination pero ahora es intermedio: reset a generico.
+        // Era start/destination, ahora intermedia y sin categoria previa: reset
+        // a generico.
         kind = 'other';
       } else {
         kind = w.kind;
       }
       // Spread `...w` para preservar TODA la metadata (notes, stopDurationMin,
-      // isReturnClone, etc.) al re-normalizar; solo cambian kind/order.
+      // categoryKind, isReturnClone, etc.) al re-normalizar; solo cambian
+      // kind/order.
       return new Waypoint({ ...w, kind, order: index });
     });
   }

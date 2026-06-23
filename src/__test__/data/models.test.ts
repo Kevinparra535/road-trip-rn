@@ -209,6 +209,33 @@ describe('RouteModel', () => {
     expect(route.waypoints[1].userOverrideKind).toBe(true);
   });
 
+  it('preserva category_kind (categoría recordada) en el round-trip', () => {
+    const route = RouteModel.fromJson({
+      id: 'r-cat',
+      rider_id: 'rider-1',
+      name: 'Ruta',
+      ride_type: 'highway',
+      waypoints: [
+        { id: 'a', name: 'A', latitude: 0, longitude: 0, kind: 'start', order: 0 },
+        {
+          id: 'b',
+          name: 'B',
+          latitude: 1,
+          longitude: 1,
+          // La parada quedó en el destino, pero recuerda que era 'rest'.
+          kind: 'destination',
+          order: 1,
+          category_kind: 'rest',
+        },
+      ],
+      geometry: [],
+      distance_km: 10,
+      estimated_duration_min: 20,
+    }).toDomain();
+
+    expect(route.waypoints[1].categoryKind).toBe('rest');
+  });
+
   it('Route.stops() devuelve todos los intermediates independiente del kind', () => {
     const route = RouteModel.fromJson({
       id: 'r-mixed',

@@ -1,13 +1,9 @@
-import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { observer } from 'mobx-react-lite';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
 
@@ -52,30 +48,31 @@ export const PartyAction = observer(({ viewModel, navigation }: PartyActionProps
 
   if (viewModel.partyMatchesActive) {
     return (
-      <TouchableOpacity
+      <MotionPressable
         onPress={() => navigation.navigate('PartyMembers')}
         hitSlop={8}
         style={styles.partyChipNav}
-        activeOpacity={0.85}
+        haptic="selection"
       >
         <Ionicons name="people" size={14} color={Colors.base.accent} />
         <Text style={styles.partyChipNavText}>{viewModel.partyStore.memberCount}</Text>
-      </TouchableOpacity>
+      </MotionPressable>
     );
   }
 
   return (
-    <TouchableOpacity
+    <MotionPressable
       onPress={handleCreate}
       hitSlop={8}
       disabled={viewModel.isPartyLoading}
+      haptic="selection"
     >
       {viewModel.isPartyLoading ? (
         <ActivityIndicator color={Colors.base.accent} />
       ) : (
         <Ionicons name="people-outline" size={22} color={Colors.base.accent} />
       )}
-    </TouchableOpacity>
+    </MotionPressable>
   );
 });
 

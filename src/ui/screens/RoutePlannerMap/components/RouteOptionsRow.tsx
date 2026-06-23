@@ -1,13 +1,8 @@
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
+import MotionPressable from '@/ui/components/MotionPressable';
 import Switch from '@/ui/components/Switch';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -112,25 +107,25 @@ const RouteOptionsRow = observer(
         {/* ── Botones de acción ────────────────────────────────────────── */}
         <View style={styles.actionsRow}>
           {/* Invertir */}
-          <TouchableOpacity
+          <MotionPressable
             style={styles.actionBtn}
             onPress={() => viewModel.reverseRoute()}
-            activeOpacity={0.75}
+            haptic="selection"
             testID="route-options-reverse"
           >
             <Ionicons name="swap-vertical" size={16} color={Colors.base.textPrimary} />
             <Text style={styles.actionBtnText}>Invertir</Text>
-          </TouchableOpacity>
+          </MotionPressable>
 
           {/* Optimizar */}
-          <TouchableOpacity
+          <MotionPressable
             style={[
               styles.actionBtn,
               styles.actionBtnAccent,
               !viewModel.canOptimize && styles.actionBtnDisabled,
             ]}
             onPress={() => void viewModel.optimizeOrder()}
-            activeOpacity={0.75}
+            haptic="selection"
             disabled={!viewModel.canOptimize}
             testID="route-options-optimize"
           >
@@ -153,7 +148,7 @@ const RouteOptionsRow = observer(
             >
               Optimizar
             </Text>
-          </TouchableOpacity>
+          </MotionPressable>
         </View>
 
         {/* ── Error de optimización ─────────────────────────────────────── */}

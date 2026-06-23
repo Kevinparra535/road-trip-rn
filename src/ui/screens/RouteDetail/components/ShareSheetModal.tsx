@@ -5,11 +5,12 @@ import {
   Share,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -41,13 +42,22 @@ export const ShareSheetModal = observer(({ viewModel }: ShareSheetModalProps) =>
       animationType="fade"
       onRequestClose={() => viewModel.closeShareSheet()}
     >
-      <Pressable style={styles.shareBackdrop} onPress={() => viewModel.closeShareSheet()}>
+      <MotionPressable
+        style={styles.shareBackdrop}
+        onPress={() => viewModel.closeShareSheet()}
+        haptic={false}
+        activeScale={1}
+      >
         <Pressable style={styles.shareCard} onPress={() => {}}>
           <View style={styles.shareHeader}>
             <Text style={styles.shareTitle}>Compartir ruta</Text>
-            <TouchableOpacity onPress={() => viewModel.closeShareSheet()} hitSlop={8}>
+            <MotionPressable
+              onPress={() => viewModel.closeShareSheet()}
+              hitSlop={8}
+              haptic="selection"
+            >
               <Ionicons name="close" size={22} color={Colors.base.iconMuted} />
-            </TouchableOpacity>
+            </MotionPressable>
           </View>
 
           <Text style={styles.shareSub}>
@@ -71,23 +81,24 @@ export const ShareSheetModal = observer(({ viewModel }: ShareSheetModalProps) =>
             <Text style={styles.error}>{viewModel.isShareError}</Text>
           ) : null}
 
-          <TouchableOpacity
+          <MotionPressable
             style={[
               styles.shareCta,
               (!shareCode || viewModel.isShareLoading) && styles.shareCtaOff,
             ]}
             disabled={!shareCode || viewModel.isShareLoading}
             onPress={handleShare}
-            activeOpacity={0.85}
+            haptic="selection"
           >
             <Ionicons name="share-social" size={18} color={Colors.base.textPrimary} />
             <Text style={styles.shareCtaText}>Compartir</Text>
-          </TouchableOpacity>
+          </MotionPressable>
 
-          <TouchableOpacity
+          <MotionPressable
             style={styles.shareRevoke}
             onPress={() => void viewModel.revokeShareCode()}
             disabled={!shareCode || viewModel.isShareLoading}
+            haptic="selection"
           >
             <Text
               style={[
@@ -97,9 +108,9 @@ export const ShareSheetModal = observer(({ viewModel }: ShareSheetModalProps) =>
             >
               Revocar codigo
             </Text>
-          </TouchableOpacity>
+          </MotionPressable>
         </Pressable>
-      </Pressable>
+      </MotionPressable>
     </Modal>
   );
 });

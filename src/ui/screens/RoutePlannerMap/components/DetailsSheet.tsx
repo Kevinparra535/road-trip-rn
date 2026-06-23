@@ -6,6 +6,7 @@ import BottomSheet, {
   BottomSheetBackgroundProps,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
+import { observer } from 'mobx-react-lite';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -41,6 +42,23 @@ const renderBackdrop = (props: BottomSheetBackdropProps) => (
     pressBehavior="close"
   />
 );
+
+/** Cabecera del sheet (frame 1b): título + resumen de la ruta. */
+const DetailsHeader = observer(
+  ({ viewModel }: { viewModel: RoutePlannerMapViewModel }) => (
+    <>
+      <Text style={styles.sheetTitle}>Detalles de ruta</Text>
+      {viewModel.directions ? (
+        <Text style={styles.sheetSubtitle} numberOfLines={1}>
+          {viewModel.distanceKm} km · {viewModel.durationLabel} ·{' '}
+          {viewModel.waypoints.length} paradas
+        </Text>
+      ) : null}
+    </>
+  ),
+);
+
+DetailsHeader.displayName = 'DetailsHeader';
 
 // ── Handle imperativo ─────────────────────────────────────────────────────────
 
@@ -94,7 +112,7 @@ const DetailsSheet = forwardRef<DetailsSheetHandle, Props>(
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.sheetTitle}>Detalles</Text>
+          <DetailsHeader viewModel={viewModel} />
 
           <AccordionSection
             iconName="options-outline"
@@ -156,9 +174,13 @@ const styles = StyleSheet.create({
     gap: Spacings.sm,
   },
   sheetTitle: {
-    paddingBottom: Spacings.xs,
     ...Fonts.header5,
     color: Colors.base.textPrimary,
+  },
+  sheetSubtitle: {
+    paddingBottom: Spacings.xs,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
   },
 });
 

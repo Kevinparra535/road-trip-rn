@@ -1,7 +1,9 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Motorcycle } from '@/domain/entities/Motorcycle';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -51,9 +53,9 @@ const MotorcycleSummaryCard = ({ motorcycle, onPress }: Props) => {
 
   if (onPress !== undefined) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.75} style={iOSCornerStyle}>
+      <MotionPressable onPress={onPress} haptic="selection" style={iOSCornerStyle}>
         {inner}
-      </TouchableOpacity>
+      </MotionPressable>
     );
   }
 

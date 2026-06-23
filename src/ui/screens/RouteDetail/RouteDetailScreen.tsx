@@ -1,12 +1,5 @@
-import { useEffect } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useEffect, useRef } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +7,9 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
+
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -40,6 +36,10 @@ const RouteDetailScreen = observer(() => {
   const params = useRoute<Route>().params;
 
   const viewModel = useViewModel<RouteDetailViewModel>(TYPES.RouteDetailViewModel);
+
+  const scrollRef = useRef<ScrollView>(null);
+  // Cuando el usuario pide la estimacion, baja al resultado en cuanto se monta.
+  const pendingEstimateScroll = useRef(false);
 
   useEffect(() => {
     viewModel.initialize(params.routeId);
@@ -76,25 +76,30 @@ const RouteDetailScreen = observer(() => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <MotionPressable onPress={() => navigation.goBack()} haptic="selection">
           <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
-        </TouchableOpacity>
+        </MotionPressable>
         <Text style={styles.navTitle} numberOfLines={1}>
           {route.name}
         </Text>
         <View style={styles.navActions}>
           <PartyAction viewModel={viewModel} navigation={navigation} />
-          <TouchableOpacity onPress={() => void viewModel.openShareSheet()} hitSlop={8}>
+          <MotionPressable
+            onPress={() => void viewModel.openShareSheet()}
+            hitSlop={8}
+            haptic="selection"
+          >
             <Ionicons name="share-outline" size={22} color={Colors.base.accent} />
-          </TouchableOpacity>
-          <TouchableOpacity
+          </MotionPressable>
+          <MotionPressable
             onPress={() => navigation.navigate('RoutePlanner', { routeId: route.id })}
             hitSlop={8}
+            haptic="selection"
             testID="route-detail-edit-btn"
           >
             <Ionicons name="create-outline" size={22} color={Colors.base.accent} />
-          </TouchableOpacity>
-          <TouchableOpacity
+          </MotionPressable>
+          <MotionPressable
             onPress={() => {
               const payload = viewModel.getDuplicationPayload();
               if (payload) {
@@ -102,19 +107,35 @@ const RouteDetailScreen = observer(() => {
               }
             }}
             hitSlop={8}
+            haptic="selection"
             testID="route-detail-duplicate-btn"
           >
             <Ionicons name="copy-outline" size={22} color={Colors.base.textSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => viewModel.deleteRoute()} hitSlop={8}>
+          </MotionPressable>
+          <MotionPressable
+            onPress={() => viewModel.deleteRoute()}
+            hitSlop={8}
+            haptic="warning"
+          >
             <Ionicons name="trash-outline" size={22} color={Colors.alerts.error} />
-          </TouchableOpacity>
+          </MotionPressable>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scroll}
+      >
         <View style={styles.mapBox}>
-          <Mapbox.MapView style={styles.map} styleURL={MAP_STYLE_URL}>
+          <Mapbox.MapView
+            style={styles.map}
+            styleURL={MAP_STYLE_URL}
+            scrollEnabled={false}
+            zoomEnabled={false}
+            rotateEnabled={false}
+            pitchEnabled={false}
+          >
             <Mapbox.Camera
               defaultSettings={{
                 centerCoordinate: viewModel.centerCoordinate,
@@ -149,7 +170,7 @@ const RouteDetailScreen = observer(() => {
                 id={stop.id}
                 coordinate={[stop.location.longitude, stop.location.latitude]}
               >
-                <View style={styles.fuelMarker}>
+                <View collapsable={false} style={styles.fuelMarker}>
                   <Ionicons name="water" size={12} color={Colors.base.textPrimary} />
                 </View>
               </Mapbox.PointAnnotation>
@@ -170,23 +191,25 @@ const RouteDetailScreen = observer(() => {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.motoRow}
           >
-            {viewModel.motorcycles.map((moto) => {
+            {viewModel.motorcycles.map((moto, i) => {
               const active = viewModel.selectedMotorcycleId === moto.id;
               return (
-                <TouchableOpacity
-                  key={moto.id}
-                  style={[styles.motoChip, active && styles.motoChipActive]}
-                  onPress={() => viewModel.selectMotorcycle(moto.id)}
-                >
-                  <Text
-                    style={[styles.motoChipText, active && styles.motoChipTextActive]}
+                <AnimatedListItem key={moto.id} index={i}>
+                  <MotionPressable
+                    style={[styles.motoChip, active && styles.motoChipActive]}
+                    onPress={() => viewModel.selectMotorcycle(moto.id)}
+                    haptic="selection"
                   >
-                    {moto.displayName()}
-                  </Text>
-                  <Text style={styles.motoChipMeta}>
-                    {moto.tankCapacityLiters} L · {moto.fuelType}
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={[styles.motoChipText, active && styles.motoChipTextActive]}
+                    >
+                      {moto.displayName()}
+                    </Text>
+                    <Text style={styles.motoChipMeta}>
+                      {moto.tankCapacityLiters} L · {moto.fuelType}
+                    </Text>
+                  </MotionPressable>
+                </AnimatedListItem>
               );
             })}
           </ScrollView>
@@ -215,13 +238,17 @@ const RouteDetailScreen = observer(() => {
           />
         </View>
 
-        <TouchableOpacity
+        <MotionPressable
           style={[
             styles.estimateBtn,
             !viewModel.canEstimate && styles.estimateBtnDisabled,
           ]}
           disabled={!viewModel.canEstimate || viewModel.isEstimateLoading}
-          onPress={() => viewModel.estimateAutonomy()}
+          onPress={() => {
+            pendingEstimateScroll.current = true;
+            void viewModel.estimateAutonomy();
+          }}
+          haptic="impactMedium"
         >
           {viewModel.isEstimateLoading ? (
             <ActivityIndicator color={Colors.base.accent} />
@@ -231,14 +258,22 @@ const RouteDetailScreen = observer(() => {
               <Text style={styles.estimateBtnText}>Estimar autonomia</Text>
             </>
           )}
-        </TouchableOpacity>
+        </MotionPressable>
 
         {viewModel.isEstimateError ? (
           <Text style={styles.error}>{viewModel.isEstimateError}</Text>
         ) : null}
 
         {estimate ? (
-          <View style={styles.estimateCard}>
+          <View
+            style={styles.estimateCard}
+            onLayout={(e) => {
+              if (!pendingEstimateScroll.current) return;
+              pendingEstimateScroll.current = false;
+              const y = e.nativeEvent.layout.y;
+              scrollRef.current?.scrollTo({ y: y - Spacings.lg, animated: true });
+            }}
+          >
             <View
               style={[
                 styles.estimateBanner,
@@ -268,11 +303,13 @@ const RouteDetailScreen = observer(() => {
             </View>
             <Text style={styles.conditionsSummary}>{estimate.conditionsSummary}</Text>
 
-            {estimate.fuelStops.map((stop) => (
-              <View key={stop.id} style={styles.stopRow}>
-                <Ionicons name="water" size={16} color={Colors.base.accent} />
-                <Text style={styles.stopText}>{stop.label}</Text>
-              </View>
+            {estimate.fuelStops.map((stop, i) => (
+              <AnimatedListItem key={stop.id} index={i}>
+                <View style={styles.stopRow}>
+                  <Ionicons name="water" size={16} color={Colors.base.accent} />
+                  <Text style={styles.stopText}>{stop.label}</Text>
+                </View>
+              </AnimatedListItem>
             ))}
           </View>
         ) : null}
@@ -284,24 +321,26 @@ const RouteDetailScreen = observer(() => {
         {viewModel.fuelStations.length > 0 ? (
           <>
             <Text style={styles.sectionTitle}>Estaciones cerca de tus paradas</Text>
-            {viewModel.fuelStations.map((station) => (
-              <View key={station.id} style={styles.stationCard}>
-                <Ionicons name="business" size={20} color={Colors.base.accent} />
-                <View style={styles.stationBody}>
-                  <Text style={styles.stationName}>{station.name}</Text>
-                  {station.brand ? (
-                    <Text style={styles.stationBrand}>{station.brand}</Text>
-                  ) : null}
-                  <Text style={styles.stationPrice}>
-                    Corriente ~${viewModel.priceLabel(station.referencePriceCorriente)} ·
-                    Extra ~$
-                    {viewModel.priceLabel(station.referencePriceExtra)}
-                  </Text>
-                  <Text style={styles.stationNote}>
-                    Precio de referencia, no por estacion.
-                  </Text>
+            {viewModel.fuelStations.map((station, i) => (
+              <AnimatedListItem key={station.id} index={i}>
+                <View style={styles.stationCard}>
+                  <Ionicons name="business" size={20} color={Colors.base.accent} />
+                  <View style={styles.stationBody}>
+                    <Text style={styles.stationName}>{station.name}</Text>
+                    {station.brand ? (
+                      <Text style={styles.stationBrand}>{station.brand}</Text>
+                    ) : null}
+                    <Text style={styles.stationPrice}>
+                      Corriente ~${viewModel.priceLabel(station.referencePriceCorriente)}{' '}
+                      · Extra ~$
+                      {viewModel.priceLabel(station.referencePriceExtra)}
+                    </Text>
+                    <Text style={styles.stationNote}>
+                      Precio de referencia, no por estacion.
+                    </Text>
+                  </View>
                 </View>
-              </View>
+              </AnimatedListItem>
             ))}
           </>
         ) : null}
@@ -341,6 +380,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.md,
+  },
+  scrollView: {
+    flex: 1,
   },
   scroll: {
     padding: Spacings.spacex2,

@@ -29,6 +29,7 @@ export type SerializedDuplicateWaypoint = {
   kind: string;
   order: number;
   mapboxCategory?: string;
+  categoryKind?: string;
   notes?: string;
   stopDurationMin?: number;
   isReturnClone?: boolean;

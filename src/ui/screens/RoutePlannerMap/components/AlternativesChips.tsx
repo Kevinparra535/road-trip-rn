@@ -1,6 +1,9 @@
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
+
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -45,64 +48,68 @@ const AlternativesChips = observer(
             const durationLabel = formatDuration(Math.round(alt.durationMin));
 
             return (
-              <TouchableOpacity
-                key={index}
-                style={[styles.card, isActive ? styles.cardActive : styles.cardInactive]}
-                onPress={() => viewModel.selectAlternative(index)}
-                activeOpacity={0.75}
-                testID={`route-alternatives-chip-${index}`}
-              >
-                {/* Card header: label + selection indicator */}
-                <View style={styles.cardHeader}>
-                  <Text
-                    style={[
-                      styles.cardLabel,
-                      isActive ? styles.textAccent : styles.textSecondary,
-                    ]}
-                  >
-                    Ruta {index + 1}
-                  </Text>
-                  <Ionicons
-                    name={isActive ? 'checkmark-circle' : 'radio-button-off'}
-                    size={16}
-                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
-                  />
-                </View>
+              <AnimatedListItem key={index} index={index}>
+                <MotionPressable
+                  style={[
+                    styles.card,
+                    isActive ? styles.cardActive : styles.cardInactive,
+                  ]}
+                  onPress={() => viewModel.selectAlternative(index)}
+                  haptic="selection"
+                  testID={`route-alternatives-chip-${index}`}
+                >
+                  {/* Card header: label + selection indicator */}
+                  <View style={styles.cardHeader}>
+                    <Text
+                      style={[
+                        styles.cardLabel,
+                        isActive ? styles.textAccent : styles.textSecondary,
+                      ]}
+                    >
+                      Ruta {index + 1}
+                    </Text>
+                    <Ionicons
+                      name={isActive ? 'checkmark-circle' : 'radio-button-off'}
+                      size={16}
+                      color={isActive ? Colors.base.accent : Colors.base.iconMuted}
+                    />
+                  </View>
 
-                {/* Distance row */}
-                <View style={styles.statRow}>
-                  <Ionicons
-                    name="navigate-outline"
-                    size={12}
-                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.statValue,
-                      isActive ? styles.textAccent : styles.textPrimary,
-                    ]}
-                  >
-                    {Math.round(alt.distanceKm)} km
-                  </Text>
-                </View>
+                  {/* Distance row */}
+                  <View style={styles.statRow}>
+                    <Ionicons
+                      name="navigate-outline"
+                      size={12}
+                      color={isActive ? Colors.base.accent : Colors.base.iconMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.statValue,
+                        isActive ? styles.textAccent : styles.textPrimary,
+                      ]}
+                    >
+                      {Math.round(alt.distanceKm)} km
+                    </Text>
+                  </View>
 
-                {/* Duration row */}
-                <View style={styles.statRow}>
-                  <Ionicons
-                    name="time-outline"
-                    size={12}
-                    color={isActive ? Colors.base.accent : Colors.base.iconMuted}
-                  />
-                  <Text
-                    style={[
-                      styles.statValue,
-                      isActive ? styles.textAccent : styles.textPrimary,
-                    ]}
-                  >
-                    {durationLabel}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                  {/* Duration row */}
+                  <View style={styles.statRow}>
+                    <Ionicons
+                      name="time-outline"
+                      size={12}
+                      color={isActive ? Colors.base.accent : Colors.base.iconMuted}
+                    />
+                    <Text
+                      style={[
+                        styles.statValue,
+                        isActive ? styles.textAccent : styles.textPrimary,
+                      ]}
+                    >
+                      {durationLabel}
+                    </Text>
+                  </View>
+                </MotionPressable>
+              </AnimatedListItem>
             );
           })}
         </ScrollView>

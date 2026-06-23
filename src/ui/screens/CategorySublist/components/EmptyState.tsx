@@ -1,5 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -49,15 +51,15 @@ export const EmptyState = ({
     <Text style={styles.emptyTitle}>{title}</Text>
     <Text style={styles.emptySub}>{subtitle}</Text>
     {!isWide ? (
-      <TouchableOpacity
+      <MotionPressable
         style={styles.expandBtn}
         onPress={onExpand}
-        activeOpacity={0.85}
+        haptic="selection"
         testID="category-sublist-expand-btn"
       >
         <Ionicons name="globe-outline" size={16} color={Colors.base.textPrimary} />
         <Text style={styles.expandBtnText}>Ver todos, no solo en la ruta</Text>
-      </TouchableOpacity>
+      </MotionPressable>
     ) : null}
   </View>
 );

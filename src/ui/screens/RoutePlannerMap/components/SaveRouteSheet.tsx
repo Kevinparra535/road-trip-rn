@@ -5,13 +5,14 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { Bookmark, ChevronLeft, Map as MapIcon, X } from 'lucide-react-native';
 import { observer } from 'mobx-react-lite';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import AppTextInput from '@/ui/components/AppTextInput';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -54,13 +55,21 @@ export const SaveRouteSheet = observer(
         >
           <Pressable style={styles.saveSheetCard} onPress={() => {}}>
             <View style={styles.saveSheetHeader}>
-              <TouchableOpacity onPress={() => viewModel.closeSaveSheet()} hitSlop={8}>
+              <MotionPressable
+                onPress={() => viewModel.closeSaveSheet()}
+                haptic="selection"
+                hitSlop={8}
+              >
                 <ChevronLeft size={22} color={Colors.base.textPrimary} />
-              </TouchableOpacity>
+              </MotionPressable>
               <Text style={styles.saveSheetTitle}>Guardar ruta</Text>
-              <TouchableOpacity onPress={() => viewModel.closeSaveSheet()} hitSlop={8}>
+              <MotionPressable
+                onPress={() => viewModel.closeSaveSheet()}
+                haptic="selection"
+                hitSlop={8}
+              >
                 <X size={22} color={Colors.base.iconMuted} />
-              </TouchableOpacity>
+              </MotionPressable>
             </View>
 
             <ScrollView keyboardShouldPersistTaps="handled">
@@ -104,23 +113,29 @@ export const SaveRouteSheet = observer(
 
               <Text style={styles.saveLabel}>TIPO DE RODADA</Text>
               <View style={styles.rideTypeTabs}>
-                {rideTypeTabs.map((tab) => {
+                {rideTypeTabs.map((tab, index) => {
                   const active = viewModel.rideType === tab.value;
                   return (
-                    <TouchableOpacity
+                    <AnimatedListItem
                       key={tab.value}
-                      style={[styles.rideTypeTab, active && styles.rideTypeTabActive]}
-                      onPress={() => viewModel.setRideType(tab.value)}
+                      index={index}
+                      style={styles.rideTypeTabFlex}
                     >
-                      <Text
-                        style={[
-                          styles.rideTypeTabText,
-                          active && styles.rideTypeTabTextActive,
-                        ]}
+                      <MotionPressable
+                        style={[styles.rideTypeTab, active && styles.rideTypeTabActive]}
+                        onPress={() => viewModel.setRideType(tab.value)}
+                        haptic="selection"
                       >
-                        {tab.label}
-                      </Text>
-                    </TouchableOpacity>
+                        <Text
+                          style={[
+                            styles.rideTypeTabText,
+                            active && styles.rideTypeTabTextActive,
+                          ]}
+                        >
+                          {tab.label}
+                        </Text>
+                      </MotionPressable>
+                    </AnimatedListItem>
                   );
                 })}
               </View>
@@ -139,19 +154,21 @@ export const SaveRouteSheet = observer(
               ) : null}
 
               <View style={styles.saveActions}>
-                <TouchableOpacity
+                <MotionPressable
                   style={styles.saveCancelBtn}
                   onPress={() => viewModel.closeSaveSheet()}
+                  haptic="selection"
                 >
                   <Text style={styles.saveCancelText}>Esta vez no</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
+                </MotionPressable>
+                <MotionPressable
                   style={[
                     styles.saveBtn,
                     (!viewModel.canSave || viewModel.isSubmitting) && styles.ctaDisabled,
                   ]}
                   disabled={!viewModel.canSave || viewModel.isSubmitting}
                   onPress={handleSave}
+                  haptic="success"
                 >
                   {viewModel.isSubmitting ? (
                     <ActivityIndicator color={Colors.base.textPrimary} />
@@ -161,7 +178,7 @@ export const SaveRouteSheet = observer(
                       <Text style={styles.ctaText}>Guardar</Text>
                     </>
                   )}
-                </TouchableOpacity>
+                </MotionPressable>
               </View>
             </ScrollView>
           </Pressable>
@@ -264,6 +281,9 @@ const styles = StyleSheet.create({
   rideTypeTabs: {
     flexDirection: 'row',
     gap: Spacings.sm,
+  },
+  rideTypeTabFlex: {
+    flex: 1,
   },
   rideTypeTab: {
     flex: 1,

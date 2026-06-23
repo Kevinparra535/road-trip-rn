@@ -1,5 +1,6 @@
 import { Alert, StyleSheet, Text, View } from 'react-native';
-import { ChevronDown, ChevronUp, Flag, Pencil, X } from 'lucide-react-native';
+import { GestureDetector, type GestureType } from 'react-native-gesture-handler';
+import { Flag, GripVertical, Pencil, StickyNote, X } from 'lucide-react-native';
 
 import MotionPressable from '@/ui/components/MotionPressable';
 
@@ -18,15 +19,19 @@ type Props = {
   onEditKind: (id: string) => void;
   onEditDetail: (id: string) => void;
   onEditPlace: (id: string) => void;
-  onMoveUp: (id: string) => void;
-  onMoveDown: (id: string) => void;
   onRemove: (id: string) => void;
+  /**
+   * Gesto del drag handle (grip) provisto por `DraggableList`. Si viene, se
+   * monta el handle para reordenar arrastrando; si no (modo lectura), se omite.
+   */
+  dragGesture?: GestureType;
 };
 
 /**
  * Fila de una parada en el timeline del Planner (diseño Pencil). Es un leaf
  * presentacional: resuelve su propio icono/color via `stopKindMeta` y delega
- * todas las acciones (editar kind/detalle/lugar, reordenar, eliminar) al screen.
+ * todas las acciones (editar kind/notas/lugar, eliminar) al screen. El
+ * reordenamiento es por drag desde el grip (`dragGesture`).
  */
 export function PlannerTimelineRow({
   item,
@@ -34,9 +39,8 @@ export function PlannerTimelineRow({
   onEditKind,
   onEditDetail,
   onEditPlace,
-  onMoveUp,
-  onMoveDown,
   onRemove,
+  dragGesture,
 }: Props) {
   const meta = stopKindMeta(item.kind);
   const canEditKind = item.isIntermediate;
@@ -45,12 +49,6 @@ export function PlannerTimelineRow({
   // del kind.
   const PinIcon = item.isLast ? Flag : meta.lucideIcon;
   const hasDetails = !!(item.notes || item.stopDurationMin);
-
-  // Un solo lápiz (como el diseño): en paradas intermedias abre el sheet de
-  // detalle (notas/duración + cambiar lugar); en los extremos va directo a
-  // elegir lugar.
-  const handleEditPress = () =>
-    item.isIntermediate ? onEditDetail(item.id) : onEditPlace(item.id);
 
   const handleRemovePress = () => {
     if (item.isIntermediate) {
@@ -118,47 +116,35 @@ export function PlannerTimelineRow({
         </View>
         {!readOnly ? (
           <View style={styles.stopActions}>
+            {item.isIntermediate ? (
+              <MotionPressable
+                onPress={() => onEditDetail(item.id)}
+                haptic="selection"
+                hitSlop={6}
+                style={[styles.actionBtn, hasDetails && styles.actionBtnActive]}
+                testID={`waypoint-${item.id}-notes`}
+              >
+                <StickyNote
+                  size={16}
+                  color={hasDetails ? Colors.base.accent : Colors.base.iconMuted}
+                />
+              </MotionPressable>
+            ) : null}
             <MotionPressable
-              onPress={handleEditPress}
+              onPress={() => onEditPlace(item.id)}
               haptic="selection"
               hitSlop={6}
               style={styles.actionBtn}
               testID={`waypoint-${item.id}-edit`}
             >
-              <Pencil
-                size={16}
-                color={hasDetails ? Colors.base.accent : Colors.base.iconMuted}
-              />
+              <Pencil size={16} color={Colors.base.iconMuted} />
             </MotionPressable>
-            {item.canMoveUp || item.canMoveDown ? (
-              <View style={styles.reorderColumn}>
-                <MotionPressable
-                  onPress={() => onMoveUp(item.id)}
-                  disabled={!item.canMoveUp}
-                  haptic="selection"
-                  hitSlop={6}
-                  style={styles.reorderBtn}
-                >
-                  <ChevronUp
-                    size={14}
-                    color={item.canMoveUp ? Colors.base.iconMuted : Colors.base.textMuted}
-                  />
-                </MotionPressable>
-                <MotionPressable
-                  onPress={() => onMoveDown(item.id)}
-                  disabled={!item.canMoveDown}
-                  haptic="selection"
-                  hitSlop={6}
-                  style={styles.reorderBtn}
-                >
-                  <ChevronDown
-                    size={14}
-                    color={
-                      item.canMoveDown ? Colors.base.iconMuted : Colors.base.textMuted
-                    }
-                  />
-                </MotionPressable>
-              </View>
+            {dragGesture ? (
+              <GestureDetector gesture={dragGesture}>
+                <View style={styles.dragHandle} testID={`waypoint-${item.id}-drag`}>
+                  <GripVertical size={18} color={Colors.base.textSecondary} />
+                </View>
+              </GestureDetector>
             ) : null}
           </View>
         ) : null}
@@ -251,21 +237,26 @@ const styles = StyleSheet.create({
     height: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: BorderRadius.md,
+  },
+  // Sticky-note resaltado cuando la parada tiene notas/duración (diseño Pencil).
+  actionBtnActive: {
+    backgroundColor: Colors.base.accentDim,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
   },
   stopActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacings.xs,
   },
-  reorderColumn: {
-    flexDirection: 'column',
+  // Drag handle (grip) para reordenar arrastrando — fondo bgPrimary como el diseño.
+  dragHandle: {
+    width: 30,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  reorderBtn: {
-    width: 22,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: Colors.base.bgPrimary,
+    borderRadius: BorderRadius.md,
   },
 });

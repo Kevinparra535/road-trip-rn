@@ -436,6 +436,9 @@ export class RoutePlannerMapViewModel {
   moveStop(waypointId: string, direction: 'up' | 'down'): void {
     this.planner.moveStop(waypointId, direction);
   }
+  reorderStops(fromIndex: number, toIndex: number): void {
+    this.planner.reorderStops(fromIndex, toIndex);
+  }
   removeStop(waypointId: string): void {
     this.planner.removeStop(waypointId);
   }

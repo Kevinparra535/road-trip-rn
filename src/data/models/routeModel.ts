@@ -20,6 +20,7 @@ type WaypointJson = {
   order: number;
   mapbox_category?: string;
   user_override_kind?: boolean;
+  category_kind?: string;
   notes?: string;
   stop_duration_min?: number;
   is_return_clone?: boolean;
@@ -206,6 +207,8 @@ export class RouteModel {
               typeof w.user_override_kind === 'boolean'
                 ? w.user_override_kind
                 : undefined,
+            category_kind:
+              typeof w.category_kind === 'string' ? w.category_kind : undefined,
             notes: typeof w.notes === 'string' ? w.notes : undefined,
             stop_duration_min:
               typeof w.stop_duration_min === 'number' ? w.stop_duration_min : undefined,
@@ -244,6 +247,7 @@ export class RouteModel {
         order: w.order,
         mapbox_category: w.mapboxCategory,
         user_override_kind: w.userOverrideKind,
+        category_kind: w.categoryKind,
         notes: w.hasNotes() ? w.notes : undefined,
         stop_duration_min:
           w.stopDurationMin && w.stopDurationMin > 0 ? w.stopDurationMin : undefined,
@@ -316,6 +320,7 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
         // Si fue migrado de 'stop' legacy, marcamos que NO fue eleccion del
         // rider para que la UI permita re-categorizar sin friccion.
         userOverrideKind: migrated ? false : w.user_override_kind,
+        categoryKind: w.category_kind as Waypoint['categoryKind'],
         notes: w.notes,
         stopDurationMin: w.stop_duration_min,
         isReturnClone: w.is_return_clone,

@@ -34,6 +34,7 @@ import { TYPES } from '@/config/types';
 import { StopKind } from '@/domain/entities/StopKind';
 
 import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import DraggableList from '@/ui/components/DraggableList';
 import GradientView from '@/ui/components/GradientView';
 import MotionPressable from '@/ui/components/MotionPressable';
 import Switch from '@/ui/components/Switch';
@@ -371,24 +372,26 @@ const RoutePlannerMapScreen = observer(() => {
                 </View>
               ) : null}
 
-              {viewModel.timelineItems.map((item, index) => (
-                <AnimatedListItem key={item.id} index={index}>
+              <DraggableList
+                data={viewModel.timelineItems}
+                keyExtractor={(item) => item.id}
+                gap={Spacings.sm}
+                onReorder={(from, to) => viewModel.reorderStops(from, to)}
+                renderItem={({ item, drag }) => (
                   <PlannerTimelineRow
-                    key={item.id}
                     item={item}
                     readOnly={viewModel.isReadOnly}
+                    dragGesture={drag}
                     onEditKind={setEditingKindFor}
                     onEditDetail={setEditingDetailFor}
                     onEditPlace={(id) => {
                       viewModel.startEditingWaypoint(id);
                       navigation.navigate('AddStop');
                     }}
-                    onMoveUp={(id) => viewModel.moveStop(id, 'up')}
-                    onMoveDown={(id) => viewModel.moveStop(id, 'down')}
                     onRemove={(id) => viewModel.removeStop(id)}
                   />
-                </AnimatedListItem>
-              ))}
+                )}
+              />
 
               {!isEmpty ? (
                 <MotionPressable

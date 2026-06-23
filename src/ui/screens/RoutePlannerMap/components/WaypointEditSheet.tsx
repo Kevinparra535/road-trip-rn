@@ -2,8 +2,10 @@ import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { observer } from 'mobx-react-lite';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import AppTextInput from '@/ui/components/AppTextInput';
 import Chip from '@/ui/components/Chip';
+import MotionPressable from '@/ui/components/MotionPressable';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 import Stepper from '@/ui/components/Stepper';
 
@@ -77,15 +79,16 @@ const WaypointEditSheet = observer(
               </View>
               {/* Link "Cambiar lugar" */}
               {onChangePlace ? (
-                <Pressable
+                <MotionPressable
                   onPress={() => onChangePlace(waypoint.id)}
                   style={styles.changePlaceBtn}
+                  haptic="selection"
                   accessibilityRole="button"
                   accessibilityLabel="Cambiar lugar"
                 >
                   <Ionicons name="swap-horizontal" size={14} color={Colors.base.accent} />
                   <Text style={styles.changePlaceText}>Cambiar lugar</Text>
-                </Pressable>
+                </MotionPressable>
               ) : null}
             </View>
 
@@ -98,17 +101,18 @@ const WaypointEditSheet = observer(
               <View style={styles.sectionBlock}>
                 <Text style={styles.sectionLabel}>Tipo de parada</Text>
                 <View style={styles.chipRow}>
-                  {SELECTABLE_STOP_KINDS.map((kind) => {
+                  {SELECTABLE_STOP_KINDS.map((kind, index) => {
                     const meta = stopKindMeta(kind);
                     return (
-                      <Chip
-                        key={kind}
-                        label={meta.label}
-                        iconName={meta.icon}
-                        active={activeKind === kind}
-                        onPress={() => viewModel.setStopKind(waypoint.id, kind)}
-                        testID={`kind-chip-${kind}`}
-                      />
+                      <AnimatedListItem key={kind} index={index}>
+                        <Chip
+                          label={meta.label}
+                          iconName={meta.icon}
+                          active={activeKind === kind}
+                          onPress={() => viewModel.setStopKind(waypoint.id, kind)}
+                          testID={`kind-chip-${kind}`}
+                        />
+                      </AnimatedListItem>
                     );
                   })}
                 </View>

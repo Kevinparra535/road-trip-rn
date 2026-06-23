@@ -207,6 +207,7 @@ export class RouteDetailViewModel {
         kind: w.kind,
         order: w.order,
         mapboxCategory: w.mapboxCategory,
+        categoryKind: w.categoryKind,
         notes: w.notes,
         stopDurationMin: w.stopDurationMin,
         isReturnClone: w.isReturnClone,

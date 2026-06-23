@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +9,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
+
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
 
@@ -58,9 +61,13 @@ const CategorySublistScreen = observer(() => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
+        <MotionPressable
+          onPress={() => navigation.goBack()}
+          haptic="selection"
+          hitSlop={8}
+        >
           <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
-        </TouchableOpacity>
+        </MotionPressable>
         <View style={styles.headerCenter}>
           <Text style={styles.navTitle} numberOfLines={1}>
             {viewModel.title}
@@ -69,9 +76,13 @@ const CategorySublistScreen = observer(() => {
             {viewModel.subtitle}
           </Text>
         </View>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
+        <MotionPressable
+          onPress={() => navigation.goBack()}
+          haptic="selection"
+          hitSlop={8}
+        >
           <Ionicons name="close" size={26} color={Colors.base.iconMuted} />
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <ScrollView
@@ -80,39 +91,40 @@ const CategorySublistScreen = observer(() => {
         contentContainerStyle={styles.chipRow}
         keyboardShouldPersistTaps="handled"
       >
-        {viewModel.chipCategories.map((chip) => {
+        {viewModel.chipCategories.map((chip, index) => {
           const isActive = viewModel.activeCategory === chip.category;
           return (
-            <TouchableOpacity
-              key={chip.category}
-              onPress={() => viewModel.setCategory(chip.category)}
-              activeOpacity={0.8}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: isActive
-                    ? hexToRgba(chip.color, 0.18)
-                    : Colors.base.bgCard,
-                  borderColor: isActive ? chip.color : Colors.base.cardBorder,
-                },
-              ]}
-            >
-              <Ionicons
-                name={chip.iconName}
-                size={16}
-                color={isActive ? chip.color : Colors.base.iconMuted}
-              />
-              <Text
+            <AnimatedListItem key={chip.category} index={index}>
+              <MotionPressable
+                onPress={() => viewModel.setCategory(chip.category)}
+                haptic="selection"
                 style={[
-                  styles.chipText,
+                  styles.chip,
                   {
-                    color: isActive ? chip.color : Colors.base.textSecondary,
+                    backgroundColor: isActive
+                      ? hexToRgba(chip.color, 0.18)
+                      : Colors.base.bgCard,
+                    borderColor: isActive ? chip.color : Colors.base.cardBorder,
                   },
                 ]}
               >
-                {chip.label}
-              </Text>
-            </TouchableOpacity>
+                <Ionicons
+                  name={chip.iconName}
+                  size={16}
+                  color={isActive ? chip.color : Colors.base.iconMuted}
+                />
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: isActive ? chip.color : Colors.base.textSecondary,
+                    },
+                  ]}
+                >
+                  {chip.label}
+                </Text>
+              </MotionPressable>
+            </AnimatedListItem>
           );
         })}
       </ScrollView>
@@ -132,43 +144,44 @@ const CategorySublistScreen = observer(() => {
           />
         ) : null}
 
-        {viewModel.rows.map((row) => (
-          <TouchableOpacity
-            key={row.place.id}
-            style={styles.poiRow}
-            onPress={() => handlePoiTap(row.place)}
-            activeOpacity={0.85}
-          >
-            <View
-              style={[
-                styles.poiIconBox,
-                { backgroundColor: hexToRgba(viewModel.activeColor, 0.15) },
-              ]}
+        {viewModel.rows.map((row, index) => (
+          <AnimatedListItem key={row.place.id} index={index}>
+            <MotionPressable
+              style={styles.poiRow}
+              onPress={() => handlePoiTap(row.place)}
+              haptic="selection"
             >
-              <Ionicons
-                name={viewModel.activeIconName}
-                size={20}
-                color={viewModel.activeColor}
-              />
-            </View>
-            <View style={styles.poiBody}>
-              <Text style={styles.poiName} numberOfLines={1}>
-                {row.place.name}
-              </Text>
-              <Text style={styles.poiSub} numberOfLines={1}>
-                {row.place.fullName}
-              </Text>
-              <View style={styles.poiMetaRow}>
-                <Text style={styles.poiMeta}>{row.distanceLabel}</Text>
-                {row.isOnRoute ? (
-                  <View style={styles.onRouteBadge}>
-                    <Text style={styles.onRouteBadgeText}>EN LA RUTA</Text>
-                  </View>
-                ) : null}
+              <View
+                style={[
+                  styles.poiIconBox,
+                  { backgroundColor: hexToRgba(viewModel.activeColor, 0.15) },
+                ]}
+              >
+                <Ionicons
+                  name={viewModel.activeIconName}
+                  size={20}
+                  color={viewModel.activeColor}
+                />
               </View>
-            </View>
-            <Ionicons name="add-circle" size={26} color={Colors.base.accent} />
-          </TouchableOpacity>
+              <View style={styles.poiBody}>
+                <Text style={styles.poiName} numberOfLines={1}>
+                  {row.place.name}
+                </Text>
+                <Text style={styles.poiSub} numberOfLines={1}>
+                  {row.place.fullName}
+                </Text>
+                <View style={styles.poiMetaRow}>
+                  <Text style={styles.poiMeta}>{row.distanceLabel}</Text>
+                  {row.isOnRoute ? (
+                    <View style={styles.onRouteBadge}>
+                      <Text style={styles.onRouteBadgeText}>EN LA RUTA</Text>
+                    </View>
+                  ) : null}
+                </View>
+              </View>
+              <Ionicons name="add-circle" size={26} color={Colors.base.accent} />
+            </MotionPressable>
+          </AnimatedListItem>
         ))}
       </ScrollView>
     </SafeAreaView>

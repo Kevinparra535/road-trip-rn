@@ -25,6 +25,13 @@ export type WaypointConstructorParams = {
    * que la inferencia automatica NO sobrescriba elecciones explicitas.
    */
   userOverrideKind?: boolean;
+  /**
+   * Categoria elegida/inferida para la parada (`food`, `fuel`, `rest`, ...),
+   * independiente del rol posicional. Si la parada pasa a `start`/`destination`,
+   * `kind` toma el rol posicional pero `categoryKind` se conserva — asi, al
+   * volver a ser intermedia, se restaura la categoria en vez de perderse.
+   */
+  categoryKind?: WaypointKind;
   /** Nota libre del rider para esta parada (ej. "tanquear y almorzar"). */
   notes?: string;
   /** Duracion planeada de la parada, en minutos. Alimenta el ETA con paradas. */
@@ -44,6 +51,7 @@ export class Waypoint {
   order: number;
   mapboxCategory?: string;
   userOverrideKind?: boolean;
+  categoryKind?: WaypointKind;
   notes?: string;
   stopDurationMin?: number;
 
@@ -56,6 +64,7 @@ export class Waypoint {
     this.order = params.order;
     this.mapboxCategory = params.mapboxCategory;
     this.userOverrideKind = params.userOverrideKind;
+    this.categoryKind = params.categoryKind;
     this.notes = params.notes;
     this.stopDurationMin = params.stopDurationMin;
 

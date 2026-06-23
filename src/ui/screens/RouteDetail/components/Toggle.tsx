@@ -1,5 +1,7 @@
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -13,9 +15,10 @@ type ToggleProps = {
 };
 
 export const Toggle = ({ label, active, onPress }: ToggleProps) => (
-  <TouchableOpacity
+  <MotionPressable
     style={[styles.toggle, active && styles.toggleActive]}
     onPress={onPress}
+    haptic="selection"
   >
     <Ionicons
       name={active ? 'checkmark-circle' : 'ellipse-outline'}
@@ -23,7 +26,7 @@ export const Toggle = ({ label, active, onPress }: ToggleProps) => (
       color={active ? Colors.base.accent : Colors.base.iconMuted}
     />
     <Text style={[styles.toggleText, active && styles.toggleTextActive]}>{label}</Text>
-  </TouchableOpacity>
+  </MotionPressable>
 );
 
 const styles = StyleSheet.create({

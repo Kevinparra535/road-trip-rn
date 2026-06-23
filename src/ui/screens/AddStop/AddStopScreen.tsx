@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +18,9 @@ import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import AppTextInput from '@/ui/components/AppTextInput';
+import MotionPressable from '@/ui/components/MotionPressable';
 import Skeleton from '@/ui/components/Skeleton';
 
 import { RoutesStackParamList } from '@/ui/navigation/types';
@@ -86,9 +87,13 @@ const AddStopScreen = observer(() => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.navbar}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={8}>
+        <MotionPressable
+          onPress={() => navigation.goBack()}
+          hitSlop={8}
+          haptic="selection"
+        >
           <Ionicons name="chevron-back" size={26} color={Colors.base.textPrimary} />
-        </TouchableOpacity>
+        </MotionPressable>
         <View style={styles.navTitleColumn}>
           <Text style={styles.navTitle} numberOfLines={1}>
             {viewModel.headerTitle}
@@ -99,14 +104,14 @@ const AddStopScreen = observer(() => {
             </Text>
           ) : null}
         </View>
-        <TouchableOpacity
+        <MotionPressable
           onPress={handleMic}
           hitSlop={8}
           style={styles.micBtn}
-          activeOpacity={0.85}
+          haptic="selection"
         >
           <Ionicons name="mic" size={20} color={Colors.base.accent} />
-        </TouchableOpacity>
+        </MotionPressable>
       </View>
 
       <View style={styles.searchBarWrapper}>
@@ -145,48 +150,54 @@ const AddStopScreen = observer(() => {
             <Text style={styles.searchStatus}>Sin resultados.</Text>
           ) : null}
 
-          {(viewModel.searchResults ?? []).map((place) => (
-            <TouchableOpacity
-              key={place.id}
-              style={styles.recentRow}
-              onPress={() => handleSearchResultTap(place)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="location" size={20} color={Colors.base.iconMuted} />
-              <View style={styles.recentBody}>
-                <Text style={styles.recentName} numberOfLines={1}>
-                  {place.name}
-                </Text>
-                <Text style={styles.recentSub} numberOfLines={1}>
-                  {place.fullName}
-                </Text>
-              </View>
-              <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
-            </TouchableOpacity>
+          {(viewModel.searchResults ?? []).map((place, index) => (
+            <AnimatedListItem key={place.id} index={index}>
+              <MotionPressable
+                style={styles.recentRow}
+                onPress={() => handleSearchResultTap(place)}
+                haptic="selection"
+              >
+                <Ionicons name="location" size={20} color={Colors.base.iconMuted} />
+                <View style={styles.recentBody}>
+                  <Text style={styles.recentName} numberOfLines={1}>
+                    {place.name}
+                  </Text>
+                  <Text style={styles.recentSub} numberOfLines={1}>
+                    {place.fullName}
+                  </Text>
+                </View>
+                <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
+              </MotionPressable>
+            </AnimatedListItem>
           ))}
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.scroll}>
           <View style={styles.grid}>
             {viewModel.categoryTiles.map((tile, index) => (
-              <TouchableOpacity
+              <AnimatedListItem
                 key={`${tile.category}-${index}`}
-                style={[styles.tile, { borderColor: hexToRgba(tile.color, 0.4) }]}
-                onPress={() => handleCategoryTap(tile)}
-                activeOpacity={0.85}
+                index={index}
+                style={styles.tileWrapper}
               >
-                <View
-                  style={[
-                    styles.tileIconBox,
-                    { backgroundColor: hexToRgba(tile.color, 0.15) },
-                  ]}
+                <MotionPressable
+                  style={[styles.tile, { borderColor: hexToRgba(tile.color, 0.4) }]}
+                  onPress={() => handleCategoryTap(tile)}
+                  haptic="selection"
                 >
-                  <Ionicons name={tile.iconName} size={28} color={tile.color} />
-                </View>
-                <Text style={styles.tileLabel} numberOfLines={1}>
-                  {tile.label}
-                </Text>
-              </TouchableOpacity>
+                  <View
+                    style={[
+                      styles.tileIconBox,
+                      { backgroundColor: hexToRgba(tile.color, 0.15) },
+                    ]}
+                  >
+                    <Ionicons name={tile.iconName} size={28} color={tile.color} />
+                  </View>
+                  <Text style={styles.tileLabel} numberOfLines={1}>
+                    {tile.label}
+                  </Text>
+                </MotionPressable>
+              </AnimatedListItem>
             ))}
           </View>
 
@@ -203,24 +214,25 @@ const AddStopScreen = observer(() => {
             </Text>
           ) : null}
 
-          {viewModel.recents.map((recent) => (
-            <TouchableOpacity
-              key={recent.id}
-              style={styles.recentRow}
-              onPress={() => handleRecentTap(recent)}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="time-outline" size={20} color={Colors.base.iconMuted} />
-              <View style={styles.recentBody}>
-                <Text style={styles.recentName} numberOfLines={1}>
-                  {recent.name}
-                </Text>
-                <Text style={styles.recentSub} numberOfLines={1}>
-                  {recent.fullName}
-                </Text>
-              </View>
-              <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
-            </TouchableOpacity>
+          {viewModel.recents.map((recent, index) => (
+            <AnimatedListItem key={recent.id} index={index}>
+              <MotionPressable
+                style={styles.recentRow}
+                onPress={() => handleRecentTap(recent)}
+                haptic="selection"
+              >
+                <Ionicons name="time-outline" size={20} color={Colors.base.iconMuted} />
+                <View style={styles.recentBody}>
+                  <Text style={styles.recentName} numberOfLines={1}>
+                    {recent.name}
+                  </Text>
+                  <Text style={styles.recentSub} numberOfLines={1}>
+                    {recent.fullName}
+                  </Text>
+                </View>
+                <Ionicons name="add-circle" size={22} color={Colors.base.accent} />
+              </MotionPressable>
+            </AnimatedListItem>
           ))}
         </ScrollView>
       )}
@@ -286,8 +298,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacings.md,
   },
-  tile: {
+  tileWrapper: {
     flexBasis: '47%',
+  },
+  tile: {
     paddingVertical: Spacings.lg,
     alignItems: 'center',
     justifyContent: 'center',
