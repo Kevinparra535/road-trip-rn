@@ -345,4 +345,22 @@ describe('DestinationPreviewViewModel', () => {
     expect(vm.hasMotorcycleVerdict).toBe(false);
     expect(vm.autonomyVerdict).toBeNull();
   });
+
+  it('setRideStyle se refleja y se pasa al BuildRoutePreviewUseCase (F5)', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview();
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    expect(vm.rideStyle).toBe('fast');
+    vm.setRideStyle('curvy');
+    expect(vm.rideStyle).toBe('curvy');
+
+    await vm.loadRoutePreview();
+    expect(build.run.mock.calls[0][0].rideStyle).toBe('curvy');
+  });
 });

@@ -129,6 +129,7 @@ describe('RouteDetailViewModel', () => {
       revokeShareCode as any,
       createTripParty as any,
       partyStore as any,
+      { run: jest.fn().mockResolvedValue(undefined) } as any,
     );
     return { vm, del };
   };
@@ -2218,6 +2219,7 @@ describe('RouteDetailViewModel', () => {
       revokeShare as any,
       createParty as any,
       partyStore as any,
+      { run: jest.fn().mockResolvedValue(undefined) } as any,
     );
     return {
       vm,

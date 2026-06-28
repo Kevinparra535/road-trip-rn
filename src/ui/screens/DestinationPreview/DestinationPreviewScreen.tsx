@@ -18,6 +18,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TYPES } from '@/config/types';
 
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import RideStyleSelector from '@/ui/components/RideStyleSelector';
 import RideTypeSelector from '@/ui/components/RideTypeSelector';
 
 import { AppStackParamList } from '@/ui/navigation/types';
@@ -216,6 +217,14 @@ const DestinationPreviewScreen = observer(() => {
             value={viewModel.rideType}
             onChange={(rideType) => viewModel.setRideType(rideType)}
             variant="compact"
+          />
+        </View>
+
+        <View style={styles.rideTypeSection}>
+          <Text style={styles.rideTypeLabel}>Estilo de ruta</Text>
+          <RideStyleSelector
+            value={viewModel.rideStyle}
+            onChange={(rideStyle) => viewModel.setRideStyle(rideStyle)}
           />
         </View>
 

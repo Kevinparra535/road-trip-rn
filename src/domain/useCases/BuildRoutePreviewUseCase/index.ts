@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
 
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -19,6 +20,8 @@ export type BuildRoutePreviewInput = {
   /** Destino previsualizado. */
   destination: { id: string; name: string; latitude: number; longitude: number };
   rideType: RideType;
+  /** Estilo de ruta (F5): fast/curvy/fuel. */
+  rideStyle?: RideStyle;
 };
 
 export type RoutePreview = {
@@ -58,6 +61,7 @@ export class BuildRoutePreviewUseCase implements UseCase<
     const route = await this.calculateDirectionsUseCase.run({
       waypoints: this.buildWaypoints(input),
       rideType: input.rideType,
+      rideStyle: input.rideStyle,
     });
 
     const motorcycle = await this.resolveActiveMotorcycle();

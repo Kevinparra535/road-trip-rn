@@ -5,6 +5,7 @@ import { TYPES } from '@/config/types';
 
 import { Place } from '@/domain/entities/Place';
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -95,9 +96,10 @@ export class DestinationPreviewViewModel {
     );
 
     // Trazado real + veredicto de autonomía: también al cambiar de lugar (y
-    // re-dispara si cambia el `rideType` en el sheet, ya que afecta la ruta).
+    // re-dispara si cambia el `rideType` o el `rideStyle` en el sheet, ya que
+    // afectan la ruta).
     this.routeReactionDisposer = reaction(
-      () => `${this.previewPlace?.id ?? ''}:${this.rideType}`,
+      () => `${this.previewPlace?.id ?? ''}:${this.rideType}:${this.rideStyle}`,
       (key) => {
         if (key.startsWith(':')) this.resetRoutePreview();
         else void this.loadRoutePreview();
@@ -313,6 +315,7 @@ export class DestinationPreviewViewModel {
           longitude: place.longitude,
         },
         rideType: rideTypeAtCall,
+        rideStyle: this.rideStyle,
       });
       if (this.previewPlace?.id !== place.id || this.rideType !== rideTypeAtCall) return;
       runInAction(() => {
@@ -340,6 +343,16 @@ export class DestinationPreviewViewModel {
    */
   setRideType(rideType: RideType): void {
     this.navStore.setRideType(rideType);
+  }
+
+  /** Estilo de ruta (F5) activo. Fuente de verdad: `NavigationStore`. */
+  get rideStyle(): RideStyle {
+    return this.navStore.rideStyle;
+  }
+
+  /** Cambia el estilo de ruta antes de confirmar (re-traza el preview). */
+  setRideStyle(rideStyle: RideStyle): void {
+    this.navStore.setRideStyle(rideStyle);
   }
 
   /** Confirma el preview (delegado al `NavigationStore`). */

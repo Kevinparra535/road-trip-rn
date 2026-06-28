@@ -17,6 +17,7 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -1284,6 +1285,18 @@ export class HomeViewModel {
     if (this.destination) void this.computeRoute();
   }
 
+  /** Estilo de ruta activo (F5). Fuente de verdad: `NavigationStore`. */
+  get rideStyle(): RideStyle {
+    return this.navStore.rideStyle;
+  }
+
+  /** Cambia el estilo de ruta; recalcula si ya hay destino. */
+  setRideStyle(rideStyle: RideStyle): void {
+    if (this.navStore.rideStyle === rideStyle) return;
+    this.navStore.setRideStyle(rideStyle);
+    if (this.destination) void this.computeRoute();
+  }
+
   /**
    * Procesa el lugar elegido en el buscador. Segun `searchMode`, lo fija
    * como destino final (y resetea las paradas intermedias) o lo agrega
@@ -1791,6 +1804,7 @@ export class HomeViewModel {
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints,
         rideType: this.rideType,
+        rideStyle: this.rideStyle,
       });
       runInAction(() => {
         this.isRouteResponse = directions;
