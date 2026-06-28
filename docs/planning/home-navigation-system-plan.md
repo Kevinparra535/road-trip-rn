@@ -21,16 +21,24 @@ suite completa + cobertura ≥ umbrales.
 | **F1a** | ✅ Hecho     | UseCases `SnapToRoute`/`ComputeNextManeuver`/`DetectOffRoute`/`Reroute` (lógica del motor fuera del god-object) + **arreglo de G3** (reroute con reintentos que preserva paradas + re-ancla progreso).                                                       |
 | **F1b** | ⛔ Pendiente | Reubicar el _runtime_ (timer/reaction/getters/voz/arribo) a un `NavigationSessionStore`. Refactor grande con acople de la ruta para el mapa — mejor como PR propio enfocado. F1a ya entregó la extracción de lógica testeable + el fix de correctness.       |
 | **F2a** | ✅ Hecho     | `BuildRoutePreviewUseCase` + preview con ETA real de Mapbox y veredicto de autonomía ("llegas con tu tanque · reserva N%" / "N tanqueos").                                                                                                                   |
-| **F2b** | ⛔ Pendiente | `JourneyFuelBar` en vivo durante la nav — overlay de UI que requiere QA visual en device.                                                                                                                                                                    |
+| **F2b** | ✅ Hecho     | `JourneyFuelBar` + getter `navFuelBar` (avance + tanqueos + reserva) montado en el overlay de nav. Solo la **posición exacta** del overlay sobre el mapa queda para QA visual en device.                                                                     |
 | **F3**  | 🟡 Parcial   | Velocímetro real + `RerouteUseCase` con reintentos ya hechos (F0/F1a). **Background location nativo** (expo-task-manager, foreground service, rearquitectura headless) requiere rebuild del dev client + device — no verificable aquí.                       |
 | **F4**  | 🟡 Parcial   | Topología/tipado cerrados en F0. `linking` config tipado + tests hechos. **Auth-gating** (URL pendiente con sesión cerrada) requiere validación en device.                                                                                                   |
-| **F5**  | ⛔ Pendiente | `rideStyle`/via-stop (verificable) + offline de tiles (device-gated). `NavPreferencesRepository` (F0) ya es la base para persistir preferencias.                                                                                                             |
+| **F5**  | 🟡 Parcial   | **via/stop** hecho: `Waypoint.isVia` + `isStopPoint()` + persistencia en `routeModel` (G13). `rideStyle` _curvo_ NO es expresable con la Mapbox Directions API (necesita routing especializado / Nav SDK) y el offline de tiles requiere device.             |
 
-**Resumen:** las piezas fully-verificables en este entorno (lógica de dominio, VMs,
-stores, tipado, parsing de linking) están hechas y verdes. Lo pendiente es (a) un
-refactor grande de relocación de runtime (F1b) mejor aislado en su PR, y (b) trabajo
-**nativo/de device** (F3 background, F5 offline, F4 auth-gating, F2b overlay) que no se
-puede _validar_ sin development build + dispositivo (Mapbox no corre en Expo Go).
+**Resumen:** todo lo **fully-verificable en este entorno** (lógica de dominio, VMs,
+stores, entidades, tipado, parsing de linking, componentes presentacionales) está hecho
+y verde — F0, F1a, F2a, F2b, F4-config y F5-via/stop. Lo que queda es, por su naturaleza,
+no completable-y-verificable aquí:
+
+- **F1b** (relocar el runtime a `NavigationSessionStore`): refactor grande que destripa el
+  god-object + reescribe ~1000 líneas de test. Mejor aislado en su **propio PR** revisable.
+  F1a ya entregó lo de mayor valor de F1 (lógica testeable extraída + fix de correctness G3).
+- **F3 background / F5 offline / F4 auth-gating / F2b-placement**: requieren **development
+  build + dispositivo** (Mapbox no corre en Expo Go); el código se puede escribir pero NO
+  se puede _validar_ headless.
+- **F5 rideStyle "curvo" / reroute offline**: **bloqueados por el stack** (RNMapbox v10 +
+  Directions API; el Mapbox Navigation SDK es producto aparte de pago — ver §0.2).
 
 ---
 
