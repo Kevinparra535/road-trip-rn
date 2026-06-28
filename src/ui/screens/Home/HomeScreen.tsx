@@ -13,7 +13,6 @@ import { observer } from 'mobx-react-lite';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 import {
   CompositeNavigationProp,
   useFocusEffect,
@@ -40,7 +39,7 @@ import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
-import { AppDrawerParamList, HomeStackParamList } from '@/ui/navigation/types';
+import { AppStackParamList, HomeStackParamList } from '@/ui/navigation/types';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -64,13 +63,14 @@ import { RouteDraftRecoveryModal } from './components/RouteDraftRecoveryModal';
 const HomeScreen = observer(() => {
   const viewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
   // HomeScreen vive dentro del HomeNavigator (Stack) que vive dentro del
-  // AppDrawer. CompositeNavigationProp permite tipear navigate para ambos:
-  // rutas del Stack (DestinationPreview) y del Drawer (ProfileTab, openDrawer).
+  // AppStackNavigator (stack raíz plano). CompositeNavigationProp tipa navigate
+  // para ambos: rutas del HomeStack (DestinationPreview) y del stack raíz
+  // (RoutePlanner, RoutesTab, GarageTab, ProfileTab, RouteDetail…).
   const navigation =
     useNavigation<
       CompositeNavigationProp<
         NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
-        DrawerNavigationProp<AppDrawerParamList>
+        NativeStackNavigationProp<AppStackParamList>
       >
     >();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
@@ -252,7 +252,7 @@ const HomeScreen = observer(() => {
     navigation.navigate('RoutesTab', {
       screen: 'RouteDetail',
       params: { routeId: selectedSavedRouteId },
-    } as never);
+    });
     viewModel.clearSelectedSavedRoute();
   }, [selectedSavedRouteId, navigation, viewModel]);
 
@@ -470,7 +470,7 @@ const HomeScreen = observer(() => {
         viewModel={viewModel}
         onContinue={() => {
           viewModel.continuePlanningDraft();
-          (navigation as any).navigate('RoutePlanner');
+          navigation.navigate('RoutePlanner');
         }}
         onDismiss={() => void viewModel.dismissPendingDraft()}
       />

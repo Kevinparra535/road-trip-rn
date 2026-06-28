@@ -65,6 +65,7 @@
     "expo-location": "~19.0.8",
     "expo-speech": "~14.0.8",
     "expo-status-bar": "~3.0.9",
+    "expo-task-manager": "~14.0.9",
     "firebase": "^12.13.0",
     "inversify": "^8.1.0",
     "lucide-react-native": "^1.21.0",

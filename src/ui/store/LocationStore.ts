@@ -85,6 +85,19 @@ export class LocationStore {
     return this.isHeadingResponse?.degrees ?? null;
   }
 
+  /**
+   * Velocidad instantanea del GPS en **m/s**, o `null` si el fix no la reporta.
+   * Expo (`coords.speed`) entrega `null` —o `-1` en algunos devices Android—
+   * cuando no hay una velocidad valida (parado, arranque en frio, sin fix de
+   * Doppler). Normalizamos esos casos a `null` para que el consumidor decida
+   * (el velocimetro de navegacion oculta su caja cuando es `null`).
+   */
+  get speed(): number | null {
+    const raw = this.isLocationResponse?.speed;
+    if (raw === null || raw === undefined || raw < 0) return null;
+    return raw;
+  }
+
   // ── Actions ─────────────────────────────────────────────────────────────────
 
   /**

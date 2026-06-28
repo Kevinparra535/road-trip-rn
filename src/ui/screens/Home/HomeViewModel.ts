@@ -4,6 +4,17 @@ import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
 import {
+  DEFAULT_RIDE_TYPE,
+  NAV_ARRIVAL_THRESHOLD_KM,
+  NAV_AVG_SPEED_KMH,
+  NAV_TICK_MS,
+  NAV_VOICE_LANGUAGE,
+  OFF_ROUTE_CONFIRM_TICKS,
+  OFF_ROUTE_THRESHOLD_KM,
+  ROUTE_STATION_SAMPLES,
+  SIM_KM_PER_TICK,
+} from '@/config/navigation';
+import {
   ROUTE_ALT_WIDTH,
   ROUTE_CORE_WIDTH_NAV,
   ROUTE_CORE_WIDTH_PLANNING,
@@ -35,6 +46,7 @@ import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCa
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+import { GetNavPreferencesUseCase } from '@/domain/useCases/GetNavPreferencesUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
@@ -45,6 +57,7 @@ import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
+import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUseCase';
 
 import {
   boundingBox,
@@ -82,32 +95,8 @@ const TRIANGLE_TAIL_KM = 0.03;
 // Buscador: espera tras la ultima tecla antes de consultar el geocoder.
 const SEARCH_DEBOUNCE_MS = 400;
 
-// ── Navegacion (simulacion) ─────────────────────────────────────────────────
-// Velocidad promedio modelada para el viaje.
-const NAV_AVG_SPEED_KMH = 100;
-// Periodo del tick de simulacion.
-const NAV_TICK_MS = 500;
-// Aceleracion del tiempo: 1 s real avanza SIM_TIME_MULTIPLIER s simulados,
-// para poder ver el recorrido sin esperar el viaje completo. 60 = una ruta
-// de ~50 km se recorre en ~30 s; suficiente para seguirla visualmente.
-const SIM_TIME_MULTIPLIER = 60;
-// Distancia que avanza el conductor simulado en cada tick.
-const SIM_KM_PER_TICK =
-  (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
-// Desviacion (km) a partir de la cual se considera que se salio de la ruta.
-const OFF_ROUTE_THRESHOLD_KM = 0.06;
-// Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
-const OFF_ROUTE_CONFIRM_TICKS = 4;
-// Distancia (km) al final de la ruta a partir de la cual se considera que el
-// rider llego al destino. Tolerancia para que el GPS no tenga que coincidir
-// exactamente con la geometria de Mapbox.
-const NAV_ARRIVAL_THRESHOLD_KM = 0.05;
-// Puntos de muestreo de la ruta para buscar gasolineras a lo largo de ella.
-const ROUTE_STATION_SAMPLES = 6;
-// Idioma para las anuncios de voz turn-by-turn (Mapbox ya las localiza).
-const NAV_VOICE_LANGUAGE = 'es-CO';
-// Tipo de rodada por defecto del trazado del Home.
-const DEFAULT_RIDE_TYPE: RideType = 'highway';
+// Las constantes del motor de navegación (NAV_*/SIM_*/OFF_ROUTE_*) viven en
+// `src/config/navigation.ts` — ver el import al inicio del archivo.
 
 // Colores del trazado por tipo de rodada (principal / alternativas).
 const HIGHWAY_COLORS = {
@@ -364,6 +353,10 @@ export class HomeViewModel {
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
     @inject(TYPES.InferStopKindUseCase)
     private readonly inferStopKindUseCase: InferStopKindUseCase,
+    @inject(TYPES.GetNavPreferencesUseCase)
+    private readonly getNavPreferencesUseCase: GetNavPreferencesUseCase,
+    @inject(TYPES.SetMutePreferenceUseCase)
+    private readonly setMutePreferenceUseCase: SetMutePreferenceUseCase,
     @inject(TYPES.PlannerStore)
     private readonly plannerStore: PlannerStore,
     @inject(TYPES.NavigationStore)
@@ -1196,12 +1189,16 @@ export class HomeViewModel {
   /**
    * Velocidad instantanea del conductor en km/h para el velocimetro de la
    * barra de navegacion. En la ruta de prueba devuelve la velocidad promedio
-   * modelada; en una ruta real vendra del GPS cuando se exponga en el store.
+   * modelada; en una ruta real la toma del GPS (`LocationStore.speed`, en m/s)
+   * y la convierte a km/h. Es `null` cuando el fix aun no reporta velocidad
+   * (parado/sin Doppler) — el velocimetro oculta su caja en ese caso.
    */
   get navSpeedKmh(): number | null {
     if (!this.isNavigating) return null;
     if (this.isSimulatedNavigation) return NAV_AVG_SPEED_KMH;
-    return null;
+    const metersPerSecond = this.locationStore.speed;
+    if (metersPerSecond === null) return null;
+    return metersPerSecond * 3.6;
   }
 
   /**
@@ -1303,6 +1300,7 @@ export class HomeViewModel {
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
     void this.loadHomeFeed();
+    void this.loadNavPreferences();
     // E3 flow brief: detectar draft del Planner para mostrar el sheet
     // "Continúa donde quedaste". El flow vive en el PlannerStore (singleton);
     // el Home solo lo dispara y lee `pendingDraft` vía delegadores.
@@ -1741,12 +1739,42 @@ export class HomeViewModel {
     }
   }
 
-  /** Alterna los anuncios de voz turn-by-turn. */
+  /** Alterna los anuncios de voz turn-by-turn y persiste la preferencia. */
   toggleMute(): void {
     runInAction(() => {
       this.isMuted = !this.isMuted;
     });
     if (this.isMuted) Speech.stop();
+    void this.persistMute(this.isMuted);
+  }
+
+  /** Carga el flag de mute persistido (corre al inicializar el Home). */
+  private async loadNavPreferences(): Promise<void> {
+    try {
+      const prefs = await this.getNavPreferencesUseCase.run();
+      runInAction(() => {
+        this.isMuted = prefs.muted;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error cargando preferencias de navegacion: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+  }
+
+  /** Persiste el flag de mute sin bloquear el toggle de la UI. */
+  private async persistMute(muted: boolean): Promise<void> {
+    try {
+      await this.setMutePreferenceUseCase.run(muted);
+    } catch (error) {
+      this.logger.error(
+        `Error persistiendo mute: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */

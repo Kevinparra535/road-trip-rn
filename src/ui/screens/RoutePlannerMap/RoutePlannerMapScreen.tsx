@@ -36,7 +36,7 @@ import { StopKind } from '@/domain/entities/StopKind';
 import GradientView from '@/ui/components/GradientView';
 import Switch from '@/ui/components/Switch';
 
-import { RoutesStackParamList } from '@/ui/navigation/types';
+import { AppStackParamList } from '@/ui/navigation/types';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -69,8 +69,8 @@ import { StartPointPicker } from './components/StartPointPicker';
 import TemplateSheet from './components/TemplateSheet';
 import WaypointEditSheet from './components/WaypointEditSheet';
 
-type Nav = NativeStackNavigationProp<RoutesStackParamList, 'RoutePlanner'>;
-type Route = RouteProp<RoutesStackParamList, 'RoutePlanner'>;
+type Nav = NativeStackNavigationProp<AppStackParamList, 'RoutePlanner'>;
+type Route = RouteProp<AppStackParamList, 'RoutePlanner'>;
 
 type OpenSection = 'options' | 'autonomy' | 'elevation' | null;
 
@@ -166,7 +166,7 @@ const RoutePlannerMapScreen = observer(() => {
       );
       return;
     }
-    exitAfterStateClear(() => (navigation as any).navigate('HomeTab'));
+    exitAfterStateClear(() => navigation.navigate('HomeTab'));
   };
 
   const handleConfirmDiscard = () => {
@@ -195,7 +195,7 @@ const RoutePlannerMapScreen = observer(() => {
       return;
     }
     viewModel.closeSavedSheet();
-    exitAfterStateClear(() => (navigation as any).navigate('HomeTab'));
+    exitAfterStateClear(() => navigation.navigate('HomeTab'));
   };
   const handleViewDetailFromSaved = () => {
     const id = viewModel.savedRouteId;
@@ -494,7 +494,7 @@ const RoutePlannerMapScreen = observer(() => {
               <NoMotorcycleNotice
                 viewModel={viewModel}
                 onPress={() => {
-                  navigation.navigate('GarageTab' as never);
+                  navigation.navigate('GarageTab');
                 }}
               />
 

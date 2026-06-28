@@ -126,7 +126,11 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   instruction: {
-    ...Fonts.header4,
+    // Glanceabilidad (F0): la instrucción es lo que el rider DEBE leer de un
+    // vistazo con casco; sube un escalón (header4 → header3) para que no quede
+    // por debajo de la distancia. El tuning fino de tamaño/contraste de toda la
+    // barra queda pendiente de QA visual en device.
+    ...Fonts.header3,
     color: Colors.base.textPrimary,
   },
   street: {

@@ -11,7 +11,7 @@ import { NetworkStore } from '@/ui/store/NetworkStore';
 import { SessionStore } from '@/ui/store/SessionStore';
 import { SyncCoordinator } from '@/ui/store/SyncCoordinator';
 
-import AppDrawer from './AppDrawer';
+import AppStackNavigator from './AppStackNavigator';
 import AuthNavigator from './AuthNavigator';
 
 const RootNavigator = observer(() => {
@@ -38,7 +38,7 @@ const RootNavigator = observer(() => {
     );
   }
 
-  return session.isAuthenticated ? <AppDrawer /> : <AuthNavigator />;
+  return session.isAuthenticated ? <AppStackNavigator /> : <AuthNavigator />;
 });
 
 const styles = StyleSheet.create({

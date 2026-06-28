@@ -93,9 +93,28 @@ export type HomeStackParamList = {
   DestinationPreview: undefined;
 };
 
-export type AppDrawerParamList = {
-  HomeTab: NavigatorScreenParams<HomeStackParamList>;
-  RoutesTab: NavigatorScreenParams<RoutesStackParamList>;
-  GarageTab: NavigatorScreenParams<GarageStackParamList>;
+/**
+ * Param list del stack RAÍZ real de la app (`AppStackNavigator`). Pese al
+ * nombre histórico "AppDrawer", la topología es un `createNativeStackNavigator`
+ * PLANO: las pantallas de planeación viven como hermanas a nivel root, no
+ * anidadas bajo `RoutesTab`. Por eso se reexponen aquí —además de vía
+ * `RoutesTab`/`GarageTab`— reusando las shapes de los stacks anidados: así los
+ * `navigate('RoutePlanner', …)` directos quedan tipados sin `as any`/`as never`.
+ *
+ * La consolidación de esta duplicación (decidir tabs reales vs stack plano) es
+ * trabajo de F4 — ver `docs/planning/home-navigation-system-plan.md`.
+ */
+export type AppStackParamList = {
+  HomeTab: NavigatorScreenParams<HomeStackParamList> | undefined;
+  RoutesTab: NavigatorScreenParams<RoutesStackParamList> | undefined;
+  GarageTab: NavigatorScreenParams<GarageStackParamList> | undefined;
   ProfileTab: undefined;
+  // Pantallas FLAT a nivel root (la topología real del AppStackNavigator).
+  RoutePlanner: RoutesStackParamList['RoutePlanner'];
+  RouteDetail: RoutesStackParamList['RouteDetail'];
+  JoinRoute: RoutesStackParamList['JoinRoute'];
+  PartyMembers: RoutesStackParamList['PartyMembers'];
+  AddStop: RoutesStackParamList['AddStop'];
+  CategorySublist: RoutesStackParamList['CategorySublist'];
+  MotorcycleForm: GarageStackParamList['MotorcycleForm'];
 };

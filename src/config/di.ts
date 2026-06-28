@@ -44,6 +44,7 @@ import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationReposi
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
+import { NavPreferencesRepositoryImpl } from '@/data/repositories/NavPreferencesRepositoryImpl';
 import { NetworkRepositoryImpl } from '@/data/repositories/NetworkRepositoryImpl';
 import { OptimizationRepositoryImpl } from '@/data/repositories/OptimizationRepositoryImpl';
 import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCategorySearchRepositoryImpl';
@@ -63,6 +64,7 @@ import type { FuelStationRepository } from '@/domain/repositories/FuelStationRep
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
+import type { NavPreferencesRepository } from '@/domain/repositories/NavPreferencesRepository';
 import type { NetworkRepository } from '@/domain/repositories/NetworkRepository';
 import type { OptimizationRepository } from '@/domain/repositories/OptimizationRepository';
 import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceCategorySearchRepository';
@@ -97,6 +99,7 @@ import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
+import { GetNavPreferencesUseCase } from '@/domain/useCases/GetNavPreferencesUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
@@ -116,6 +119,7 @@ import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareC
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
+import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
@@ -279,6 +283,10 @@ container
   .to(RecentDestinationRepositoryImpl)
   .inSingletonScope();
 container
+  .bind<NavPreferencesRepository>(TYPES.NavPreferencesRepository)
+  .to(NavPreferencesRepositoryImpl)
+  .inSingletonScope();
+container
   .bind<RouteDraftRepository>(TYPES.RouteDraftRepository)
   .to(RouteDraftRepositoryImpl)
   .inSingletonScope();
@@ -387,6 +395,12 @@ container
 container
   .bind<ClearRecentDestinationsUseCase>(TYPES.ClearRecentDestinationsUseCase)
   .to(ClearRecentDestinationsUseCase);
+container
+  .bind<GetNavPreferencesUseCase>(TYPES.GetNavPreferencesUseCase)
+  .to(GetNavPreferencesUseCase);
+container
+  .bind<SetMutePreferenceUseCase>(TYPES.SetMutePreferenceUseCase)
+  .to(SetMutePreferenceUseCase);
 container.bind<GetRouteDraftUseCase>(TYPES.GetRouteDraftUseCase).to(GetRouteDraftUseCase);
 container
   .bind<SaveRouteDraftUseCase>(TYPES.SaveRouteDraftUseCase)

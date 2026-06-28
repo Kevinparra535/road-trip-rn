@@ -13,11 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
 import PrimaryButton from '@/ui/components/PrimaryButton';
 import RideTypeSelector from '@/ui/components/RideTypeSelector';
+
+import { AppStackParamList } from '@/ui/navigation/types';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -41,7 +44,7 @@ import { DestinationPreviewViewModel } from './DestinationPreviewViewModel';
  * Es 100% presentacional: todo el estado vive en `DestinationPreviewViewModel`.
  */
 const DestinationPreviewScreen = observer(() => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { width } = useWindowDimensions();
   const viewModel = useViewModel<DestinationPreviewViewModel>(
     TYPES.DestinationPreviewViewModel,
@@ -85,20 +88,13 @@ const DestinationPreviewScreen = observer(() => {
    * Acción A2 del flow brief: en vez de trazar la ruta directo en el Home,
    * abrir el RoutePlanner con este destino preseteado. El Planner mostrará
    * el bloque "Falta arranque" con los 3 botones para elegir el inicio.
-   *
-   * Cast `as never` porque `RoutePlanner` vive en RoutesStackParamList y
-   * estamos navegando desde el Home stack — el AppDrawer es flat asi que
-   * resuelve en runtime aunque TS no lo sepa.
+   * `RoutePlanner` vive flat en el stack raíz (`AppStackParamList`).
    */
   const handleOpenInPlanner = () => {
-    if (!place) return;
+    const destinationPlace = viewModel.plannerDestinationParam;
+    if (!destinationPlace) return;
     viewModel.cancel(); // limpia el preview state del Home
-    // Cast `as any` porque el RoutePlanner vive en RoutesStackParamList
-    // pero estamos navegando desde el Home stack — el AppDrawer flat lo
-    // resuelve en runtime.
-    (navigation as any).navigate('RoutePlanner', {
-      destinationPlace: viewModel.plannerDestinationParam,
-    });
+    navigation.navigate('RoutePlanner', { destinationPlace });
   };
 
   const typeLabel = viewModel.typeLabel;
