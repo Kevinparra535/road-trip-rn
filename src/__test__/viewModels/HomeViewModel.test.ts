@@ -1137,11 +1137,37 @@ describe('HomeViewModel — barra de combustible del viaje (navFuelBar)', () => 
   it('expone total, avance y paradas durante la navegación', () => {
     const vm = makeVM();
     buildRealNav(vm);
+    vm.isFuelEstimateResponse = makeRouteFuelEstimate({
+      distanceKm: 200,
+      effectiveRangeKm: 500,
+    });
+    vm.fuelStops = [
+      {
+        id: 'fuel-1',
+        label: 'Tanqueo 1',
+        distanceFromStartKm: 123.4,
+        order: 1,
+        location: makeGeoLocation(),
+      },
+      {
+        id: 'fuel-2',
+        label: 'Tanqueo 2',
+        distanceFromStartKm: 167.8,
+        order: 2,
+        location: makeGeoLocation(),
+      },
+    ];
     const bar = vm.navFuelBar;
     expect(bar).not.toBeNull();
-    expect(bar!.totalKm).toBe(200);
-    expect(typeof bar!.progressKm).toBe('number');
-    expect(Array.isArray(bar!.stops)).toBe(true);
+    expect(bar).toMatchObject({
+      totalKm: 200,
+      progressKm: expect.any(Number),
+      reservePercent: 60,
+      stops: [
+        { id: 'fuel-1', km: 123, suggested: true },
+        { id: 'fuel-2', km: 168, suggested: false },
+      ],
+    });
   });
 });
 
