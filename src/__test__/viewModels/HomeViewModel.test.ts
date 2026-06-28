@@ -1100,6 +1100,51 @@ describe('HomeViewModel — velocímetro real (navSpeedKmh)', () => {
   });
 });
 
+describe('HomeViewModel — barra de combustible del viaje (navFuelBar)', () => {
+  const buildRealNav = (vm: ReturnType<typeof makeVM>) => {
+    vm.startNavigationFromPlanner({
+      waypoints: [
+        {
+          id: 'w1',
+          kind: 'start',
+          latitude: 4.6,
+          longitude: -74.08,
+          name: 'A',
+          order: 0,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+        {
+          id: 'w2',
+          kind: 'destination',
+          latitude: 4.8,
+          longitude: -74.2,
+          name: 'B',
+          order: 1,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+      ],
+      directions: makeRouteDirections({ distanceKm: 200 }),
+      rideType: 'highway',
+    } as any);
+  };
+
+  it('es null cuando no se está navegando', () => {
+    expect(makeVM().navFuelBar).toBeNull();
+  });
+
+  it('expone total, avance y paradas durante la navegación', () => {
+    const vm = makeVM();
+    buildRealNav(vm);
+    const bar = vm.navFuelBar;
+    expect(bar).not.toBeNull();
+    expect(bar!.totalKm).toBe(200);
+    expect(typeof bar!.progressKm).toBe('number');
+    expect(Array.isArray(bar!.stops)).toBe(true);
+  });
+});
+
 describe('HomeViewModel — persistencia del mute', () => {
   it('carga el mute persistido al inicializar', async () => {
     const getNavPreferences = { run: jest.fn().mockResolvedValue({ muted: true }) };

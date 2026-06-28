@@ -1069,6 +1069,36 @@ export class HomeViewModel {
   }
 
   /**
+   * Datos de la "barra de combustible del viaje" (F2b): el `JourneyFuelBar`
+   * glanceable que se pinta durante la navegacion. Avance en vivo + paradas de
+   * tanqueo sugeridas + reserva del tanque al llegar. `null` cuando no se esta
+   * navegando o no hay ruta.
+   */
+  get navFuelBar(): {
+    totalKm: number;
+    progressKm: number;
+    stops: { id: string; km: number; suggested: boolean }[];
+    reservePercent: number | null;
+  } | null {
+    const route = this.isRouteResponse;
+    if (!route || !this.isNavigating) return null;
+    const fuel = this.isFuelEstimateResponse;
+    const reservePercent = fuel
+      ? Math.max(0, Math.round((1 - fuel.rangeUsedFraction) * 100))
+      : null;
+    return {
+      totalKm: Math.round(route.distanceKm),
+      progressKm: Math.round(this.navProgressKm),
+      stops: this.fuelStops.map((stop, index) => ({
+        id: stop.id,
+        km: Math.round(stop.distanceFromStartKm),
+        suggested: index === 0,
+      })),
+      reservePercent,
+    };
+  }
+
+  /**
    * Kilometros recorridos sobre la ruta durante la navegacion. En la ruta de
    * prueba viene del simulador; en cualquier otra, del GPS real proyectado
    * sobre la polyline.

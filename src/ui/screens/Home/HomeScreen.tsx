@@ -34,6 +34,7 @@ import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
+import JourneyFuelBar from '@/ui/components/JourneyFuelBar';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
@@ -491,6 +492,23 @@ const HomeScreen = observer(() => {
                 streetName={viewModel.currentTurn.streetName}
                 maneuverType={viewModel.currentTurn.maneuverType}
                 maneuverModifier={viewModel.currentTurn.maneuverModifier}
+              />
+            </SafeAreaView>
+          ) : null}
+
+          {/* F2b: barra de combustible del viaje, glanceable, bajo el TurnBanner.
+              Posición exacta sobre el mapa pendiente de QA visual en device. */}
+          {viewModel.navFuelBar ? (
+            <SafeAreaView
+              edges={['left', 'right']}
+              style={styles.fuelBarWrap}
+              pointerEvents="box-none"
+            >
+              <JourneyFuelBar
+                totalKm={viewModel.navFuelBar.totalKm}
+                progressKm={viewModel.navFuelBar.progressKm}
+                stops={viewModel.navFuelBar.stops}
+                reservePercent={viewModel.navFuelBar.reservePercent}
               />
             </SafeAreaView>
           ) : null}
@@ -1617,6 +1635,14 @@ const styles = StyleSheet.create({
   turnBannerWrap: {
     position: 'absolute',
     top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacings.lg,
+  },
+  // F2b: bajo el TurnBanner (~140 alto). Offset pendiente de QA visual en device.
+  fuelBarWrap: {
+    position: 'absolute',
+    top: 156,
     left: 0,
     right: 0,
     paddingHorizontal: Spacings.lg,
