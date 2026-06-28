@@ -77,6 +77,12 @@ const AddStopScreen = observer(() => {
     navigation.goBack();
   };
 
+  const handleUseLocation = async () => {
+    await viewModel.useMyLocation();
+    // Solo cerramos si se ubicó bien; si hubo error, el rider lo ve y reintenta.
+    if (!viewModel.isSearchError) navigation.goBack();
+  };
+
   const handleMic = () => {
     Alert.alert(
       'Voz proximamente',
@@ -122,9 +128,19 @@ const AddStopScreen = observer(() => {
           value={viewModel.searchQuery}
           onChangeText={(t) => viewModel.setSearchQuery(t)}
           onClear={() => viewModel.clearSearch()}
+          onSubmitEditing={() => viewModel.submitSearch()}
           returnKeyType="search"
           autoCorrect={false}
         />
+        <MotionPressable
+          style={styles.useLocationBtn}
+          onPress={handleUseLocation}
+          haptic="selection"
+          testID="add-stop-use-location"
+        >
+          <Ionicons name="navigate" size={18} color={Colors.base.accent} />
+          <Text style={styles.useLocationText}>Usar mi ubicación</Text>
+        </MotionPressable>
       </View>
 
       {viewModel.isSearching ? (
@@ -141,7 +157,17 @@ const AddStopScreen = observer(() => {
           ) : null}
 
           {viewModel.isSearchError ? (
-            <Text style={styles.error}>{viewModel.isSearchError}</Text>
+            <View style={styles.searchErrorBox}>
+              <Text style={styles.error}>{viewModel.isSearchError}</Text>
+              <MotionPressable
+                style={styles.retryBtn}
+                onPress={() => viewModel.submitSearch()}
+                haptic="selection"
+              >
+                <Ionicons name="refresh" size={16} color={Colors.base.accent} />
+                <Text style={styles.retryText}>Reintentar</Text>
+              </MotionPressable>
+            </View>
           ) : null}
 
           {!viewModel.isSearchLoading &&
@@ -281,6 +307,17 @@ const styles = StyleSheet.create({
   searchBarWrapper: {
     marginHorizontal: Spacings.spacex2,
     marginBottom: Spacings.sm,
+    gap: Spacings.sm,
+  },
+  useLocationBtn: {
+    paddingVertical: Spacings.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+  },
+  useLocationText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
   },
   searchStatus: {
     paddingVertical: Spacings.lg,
@@ -362,6 +399,25 @@ const styles = StyleSheet.create({
   error: {
     ...Fonts.labelInputError,
     color: Colors.alerts.error,
+  },
+  searchErrorBox: {
+    gap: Spacings.sm,
+    alignItems: 'flex-start',
+  },
+  retryBtn: {
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+    backgroundColor: Colors.base.accentDim,
+  },
+  retryText: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.accent,
   },
 });
 

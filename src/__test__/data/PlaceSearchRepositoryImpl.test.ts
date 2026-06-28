@@ -43,12 +43,12 @@ describe('PlaceSearchRepositoryImpl', () => {
 
     expect(places).toHaveLength(1);
     expect(places[0].name).toBe('Villa de Leyva');
-    expect(service.search).toHaveBeenCalledWith('villa', [-74, 4.6]);
+    expect(service.search).toHaveBeenCalledWith('villa', [-74, 4.6], undefined);
   });
 
   it('searches without proximity when none is provided', async () => {
     const service = { search: jest.fn().mockResolvedValue([]) };
     await new PlaceSearchRepositoryImpl(service as any).searchPlaces('bogota');
-    expect(service.search).toHaveBeenCalledWith('bogota', undefined);
+    expect(service.search).toHaveBeenCalledWith('bogota', undefined, undefined);
   });
 });

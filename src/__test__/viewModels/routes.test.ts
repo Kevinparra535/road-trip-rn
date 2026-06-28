@@ -272,6 +272,9 @@ describe('PlannerStore', () => {
       create as any,
       update as any,
       searchPlaces as any,
+      { run: jest.fn() } as any, // suggestPlacesUseCase (no usado en este test)
+      { run: jest.fn() } as any, // retrievePlaceUseCase (no usado en este test)
+      { run: jest.fn() } as any, // reverseGeocodeUseCase (no usado en este test)
       searchPlacesByCategory as any,
       estimatePartyFuel as any,
       getAllMotorcycles as any,
@@ -1328,6 +1331,7 @@ describe('PlannerStore', () => {
       expect(searchPlaces.run).toHaveBeenCalledWith({
         query: 'Villa',
         proximity: undefined,
+        signal: expect.any(AbortSignal),
       });
       expect(vm.searchResults).toHaveLength(1);
       expect(vm.searchResults?.[0].name).toBe('Villa de Leyva');

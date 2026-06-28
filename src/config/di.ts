@@ -112,6 +112,8 @@ import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCa
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
+import { RetrievePlaceUseCase } from '@/domain/useCases/RetrievePlaceUseCase';
+import { ReverseGeocodeUseCase } from '@/domain/useCases/ReverseGeocodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
@@ -119,6 +121,7 @@ import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+import { SuggestPlacesUseCase } from '@/domain/useCases/SuggestPlacesUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
@@ -344,6 +347,13 @@ container
 container.bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase).to(WatchLocationUseCase);
 container.bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase).to(WatchHeadingUseCase);
 container.bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase).to(SearchPlacesUseCase);
+container.bind<SuggestPlacesUseCase>(TYPES.SuggestPlacesUseCase).to(SuggestPlacesUseCase);
+container
+  .bind<RetrievePlaceUseCase>(TYPES.RetrievePlaceUseCase)
+  .to(RetrievePlaceUseCase);
+container
+  .bind<ReverseGeocodeUseCase>(TYPES.ReverseGeocodeUseCase)
+  .to(ReverseGeocodeUseCase);
 container
   .bind<SearchPlacesByCategoryUseCase>(TYPES.SearchPlacesByCategoryUseCase)
   .to(SearchPlacesByCategoryUseCase);

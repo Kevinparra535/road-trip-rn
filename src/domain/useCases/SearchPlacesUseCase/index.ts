@@ -12,6 +12,8 @@ import { UseCase } from '@/domain/useCases/UseCase';
 export type SearchPlacesInput = {
   query: string;
   proximity?: GeoPoint;
+  /** Permite cancelar la petición si la búsqueda queda obsoleta. */
+  signal?: AbortSignal;
 };
 
 /** Longitud minima de texto antes de consultar el geocoder. */
@@ -28,6 +30,6 @@ export class SearchPlacesUseCase implements UseCase<SearchPlacesInput, Place[]> 
   async run(input: SearchPlacesInput): Promise<Place[]> {
     const query = input.query.trim();
     if (query.length < MIN_PLACE_QUERY_LENGTH) return [];
-    return this.repository.searchPlaces(query, input.proximity);
+    return this.repository.searchPlaces(query, input.proximity, input.signal);
   }
 }

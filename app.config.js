@@ -13,6 +13,12 @@ module.exports = ({ config }) => ({
     placeSummaryBaseUrl:
       process.env.PLACE_SUMMARY_BASE_URL ||
       'https://es.wikipedia.org/api/rest_v1/page/summary',
+    // ── Búsqueda de lugares (tunables por entorno, defaults para Colombia) ──
+    searchCountry: process.env.SEARCH_COUNTRY || 'co',
+    searchLanguage: process.env.SEARCH_LANGUAGE || 'es',
+    searchBbox: process.env.SEARCH_BBOX || '-79.1,-4.3,-66.8,12.6',
+    searchResultLimit: Number(process.env.SEARCH_RESULT_LIMIT || 8),
+    searchProvider: process.env.SEARCH_PROVIDER || 'geocoding_v5',
     firebase: {
       apiKey: process.env.FIREBASE_API_KEY || 'SET_FIREBASE_API_KEY',
       authDomain: process.env.FIREBASE_AUTH_DOMAIN || 'SET_FIREBASE_AUTH_DOMAIN',

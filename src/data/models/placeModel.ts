@@ -1,4 +1,5 @@
 import { Place } from '@/domain/entities/Place';
+import { PlaceSuggestion } from '@/domain/entities/PlaceSuggestion';
 
 export type PlaceModelConstructorParams = {
   id: string;
@@ -186,5 +187,88 @@ PlaceModel.prototype.toDomain = function toDomain(): Place {
     maki: this.maki,
     region: this.region,
     country: this.country,
+  });
+};
+
+export type PlaceSuggestionModelConstructorParams = {
+  id: string;
+  name: string;
+  fullName: string;
+  placeType?: string;
+  region?: string;
+  country?: string;
+  distanceMeters?: number;
+  [key: string]: any;
+};
+
+/** Modelo de una sugerencia de Search Box (`/suggest`): sin coordenadas. */
+export class PlaceSuggestionModel {
+  [key: string]: any;
+
+  id: string;
+  name: string;
+  fullName: string;
+  placeType?: string;
+  region?: string;
+  country?: string;
+  distanceMeters?: number;
+
+  constructor(params: PlaceSuggestionModelConstructorParams) {
+    this.id = params.id;
+    this.name = params.name;
+    this.fullName = params.fullName;
+    this.placeType = params.placeType;
+    this.region = params.region;
+    this.country = params.country;
+    this.distanceMeters = params.distanceMeters;
+
+    Object.assign(this, params);
+  }
+
+  /** Parsea un item de `suggestions` de Search Box `/suggest`. */
+  static fromSearchBoxSuggestion(s: any): PlaceSuggestionModel | null {
+    const id = s?.mapbox_id ? String(s.mapbox_id) : null;
+    if (!id) return null; // sin mapbox_id no se puede hacer retrieve
+
+    const name = String(s?.name ?? s?.name_preferred ?? 'Lugar');
+    const fullName = String(
+      s?.full_address ?? s?.place_formatted ?? s?.address ?? name,
+    );
+
+    const ctx = s?.context ?? {};
+    const region: string | undefined = ctx?.region?.name
+      ? String(ctx.region.name)
+      : undefined;
+    const country: string | undefined = ctx?.country?.name
+      ? String(ctx.country.name)
+      : undefined;
+
+    return new PlaceSuggestionModel({
+      id,
+      name,
+      fullName,
+      placeType: s?.feature_type ? String(s.feature_type) : undefined,
+      region,
+      country,
+      distanceMeters: typeof s?.distance === 'number' ? s.distance : undefined,
+    });
+  }
+}
+
+declare module './placeModel' {
+  interface PlaceSuggestionModel {
+    toDomain(): PlaceSuggestion;
+  }
+}
+
+PlaceSuggestionModel.prototype.toDomain = function toDomain(): PlaceSuggestion {
+  return new PlaceSuggestion({
+    id: this.id,
+    name: this.name,
+    fullName: this.fullName,
+    placeType: this.placeType,
+    region: this.region,
+    country: this.country,
+    distanceMeters: this.distanceMeters,
   });
 };

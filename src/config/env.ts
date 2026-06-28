@@ -33,6 +33,22 @@ const envSchema = z.object({
   // El default se computa parseando `{}` (todos los campos tienen su propio
   // default); zod 4 tipa el arg de `.default()` con el output completo.
   firebase: firebaseSchema.default(() => firebaseSchema.parse({})),
+
+  // ── Búsqueda de lugares (geocoding / Search Box) ──────────────────────────
+  /** ISO 3166-1 alpha-2 para sesgar/filtrar resultados al país (Colombia). */
+  searchCountry: z.string().length(2).default('co'),
+  /** Idioma IETF/BCP-47 de los resultados. */
+  searchLanguage: z.string().min(2).default('es'),
+  /** Bounding box `minLon,minLat,maxLon,maxLat` para acotar a Colombia. */
+  searchBbox: z.string().default('-79.1,-4.3,-66.8,12.6'),
+  /** Máximo de resultados por búsqueda de texto. */
+  searchResultLimit: z.coerce.number().int().min(1).max(10).default(8),
+  /**
+   * Proveedor del buscador de texto. `geocoding_v5` (default, vía estable y
+   * verificada) o `searchbox` (POIs ricos vía Search Box `/suggest`+`/retrieve`).
+   * Se conmuta sin recompilar vía `SEARCH_PROVIDER` en el entorno.
+   */
+  searchProvider: z.enum(['geocoding_v5', 'searchbox']).default('geocoding_v5'),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

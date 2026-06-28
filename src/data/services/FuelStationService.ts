@@ -34,7 +34,9 @@ export class FuelStationServiceImpl implements FuelStationService {
       access_token: ENV.mapboxPublicToken,
       proximity: `${longitude},${latitude}`,
       limit: String(limit),
+      language: ENV.searchLanguage ?? 'es',
     });
+    if (ENV.searchCountry) params.set('country', ENV.searchCountry);
 
     const response = await this.http.get(`${MAPBOX_CATEGORY_URL}?${params}`);
     if (!response.ok) {

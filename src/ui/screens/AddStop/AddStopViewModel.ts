@@ -11,6 +11,7 @@ import { StopKind } from '@/domain/entities/StopKind';
 import { SearchableCategory } from '@/domain/repositories/PlaceCategorySearchRepository';
 
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
+import { MIN_PLACE_QUERY_LENGTH } from '@/domain/useCases/SearchPlacesUseCase';
 
 import Logger from '@/ui/utils/Logger';
 
@@ -173,12 +174,19 @@ export class AddStopViewModel {
   }
 
   get isSearchError(): string | null {
-    return this.planner.isSearchError;
+    // Copy amigable; el error técnico real queda en el logger del planner.
+    return this.planner.isSearchError
+      ? 'No pudimos completar la búsqueda. Revisa tu conexión e inténtalo de nuevo.'
+      : null;
   }
 
-  /** `true` cuando hay una query activa — la UI muestra resultados en vez del grid. */
+  /**
+   * `true` cuando la query alcanza el mínimo buscable — la UI muestra resultados
+   * en vez del grid. Por debajo del mínimo se mantiene el grid (evita un
+   * "Sin resultados" prematuro con 1-2 caracteres).
+   */
   get isSearching(): boolean {
-    return this.planner.searchQuery.trim().length > 0;
+    return this.planner.searchQuery.trim().length >= MIN_PLACE_QUERY_LENGTH;
   }
 
   /** Actualiza el texto del buscador; el debounce del planner dispara la consulta. */
@@ -191,6 +199,16 @@ export class AddStopViewModel {
     this.planner.clearSearch();
   }
 
+  /** Fuerza la búsqueda ya (submit del teclado o reintento tras error). */
+  submitSearch(): void {
+    this.planner.submitSearch();
+  }
+
+  /** "Usar mi ubicación": delega al planner (permiso + reverse + ubicar). */
+  async useMyLocation(): Promise<void> {
+    await this.planner.useCurrentLocation();
+  }
+
   /**
    * Convierte un resultado del buscador en waypoint. Replica la logica de
    * `selectRecent` pero con un `Place`:
@@ -200,6 +218,12 @@ export class AddStopViewModel {
    *   agrega como intermedio).
    */
   selectSearchResult(place: Place): void {
+    // Search Box: la sugerencia no trae coordenadas → delega al planner, que
+    // hace el retrieve y luego reemplaza (modo edit) o agrega.
+    if (place.suggestionId) {
+      this.planner.selectSearchResult(place);
+      return;
+    }
     if (this.planner.isEditingWaypoint) {
       this.planner.replaceEditingWaypoint({
         latitude: place.latitude,

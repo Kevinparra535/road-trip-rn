@@ -41,6 +41,8 @@ describe('WikipediaSummaryService', () => {
 
     expect(global.fetch).toHaveBeenCalledWith(
       'https://wiki.test/page/summary/Villa%20de%20Leyva',
+      // El FetchHttpManager pasa un AbortSignal (timeout/cancelación).
+      expect.objectContaining({ signal: expect.anything() }),
     );
     expect(result).not.toBeNull();
     expect(result!.title).toBe('Villa de Leyva');

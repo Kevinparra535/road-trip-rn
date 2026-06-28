@@ -112,9 +112,10 @@ export class PlaceCategorySearchServiceImpl implements PlaceCategorySearchServic
     const params = new URLSearchParams({
       access_token: ENV.mapboxPublicToken,
       limit: String(opts?.limit ?? RESULTS_PER_SAMPLE),
-      language: 'es',
+      language: ENV.searchLanguage ?? 'es',
       proximity: `${proximity[0]},${proximity[1]}`,
     });
+    if (ENV.searchCountry) params.set('country', ENV.searchCountry);
     if (opts?.bbox) {
       params.set('bbox', opts.bbox.join(','));
     }
@@ -145,16 +146,18 @@ export class PlaceCategorySearchServiceImpl implements PlaceCategorySearchServic
     const params = new URLSearchParams({
       access_token: ENV.mapboxPublicToken,
       limit: String(opts?.limit ?? TOWN_RESULTS_PER_SAMPLE),
-      language: 'es',
+      language: ENV.searchLanguage ?? 'es',
       types: 'place,locality',
       proximity: `${proximity[0]},${proximity[1]}`,
     });
+    if (ENV.searchCountry) params.set('country', ENV.searchCountry);
     if (opts?.bbox) {
       params.set('bbox', opts.bbox.join(','));
     }
 
-    // El forward geocoding requiere un termino de busqueda; usamos las propias
-    // coordenadas como query reverse-friendly + proximity para sesgar al sample.
+    // Mapbox v5 interpreta una query `lng,lat` como reverse geocoding: devuelve
+    // la localidad que contiene el punto. Con types=place,locality se obtiene el
+    // pueblo/ciudad del sample (sesgado por country/proximity).
     const query = `${proximity[0]},${proximity[1]}`;
     const response = await this.http.get(
       `${MAPBOX_GEOCODING_URL}/${encodeURIComponent(query)}.json?${params}`,

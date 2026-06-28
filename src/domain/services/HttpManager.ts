@@ -9,6 +9,14 @@ export interface HttpResponse {
   json(): Promise<any>;
 }
 
+/** Opciones de transporte (cancelación + timeout). Todas opcionales. */
+export interface HttpRequestOptions {
+  /** Señal externa para cancelar la petición (p.ej. búsqueda obsoleta). */
+  signal?: AbortSignal;
+  /** Timeout en ms; aborta la petición si se excede. */
+  timeoutMs?: number;
+}
+
 export interface HttpManager {
-  get(url: string): Promise<HttpResponse>;
+  get(url: string, opts?: HttpRequestOptions): Promise<HttpResponse>;
 }

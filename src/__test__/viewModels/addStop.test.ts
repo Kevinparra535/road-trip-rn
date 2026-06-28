@@ -185,7 +185,10 @@ describe('AddStopViewModel', () => {
     expect(vm.searchQuery).toBe('cat');
     expect(vm.searchResults).toEqual([place]);
     expect(vm.isSearchLoading).toBe(true);
-    expect(vm.isSearchError).toBe('boom');
+    // El VM mapea cualquier error técnico del planner a un copy amigable.
+    expect(vm.isSearchError).toBe(
+      'No pudimos completar la búsqueda. Revisa tu conexión e inténtalo de nuevo.',
+    );
   });
 
   it('setSearchQuery y clearSearch delegan al planner', () => {

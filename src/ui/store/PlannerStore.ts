@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IReactionDisposer, makeAutoObservable, reaction, runInAction } from 'mobx';
 
+import { ENV } from '@/config/env';
 import { TYPES } from '@/config/types';
 
 import { Motorcycle } from '@/domain/entities/Motorcycle';
@@ -26,12 +27,15 @@ import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
 import { GetRouteUseCase } from '@/domain/useCases/GetRouteUseCase';
 import { inferStopKindFromInput } from '@/domain/useCases/InferStopKindUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
+import { RetrievePlaceUseCase } from '@/domain/useCases/RetrievePlaceUseCase';
+import { ReverseGeocodeUseCase } from '@/domain/useCases/ReverseGeocodeUseCase';
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
+import { SuggestPlacesUseCase } from '@/domain/useCases/SuggestPlacesUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 
 import {
@@ -61,8 +65,8 @@ type ICalls =
   | 'optimize';
 type Mode = 'create' | 'edit';
 
-/** Debounce de la busqueda del Planner — coincide con el del Home (400ms). */
-const SEARCH_DEBOUNCE_MS = 400;
+/** Debounce de la busqueda del Planner (as-you-type). */
+const SEARCH_DEBOUNCE_MS = 280;
 
 /**
  * Debounce del auto-recalc de directions tras cambiar waypoints. Mas largo
@@ -164,6 +168,8 @@ export class PlannerStore {
   // ── Search state (busqueda dentro del Planner) ─────────────────────────
   searchQuery: string = '';
   searchResults: Place[] | null = null;
+  /** Cancela la búsqueda en vuelo cuando llega una nueva (mobx ref). */
+  private searchAbort: AbortController | null = null;
   isSearchLoading: boolean = false;
   isSearchError: string | null = null;
 
@@ -251,6 +257,12 @@ export class PlannerStore {
     private readonly updateRouteUseCase: UpdateRouteUseCase,
     @inject(TYPES.SearchPlacesUseCase)
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
+    @inject(TYPES.SuggestPlacesUseCase)
+    private readonly suggestPlacesUseCase: SuggestPlacesUseCase,
+    @inject(TYPES.RetrievePlaceUseCase)
+    private readonly retrievePlaceUseCase: RetrievePlaceUseCase,
+    @inject(TYPES.ReverseGeocodeUseCase)
+    private readonly reverseGeocodeUseCase: ReverseGeocodeUseCase,
     @inject(TYPES.SearchPlacesByCategoryUseCase)
     private readonly searchPlacesByCategoryUseCase: SearchPlacesByCategoryUseCase,
     @inject(TYPES.EstimatePartyFuelPlanUseCase)
@@ -611,8 +623,17 @@ export class PlannerStore {
     });
   }
 
+  /**
+   * Dispara la búsqueda de inmediato (sin esperar el debounce). La usa el
+   * submit del teclado (`return`) y el botón de reintento tras un error.
+   */
+  submitSearch(): void {
+    void this.runSearch(this.searchQuery);
+  }
+
   /** Resetea la busqueda (input + resultados + error). */
   clearSearch(): void {
+    this.searchAbort?.abort();
     runInAction(() => {
       this.searchQuery = '';
       this.searchResults = null;
@@ -622,56 +643,180 @@ export class PlannerStore {
   }
 
   /**
+   * "Usar mi ubicación": asegura permiso + coordenadas del GPS, hace reverse
+   * geocoding para un nombre legible y ubica el resultado (reemplaza o agrega).
+   */
+  async useCurrentLocation(): Promise<void> {
+    this.updateLoadingState(true, null, 'search');
+    try {
+      if (!this.locationStore.hasLocation) {
+        const granted = await this.locationStore.ensurePermission();
+        if (!granted) {
+          this.handleError(
+            new Error('Necesitamos permiso de ubicación.'),
+            'search',
+          );
+          return;
+        }
+        await this.locationStore.loadCurrentLocation();
+      }
+      const coords = this.locationStore.coordinates;
+      if (!coords) {
+        this.handleError(new Error('No pudimos obtener tu ubicación.'), 'search');
+        return;
+      }
+      const [longitude, latitude] = coords;
+      const resolved =
+        (await this.reverseGeocodeUseCase.run({ latitude, longitude })) ??
+        new Place({
+          id: `loc-${longitude},${latitude}`,
+          name: 'Mi ubicación',
+          fullName: 'Mi ubicación',
+          latitude,
+          longitude,
+        });
+      this.updateLoadingState(false, null, 'search');
+      this.placeResolved(resolved);
+    } catch (error) {
+      this.handleError(error, 'search');
+    }
+  }
+
+  /**
    * Procesa el resultado elegido del buscador: lo convierte en waypoint
    * con `addWaypointWithKind` usando el `StopKind` inferido por la
    * categoria de Mapbox. Luego limpia la busqueda.
    */
   selectSearchResult(place: Place): void {
-    const inferred = inferStopKindFromInput({
-      mapboxCategory: place.category,
-      placeType: place.placeType,
-    });
-    // Fallback: 'other' = parada generica sin categoria. El rider
-    // re-categoriza tocando el dot si quiere especificar.
-    const kind: StopKind = inferred ?? 'other';
-    this.addWaypointWithKind({
-      latitude: place.latitude,
-      longitude: place.longitude,
-      name: place.name,
-      kind,
-      mapboxCategory: place.category,
-    });
+    // Search Box: la sugerencia no trae coordenadas; resolverlas con retrieve
+    // y luego ubicar (reemplazar el waypoint en edicion o agregar uno nuevo).
+    if (place.suggestionId) {
+      void this.retrieveAndPlace(String(place.suggestionId));
+      return;
+    }
+    this.placeResolved(place);
+  }
+
+  /** Ubica un `Place` ya resuelto: reemplaza el waypoint en edicion o agrega uno. */
+  private placeResolved(place: Place): void {
+    if (this.isEditingWaypoint) {
+      this.replaceEditingWaypoint({
+        latitude: place.latitude,
+        longitude: place.longitude,
+        name: place.name,
+        mapboxCategory: place.category,
+      });
+    } else {
+      // Fallback: 'other' = parada generica sin categoria. El rider
+      // re-categoriza tocando el dot si quiere especificar.
+      const kind: StopKind =
+        inferStopKindFromInput({
+          mapboxCategory: place.category,
+          placeType: place.placeType,
+        }) ?? 'other';
+      this.addWaypointWithKind({
+        latitude: place.latitude,
+        longitude: place.longitude,
+        name: place.name,
+        kind,
+        mapboxCategory: place.category,
+      });
+    }
     this.clearSearch();
+  }
+
+  /** Resuelve una sugerencia de Search Box a coordenadas y la ubica. */
+  private async retrieveAndPlace(suggestionId: string): Promise<void> {
+    this.updateLoadingState(true, null, 'search');
+    try {
+      const place = await this.retrievePlaceUseCase.run({ suggestionId });
+      if (!place) {
+        this.handleError(new Error('No se pudo resolver el lugar.'), 'search');
+        return;
+      }
+      this.placeResolved(place);
+      this.updateLoadingState(false, null, 'search');
+    } catch (error) {
+      this.handleError(error, 'search');
+    }
   }
 
   private async runSearch(query: string): Promise<void> {
     const trimmed = query.trim();
     if (trimmed.length < MIN_PLACE_QUERY_LENGTH) {
+      this.searchAbort?.abort();
       runInAction(() => {
         this.searchResults = null;
       });
       return;
     }
+    // Cancela la búsqueda anterior en vuelo (evita resultados obsoletos y, con
+    // Search Box, peticiones de sesión innecesarias).
+    this.searchAbort?.abort();
+    const controller = new AbortController();
+    this.searchAbort = controller;
+
     this.updateLoadingState(true, null, 'search');
     try {
-      // Proximity: si ya hay un waypoint, sesgar busqueda hacia el ultimo.
-      const last = this.waypoints[this.waypoints.length - 1];
-      const proximity: GeoPoint | undefined = last
-        ? { latitude: last.latitude, longitude: last.longitude }
+      // Proximity: en modo edicion sesga hacia el waypoint que se edita; si no,
+      // hacia el ultimo waypoint del plan.
+      const anchor =
+        this.editingWaypoint ?? this.waypoints[this.waypoints.length - 1];
+      const proximity: GeoPoint | undefined = anchor
+        ? { latitude: anchor.latitude, longitude: anchor.longitude }
         : undefined;
-      const places = await this.searchPlacesUseCase.run({
-        query: trimmed,
-        proximity,
-      });
-      // Descarta respuestas obsoletas si el query ya cambio (race condition).
-      if (this.searchQuery.trim() !== trimmed) return;
+
+      const places =
+        ENV.searchProvider === 'searchbox'
+          ? await this.suggestToPlaces(trimmed, proximity, controller.signal)
+          : await this.searchPlacesUseCase.run({
+              query: trimmed,
+              proximity,
+              signal: controller.signal,
+            });
+
+      // Descarta respuestas obsoletas (query cambió o búsqueda cancelada).
+      if (controller.signal.aborted || this.searchQuery.trim() !== trimmed) return;
       runInAction(() => {
         this.searchResults = places;
       });
       this.updateLoadingState(false, null, 'search');
     } catch (error) {
+      // Una cancelación no es un error que mostrar al rider.
+      if (controller.signal.aborted) return;
       this.handleError(error, 'search');
     }
+  }
+
+  /**
+   * Search Box: trae sugerencias (sin coordenadas) y las adapta a `Place` para
+   * la UI, guardando el `id` opaco en `suggestionId`. Las coordenadas se
+   * resuelven con `retrieve` al seleccionar (ver `selectSearchResult`).
+   */
+  private async suggestToPlaces(
+    query: string,
+    proximity?: GeoPoint,
+    signal?: AbortSignal,
+  ): Promise<Place[]> {
+    const suggestions = await this.suggestPlacesUseCase.run({
+      query,
+      proximity,
+      signal,
+    });
+    return suggestions.map(
+      (s) =>
+        new Place({
+          id: s.id,
+          name: s.name,
+          fullName: s.fullName,
+          latitude: 0,
+          longitude: 0,
+          placeType: s.placeType,
+          region: s.region,
+          country: s.country,
+          suggestionId: s.id,
+        }),
+    );
   }
 
   // ── Category search (chip row del Planner) ─────────────────────────────
