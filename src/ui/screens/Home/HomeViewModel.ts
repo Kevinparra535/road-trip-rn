@@ -41,6 +41,8 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
+import { computeNextManeuver } from '@/domain/useCases/ComputeNextManeuverUseCase';
+import { detectOffRoute } from '@/domain/useCases/DetectOffRouteUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
@@ -53,16 +55,17 @@ import {
   inferStopKindFromInput,
   InferStopKindUseCase,
 } from '@/domain/useCases/InferStopKindUseCase';
+import { RerouteUseCase } from '@/domain/useCases/RerouteUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
 import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUseCase';
+import { snapToRoute } from '@/domain/useCases/SnapToRouteUseCase';
 
 import {
   boundingBox,
   distanceAlongNearest,
-  distanceToPolylineKm,
   haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
@@ -335,6 +338,8 @@ export class HomeViewModel {
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
     @inject(TYPES.CalculateDirectionsUseCase)
     private readonly calculateDirectionsUseCase: CalculateDirectionsUseCase,
+    @inject(TYPES.RerouteUseCase)
+    private readonly rerouteUseCase: RerouteUseCase,
     @inject(TYPES.GetRouteElevationUseCase)
     private readonly getRouteElevationUseCase: GetRouteElevationUseCase,
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -1267,20 +1272,15 @@ export class HomeViewModel {
   } | null {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return null;
-    const steps: NavigationStep[] = route.steps;
-    if (steps.length === 0) return null;
-    const progress = this.navProgressKm;
-    // Empezamos a partir del segundo step: el primero es siempre `depart`,
-    // no es una maniobra para anticipar.
-    const next = steps
-      .slice(1)
-      .find((step) => step.distanceFromStartKm > progress - 0.001);
+    // La lógica (saltar `depart`, hallar el próximo step, fallback de texto)
+    // vive en `ComputeNextManeuverUseCase`; aquí solo añadimos la presentación
+    // de la distancia ("En 800 m").
+    const next = computeNextManeuver(route.steps, this.navProgressKm);
     if (!next) return null;
-    const remainingKm = Math.max(0, next.distanceFromStartKm - progress);
     return {
-      remainingKm,
-      distanceText: this.formatTurnDistance(remainingKm),
-      instruction: next.instruction || this.fallbackInstruction(next),
+      remainingKm: next.remainingKm,
+      distanceText: this.formatTurnDistance(next.remainingKm),
+      instruction: next.instruction,
       streetName: next.streetName,
       maneuverType: next.maneuverType,
       maneuverModifier: next.maneuverModifier,
@@ -1873,47 +1873,53 @@ export class HomeViewModel {
     const route = this.isRouteResponse;
     const rider = this.navRiderPoint;
     if (!route || !rider) return;
-    const deviationKm = distanceToPolylineKm(route.geometry, rider);
-    if (deviationKm <= OFF_ROUTE_THRESHOLD_KM) {
-      this.offRouteTicks = 0;
-      return;
-    }
-    this.offRouteTicks += 1;
-    if (this.offRouteTicks >= OFF_ROUTE_CONFIRM_TICKS) {
-      this.offRouteTicks = 0;
+    // Desviación perpendicular (geometría, sin costo de API) + debounce extraído
+    // a `DetectOffRouteUseCase` (umbral + ticks de confirmación).
+    const { deviationKm } = snapToRoute(route.geometry, rider);
+    const result = detectOffRoute({
+      deviationKm,
+      consecutiveTicks: this.offRouteTicks,
+    });
+    this.offRouteTicks = result.ticks;
+    if (result.shouldReroute) {
       void this.recalculateFrom(rider);
     }
   }
 
-  /** Recalcula la ruta desde la posicion actual hacia el mismo destino. */
+  /**
+   * Recalcula la ruta desde la posición actual hacia el mismo destino,
+   * **preservando las paradas intermedias** y con reintentos (`RerouteUseCase`,
+   * cierra G3). Re-ancla el progreso sobre la nueva geometría en vez del reset
+   * destructivo a 0 que producía discontinuidad visual. Si el reroute falla
+   * tras los reintentos, conserva la ruta vigente y solo loguea.
+   */
   private async recalculateFrom(origin: GeoPoint): Promise<void> {
     const place = this.destination;
     if (!place) return;
     try {
-      const directions = await this.calculateDirectionsUseCase.run({
-        waypoints: [
-          new Waypoint({
-            id: 'origin',
-            name: 'Posicion actual',
-            latitude: origin.latitude,
-            longitude: origin.longitude,
-            kind: 'start',
-            order: 0,
-          }),
-          new Waypoint({
-            id: place.id,
-            name: place.name,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            kind: 'destination',
-            order: 1,
-          }),
-        ],
+      const directions = await this.rerouteUseCase.run({
+        origin,
+        destination: {
+          id: place.id,
+          name: place.name,
+          latitude: place.latitude,
+          longitude: place.longitude,
+        },
+        intermediateStops: this.intermediateStops.map((stop) => ({
+          id: stop.id,
+          name: stop.name,
+          latitude: stop.latitude,
+          longitude: stop.longitude,
+        })),
         rideType: this.rideType,
       });
       runInAction(() => {
         this.isRouteResponse = directions;
-        this.simulatedDistanceKm = 0;
+        // Re-ancla el avance sobre la NUEVA polyline (solo aplica al simulador;
+        // en GPS real `navProgressKm` se recomputa contra la nueva geometría).
+        if (this.isSimulatedNavigation) {
+          this.simulatedDistanceKm = snapToRoute(directions.geometry, origin).progressKm;
+        }
       });
     } catch (error) {
       this.logger.error(
@@ -2312,33 +2318,6 @@ export class HomeViewModel {
       return `En ${meters} m`;
     }
     return `En ${km.toFixed(1)} km`;
-  }
-
-  /** Texto de respaldo cuando Mapbox no entrega `maneuver.instruction`. */
-  private fallbackInstruction(step: NavigationStep): string {
-    if (step.maneuverType === 'arrive') return 'Llegas al destino';
-    if (step.maneuverType === 'roundabout' || step.maneuverType === 'rotary') {
-      return 'Entra a la rotonda';
-    }
-    switch (step.maneuverModifier) {
-      case 'left':
-        return 'Gira a la izquierda';
-      case 'right':
-        return 'Gira a la derecha';
-      case 'sharp left':
-        return 'Giro cerrado a la izquierda';
-      case 'sharp right':
-        return 'Giro cerrado a la derecha';
-      case 'slight left':
-        return 'Mantente a la izquierda';
-      case 'slight right':
-        return 'Mantente a la derecha';
-      case 'uturn':
-        return 'Da media vuelta';
-      case 'straight':
-      default:
-        return 'Continua de frente';
-    }
   }
 
   private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {

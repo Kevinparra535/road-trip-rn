@@ -82,11 +82,13 @@ import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinat
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
 import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
+import { ComputeNextManeuverUseCase } from '@/domain/useCases/ComputeNextManeuverUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
+import { DetectOffRouteUseCase } from '@/domain/useCases/DetectOffRouteUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
@@ -114,6 +116,7 @@ import { ObserveNetworkStatusUseCase } from '@/domain/useCases/ObserveNetworkSta
 import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { RerouteUseCase } from '@/domain/useCases/RerouteUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
@@ -123,6 +126,7 @@ import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUse
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+import { SnapToRouteUseCase } from '@/domain/useCases/SnapToRouteUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
@@ -337,6 +341,14 @@ container.bind<DeleteRouteUseCase>(TYPES.DeleteRouteUseCase).to(DeleteRouteUseCa
 container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
+container.bind<SnapToRouteUseCase>(TYPES.SnapToRouteUseCase).to(SnapToRouteUseCase);
+container
+  .bind<ComputeNextManeuverUseCase>(TYPES.ComputeNextManeuverUseCase)
+  .to(ComputeNextManeuverUseCase);
+container
+  .bind<DetectOffRouteUseCase>(TYPES.DetectOffRouteUseCase)
+  .to(DetectOffRouteUseCase);
+container.bind<RerouteUseCase>(TYPES.RerouteUseCase).to(RerouteUseCase);
 container
   .bind<EstimateAutonomyUseCase>(TYPES.EstimateAutonomyUseCase)
   .to(EstimateAutonomyUseCase);

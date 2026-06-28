@@ -26,6 +26,9 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
 
 const makeSearchUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
 const makeDirectionsUseCase = () => ({ run: jest.fn() });
+const makeRerouteUseCase = () => ({
+  run: jest.fn().mockResolvedValue(makeRouteDirections()),
+});
 const makeElevationUseCase = () => ({
   run: jest.fn().mockResolvedValue(makeElevationProfile()),
 });
@@ -92,11 +95,15 @@ const makeVM = (
   // NavigationStore real: sin deps, y la reaction de `confirmedPlace` necesita
   // observables reales para disparar selectDestination + recordRecent.
   navStore: NavigationStore = new NavigationStore(),
+  // `reroute` va al final de la firma (para no desalinear los call sites
+  // posicionales) pero se inyecta en su posición real del constructor (4ª).
+  reroute: { run: jest.Mock } = makeRerouteUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
     searchPlaces as any,
     directions as any,
+    reroute as any,
     elevation as any,
     rider as any,
     motos as any,
