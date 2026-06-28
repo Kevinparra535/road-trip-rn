@@ -6,6 +6,7 @@ import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 
 import { initMapbox } from '@/ui/map/mapbox';
+import { linking } from '@/ui/navigation/linking';
 import RootNavigator from '@/ui/navigation/RootNavigator';
 
 import Colors from '@/ui/styles/Colors';
@@ -44,7 +45,7 @@ export default function App() {
             root y no quedan atrapados en los containers nativos de
             react-native-screens (que rompen el render de gorhom). */}
         <BottomSheetModalProvider>
-          <NavigationContainer theme={navTheme}>
+          <NavigationContainer theme={navTheme} linking={linking}>
             <StatusBar style="light" />
             <RootNavigator />
           </NavigationContainer>
