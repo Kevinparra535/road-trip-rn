@@ -116,6 +116,7 @@ import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCa
 import { ObserveNetworkStatusUseCase } from '@/domain/useCases/ObserveNetworkStatusUseCase';
 import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
+import { RequestBackgroundLocationUseCase } from '@/domain/useCases/RequestBackgroundLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
 import { RerouteUseCase } from '@/domain/useCases/RerouteUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
@@ -363,6 +364,9 @@ container
 container
   .bind<RequestLocationPermissionUseCase>(TYPES.RequestLocationPermissionUseCase)
   .to(RequestLocationPermissionUseCase);
+container
+  .bind<RequestBackgroundLocationUseCase>(TYPES.RequestBackgroundLocationUseCase)
+  .to(RequestBackgroundLocationUseCase);
 container
   .bind<GetCurrentLocationUseCase>(TYPES.GetCurrentLocationUseCase)
   .to(GetCurrentLocationUseCase);

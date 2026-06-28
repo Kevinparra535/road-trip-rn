@@ -7,6 +7,15 @@ import { RideType } from '@/domain/entities/Route';
  * las comparta. Ver `docs/planning/home-navigation-system-plan.md`.
  */
 
+/**
+ * Nombre del task de background location (F3). Lo comparten el módulo que define
+ * el task (`src/data/location/backgroundLocationTask.ts`, importado solo en el
+ * arranque de la app) y el `LocationService` que arranca/detiene las updates.
+ * Vive en config (sin side-effects) para no arrastrar `TaskManager.defineTask`
+ * a la cadena de DI/tests.
+ */
+export const BACKGROUND_LOCATION_TASK = 'road-trip/background-location';
+
 // ── Cámara de navegación (compartida Home + NavigationSessionStore) ─────────
 /** Zoom al seguir al rider durante la navegación. */
 export const FOLLOW_ZOOM = 16.5;

@@ -28,6 +28,19 @@ export class LocationRepositoryImpl implements LocationRepository {
     return this.mapStatus(status);
   }
 
+  async requestBackgroundPermission(): Promise<LocationPermissionStatus> {
+    const status = await this.service.requestBackgroundPermission();
+    return this.mapStatus(status);
+  }
+
+  async startBackgroundTracking(): Promise<void> {
+    await this.service.startBackgroundUpdates();
+  }
+
+  async stopBackgroundTracking(): Promise<void> {
+    await this.service.stopBackgroundUpdates();
+  }
+
   async getCurrentLocation(): Promise<GeoLocation> {
     const position = await this.service.getCurrentPosition();
     return LocationModel.fromJson(position).toDomain();

@@ -12,6 +12,10 @@ import RootNavigator from '@/ui/navigation/RootNavigator';
 import Colors from '@/ui/styles/Colors';
 import useAppFonts from '@/ui/utils/fontsLoader';
 
+// Registra el background location task (F3). Import con side-effect: corre
+// `TaskManager.defineTask` una vez al arrancar la app (no en la cadena de DI).
+import '@/data/location/backgroundLocationTask';
+
 initMapbox();
 
 const navTheme = {
