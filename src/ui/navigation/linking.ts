@@ -1,4 +1,7 @@
+import { Linking } from 'react-native';
 import { LinkingOptions } from '@react-navigation/native';
+
+import { PendingDeepLinkStore } from '@/ui/store/PendingDeepLinkStore';
 
 import { AppStackParamList } from './types';
 
@@ -36,3 +39,33 @@ export const linking: LinkingOptions<AppStackParamList> = {
     },
   },
 };
+
+/**
+ * Construye el `linking` con **auth-gating** (F4): si llega un deep link con la
+ * sesión cerrada, lo guarda en el `PendingDeepLinkStore` en vez de perderlo, y
+ * lo reemite al login. Recibe los stores como accessors para no acoplar este
+ * módulo al container de DI (así los tests de `linking.config` no lo tocan); el
+ * cableado lo hace `App.tsx`.
+ */
+export const createAuthGatedLinking = (
+  getIsAuthenticated: () => boolean,
+  getPending: () => PendingDeepLinkStore,
+): LinkingOptions<AppStackParamList> => ({
+  ...linking,
+  async getInitialURL() {
+    const url = await Linking.getInitialURL();
+    if (!url) return null;
+    return getPending().gate(url, getIsAuthenticated()) === 'allow' ? url : null;
+  },
+  subscribe(listener) {
+    const onReceive = ({ url }: { url: string }) => {
+      if (getPending().gate(url, getIsAuthenticated()) === 'allow') listener(url);
+    };
+    const sub = Linking.addEventListener('url', onReceive);
+    const unstash = getPending().onResolved((url) => listener(url));
+    return () => {
+      sub.remove();
+      unstash();
+    };
+  },
+});

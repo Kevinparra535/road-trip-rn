@@ -8,6 +8,7 @@ import Colors from '@/ui/styles/Colors';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 import { NetworkStore } from '@/ui/store/NetworkStore';
+import { PendingDeepLinkStore } from '@/ui/store/PendingDeepLinkStore';
 import { SessionStore } from '@/ui/store/SessionStore';
 import { SyncCoordinator } from '@/ui/store/SyncCoordinator';
 
@@ -18,6 +19,7 @@ const RootNavigator = observer(() => {
   const session = useViewModel<SessionStore>(TYPES.SessionStore);
   const networkStore = useViewModel<NetworkStore>(TYPES.NetworkStore);
   const syncCoordinator = useViewModel<SyncCoordinator>(TYPES.SyncCoordinator);
+  const pendingDeepLink = useViewModel<PendingDeepLinkStore>(TYPES.PendingDeepLinkStore);
 
   useEffect(() => {
     session.initialize();
@@ -29,6 +31,13 @@ const RootNavigator = observer(() => {
       session.dispose();
     };
   }, [session, networkStore, syncCoordinator]);
+
+  // Auth-gating de deep links (F4): al autenticarse, reemite la URL que llegó
+  // con la sesión cerrada para que el navigator la resuelva.
+  const isAuthenticated = session.isAuthenticated;
+  useEffect(() => {
+    if (isAuthenticated) pendingDeepLink.resolvePending();
+  }, [isAuthenticated, pendingDeepLink]);
 
   if (!session.isBootstrapped) {
     return (

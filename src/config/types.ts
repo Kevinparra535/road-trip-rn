@@ -122,6 +122,7 @@ export const TYPES = {
   PlannerStore: Symbol.for('PlannerStore'),
   NavigationStore: Symbol.for('NavigationStore'),
   NavigationSessionStore: Symbol.for('NavigationSessionStore'),
+  PendingDeepLinkStore: Symbol.for('PendingDeepLinkStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),
   NetworkStore: Symbol.for('NetworkStore'),

@@ -154,6 +154,7 @@ import { LocationStore } from '@/ui/store/LocationStore';
 import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 import { NetworkStore } from '@/ui/store/NetworkStore';
+import { PendingDeepLinkStore } from '@/ui/store/PendingDeepLinkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
@@ -458,6 +459,10 @@ container
 container
   .bind<NavigationSessionStore>(TYPES.NavigationSessionStore)
   .to(NavigationSessionStore)
+  .inSingletonScope();
+container
+  .bind<PendingDeepLinkStore>(TYPES.PendingDeepLinkStore)
+  .to(PendingDeepLinkStore)
   .inSingletonScope();
 container
   .bind<PlannerInsightsStore>(TYPES.PlannerInsightsStore)

@@ -5,18 +5,30 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 
+import { container } from '@/config/di';
+import { TYPES } from '@/config/types';
+
 import { initMapbox } from '@/ui/map/mapbox';
-import { linking } from '@/ui/navigation/linking';
+import { createAuthGatedLinking } from '@/ui/navigation/linking';
 import RootNavigator from '@/ui/navigation/RootNavigator';
 
 import Colors from '@/ui/styles/Colors';
 import useAppFonts from '@/ui/utils/fontsLoader';
+
+import { PendingDeepLinkStore } from '@/ui/store/PendingDeepLinkStore';
+import { SessionStore } from '@/ui/store/SessionStore';
 
 // Registra el background location task (F3). Import con side-effect: corre
 // `TaskManager.defineTask` una vez al arrancar la app (no en la cadena de DI).
 import '@/data/location/backgroundLocationTask';
 
 initMapbox();
+
+// Deep-linking con auth-gating (F4): los stores se resuelven del container.
+const linking = createAuthGatedLinking(
+  () => container.get<SessionStore>(TYPES.SessionStore).isAuthenticated,
+  () => container.get<PendingDeepLinkStore>(TYPES.PendingDeepLinkStore),
+);
 
 const navTheme = {
   ...DarkTheme,
