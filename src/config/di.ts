@@ -46,6 +46,7 @@ import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleReposito
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
 import { NavPreferencesRepositoryImpl } from '@/data/repositories/NavPreferencesRepositoryImpl';
 import { NetworkRepositoryImpl } from '@/data/repositories/NetworkRepositoryImpl';
+import { OfflineMapRepositoryImpl } from '@/data/repositories/OfflineMapRepositoryImpl';
 import { OptimizationRepositoryImpl } from '@/data/repositories/OptimizationRepositoryImpl';
 import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCategorySearchRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
@@ -66,6 +67,7 @@ import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepos
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
 import type { NavPreferencesRepository } from '@/domain/repositories/NavPreferencesRepository';
 import type { NetworkRepository } from '@/domain/repositories/NetworkRepository';
+import type { OfflineMapRepository } from '@/domain/repositories/OfflineMapRepository';
 import type { OptimizationRepository } from '@/domain/repositories/OptimizationRepository';
 import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceCategorySearchRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
@@ -90,6 +92,7 @@ import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
 import { DetectOffRouteUseCase } from '@/domain/useCases/DetectOffRouteUseCase';
+import { DownloadOfflineCorridorUseCase } from '@/domain/useCases/DownloadOfflineCorridorUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
@@ -304,6 +307,10 @@ container
   .to(ElevationRepositoryImpl)
   .inSingletonScope();
 container
+  .bind<OfflineMapRepository>(TYPES.OfflineMapRepository)
+  .to(OfflineMapRepositoryImpl)
+  .inSingletonScope();
+container
   .bind<OptimizationRepository>(TYPES.OptimizationRepository)
   .to(OptimizationRepositoryImpl)
   .inSingletonScope();
@@ -357,6 +364,9 @@ container
   .bind<DetectOffRouteUseCase>(TYPES.DetectOffRouteUseCase)
   .to(DetectOffRouteUseCase);
 container.bind<RerouteUseCase>(TYPES.RerouteUseCase).to(RerouteUseCase);
+container
+  .bind<DownloadOfflineCorridorUseCase>(TYPES.DownloadOfflineCorridorUseCase)
+  .to(DownloadOfflineCorridorUseCase);
 container
   .bind<EstimateAutonomyUseCase>(TYPES.EstimateAutonomyUseCase)
   .to(EstimateAutonomyUseCase);
