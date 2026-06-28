@@ -120,6 +120,7 @@ export const TYPES = {
   TripPartyStore: Symbol.for('TripPartyStore'),
   PlannerStore: Symbol.for('PlannerStore'),
   NavigationStore: Symbol.for('NavigationStore'),
+  NavigationSessionStore: Symbol.for('NavigationSessionStore'),
   PlannerInsightsStore: Symbol.for('PlannerInsightsStore'),
   PlannerTemplateController: Symbol.for('PlannerTemplateController'),
   NetworkStore: Symbol.for('NetworkStore'),

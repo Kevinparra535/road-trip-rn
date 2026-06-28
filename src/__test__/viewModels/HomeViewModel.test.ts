@@ -1,6 +1,7 @@
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 
 import {
@@ -103,7 +104,6 @@ const makeVM = (
     store as any,
     searchPlaces as any,
     directions as any,
-    reroute as any,
     elevation as any,
     rider as any,
     motos as any,
@@ -113,8 +113,14 @@ const makeVM = (
     addRecent as any,
     getAllRoutes as any,
     inferStopKind as any,
-    getNavPreferences as any,
-    setMute as any,
+    // El motor de nav vive en NavigationSessionStore (F1b): se construye con los
+    // mocks de reroute/prefs y comparte el mismo locationStore mock que el VM.
+    new NavigationSessionStore(
+      store as any,
+      reroute as any,
+      getNavPreferences as any,
+      setMute as any,
+    ),
     plannerStore as any,
     navStore,
   );
@@ -1082,21 +1088,21 @@ describe('HomeViewModel — velocímetro real (navSpeedKmh)', () => {
   };
 
   it('es null cuando no se está navegando', () => {
-    expect(makeVM().navSpeedKmh).toBeNull();
+    expect(makeVM().navSpeedLabel).toBeNull();
   });
 
   it('convierte la velocidad del GPS (m/s) a km/h en una ruta real', () => {
     const vm = makeVM(makeLocationStore({ speed: 10 }));
     buildRealNav(vm);
     expect(vm.isNavigating).toBe(true);
-    expect(vm.navSpeedKmh).toBeCloseTo(36, 5); // 10 m/s * 3.6
+    expect(vm.navSpeedLabel).toBe(36); // 10 m/s * 3.6, redondeado
   });
 
   it('es null mientras el GPS no reporta velocidad (parado/sin Doppler)', () => {
     const vm = makeVM(makeLocationStore({ speed: null }));
     buildRealNav(vm);
     expect(vm.isNavigating).toBe(true);
-    expect(vm.navSpeedKmh).toBeNull();
+    expect(vm.navSpeedLabel).toBeNull();
   });
 });
 

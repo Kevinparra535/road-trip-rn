@@ -150,6 +150,7 @@ import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 import { NetworkStore } from '@/ui/store/NetworkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
@@ -449,6 +450,10 @@ container.bind<PlannerStore>(TYPES.PlannerStore).to(PlannerStore).inSingletonSco
 container
   .bind<NavigationStore>(TYPES.NavigationStore)
   .to(NavigationStore)
+  .inSingletonScope();
+container
+  .bind<NavigationSessionStore>(TYPES.NavigationSessionStore)
+  .to(NavigationSessionStore)
   .inSingletonScope();
 container
   .bind<PlannerInsightsStore>(TYPES.PlannerInsightsStore)

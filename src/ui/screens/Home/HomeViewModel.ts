@@ -1,19 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
-import * as Speech from 'expo-speech';
 
 import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
-import {
-  DEFAULT_RIDE_TYPE,
-  NAV_ARRIVAL_THRESHOLD_KM,
-  NAV_AVG_SPEED_KMH,
-  NAV_TICK_MS,
-  NAV_VOICE_LANGUAGE,
-  OFF_ROUTE_CONFIRM_TICKS,
-  OFF_ROUTE_THRESHOLD_KM,
-  ROUTE_STATION_SAMPLES,
-  SIM_KM_PER_TICK,
-} from '@/config/navigation';
+import { DEFAULT_RIDE_TYPE, ROUTE_STATION_SAMPLES } from '@/config/navigation';
 import {
   ROUTE_ALT_WIDTH,
   ROUTE_CORE_WIDTH_NAV,
@@ -25,11 +14,6 @@ import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
-import {
-  ManeuverModifier,
-  ManeuverType,
-  NavigationStep,
-} from '@/domain/entities/NavigationStep';
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
@@ -41,27 +25,21 @@ import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
-import { computeNextManeuver } from '@/domain/useCases/ComputeNextManeuverUseCase';
-import { detectOffRoute } from '@/domain/useCases/DetectOffRouteUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
-import { GetNavPreferencesUseCase } from '@/domain/useCases/GetNavPreferencesUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
 import {
   inferStopKindFromInput,
   InferStopKindUseCase,
 } from '@/domain/useCases/InferStopKindUseCase';
-import { RerouteUseCase } from '@/domain/useCases/RerouteUseCase';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
 } from '@/domain/useCases/SearchPlacesUseCase';
-import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUseCase';
-import { snapToRoute } from '@/domain/useCases/SnapToRouteUseCase';
 
 import {
   boundingBox,
@@ -76,6 +54,7 @@ import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
 import { LocationStore } from '@/ui/store/LocationStore';
+import { CameraTarget, NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore, PlannerNavPayload } from '@/ui/store/NavigationStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 
@@ -153,14 +132,9 @@ const elevationColor = (ratio: number): string => {
   return lerpHexColor(ELEVATION_RAMP[index], ELEVATION_RAMP[index + 1], scaled - index);
 };
 
-/** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
-export type CameraTarget = {
-  centerCoordinate: [number, number];
-  zoomLevel: number;
-  pitch: number;
-  /** Rumbo (bearing) de la camara en grados; opcional. */
-  heading?: number;
-};
+// `CameraTarget` ahora vive en `NavigationSessionStore` (lo reusa el motor de
+// nav); se re-exporta para no romper imports existentes.
+export type { CameraTarget };
 
 /** Caja envolvente en formato Mapbox [lng, lat] para `fitBounds`. */
 export type MapBounds = {
@@ -274,28 +248,8 @@ export class HomeViewModel {
   isFuelEstimateError: string | null = null;
   isFuelEstimateResponse: RouteFuelEstimate | null = null;
 
-  // ── State: navegacion (simulacion del recorrido) ──
-  isNavigating: boolean = false;
-  simulatedDistanceKm: number = 0;
-  /**
-   * Pantalla "8 - Home Llegada" del Pencil: al alcanzar el destino, congela
-   * la nav y muestra el panel de llegada con el resumen del viaje. Permanece
-   * en `true` hasta que el rider toca "Finalizar" (`dismissArrival`).
-   */
-  isArrived: boolean = false;
-  private arrivedAt: Date | null = null;
-  /**
-   * Pantalla "6b - Home Nav Activa + Elevacion" del Pencil: muestra la barra
-   * lateral con el perfil de altura. Cuando es `false` (pantalla 6a) solo se
-   * ve un chip compacto con altitud y ascenso al lado del marcador del rider.
-   */
-  isElevationStripOpen: boolean = true;
-  /**
-   * Silencia los anuncios de voz turn-by-turn. Persiste solo en memoria —
-   * se reinicia al cerrar la app. Por defecto el motero recibe voz cuando
-   * arranca la navegacion para que no haya que mirar la pantalla.
-   */
-  isMuted: boolean = false;
+  // ── Navegacion: el runtime vive en `NavigationSessionStore` (F1b). El Home
+  // expone getters proxy para que el `HomeScreen` no cambie. ──
 
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
@@ -323,12 +277,6 @@ export class HomeViewModel {
   private confirmReactionDisposer: (() => void) | null = null;
   /** Disposer de la reaccion que arranca la nav desde el handoff del Planner. */
   private plannerNavReactionDisposer: (() => void) | null = null;
-  private navTimer: ReturnType<typeof setInterval> | null = null;
-  /** Disposer de la reaccion que escucha el avance del GPS real. */
-  private navReactionDisposer: (() => void) | null = null;
-  /** Claves de los anuncios de voz ya reproducidos (no repetir). */
-  private spokenVoiceIds: Set<string> = new Set();
-  private offRouteTicks: number = 0;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -338,8 +286,6 @@ export class HomeViewModel {
     private readonly searchPlacesUseCase: SearchPlacesUseCase,
     @inject(TYPES.CalculateDirectionsUseCase)
     private readonly calculateDirectionsUseCase: CalculateDirectionsUseCase,
-    @inject(TYPES.RerouteUseCase)
-    private readonly rerouteUseCase: RerouteUseCase,
     @inject(TYPES.GetRouteElevationUseCase)
     private readonly getRouteElevationUseCase: GetRouteElevationUseCase,
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -358,10 +304,8 @@ export class HomeViewModel {
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
     @inject(TYPES.InferStopKindUseCase)
     private readonly inferStopKindUseCase: InferStopKindUseCase,
-    @inject(TYPES.GetNavPreferencesUseCase)
-    private readonly getNavPreferencesUseCase: GetNavPreferencesUseCase,
-    @inject(TYPES.SetMutePreferenceUseCase)
-    private readonly setMutePreferenceUseCase: SetMutePreferenceUseCase,
+    @inject(TYPES.NavigationSessionStore)
+    private readonly navSession: NavigationSessionStore,
     @inject(TYPES.PlannerStore)
     private readonly plannerStore: PlannerStore,
     @inject(TYPES.NavigationStore)
@@ -1061,11 +1005,76 @@ export class HomeViewModel {
     };
   }
 
-  // ── Computed: navegacion ────────────────────────────────────────────────────
+  // ── Computed: navegacion (proxies al `NavigationSessionStore`, F1b) ─────────
 
   /** La ruta actual proviene del boton DEV "Ruta de prueba". */
   get isSimulatedNavigation(): boolean {
     return this.destination?.id === DEV_FAKE_DESTINATION.id;
+  }
+
+  get isNavigating(): boolean {
+    return this.navSession.isNavigating;
+  }
+
+  get isArrived(): boolean {
+    return this.navSession.isArrived;
+  }
+
+  get isMuted(): boolean {
+    return this.navSession.isMuted;
+  }
+
+  get isElevationStripOpen(): boolean {
+    return this.navSession.isElevationStripOpen;
+  }
+
+  get navRiderCoordinate(): [number, number] | null {
+    return this.navSession.navRiderCoordinate;
+  }
+
+  get navCameraTarget(): CameraTarget | null {
+    return this.navSession.navCameraTarget;
+  }
+
+  get navSpeedLabel(): number | null {
+    return this.navSession.navSpeedLabel;
+  }
+
+  get navRemaining(): { distance: string; eta: string; arrival: string } | null {
+    return this.navSession.navRemaining;
+  }
+
+  get currentTurn() {
+    return this.navSession.currentTurn;
+  }
+
+  /**
+   * Avance del rider durante la nav (proxy al `NavigationSessionStore`). Lo usan
+   * `navFuelBar` y `currentNavElevation` para situar marcadores/altitud en vivo.
+   */
+  get navProgressKm(): number {
+    return this.navSession.navProgressKm;
+  }
+
+  /**
+   * Resumen del viaje terminado para el panel de llegada: la base
+   * (destino/hora/distancia/duración) viene del `NavigationSessionStore`; el
+   * Home le agrega el combustible estimado (que es su estado).
+   */
+  get arrivalSummary(): {
+    destinationName: string;
+    arrivalTime: string;
+    distance: string;
+    duration: string;
+    fuel: string;
+  } | null {
+    const base = this.navSession.arrivalSummary;
+    if (!base) return null;
+    const fuel = this.isFuelEstimateResponse;
+    return {
+      ...base,
+      fuel: fuel ? `${fuel.fuelNeededLiters.toFixed(1)} L` : '—',
+    };
   }
 
   /**
@@ -1095,78 +1104,6 @@ export class HomeViewModel {
         suggested: index === 0,
       })),
       reservePercent,
-    };
-  }
-
-  /**
-   * Kilometros recorridos sobre la ruta durante la navegacion. En la ruta de
-   * prueba viene del simulador; en cualquier otra, del GPS real proyectado
-   * sobre la polyline.
-   */
-  get navProgressKm(): number {
-    return this.isSimulatedNavigation ? this.simulatedDistanceKm : this.routeProgressKm;
-  }
-
-  /**
-   * Posicion del conductor sobre la ruta, como GeoPoint. En modo simulado se
-   * proyecta sobre la polilinea (siempre sobre la ruta). En modo GPS real se
-   * usa la coordenada cruda del `LocationStore` para que `monitorOffRoute`
-   * pueda detectar desviaciones reales del trazado.
-   */
-  get navRiderPoint(): GeoPoint | null {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return null;
-    if (this.isSimulatedNavigation) {
-      return pointAtDistanceAlong(route.geometry, this.simulatedDistanceKm);
-    }
-    const location = this.locationStore.isLocationResponse;
-    if (!location) return null;
-    return { latitude: location.latitude, longitude: location.longitude };
-  }
-
-  /** Posicion del conductor simulado en formato [lng, lat] para Mapbox. */
-  get navRiderCoordinate(): [number, number] | null {
-    const point = this.navRiderPoint;
-    return point ? [point.longitude, point.latitude] : null;
-  }
-
-  /**
-   * Rumbo hacia el frente de la ruta desde la posicion del rider, en grados
-   * (0 = norte). Permite orientar la camara de navegacion para que la ruta
-   * salga siempre hacia adelante en el viewport — clave cuando el rider esta
-   * quieto en el origen y `pitch` inclina la camara.
-   */
-  get navHeading(): number | null {
-    const route = this.isRouteResponse;
-    const rider = this.navRiderPoint;
-    if (!route || !rider) return null;
-    const lookAhead = pointAtDistanceAlong(
-      route.geometry,
-      Math.min(route.distanceKm, this.navProgressKm + 0.05),
-    );
-    if (!lookAhead) return null;
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const toDeg = (rad: number) => (rad * 180) / Math.PI;
-    const lat1 = toRad(rider.latitude);
-    const lat2 = toRad(lookAhead.latitude);
-    const dLon = toRad(lookAhead.longitude - rider.longitude);
-    const y = Math.sin(dLon) * Math.cos(lat2);
-    const x =
-      Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-    if (x === 0 && y === 0) return null;
-    return (toDeg(Math.atan2(y, x)) + 360) % 360;
-  }
-
-  /** Objetivo de camara que sigue al conductor durante la navegacion. */
-  get navCameraTarget(): CameraTarget | null {
-    const coordinate = this.navRiderCoordinate;
-    if (!coordinate) return null;
-    const heading = this.navHeading;
-    return {
-      centerCoordinate: coordinate,
-      zoomLevel: FOLLOW_ZOOM,
-      pitch: PERSPECTIVE_PITCH,
-      ...(heading !== null ? { heading } : {}),
     };
   }
 
@@ -1212,111 +1149,6 @@ export class HomeViewModel {
     return elevation ? Math.round(elevation.ascentSoFarM) : null;
   }
 
-  /**
-   * Velocidad instantanea ya redondeada para el velocimetro de la barra de
-   * navegacion. `null` cuando no hay velocidad que mostrar.
-   */
-  get navSpeedLabel(): number | null {
-    const speed = this.navSpeedKmh;
-    return speed === null ? null : Math.round(speed);
-  }
-
-  /**
-   * Velocidad instantanea del conductor en km/h para el velocimetro de la
-   * barra de navegacion. En la ruta de prueba devuelve la velocidad promedio
-   * modelada; en una ruta real la toma del GPS (`LocationStore.speed`, en m/s)
-   * y la convierte a km/h. Es `null` cuando el fix aun no reporta velocidad
-   * (parado/sin Doppler) — el velocimetro oculta su caja en ese caso.
-   */
-  get navSpeedKmh(): number | null {
-    if (!this.isNavigating) return null;
-    if (this.isSimulatedNavigation) return NAV_AVG_SPEED_KMH;
-    const metersPerSecond = this.locationStore.speed;
-    if (metersPerSecond === null) return null;
-    return metersPerSecond * 3.6;
-  }
-
-  /**
-   * Resumen de la navegacion para el panel inferior del Pencil 6a/6b:
-   * distancia restante en km, tiempo restante en formato corto y hora de
-   * llegada estimada calculada desde "ahora".
-   */
-  get navRemaining(): {
-    distance: string;
-    eta: string;
-    arrival: string;
-  } | null {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return null;
-    const remainingKm = Math.max(0, route.distanceKm - this.navProgressKm);
-    const remainingMin = (remainingKm / NAV_AVG_SPEED_KMH) * 60;
-    return {
-      distance: `${Math.round(remainingKm)} km`,
-      eta: this.formatDuration(remainingMin),
-      arrival: this.formatArrivalTime(remainingMin),
-    };
-  }
-
-  /**
-   * Datos del panel "8 - Home Llegada": resumen del viaje recien terminado.
-   * Disponible solo mientras `isArrived` esta activo y la moto/ruta siguen
-   * en memoria; al pulsar "Finalizar" se limpia todo y vuelve a `null`.
-   */
-  get arrivalSummary(): {
-    destinationName: string;
-    arrivalTime: string;
-    distance: string;
-    duration: string;
-    fuel: string;
-  } | null {
-    const route = this.isRouteResponse;
-    const destination = this.destination;
-    const arrivedAt = this.arrivedAt;
-    if (!this.isArrived || !route || !destination || !arrivedAt) return null;
-    const hh = String(arrivedAt.getHours()).padStart(2, '0');
-    const mm = String(arrivedAt.getMinutes()).padStart(2, '0');
-    const fuel = this.isFuelEstimateResponse;
-    return {
-      destinationName: destination.name,
-      arrivalTime: `${hh}:${mm}`,
-      distance: `${Math.round(route.distanceKm)}`,
-      duration: this.formatDuration(route.durationMin),
-      fuel: fuel ? `${fuel.fuelNeededLiters.toFixed(1)} L` : '—',
-    };
-  }
-
-  /**
-   * Step indicator del Pencil ("TurnBanner"): la maniobra que el rider va a
-   * encontrar mas adelante en la ruta. Busca el primer step (saltandose el
-   * `depart` del kilometro 0) cuyo punto de maniobra aun no se ha alcanzado,
-   * y devuelve la distancia restante hasta el, la instruccion ya localizada
-   * por Mapbox y los datos para escoger el icono del giro.
-   */
-  get currentTurn(): {
-    remainingKm: number;
-    distanceText: string;
-    instruction: string;
-    streetName: string;
-    maneuverType: ManeuverType;
-    maneuverModifier: ManeuverModifier | null;
-  } | null {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return null;
-    // La lógica (saltar `depart`, hallar el próximo step, fallback de texto)
-    // vive en `ComputeNextManeuverUseCase`; aquí solo añadimos la presentación
-    // de la distancia ("En 800 m").
-    const next = computeNextManeuver(route.steps, this.navProgressKm);
-    if (!next) return null;
-    return {
-      remainingKm: next.remainingKm,
-      distanceText: this.formatTurnDistance(next.remainingKm),
-      instruction: next.instruction,
-      streetName: next.streetName,
-      maneuverType: next.maneuverType,
-      maneuverModifier: next.maneuverModifier,
-    };
-  }
-
   // ── Computed: rider ─────────────────────────────────────────────────────────
 
   /** Iniciales del rider para el avatar del buscador; `--` si aun no carga. */
@@ -1330,7 +1162,7 @@ export class HomeViewModel {
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
     void this.loadHomeFeed();
-    void this.loadNavPreferences();
+    void this.navSession.loadPreferences();
     // E3 flow brief: detectar draft del Planner para mostrar el sheet
     // "Continúa donde quedaste". El flow vive en el PlannerStore (singleton);
     // el Home solo lo dispara y lee `pendingDraft` vía delegadores.
@@ -1400,8 +1232,7 @@ export class HomeViewModel {
     this.confirmReactionDisposer = null;
     this.plannerNavReactionDisposer?.();
     this.plannerNavReactionDisposer = null;
-    this.clearNavTimer();
-    Speech.stop();
+    this.navSession.dispose();
     this.locationStore.dispose();
   }
 
@@ -1741,260 +1572,48 @@ export class HomeViewModel {
   }
 
   /**
-   * Inicia la navegacion: la pantalla se despeja (solo el mapa). En la ruta
-   * de prueba se arranca la simulacion a velocidad promedio; en cualquier
-   * otra ruta el avance se deriva del GPS real (ver `navProgressKm`), asi
-   * que el rider se queda quieto hasta que la moto se mueva fisicamente.
+   * Inicia la navegacion entregando el snapshot de la sesión al
+   * `NavigationSessionStore` (que posee el runtime: timer/GPS/voz/off-route).
    */
   startNavigation(): void {
-    if (!this.hasRoute) return;
-    runInAction(() => {
-      this.isNavigating = true;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
+    const route = this.isRouteResponse;
+    const destination = this.destination;
+    if (!route || !destination) return;
+    this.navSession.start({
+      route,
+      destination,
+      intermediateStops: this.intermediateStops,
+      rideType: this.rideType,
+      isSimulated: this.isSimulatedNavigation,
     });
-    this.spokenVoiceIds.clear();
-    this.clearNavTimer();
-    if (this.isSimulatedNavigation) {
-      this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
-    } else {
-      // GPS real: el avance se deriva de `locationStore.coordinates` via
-      // `navProgressKm`. Reaccionamos a cada lectura nueva para disparar la
-      // voz, vigilar off-route y detectar llegada (mismo "tick" del sim).
-      this.navReactionDisposer = reaction(
-        () => this.navProgressKm,
-        () => this.handleRealNavTick(),
-        { fireImmediately: true },
-      );
-    }
   }
 
-  /** Alterna los anuncios de voz turn-by-turn y persiste la preferencia. */
+  /** Alterna los anuncios de voz turn-by-turn (delegado al store). */
   toggleMute(): void {
-    runInAction(() => {
-      this.isMuted = !this.isMuted;
-    });
-    if (this.isMuted) Speech.stop();
-    void this.persistMute(this.isMuted);
-  }
-
-  /** Carga el flag de mute persistido (corre al inicializar el Home). */
-  private async loadNavPreferences(): Promise<void> {
-    try {
-      const prefs = await this.getNavPreferencesUseCase.run();
-      runInAction(() => {
-        this.isMuted = prefs.muted;
-      });
-    } catch (error) {
-      this.logger.error(
-        `Error cargando preferencias de navegacion: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  }
-
-  /** Persiste el flag de mute sin bloquear el toggle de la UI. */
-  private async persistMute(muted: boolean): Promise<void> {
-    try {
-      await this.setMutePreferenceUseCase.run(muted);
-    } catch (error) {
-      this.logger.error(
-        `Error persistiendo mute: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
+    this.navSession.toggleMute();
   }
 
   /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */
   toggleElevationStrip(): void {
-    this.isElevationStripOpen = !this.isElevationStripOpen;
+    this.navSession.toggleElevationStrip();
   }
 
   /** Termina la navegacion y restaura la pantalla del Home. */
   stopNavigation(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
-    runInAction(() => {
-      this.isNavigating = false;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
-    });
-  }
-
-  /**
-   * Marca el viaje como completado: detiene la simulacion / GPS, fija la
-   * hora de llegada y conserva la ruta para que el panel "8 - Home Llegada"
-   * pueda mostrar el resumen. La navegacion se considera terminada
-   * (`isNavigating = false`) pero la ruta sigue en memoria hasta que el
-   * rider toca "Finalizar".
-   */
-  private markArrived(): void {
-    this.clearNavTimer();
-    runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = true;
-      this.arrivedAt = new Date();
-      this.offRouteTicks = 0;
-    });
+    this.navSession.stop();
   }
 
   /** Cierra el panel de llegada y limpia la ruta (vuelve al Home vacio). */
   dismissArrival(): void {
-    runInAction(() => {
-      this.isArrived = false;
-      this.arrivedAt = null;
-    });
+    this.navSession.dismissArrival();
     this.clearRoute();
-  }
-
-  /** Avanza al conductor simulado un tick sobre la ruta. */
-  private advanceSimulation(): void {
-    const route = this.isRouteResponse;
-    if (!route) {
-      this.stopNavigation();
-      return;
-    }
-    runInAction(() => {
-      this.simulatedDistanceKm = Math.min(
-        route.distanceKm,
-        this.simulatedDistanceKm + SIM_KM_PER_TICK,
-      );
-    });
-    this.maybeSpeak();
-    this.monitorOffRoute();
-    if (this.simulatedDistanceKm >= route.distanceKm) {
-      this.markArrived();
-    }
-  }
-
-  /**
-   * Reproduce los anuncios de voz turn-by-turn de Mapbox cuyo punto de
-   * disparo ya quedo atras del rider. Cada anuncio se identifica por step +
-   * `distanceAlongGeometry` para evitar repetirlo y se omite si el motero
-   * silencio la voz con `toggleMute`.
-   */
-  private maybeSpeak(): void {
-    if (this.isMuted) return;
-    const route = this.isRouteResponse;
-    if (!route) return;
-    const progressKm = this.navProgressKm;
-    for (const step of route.steps) {
-      for (const voice of step.voiceInstructions) {
-        const triggerKm = step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
-        if (progressKm < triggerKm) continue;
-        const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
-        if (this.spokenVoiceIds.has(key)) continue;
-        this.spokenVoiceIds.add(key);
-        Speech.speak(voice.announcement, { language: NAV_VOICE_LANGUAGE });
-      }
-    }
-  }
-
-  /**
-   * Detecta de forma local (geometria, sin costo de API) si el conductor se
-   * salio de la ruta. Solo cuando la desviacion se sostiene varios ticks se
-   * gasta UNA llamada de recalculo. En la simulacion el conductor sigue la
-   * ruta, asi que esta vigilancia queda latente hasta usar GPS real.
-   */
-  private monitorOffRoute(): void {
-    const route = this.isRouteResponse;
-    const rider = this.navRiderPoint;
-    if (!route || !rider) return;
-    // Desviación perpendicular (geometría, sin costo de API) + debounce extraído
-    // a `DetectOffRouteUseCase` (umbral + ticks de confirmación).
-    const { deviationKm } = snapToRoute(route.geometry, rider);
-    const result = detectOffRoute({
-      deviationKm,
-      consecutiveTicks: this.offRouteTicks,
-    });
-    this.offRouteTicks = result.ticks;
-    if (result.shouldReroute) {
-      void this.recalculateFrom(rider);
-    }
-  }
-
-  /**
-   * Recalcula la ruta desde la posición actual hacia el mismo destino,
-   * **preservando las paradas intermedias** y con reintentos (`RerouteUseCase`,
-   * cierra G3). Re-ancla el progreso sobre la nueva geometría en vez del reset
-   * destructivo a 0 que producía discontinuidad visual. Si el reroute falla
-   * tras los reintentos, conserva la ruta vigente y solo loguea.
-   */
-  private async recalculateFrom(origin: GeoPoint): Promise<void> {
-    const place = this.destination;
-    if (!place) return;
-    try {
-      const directions = await this.rerouteUseCase.run({
-        origin,
-        destination: {
-          id: place.id,
-          name: place.name,
-          latitude: place.latitude,
-          longitude: place.longitude,
-        },
-        intermediateStops: this.intermediateStops.map((stop) => ({
-          id: stop.id,
-          name: stop.name,
-          latitude: stop.latitude,
-          longitude: stop.longitude,
-        })),
-        rideType: this.rideType,
-      });
-      runInAction(() => {
-        this.isRouteResponse = directions;
-        // Re-ancla el avance sobre la NUEVA polyline (solo aplica al simulador;
-        // en GPS real `navProgressKm` se recomputa contra la nueva geometría).
-        if (this.isSimulatedNavigation) {
-          this.simulatedDistanceKm = snapToRoute(directions.geometry, origin).progressKm;
-        }
-      });
-    } catch (error) {
-      this.logger.error(
-        `Error recalculando ruta: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  }
-
-  /**
-   * Hook que corre en cada lectura nueva del GPS durante navegacion real:
-   * dispara la voz turn-by-turn, vigila si se salio de la ruta y detecta
-   * la llegada. Es el equivalente, para GPS real, del tick del simulador.
-   */
-  private handleRealNavTick(): void {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return;
-    this.maybeSpeak();
-    this.monitorOffRoute();
-    if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
-      this.markArrived();
-    }
-  }
-
-  private clearNavTimer(): void {
-    this.navReactionDisposer?.();
-    this.navReactionDisposer = null;
-    if (this.navTimer) {
-      clearInterval(this.navTimer);
-      this.navTimer = null;
-    }
   }
 
   /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
+    // El runtime de nav (timer/voz/llegada) vive en el store: lo reseteamos ahí.
+    this.navSession.reset();
     runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
       this.destination = null;
       this.intermediateStops = [];
       this.searchMode = 'destination';
@@ -2019,20 +1638,11 @@ export class HomeViewModel {
   }
 
   reset(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
+    this.navSession.reset();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
-      this.isMuted = false;
       this.isPerspective = false;
       this.hasAutoCentered = false;
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
-      this.isElevationStripOpen = true;
       this.searchQuery = '';
       this.isSearchLoading = false;
       this.isSearchError = null;

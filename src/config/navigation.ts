@@ -7,6 +7,12 @@ import { RideType } from '@/domain/entities/Route';
  * las comparta. Ver `docs/planning/home-navigation-system-plan.md`.
  */
 
+// ── Cámara de navegación (compartida Home + NavigationSessionStore) ─────────
+/** Zoom al seguir al rider durante la navegación. */
+export const FOLLOW_ZOOM = 16.5;
+/** Inclinación (pitch) de la cámara en perspectiva, estilo Waze. */
+export const PERSPECTIVE_PITCH = 60;
+
 // ── Navegación (simulación) ─────────────────────────────────────────────────
 /** Velocidad promedio modelada para el viaje simulado. */
 export const NAV_AVG_SPEED_KMH = 100;
