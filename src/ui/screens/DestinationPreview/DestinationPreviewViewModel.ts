@@ -6,7 +6,10 @@ import { TYPES } from '@/config/types';
 import { Place } from '@/domain/entities/Place';
 import { PlaceSummary } from '@/domain/entities/PlaceSummary';
 import { RideType } from '@/domain/entities/Route';
+import { RouteDirections } from '@/domain/entities/RouteDirections';
+import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 
+import { BuildRoutePreviewUseCase } from '@/domain/useCases/BuildRoutePreviewUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 
 import { haversineKm } from '@/domain/geo/geoMath';
@@ -28,7 +31,7 @@ const STRAIGHT_TO_ROAD_FACTOR = 1.3;
 const DEFAULT_MAP_THUMB_WIDTH = 320;
 const MAP_THUMB_HEIGHT = 220;
 
-type ICalls = 'placeSummary';
+type ICalls = 'placeSummary' | 'routePreview';
 
 /**
  * VM del formSheet "DestinationPreview". Orquesta:
@@ -56,8 +59,17 @@ export class DestinationPreviewViewModel {
    */
   isPlaceSummaryResponse: PlaceSummary | null = null;
 
+  // ── State: preview de ruta real + veredicto de autonomía (F2a) ──
+  isRoutePreviewLoading: boolean = false;
+  isRoutePreviewError: string | null = null;
+  /** Trazado real de Mapbox del preview (distancia/ETA reales). */
+  routePreview: RouteDirections | null = null;
+  /** Veredicto de autonomía de la moto activa sobre el preview (o `null`). */
+  fuelPreview: RouteFuelEstimate | null = null;
+
   private logger = new Logger('DestinationPreviewViewModel');
   private summaryReactionDisposer: (() => void) | null = null;
+  private routeReactionDisposer: (() => void) | null = null;
 
   constructor(
     @inject(TYPES.NavigationStore)
@@ -66,6 +78,8 @@ export class DestinationPreviewViewModel {
     private readonly locationStore: LocationStore,
     @inject(TYPES.GetPlaceSummaryUseCase)
     private readonly getPlaceSummaryUseCase: GetPlaceSummaryUseCase,
+    @inject(TYPES.BuildRoutePreviewUseCase)
+    private readonly buildRoutePreviewUseCase: BuildRoutePreviewUseCase,
   ) {
     makeAutoObservable(this);
 
@@ -77,6 +91,16 @@ export class DestinationPreviewViewModel {
       (placeId) => {
         if (placeId) void this.loadPlaceSummary();
         else this.resetPlaceSummary();
+      },
+    );
+
+    // Trazado real + veredicto de autonomía: también al cambiar de lugar (y
+    // re-dispara si cambia el `rideType` en el sheet, ya que afecta la ruta).
+    this.routeReactionDisposer = reaction(
+      () => `${this.previewPlace?.id ?? ''}:${this.rideType}`,
+      (key) => {
+        if (key.startsWith(':')) this.resetRoutePreview();
+        else void this.loadRoutePreview();
       },
     );
   }
@@ -119,6 +143,64 @@ export class DestinationPreviewViewModel {
 
   get hasStats(): boolean {
     return this.distanceKm !== null && this.etaMin !== null;
+  }
+
+  // ── Computed: preview de ruta real + veredicto de autonomía (F2a) ──────────
+
+  get hasRoutePreview(): boolean {
+    return this.routePreview !== null;
+  }
+
+  /** Distancia REAL de la ruta de Mapbox (reemplaza la straight-line al cargar). */
+  get realDistanceLabel(): string | null {
+    const route = this.routePreview;
+    if (!route) return null;
+    const km = route.distanceKm;
+    return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
+  }
+
+  /** ETA REAL de Mapbox (reemplaza la heurística straight-line `*1.3/80`). */
+  get realEtaLabel(): string | null {
+    const route = this.routePreview;
+    if (!route) return null;
+    const total = Math.round(route.durationMin);
+    const hours = Math.floor(total / 60);
+    const mins = total % 60;
+    if (hours <= 0) return `${mins} min`;
+    return `${hours} h ${mins} min`;
+  }
+
+  /**
+   * El rider tiene moto pero el cálculo de autonomía aún no llega, o no hay
+   * moto registrada. La UI usa esto para ofrecer ir al Garaje.
+   */
+  get hasMotorcycleVerdict(): boolean {
+    return this.fuelPreview !== null;
+  }
+
+  /**
+   * Veredicto de autonomía sobre el preview: ¿llega con el tanque?, cuántos
+   * tanqueos hacen falta y qué reserva queda. La columna vertebral diferencial
+   * del preview (F2a). `null` mientras carga o si no hay moto activa.
+   */
+  get autonomyVerdict(): {
+    reaches: boolean;
+    refuelCount: number;
+    reservePercent: number;
+    label: string;
+  } | null {
+    const fuel = this.fuelPreview;
+    if (!fuel) return null;
+    const refuelCount = fuel.refuelPointsKm().length;
+    const reservePercent = Math.max(0, Math.round((1 - fuel.rangeUsedFraction) * 100));
+    return {
+      reaches: fuel.reachesWithoutRefuel,
+      refuelCount,
+      reservePercent,
+      label: fuel.reachesWithoutRefuel
+        ? `Llegas con tu tanque · reserva ${reservePercent}%`
+        : `${refuelCount} ${refuelCount === 1 ? 'tanqueo' : 'tanqueos'} en ruta`,
+    };
   }
 
   /** Distancia formateada para el chip de stats (`<1km` -> metros, etc.). */
@@ -208,6 +290,42 @@ export class DestinationPreviewViewModel {
   }
 
   /**
+   * Calcula el trazado real + veredicto de autonomía del preview. Idempotente
+   * por (placeId, rideType): si el rider cambia de lugar o de modo mientras
+   * esperábamos, se descarta la respuesta obsoleta.
+   */
+  async loadRoutePreview(): Promise<void> {
+    const place = this.previewPlace;
+    const location = this.locationStore.isLocationResponse;
+    if (!place || !location) {
+      this.resetRoutePreview();
+      return;
+    }
+    const rideTypeAtCall = this.rideType;
+    this.updateLoadingState(true, null, 'routePreview');
+    try {
+      const preview = await this.buildRoutePreviewUseCase.run({
+        origin: { latitude: location.latitude, longitude: location.longitude },
+        destination: {
+          id: place.id,
+          name: place.name,
+          latitude: place.latitude,
+          longitude: place.longitude,
+        },
+        rideType: rideTypeAtCall,
+      });
+      if (this.previewPlace?.id !== place.id || this.rideType !== rideTypeAtCall) return;
+      runInAction(() => {
+        this.routePreview = preview.route;
+        this.fuelPreview = preview.fuel;
+      });
+      this.updateLoadingState(false, null, 'routePreview');
+    } catch (error) {
+      this.handleError(error, 'routePreview');
+    }
+  }
+
+  /**
    * Tipo de rodada activo. Es un getter porque la fuente de verdad vive en
    * `NavigationStore.rideType` (compartido con el Home, que lo lee en
    * `computeRoute()` para elegir colores de linea y waypoints).
@@ -243,19 +361,35 @@ export class DestinationPreviewViewModel {
     });
   }
 
+  /** Limpia el preview de ruta + veredicto (al cambiar de lugar o desmontar). */
+  resetRoutePreview(): void {
+    runInAction(() => {
+      this.isRoutePreviewLoading = false;
+      this.isRoutePreviewError = null;
+      this.routePreview = null;
+      this.fuelPreview = null;
+    });
+  }
+
   reset(): void {
     runInAction(() => {
       this.viewportWidth = DEFAULT_MAP_THUMB_WIDTH;
       this.isPlaceSummaryLoading = false;
       this.isPlaceSummaryError = null;
       this.isPlaceSummaryResponse = null;
+      this.isRoutePreviewLoading = false;
+      this.isRoutePreviewError = null;
+      this.routePreview = null;
+      this.fuelPreview = null;
     });
   }
 
-  /** Libera la reaccion que sincroniza el fetch del resumen. */
+  /** Libera las reacciones que sincronizan resumen y preview de ruta. */
   dispose(): void {
     this.summaryReactionDisposer?.();
     this.summaryReactionDisposer = null;
+    this.routeReactionDisposer?.();
+    this.routeReactionDisposer = null;
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
@@ -266,6 +400,10 @@ export class DestinationPreviewViewModel {
         case 'placeSummary':
           this.isPlaceSummaryLoading = isLoading;
           this.isPlaceSummaryError = error;
+          break;
+        case 'routePreview':
+          this.isRoutePreviewLoading = isLoading;
+          this.isRoutePreviewError = error;
           break;
       }
     });

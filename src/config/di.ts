@@ -79,6 +79,7 @@ import type { TripPartyRepository } from '@/domain/repositories/TripPartyReposit
 import type { HttpManager } from '@/domain/services/HttpManager';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
+import { BuildRoutePreviewUseCase } from '@/domain/useCases/BuildRoutePreviewUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
 import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
@@ -341,6 +342,9 @@ container.bind<DeleteRouteUseCase>(TYPES.DeleteRouteUseCase).to(DeleteRouteUseCa
 container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
+container
+  .bind<BuildRoutePreviewUseCase>(TYPES.BuildRoutePreviewUseCase)
+  .to(BuildRoutePreviewUseCase);
 container.bind<SnapToRouteUseCase>(TYPES.SnapToRouteUseCase).to(SnapToRouteUseCase);
 container
   .bind<ComputeNextManeuverUseCase>(TYPES.ComputeNextManeuverUseCase)

@@ -3,7 +3,12 @@ import { PlaceSummary } from '@/domain/entities/PlaceSummary';
 import { DestinationPreviewViewModel } from '@/ui/screens/DestinationPreview/DestinationPreviewViewModel';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 
-import { makeGeoLocation, makePlace } from '../factories';
+import {
+  makeGeoLocation,
+  makePlace,
+  makeRouteDirections,
+  makeRouteFuelEstimate,
+} from '../factories';
 
 // `mapboxStaticImageUrl` lee `ENV.mapboxPublicToken` y `ENV.MAP_STYLE_URL`.
 // Mockeamos el env para que el VM construya URLs predecibles sin tocar
@@ -42,6 +47,13 @@ const makeUseCase = (result: PlaceSummary | null = null): { run: jest.Mock } => 
   run: jest.fn().mockResolvedValue(result),
 });
 
+// BuildRoutePreviewUseCase: por defecto devuelve una ruta sin veredicto de moto.
+const makeBuildRoutePreview = (
+  result: unknown = { route: makeRouteDirections(), fuel: null },
+): { run: jest.Mock } => ({
+  run: jest.fn().mockResolvedValue(result),
+});
+
 const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('DestinationPreviewViewModel', () => {
@@ -50,6 +62,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     expect(vm.previewPlace).toBeNull();
@@ -75,6 +88,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore(place) as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     expect(vm.hasPreview).toBe(true);
@@ -93,6 +107,7 @@ describe('DestinationPreviewViewModel', () => {
         }),
       }) as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     expect(vm.distanceKm).not.toBeNull();
@@ -108,6 +123,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore(place) as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     vm.setViewportWidth(320);
@@ -129,6 +145,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore(place) as any,
       makeLocationStore() as any,
       useCase as any,
+      makeBuildRoutePreview() as any,
     );
 
     const pending = vm.loadPlaceSummary();
@@ -150,6 +167,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore(place) as any,
       makeLocationStore() as any,
       useCase as any,
+      makeBuildRoutePreview() as any,
     );
 
     await vm.loadPlaceSummary();
@@ -166,6 +184,7 @@ describe('DestinationPreviewViewModel', () => {
       navStore as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     expect(vm.previewPlace).toBe(place);
@@ -183,6 +202,7 @@ describe('DestinationPreviewViewModel', () => {
       navStore as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     vm.cancel();
@@ -196,6 +216,7 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
     vm.setViewportWidth(500);
     (vm as any).isPlaceSummaryResponse = new PlaceSummary({ title: 'X' });
@@ -211,11 +232,117 @@ describe('DestinationPreviewViewModel', () => {
       makeNavStore() as any,
       makeLocationStore() as any,
       makeUseCase() as any,
+      makeBuildRoutePreview() as any,
     );
 
     await flush();
     expect(() => vm.dispose()).not.toThrow();
     // Llamarlo dos veces es seguro (defensa).
     expect(() => vm.dispose()).not.toThrow();
+  });
+
+  // ── F2a: preview de ruta real + veredicto de autonomía ────────────────────
+
+  const makeLocatedNav = (place = makePlace({ latitude: 5.5, longitude: -73.5 })) => ({
+    navStore: makeNavStore(place),
+    location: makeLocationStore({
+      isLocationResponse: makeGeoLocation({ latitude: 4.6, longitude: -74.0 }),
+    }),
+  });
+
+  it('loadRoutePreview puebla la ruta real + veredicto y alterna el loading', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview({
+      route: makeRouteDirections({ distanceKm: 120, durationMin: 95 }),
+      fuel: makeRouteFuelEstimate({ distanceKm: 120 }),
+    });
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    const pending = vm.loadRoutePreview();
+    expect(vm.isRoutePreviewLoading).toBe(true);
+    await pending;
+
+    expect(build.run).toHaveBeenCalledTimes(1);
+    expect(vm.isRoutePreviewLoading).toBe(false);
+    expect(vm.hasRoutePreview).toBe(true);
+    expect(vm.realDistanceLabel).toBe('120 km');
+    expect(vm.realEtaLabel).toBe('1 h 35 min');
+  });
+
+  it('no llama al UseCase si aún no hay ubicación', async () => {
+    const build = makeBuildRoutePreview();
+    const vm = new DestinationPreviewViewModel(
+      makeNavStore(makePlace()) as any,
+      makeLocationStore() as any, // sin isLocationResponse
+      makeUseCase() as any,
+      build as any,
+    );
+
+    await vm.loadRoutePreview();
+    expect(build.run).not.toHaveBeenCalled();
+    expect(vm.hasRoutePreview).toBe(false);
+  });
+
+  it('autonomyVerdict: "llegas con el tanque" + reserva cuando alcanza', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview({
+      route: makeRouteDirections({ distanceKm: 60 }),
+      // distancia << rango efectivo -> alcanza, reserva alta.
+      fuel: makeRouteFuelEstimate({ distanceKm: 60, effectiveRangeKm: 420 }),
+    });
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    await vm.loadRoutePreview();
+
+    expect(vm.autonomyVerdict?.reaches).toBe(true);
+    expect(vm.autonomyVerdict?.label).toContain('Llegas con tu tanque');
+    expect(vm.autonomyVerdict?.reservePercent).toBeGreaterThan(0);
+  });
+
+  it('autonomyVerdict: muestra los tanqueos cuando NO alcanza', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview({
+      route: makeRouteDirections({ distanceKm: 900 }),
+      // distancia >> rango -> no alcanza, necesita tanqueos.
+      fuel: makeRouteFuelEstimate({ distanceKm: 900, effectiveRangeKm: 300 }),
+    });
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    await vm.loadRoutePreview();
+
+    expect(vm.autonomyVerdict?.reaches).toBe(false);
+    expect(vm.autonomyVerdict?.label).toMatch(/tanqueo/);
+  });
+
+  it('sin moto activa: hay ruta pero el veredicto queda null', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview({ route: makeRouteDirections(), fuel: null });
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    await vm.loadRoutePreview();
+
+    expect(vm.hasRoutePreview).toBe(true);
+    expect(vm.hasMotorcycleVerdict).toBe(false);
+    expect(vm.autonomyVerdict).toBeNull();
   });
 });

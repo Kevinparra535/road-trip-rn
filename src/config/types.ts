@@ -60,6 +60,7 @@ export const TYPES = {
   UpdateRouteUseCase: Symbol.for('UpdateRouteUseCase'),
   DeleteRouteUseCase: Symbol.for('DeleteRouteUseCase'),
   CalculateDirectionsUseCase: Symbol.for('CalculateDirectionsUseCase'),
+  BuildRoutePreviewUseCase: Symbol.for('BuildRoutePreviewUseCase'),
   SnapToRouteUseCase: Symbol.for('SnapToRouteUseCase'),
   ComputeNextManeuverUseCase: Symbol.for('ComputeNextManeuverUseCase'),
   DetectOffRouteUseCase: Symbol.for('DetectOffRouteUseCase'),
