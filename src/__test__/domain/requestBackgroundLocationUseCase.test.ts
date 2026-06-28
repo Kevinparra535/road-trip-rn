@@ -7,6 +7,7 @@ const makeRepo = (overrides: Partial<LocationRepository> = {}): LocationReposito
   requestBackgroundPermission: jest.fn().mockResolvedValue('granted'),
   getCurrentLocation: jest.fn(),
   watchLocation: jest.fn(),
+  watchBackgroundLocation: jest.fn(),
   watchHeading: jest.fn(),
   startBackgroundTracking: jest.fn().mockResolvedValue(undefined),
   stopBackgroundTracking: jest.fn().mockResolvedValue(undefined),

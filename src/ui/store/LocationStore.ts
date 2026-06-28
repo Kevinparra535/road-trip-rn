@@ -10,6 +10,7 @@ import { LocationPermissionStatus } from '@/domain/repositories/LocationReposito
 
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { WatchBackgroundLocationUseCase } from '@/domain/useCases/WatchBackgroundLocationUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
@@ -40,6 +41,7 @@ export class LocationStore {
   isHeadingResponse: DeviceHeading | null = null;
 
   private unsubscribeLocation: (() => void) | null = null;
+  private unsubscribeBackground: (() => void) | null = null;
   private unsubscribeHeading: (() => void) | null = null;
   private lastHeadingDegrees: number | null = null;
   private logger = new Logger('LocationStore');
@@ -53,6 +55,8 @@ export class LocationStore {
     private readonly watchLocationUseCase: WatchLocationUseCase,
     @inject(TYPES.WatchHeadingUseCase)
     private readonly watchHeadingUseCase: WatchHeadingUseCase,
+    @inject(TYPES.WatchBackgroundLocationUseCase)
+    private readonly watchBackgroundLocationUseCase: WatchBackgroundLocationUseCase,
   ) {
     makeAutoObservable(this);
   }
@@ -110,6 +114,7 @@ export class LocationStore {
     if (!granted) return;
     await this.loadCurrentLocation();
     await this.startWatchingLocation();
+    await this.startWatchingBackgroundLocation();
     await this.startWatchingHeading();
   }
 
@@ -143,10 +148,12 @@ export class LocationStore {
     }
   }
 
-  /** Cancela las suscripciones al GPS y a la brujula. */
+  /** Cancela las suscripciones al GPS, al background y a la brujula. */
   dispose(): void {
     this.unsubscribeLocation?.();
     this.unsubscribeLocation = null;
+    this.unsubscribeBackground?.();
+    this.unsubscribeBackground = null;
     this.unsubscribeHeading?.();
     this.unsubscribeHeading = null;
   }
@@ -175,6 +182,25 @@ export class LocationStore {
           this.isLocationResponse = location;
         });
       });
+    } catch (error) {
+      this.handleError(error, 'location');
+    }
+  }
+
+  /**
+   * Se suscribe a los fixes del background task (F3): cuando la app vuelve de
+   * background, el último fix mantiene viva la ubicación para que la nav no se
+   * congele. Es additivo al watch en foreground.
+   */
+  private async startWatchingBackgroundLocation(): Promise<void> {
+    try {
+      this.unsubscribeBackground = await this.watchBackgroundLocationUseCase.run(
+        (location) => {
+          runInAction(() => {
+            this.isLocationResponse = location;
+          });
+        },
+      );
     } catch (error) {
       this.handleError(error, 'location');
     }

@@ -3,6 +3,8 @@ import { injectable } from 'inversify';
 
 import { BACKGROUND_LOCATION_TASK } from '@/config/navigation';
 
+import { onBackgroundLocations } from '@/data/location/backgroundLocationRegistry';
+
 /**
  * Servicio de la capa data: aisla la integracion con `expo-location`.
  * Devuelve las formas crudas de Expo; el repositorio las traduce a dominio.
@@ -34,6 +36,14 @@ export interface LocationService {
   startBackgroundUpdates(): Promise<void>;
   /** Detiene las updates en background si estaban activas. */
   stopBackgroundUpdates(): Promise<void>;
+  /**
+   * Se suscribe al ÚLTIMO fix de cada lote que entrega el background task
+   * (cuando la app está viva). Devuelve la funcion para desuscribir. Sincrono:
+   * el registro vive en memoria del proceso.
+   */
+  watchBackgroundPosition(
+    listener: (position: Location.LocationObject) => void,
+  ): () => void;
 }
 
 @injectable()
@@ -97,5 +107,14 @@ export class LocationServiceImpl implements LocationService {
       BACKGROUND_LOCATION_TASK,
     );
     if (already) await Location.stopLocationUpdatesAsync(BACKGROUND_LOCATION_TASK);
+  }
+
+  watchBackgroundPosition(
+    listener: (position: Location.LocationObject) => void,
+  ): () => void {
+    return onBackgroundLocations((locations) => {
+      const latest = locations[locations.length - 1];
+      if (latest) listener(latest);
+    });
   }
 }

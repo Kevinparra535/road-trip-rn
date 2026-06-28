@@ -71,6 +71,7 @@ export const TYPES = {
   RequestBackgroundLocationUseCase: Symbol.for('RequestBackgroundLocationUseCase'),
   GetCurrentLocationUseCase: Symbol.for('GetCurrentLocationUseCase'),
   WatchLocationUseCase: Symbol.for('WatchLocationUseCase'),
+  WatchBackgroundLocationUseCase: Symbol.for('WatchBackgroundLocationUseCase'),
   WatchHeadingUseCase: Symbol.for('WatchHeadingUseCase'),
   SearchPlacesUseCase: Symbol.for('SearchPlacesUseCase'),
   SearchPlacesByCategoryUseCase: Symbol.for('SearchPlacesByCategoryUseCase'),

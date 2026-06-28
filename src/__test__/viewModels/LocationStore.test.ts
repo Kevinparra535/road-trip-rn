@@ -5,8 +5,9 @@ import { makeDeviceHeading, makeGeoLocation } from '../factories';
 const makeUseCases = () => ({
   requestPermission: { run: jest.fn() },
   getCurrentLocation: { run: jest.fn() },
-  watchLocation: { run: jest.fn() },
+  watchLocation: { run: jest.fn().mockResolvedValue(jest.fn()) },
   watchHeading: { run: jest.fn() },
+  watchBackgroundLocation: { run: jest.fn().mockResolvedValue(jest.fn()) },
 });
 
 const makeStore = (uc = makeUseCases()) =>
@@ -15,6 +16,7 @@ const makeStore = (uc = makeUseCases()) =>
     uc.getCurrentLocation as any,
     uc.watchLocation as any,
     uc.watchHeading as any,
+    uc.watchBackgroundLocation as any,
   );
 
 describe('LocationStore', () => {

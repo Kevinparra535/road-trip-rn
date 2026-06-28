@@ -12,6 +12,7 @@ const makeRepo = (): jest.Mocked<LocationRepository> => ({
   requestBackgroundPermission: jest.fn(),
   getCurrentLocation: jest.fn(),
   watchLocation: jest.fn(),
+  watchBackgroundLocation: jest.fn(),
   watchHeading: jest.fn(),
   startBackgroundTracking: jest.fn(),
   stopBackgroundTracking: jest.fn(),

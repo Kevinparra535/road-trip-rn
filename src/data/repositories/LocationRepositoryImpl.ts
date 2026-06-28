@@ -53,6 +53,12 @@ export class LocationRepositoryImpl implements LocationRepository {
     return () => subscription.remove();
   }
 
+  async watchBackgroundLocation(listener: LocationListener): Promise<() => void> {
+    return this.service.watchBackgroundPosition((position) => {
+      listener(LocationModel.fromJson(position).toDomain());
+    });
+  }
+
   async watchHeading(listener: HeadingListener): Promise<() => void> {
     const subscription = await this.service.watchHeading((heading) => {
       listener(DeviceHeadingModel.fromJson(heading).toDomain());

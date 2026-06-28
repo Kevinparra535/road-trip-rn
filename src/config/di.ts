@@ -131,6 +131,7 @@ import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
 import { SnapToRouteUseCase } from '@/domain/useCases/SnapToRouteUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
+import { WatchBackgroundLocationUseCase } from '@/domain/useCases/WatchBackgroundLocationUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
@@ -372,6 +373,9 @@ container
   .bind<GetCurrentLocationUseCase>(TYPES.GetCurrentLocationUseCase)
   .to(GetCurrentLocationUseCase);
 container.bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase).to(WatchLocationUseCase);
+container
+  .bind<WatchBackgroundLocationUseCase>(TYPES.WatchBackgroundLocationUseCase)
+  .to(WatchBackgroundLocationUseCase);
 container.bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase).to(WatchHeadingUseCase);
 container.bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase).to(SearchPlacesUseCase);
 container
