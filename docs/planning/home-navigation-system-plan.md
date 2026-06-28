@@ -10,6 +10,30 @@
 
 ---
 
+## Estado de implementación (rama `feat/home-navigation-system`)
+
+Verificado verde en cada commit: `typecheck` 0 · `lint` 0 errores · `format:check` ok ·
+suite completa + cobertura ≥ umbrales.
+
+| Fase    | Estado       | Notas                                                                                                                                                                                                                                                        |
+| ------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **F0**  | ✅ Hecho     | Velocímetro real (2 getters), `AppDrawer`→`AppStackNavigator`, navegadores huérfanos borrados, navegación tipada (0 `as any`/`as never`), constantes a `config/navigation.ts`, `NavPreferencesRepository` + mute persistido, TurnBanner instrucción header3. |
+| **F1a** | ✅ Hecho     | UseCases `SnapToRoute`/`ComputeNextManeuver`/`DetectOffRoute`/`Reroute` (lógica del motor fuera del god-object) + **arreglo de G3** (reroute con reintentos que preserva paradas + re-ancla progreso).                                                       |
+| **F1b** | ⛔ Pendiente | Reubicar el _runtime_ (timer/reaction/getters/voz/arribo) a un `NavigationSessionStore`. Refactor grande con acople de la ruta para el mapa — mejor como PR propio enfocado. F1a ya entregó la extracción de lógica testeable + el fix de correctness.       |
+| **F2a** | ✅ Hecho     | `BuildRoutePreviewUseCase` + preview con ETA real de Mapbox y veredicto de autonomía ("llegas con tu tanque · reserva N%" / "N tanqueos").                                                                                                                   |
+| **F2b** | ⛔ Pendiente | `JourneyFuelBar` en vivo durante la nav — overlay de UI que requiere QA visual en device.                                                                                                                                                                    |
+| **F3**  | 🟡 Parcial   | Velocímetro real + `RerouteUseCase` con reintentos ya hechos (F0/F1a). **Background location nativo** (expo-task-manager, foreground service, rearquitectura headless) requiere rebuild del dev client + device — no verificable aquí.                       |
+| **F4**  | 🟡 Parcial   | Topología/tipado cerrados en F0. `linking` config tipado + tests hechos. **Auth-gating** (URL pendiente con sesión cerrada) requiere validación en device.                                                                                                   |
+| **F5**  | ⛔ Pendiente | `rideStyle`/via-stop (verificable) + offline de tiles (device-gated). `NavPreferencesRepository` (F0) ya es la base para persistir preferencias.                                                                                                             |
+
+**Resumen:** las piezas fully-verificables en este entorno (lógica de dominio, VMs,
+stores, tipado, parsing de linking) están hechas y verdes. Lo pendiente es (a) un
+refactor grande de relocación de runtime (F1b) mejor aislado en su PR, y (b) trabajo
+**nativo/de device** (F3 background, F5 offline, F4 auth-gating, F2b overlay) que no se
+puede _validar_ sin development build + dispositivo (Mapbox no corre en Expo Go).
+
+---
+
 ## 0. Correcciones de realidad técnica (verificadas en código)
 
 Tres supuestos comunes son **falsos** y reordenan las prioridades. Verificados en código,
