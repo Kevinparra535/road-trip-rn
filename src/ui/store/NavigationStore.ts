@@ -2,6 +2,7 @@ import { injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
 import { Place } from '@/domain/entities/Place';
+import { DEFAULT_RIDE_STYLE, RideStyle } from '@/domain/entities/RideStyle';
 import { RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
@@ -50,6 +51,8 @@ export class NavigationStore {
   previewPlace: Place | null = null;
   /** Tipo de rodada elegido en el preview; lo lee el Home al trazar la ruta. */
   rideType: RideType = DEFAULT_RIDE_TYPE;
+  /** Estilo de ruta (F5: fast/curvy/fuel) elegido en el preview. */
+  rideStyle: RideStyle = DEFAULT_RIDE_STYLE;
   /**
    * Señal one-shot de confirmación: al confirmar el preview, el lugar pasa aquí
    * y la `reaction` del Home lo consume (selectDestination + recordRecent) y
@@ -121,6 +124,13 @@ export class NavigationStore {
     });
   }
 
+  /** Cambia el estilo de ruta (F5) elegido en el preview. */
+  setRideStyle(rideStyle: RideStyle): void {
+    runInAction(() => {
+      this.rideStyle = rideStyle;
+    });
+  }
+
   /**
    * Emite la señal de handoff Planner -> navegación. La `reaction` del
    * `HomeViewModel` reacciona a `pendingPlannerNav` para arrancar la nav.
@@ -144,6 +154,7 @@ export class NavigationStore {
       this.confirmedPlace = null;
       this.pendingPlannerNav = null;
       this.rideType = DEFAULT_RIDE_TYPE;
+      this.rideStyle = DEFAULT_RIDE_STYLE;
     });
   }
 }

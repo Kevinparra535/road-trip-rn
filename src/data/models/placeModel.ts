@@ -231,9 +231,7 @@ export class PlaceSuggestionModel {
     if (!id) return null; // sin mapbox_id no se puede hacer retrieve
 
     const name = String(s?.name ?? s?.name_preferred ?? 'Lugar');
-    const fullName = String(
-      s?.full_address ?? s?.place_formatted ?? s?.address ?? name,
-    );
+    const fullName = String(s?.full_address ?? s?.place_formatted ?? s?.address ?? name);
 
     const ctx = s?.context ?? {};
     const region: string | undefined = ctx?.region?.name

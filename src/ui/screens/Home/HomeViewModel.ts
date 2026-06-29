@@ -1,8 +1,16 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
-import * as Speech from 'expo-speech';
 
-import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
+import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
+import {
+  DEFAULT_RIDE_TYPE,
+  NAV_ARRIVAL_THRESHOLD_KM,
+  NAV_LAB_DEFAULT_SPEED_MULTIPLIER,
+  NAV_LAB_MIN_TRACE_KM,
+  NAV_LAB_SPEED_MULTIPLIERS,
+  NavLabSpeedMultiplier,
+  ROUTE_STATION_SAMPLES,
+} from '@/config/navigation';
 import {
   ROUTE_ALT_WIDTH,
   ROUTE_CORE_WIDTH_NAV,
@@ -14,14 +22,10 @@ import { ElevationProfile } from '@/domain/entities/ElevationProfile';
 import { FuelStation } from '@/domain/entities/FuelStation';
 import { FuelStop } from '@/domain/entities/FuelStop';
 import { Motorcycle } from '@/domain/entities/Motorcycle';
-import {
-  ManeuverModifier,
-  ManeuverType,
-  NavigationStep,
-} from '@/domain/entities/NavigationStep';
 import { Place } from '@/domain/entities/Place';
 import { RecentDestination } from '@/domain/entities/RecentDestination';
 import { Rider } from '@/domain/entities/Rider';
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { GeoPoint, RideType, Route } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -29,6 +33,14 @@ import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
+import {
+  buildNavigationSuggestions,
+  createNavigationSuggestionLifecycleState,
+  NavigationGuidanceInput,
+  NavigationSuggestionLifecycleState,
+  NavSuggestion,
+  resolveNavigationSuggestionLifecycle,
+} from '@/domain/useCases/BuildNavigationSuggestionsUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -49,7 +61,6 @@ import {
 import {
   boundingBox,
   distanceAlongNearest,
-  distanceToPolylineKm,
   haversineKm,
   headingTriangle,
   pointAtDistanceAlong,
@@ -60,6 +71,7 @@ import Colors from '@/ui/styles/Colors';
 import Logger from '@/ui/utils/Logger';
 
 import { LocationStore } from '@/ui/store/LocationStore';
+import { CameraTarget, NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore, PlannerNavPayload } from '@/ui/store/NavigationStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 
@@ -82,32 +94,8 @@ const TRIANGLE_TAIL_KM = 0.03;
 // Buscador: espera tras la ultima tecla antes de consultar el geocoder.
 const SEARCH_DEBOUNCE_MS = 400;
 
-// ── Navegacion (simulacion) ─────────────────────────────────────────────────
-// Velocidad promedio modelada para el viaje.
-const NAV_AVG_SPEED_KMH = 100;
-// Periodo del tick de simulacion.
-const NAV_TICK_MS = 500;
-// Aceleracion del tiempo: 1 s real avanza SIM_TIME_MULTIPLIER s simulados,
-// para poder ver el recorrido sin esperar el viaje completo. 60 = una ruta
-// de ~50 km se recorre en ~30 s; suficiente para seguirla visualmente.
-const SIM_TIME_MULTIPLIER = 60;
-// Distancia que avanza el conductor simulado en cada tick.
-const SIM_KM_PER_TICK =
-  (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
-// Desviacion (km) a partir de la cual se considera que se salio de la ruta.
-const OFF_ROUTE_THRESHOLD_KM = 0.06;
-// Ticks consecutivos fuera de ruta antes de gastar UNA llamada de recalculo.
-const OFF_ROUTE_CONFIRM_TICKS = 4;
-// Distancia (km) al final de la ruta a partir de la cual se considera que el
-// rider llego al destino. Tolerancia para que el GPS no tenga que coincidir
-// exactamente con la geometria de Mapbox.
-const NAV_ARRIVAL_THRESHOLD_KM = 0.05;
-// Puntos de muestreo de la ruta para buscar gasolineras a lo largo de ella.
-const ROUTE_STATION_SAMPLES = 6;
-// Idioma para las anuncios de voz turn-by-turn (Mapbox ya las localiza).
-const NAV_VOICE_LANGUAGE = 'es-CO';
-// Tipo de rodada por defecto del trazado del Home.
-const DEFAULT_RIDE_TYPE: RideType = 'highway';
+// Las constantes del motor de navegación (NAV_*/SIM_*/OFF_ROUTE_*) viven en
+// `src/config/navigation.ts` — ver el import al inicio del archivo.
 
 // Colores del trazado por tipo de rodada (principal / alternativas).
 const HIGHWAY_COLORS = {
@@ -161,14 +149,9 @@ const elevationColor = (ratio: number): string => {
   return lerpHexColor(ELEVATION_RAMP[index], ELEVATION_RAMP[index + 1], scaled - index);
 };
 
-/** Objetivo imperativo de camara que la pantalla aplica con `setCamera`. */
-export type CameraTarget = {
-  centerCoordinate: [number, number];
-  zoomLevel: number;
-  pitch: number;
-  /** Rumbo (bearing) de la camara en grados; opcional. */
-  heading?: number;
-};
+// `CameraTarget` ahora vive en `NavigationSessionStore` (lo reusa el motor de
+// nav); se re-exporta para no romper imports existentes.
+export type { CameraTarget };
 
 /** Caja envolvente en formato Mapbox [lng, lat] para `fitBounds`. */
 export type MapBounds = {
@@ -220,6 +203,17 @@ export type HomeFeedItem =
 // Tope del feed: con 8 items entran 2-3 pantallas completas del sheet expandido
 // sin volverse infinito. El "Ver todo" lleva a la lista completa cuando se haga.
 const HOME_FEED_MAX = 8;
+
+/** Modo de selección de punto en el Navigation Lab (dev): qué punto fija el tap. */
+export type NavigationLabPickMode = 'origin' | 'destination';
+
+/** Marcador A/B del Navigation Lab para pintar en el mapa. */
+export type NavigationLabMarker = {
+  id: string;
+  label: string;
+  coordinate: [number, number];
+  isActive: boolean;
+};
 
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
@@ -282,34 +276,28 @@ export class HomeViewModel {
   isFuelEstimateError: string | null = null;
   isFuelEstimateResponse: RouteFuelEstimate | null = null;
 
-  // ── State: navegacion (simulacion del recorrido) ──
-  isNavigating: boolean = false;
-  simulatedDistanceKm: number = 0;
-  /**
-   * Pantalla "8 - Home Llegada" del Pencil: al alcanzar el destino, congela
-   * la nav y muestra el panel de llegada con el resumen del viaje. Permanece
-   * en `true` hasta que el rider toca "Finalizar" (`dismissArrival`).
-   */
-  isArrived: boolean = false;
-  private arrivedAt: Date | null = null;
-  /**
-   * Pantalla "6b - Home Nav Activa + Elevacion" del Pencil: muestra la barra
-   * lateral con el perfil de altura. Cuando es `false` (pantalla 6a) solo se
-   * ve un chip compacto con altitud y ascenso al lado del marcador del rider.
-   */
-  isElevationStripOpen: boolean = true;
-  /**
-   * Silencia los anuncios de voz turn-by-turn. Persiste solo en memoria —
-   * se reinicia al cerrar la app. Por defecto el motero recibe voz cuando
-   * arranca la navegacion para que no haya que mirar la pantalla.
-   */
-  isMuted: boolean = false;
+  // ── Navegacion: el runtime vive en `NavigationSessionStore` (F1b). El Home
+  // expone getters proxy para que el `HomeScreen` no cambie. ──
 
   // ── State: paradas de tanqueo sugeridas y sus estaciones ──
   fuelStops: FuelStop[] = [];
   isFuelStopLoading: boolean = false;
   isFuelStopError: string | null = null;
   isFuelStopResponse: FuelStation[] | null = null;
+
+  // ── State: sugerencias contextuales en marcha (motor de guidance) ──
+  // Lifecycle anti-parpadeo (tiempo mínimo visible + cooldown) y los avisos ya
+  // resueltos que pinta el `NavSuggestionRail`.
+  private navSuggestionLifecycle: NavigationSuggestionLifecycleState =
+    createNavigationSuggestionLifecycleState();
+  private navSuggestionsState: NavSuggestion[] = [];
+
+  // ── State: Navigation Lab (simulador manual A→B con control de velocidad, dev) ──
+  isNavigationLabOpen: boolean = false;
+  navigationLabPickMode: NavigationLabPickMode = 'origin';
+  navigationLabOrigin: Place = DEV_FAKE_ORIGIN;
+  navigationLabDestination: Place = DEV_FAKE_DESTINATION;
+  navigationLabSpeedMultiplier: NavLabSpeedMultiplier = NAV_LAB_DEFAULT_SPEED_MULTIPLIER;
 
   // ── State: feed del Home idle (destinos recientes + rutas guardadas) ──
   isRecentsLoading: boolean = false;
@@ -331,12 +319,8 @@ export class HomeViewModel {
   private confirmReactionDisposer: (() => void) | null = null;
   /** Disposer de la reaccion que arranca la nav desde el handoff del Planner. */
   private plannerNavReactionDisposer: (() => void) | null = null;
-  private navTimer: ReturnType<typeof setInterval> | null = null;
-  /** Disposer de la reaccion que escucha el avance del GPS real. */
-  private navReactionDisposer: (() => void) | null = null;
-  /** Claves de los anuncios de voz ya reproducidos (no repetir). */
-  private spokenVoiceIds: Set<string> = new Set();
-  private offRouteTicks: number = 0;
+  /** Disposer de la reaccion que recalcula las sugerencias de navegación. */
+  private navSuggestionDisposer: (() => void) | null = null;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -364,6 +348,8 @@ export class HomeViewModel {
     private readonly getAllRoutesUseCase: GetAllRoutesUseCase,
     @inject(TYPES.InferStopKindUseCase)
     private readonly inferStopKindUseCase: InferStopKindUseCase,
+    @inject(TYPES.NavigationSessionStore)
+    private readonly navSession: NavigationSessionStore,
     @inject(TYPES.PlannerStore)
     private readonly plannerStore: PlannerStore,
     @inject(TYPES.NavigationStore)
@@ -401,6 +387,16 @@ export class HomeViewModel {
         this.startNavigationFromPlanner(payload);
         this.navStore.consumePlannerNav();
       },
+    );
+    // Motor de sugerencias contextuales (estilo Waze): recalcula los avisos
+    // glanceables —tanqueo, elevación, curva, off-route, llegada— cada vez que
+    // cambia el progreso/estado de la sesión o los datos de combustible/
+    // elevación, y resuelve el lifecycle anti-parpadeo. `fireImmediately` deja
+    // el rail vacío mientras no hay sesión activa.
+    this.navSuggestionDisposer = reaction(
+      () => this.navSuggestionSignal,
+      () => this.recomputeNavSuggestions(),
+      { fireImmediately: true },
     );
   }
 
@@ -1063,82 +1059,177 @@ export class HomeViewModel {
     };
   }
 
-  // ── Computed: navegacion ────────────────────────────────────────────────────
+  // ── Computed: navegacion (proxies al `NavigationSessionStore`, F1b) ─────────
 
   /** La ruta actual proviene del boton DEV "Ruta de prueba". */
   get isSimulatedNavigation(): boolean {
-    return this.destination?.id === DEV_FAKE_DESTINATION.id;
+    // Durante una sesión activa, la verdad es del store (cubre las rutas del
+    // Navigation Lab, cuyo destino no es DEV_FAKE_DESTINATION). Antes de
+    // arrancar, el botón "Ruta de prueba" se reconoce por su destino.
+    return (
+      this.navSession.isSimulated || this.destination?.id === DEV_FAKE_DESTINATION.id
+    );
+  }
+
+  get isNavigating(): boolean {
+    return this.navSession.isNavigating;
+  }
+
+  get isArrived(): boolean {
+    return this.navSession.isArrived;
+  }
+
+  get isMuted(): boolean {
+    return this.navSession.isMuted;
+  }
+
+  get isElevationStripOpen(): boolean {
+    return this.navSession.isElevationStripOpen;
+  }
+
+  get navRiderCoordinate(): [number, number] | null {
+    return this.navSession.navRiderCoordinate;
+  }
+
+  get navCameraTarget(): CameraTarget | null {
+    return this.navSession.navCameraTarget;
+  }
+
+  get navSpeedLabel(): number | null {
+    return this.navSession.navSpeedLabel;
+  }
+
+  get navRemaining(): { distance: string; eta: string; arrival: string } | null {
+    return this.navSession.navRemaining;
+  }
+
+  get currentTurn() {
+    return this.navSession.currentTurn;
   }
 
   /**
-   * Kilometros recorridos sobre la ruta durante la navegacion. En la ruta de
-   * prueba viene del simulador; en cualquier otra, del GPS real proyectado
-   * sobre la polyline.
+   * Avisos contextuales glanceables que el `NavSuggestionRail` pinta durante la
+   * navegación (tanqueo, elevación, curva, off-route, llegada). Ya pasaron por
+   * el lifecycle anti-parpadeo; el screen sólo los renderiza.
+   */
+  get navSuggestions(): NavSuggestion[] {
+    return this.navSuggestionsState;
+  }
+
+  /**
+   * Señal observable que dispara el recálculo de sugerencias: cualquier cambio
+   * en el progreso/estado de la sesión o en los datos de combustible/elevación.
+   * Devuelve un array nuevo a propósito para que la `reaction` corra en cada
+   * cambio de sus dependencias.
+   */
+  private get navSuggestionSignal(): unknown[] {
+    return [
+      this.navSession.isNavigating,
+      this.navSession.navProgressKm,
+      this.navSession.offRouteTicks,
+      this.navSession.currentTurn,
+      this.isFuelEstimateResponse,
+      this.isElevationResponse,
+      this.isFuelStopResponse,
+      this.fuelStops,
+    ];
+  }
+
+  /**
+   * Arma los candidatos con el motor de dominio y los pasa por el lifecycle
+   * anti-parpadeo, persistiendo el estado entre ticks. Usa las funciones puras
+   * (igual que el store usa `computeNextManeuver`), no el UseCase async.
+   */
+  private recomputeNavSuggestions(): void {
+    const route = this.navSession.route;
+    const candidates =
+      route && this.navSession.isNavigating
+        ? buildNavigationSuggestions(this.composeGuidanceInput(route))
+        : [];
+    const { suggestions, lifecycle } = resolveNavigationSuggestionLifecycle({
+      candidates,
+      previous: this.navSuggestionLifecycle,
+      nowMs: Date.now(),
+    });
+    runInAction(() => {
+      this.navSuggestionLifecycle = lifecycle;
+      this.navSuggestionsState = suggestions;
+    });
+  }
+
+  private composeGuidanceInput(route: RouteDirections): NavigationGuidanceInput {
+    return {
+      route,
+      isNavigating: this.navSession.isNavigating,
+      progressKm: this.navSession.navProgressKm,
+      riderPoint: this.navSession.navRiderPoint,
+      fuelStops: this.fuelStops,
+      fuelEstimate: this.isFuelEstimateResponse,
+      fuelStations: this.isFuelStopResponse ?? [],
+      elevationProfile: this.isElevationResponse,
+      currentTurn: this.navSession.currentTurn,
+      destinationName: this.navSession.destination?.name ?? '',
+      arrivalThresholdKm: NAV_ARRIVAL_THRESHOLD_KM,
+      isOffRoute: this.navSession.offRouteTicks > 0,
+    };
+  }
+
+  /**
+   * Avance del rider durante la nav (proxy al `NavigationSessionStore`). Lo usan
+   * `navFuelBar` y `currentNavElevation` para situar marcadores/altitud en vivo.
    */
   get navProgressKm(): number {
-    return this.isSimulatedNavigation ? this.simulatedDistanceKm : this.routeProgressKm;
+    return this.navSession.navProgressKm;
   }
 
   /**
-   * Posicion del conductor sobre la ruta, como GeoPoint. En modo simulado se
-   * proyecta sobre la polilinea (siempre sobre la ruta). En modo GPS real se
-   * usa la coordenada cruda del `LocationStore` para que `monitorOffRoute`
-   * pueda detectar desviaciones reales del trazado.
+   * Resumen del viaje terminado para el panel de llegada: la base
+   * (destino/hora/distancia/duración) viene del `NavigationSessionStore`; el
+   * Home le agrega el combustible estimado (que es su estado).
    */
-  get navRiderPoint(): GeoPoint | null {
+  get arrivalSummary(): {
+    destinationName: string;
+    arrivalTime: string;
+    distance: string;
+    duration: string;
+    fuel: string;
+  } | null {
+    const base = this.navSession.arrivalSummary;
+    if (!base) return null;
+    const fuel = this.isFuelEstimateResponse;
+    return {
+      ...base,
+      fuel: fuel ? `${fuel.fuelNeededLiters.toFixed(1)} L` : '—',
+    };
+  }
+
+  /**
+   * Datos de la "barra de combustible del viaje" (F2b): el `JourneyFuelBar`
+   * glanceable que se pinta durante la navegacion. Avance en vivo + paradas de
+   * tanqueo sugeridas + reserva del tanque al llegar. `null` cuando no se esta
+   * navegando o no hay ruta.
+   */
+  get navFuelBar(): {
+    totalKm: number;
+    progressKm: number;
+    stops: { id: string; km: number; suggested: boolean }[];
+    reservePercent: number | null;
+  } | null {
     const route = this.isRouteResponse;
     if (!route || !this.isNavigating) return null;
-    if (this.isSimulatedNavigation) {
-      return pointAtDistanceAlong(route.geometry, this.simulatedDistanceKm);
-    }
-    const location = this.locationStore.isLocationResponse;
-    if (!location) return null;
-    return { latitude: location.latitude, longitude: location.longitude };
-  }
-
-  /** Posicion del conductor simulado en formato [lng, lat] para Mapbox. */
-  get navRiderCoordinate(): [number, number] | null {
-    const point = this.navRiderPoint;
-    return point ? [point.longitude, point.latitude] : null;
-  }
-
-  /**
-   * Rumbo hacia el frente de la ruta desde la posicion del rider, en grados
-   * (0 = norte). Permite orientar la camara de navegacion para que la ruta
-   * salga siempre hacia adelante en el viewport — clave cuando el rider esta
-   * quieto en el origen y `pitch` inclina la camara.
-   */
-  get navHeading(): number | null {
-    const route = this.isRouteResponse;
-    const rider = this.navRiderPoint;
-    if (!route || !rider) return null;
-    const lookAhead = pointAtDistanceAlong(
-      route.geometry,
-      Math.min(route.distanceKm, this.navProgressKm + 0.05),
-    );
-    if (!lookAhead) return null;
-    const toRad = (deg: number) => (deg * Math.PI) / 180;
-    const toDeg = (rad: number) => (rad * 180) / Math.PI;
-    const lat1 = toRad(rider.latitude);
-    const lat2 = toRad(lookAhead.latitude);
-    const dLon = toRad(lookAhead.longitude - rider.longitude);
-    const y = Math.sin(dLon) * Math.cos(lat2);
-    const x =
-      Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-    if (x === 0 && y === 0) return null;
-    return (toDeg(Math.atan2(y, x)) + 360) % 360;
-  }
-
-  /** Objetivo de camara que sigue al conductor durante la navegacion. */
-  get navCameraTarget(): CameraTarget | null {
-    const coordinate = this.navRiderCoordinate;
-    if (!coordinate) return null;
-    const heading = this.navHeading;
+    const fuel = this.isFuelEstimateResponse;
+    const reservePercent = fuel
+      ? Math.max(0, Math.round((1 - fuel.rangeUsedFraction) * 100))
+      : null;
     return {
-      centerCoordinate: coordinate,
-      zoomLevel: FOLLOW_ZOOM,
-      pitch: PERSPECTIVE_PITCH,
-      ...(heading !== null ? { heading } : {}),
+      totalKm: Math.round(route.distanceKm),
+      progressKm: Math.round(this.navProgressKm),
+      stops: this.fuelStops.map((stop, index) => ({
+        id: stop.id,
+        km: Math.round(stop.distanceFromStartKm),
+        suggested: index === 0,
+      })),
+      reservePercent,
     };
   }
 
@@ -1184,112 +1275,6 @@ export class HomeViewModel {
     return elevation ? Math.round(elevation.ascentSoFarM) : null;
   }
 
-  /**
-   * Velocidad instantanea ya redondeada para el velocimetro de la barra de
-   * navegacion. `null` cuando no hay velocidad que mostrar.
-   */
-  get navSpeedLabel(): number | null {
-    const speed = this.navSpeedKmh;
-    return speed === null ? null : Math.round(speed);
-  }
-
-  /**
-   * Velocidad instantanea del conductor en km/h para el velocimetro de la
-   * barra de navegacion. En la ruta de prueba devuelve la velocidad promedio
-   * modelada; en una ruta real vendra del GPS cuando se exponga en el store.
-   */
-  get navSpeedKmh(): number | null {
-    if (!this.isNavigating) return null;
-    if (this.isSimulatedNavigation) return NAV_AVG_SPEED_KMH;
-    return null;
-  }
-
-  /**
-   * Resumen de la navegacion para el panel inferior del Pencil 6a/6b:
-   * distancia restante en km, tiempo restante en formato corto y hora de
-   * llegada estimada calculada desde "ahora".
-   */
-  get navRemaining(): {
-    distance: string;
-    eta: string;
-    arrival: string;
-  } | null {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return null;
-    const remainingKm = Math.max(0, route.distanceKm - this.navProgressKm);
-    const remainingMin = (remainingKm / NAV_AVG_SPEED_KMH) * 60;
-    return {
-      distance: `${Math.round(remainingKm)} km`,
-      eta: this.formatDuration(remainingMin),
-      arrival: this.formatArrivalTime(remainingMin),
-    };
-  }
-
-  /**
-   * Datos del panel "8 - Home Llegada": resumen del viaje recien terminado.
-   * Disponible solo mientras `isArrived` esta activo y la moto/ruta siguen
-   * en memoria; al pulsar "Finalizar" se limpia todo y vuelve a `null`.
-   */
-  get arrivalSummary(): {
-    destinationName: string;
-    arrivalTime: string;
-    distance: string;
-    duration: string;
-    fuel: string;
-  } | null {
-    const route = this.isRouteResponse;
-    const destination = this.destination;
-    const arrivedAt = this.arrivedAt;
-    if (!this.isArrived || !route || !destination || !arrivedAt) return null;
-    const hh = String(arrivedAt.getHours()).padStart(2, '0');
-    const mm = String(arrivedAt.getMinutes()).padStart(2, '0');
-    const fuel = this.isFuelEstimateResponse;
-    return {
-      destinationName: destination.name,
-      arrivalTime: `${hh}:${mm}`,
-      distance: `${Math.round(route.distanceKm)}`,
-      duration: this.formatDuration(route.durationMin),
-      fuel: fuel ? `${fuel.fuelNeededLiters.toFixed(1)} L` : '—',
-    };
-  }
-
-  /**
-   * Step indicator del Pencil ("TurnBanner"): la maniobra que el rider va a
-   * encontrar mas adelante en la ruta. Busca el primer step (saltandose el
-   * `depart` del kilometro 0) cuyo punto de maniobra aun no se ha alcanzado,
-   * y devuelve la distancia restante hasta el, la instruccion ya localizada
-   * por Mapbox y los datos para escoger el icono del giro.
-   */
-  get currentTurn(): {
-    remainingKm: number;
-    distanceText: string;
-    instruction: string;
-    streetName: string;
-    maneuverType: ManeuverType;
-    maneuverModifier: ManeuverModifier | null;
-  } | null {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return null;
-    const steps: NavigationStep[] = route.steps;
-    if (steps.length === 0) return null;
-    const progress = this.navProgressKm;
-    // Empezamos a partir del segundo step: el primero es siempre `depart`,
-    // no es una maniobra para anticipar.
-    const next = steps
-      .slice(1)
-      .find((step) => step.distanceFromStartKm > progress - 0.001);
-    if (!next) return null;
-    const remainingKm = Math.max(0, next.distanceFromStartKm - progress);
-    return {
-      remainingKm,
-      distanceText: this.formatTurnDistance(remainingKm),
-      instruction: next.instruction || this.fallbackInstruction(next),
-      streetName: next.streetName,
-      maneuverType: next.maneuverType,
-      maneuverModifier: next.maneuverModifier,
-    };
-  }
-
   // ── Computed: rider ─────────────────────────────────────────────────────────
 
   /** Iniciales del rider para el avatar del buscador; `--` si aun no carga. */
@@ -1303,6 +1288,7 @@ export class HomeViewModel {
   async initialize(): Promise<void> {
     void this.loadMotorcycle();
     void this.loadHomeFeed();
+    void this.navSession.loadPreferences();
     // E3 flow brief: detectar draft del Planner para mostrar el sheet
     // "Continúa donde quedaste". El flow vive en el PlannerStore (singleton);
     // el Home solo lo dispara y lee `pendingDraft` vía delegadores.
@@ -1372,8 +1358,9 @@ export class HomeViewModel {
     this.confirmReactionDisposer = null;
     this.plannerNavReactionDisposer?.();
     this.plannerNavReactionDisposer = null;
-    this.clearNavTimer();
-    Speech.stop();
+    this.navSuggestionDisposer?.();
+    this.navSuggestionDisposer = null;
+    this.navSession.dispose();
     this.locationStore.dispose();
   }
 
@@ -1422,6 +1409,18 @@ export class HomeViewModel {
   setRideType(rideType: RideType): void {
     if (this.navStore.rideType === rideType) return;
     this.navStore.setRideType(rideType);
+    if (this.destination) void this.computeRoute();
+  }
+
+  /** Estilo de ruta activo (F5). Fuente de verdad: `NavigationStore`. */
+  get rideStyle(): RideStyle {
+    return this.navStore.rideStyle;
+  }
+
+  /** Cambia el estilo de ruta; recalcula si ya hay destino. */
+  setRideStyle(rideStyle: RideStyle): void {
+    if (this.navStore.rideStyle === rideStyle) return;
+    this.navStore.setRideStyle(rideStyle);
     if (this.destination) void this.computeRoute();
   }
 
@@ -1713,224 +1712,227 @@ export class HomeViewModel {
   }
 
   /**
-   * Inicia la navegacion: la pantalla se despeja (solo el mapa). En la ruta
-   * de prueba se arranca la simulacion a velocidad promedio; en cualquier
-   * otra ruta el avance se deriva del GPS real (ver `navProgressKm`), asi
-   * que el rider se queda quieto hasta que la moto se mueva fisicamente.
+   * Inicia la navegacion entregando el snapshot de la sesión al
+   * `NavigationSessionStore` (que posee el runtime: timer/GPS/voz/off-route).
    */
   startNavigation(): void {
-    if (!this.hasRoute) return;
-    runInAction(() => {
-      this.isNavigating = true;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
+    const route = this.isRouteResponse;
+    const destination = this.destination;
+    if (!route || !destination) return;
+    this.navSession.start({
+      route,
+      destination,
+      intermediateStops: this.intermediateStops,
+      rideType: this.rideType,
+      rideStyle: this.rideStyle,
+      isSimulated: this.isSimulatedNavigation,
     });
-    this.spokenVoiceIds.clear();
-    this.clearNavTimer();
-    if (this.isSimulatedNavigation) {
-      this.navTimer = setInterval(() => this.advanceSimulation(), NAV_TICK_MS);
-    } else {
-      // GPS real: el avance se deriva de `locationStore.coordinates` via
-      // `navProgressKm`. Reaccionamos a cada lectura nueva para disparar la
-      // voz, vigilar off-route y detectar llegada (mismo "tick" del sim).
-      this.navReactionDisposer = reaction(
-        () => this.navProgressKm,
-        () => this.handleRealNavTick(),
-        { fireImmediately: true },
-      );
+  }
+
+  // ── Navigation Lab (dev): simulador manual A→B con control de velocidad ──────
+
+  /** Multiplicadores de velocidad disponibles en el Lab (1×–60×). */
+  get navigationLabSpeedMultipliers(): readonly NavLabSpeedMultiplier[] {
+    return NAV_LAB_SPEED_MULTIPLIERS;
+  }
+
+  /** Etiqueta del punto que el próximo tap fijará (Punto A / Punto B). */
+  get navigationLabPickModeLabel(): string {
+    return this.navigationLabPickMode === 'origin' ? 'Punto A' : 'Punto B';
+  }
+
+  /** Habilita "Trazar" solo si A y B son distintos y están separados. */
+  get navigationLabCanTrace(): boolean {
+    return (
+      this.navigationLabOrigin.id !== this.navigationLabDestination.id &&
+      haversineKm(this.navigationLabOrigin, this.navigationLabDestination) >
+        NAV_LAB_MIN_TRACE_KM
+    );
+  }
+
+  /** Marcadores A/B para el mapa, con el punto activo resaltado. */
+  get navigationLabMarkers(): NavigationLabMarker[] {
+    return [
+      {
+        id: this.navigationLabOrigin.id,
+        label: 'A',
+        coordinate: this.navigationLabOrigin.toLngLat(),
+        isActive: this.navigationLabPickMode === 'origin',
+      },
+      {
+        id: this.navigationLabDestination.id,
+        label: 'B',
+        coordinate: this.navigationLabDestination.toLngLat(),
+        isActive: this.navigationLabPickMode === 'destination',
+      },
+    ];
+  }
+
+  /** Abre/cierra el panel del Lab; al alternarlo limpia el buscador. */
+  toggleNavigationLab(): void {
+    runInAction(() => {
+      this.isNavigationLabOpen = !this.isNavigationLabOpen;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+  }
+
+  setNavigationLabPickMode(mode: NavigationLabPickMode): void {
+    runInAction(() => {
+      this.navigationLabPickMode = mode;
+    });
+  }
+
+  setNavigationLabSpeedMultiplier(multiplier: NavLabSpeedMultiplier): void {
+    if (!NAV_LAB_SPEED_MULTIPLIERS.includes(multiplier)) return;
+    runInAction(() => {
+      this.navigationLabSpeedMultiplier = multiplier;
+    });
+  }
+
+  /** Restablece A/B a los puntos por defecto y el modo a "Punto A". */
+  resetNavigationLabPoints(): void {
+    runInAction(() => {
+      this.navigationLabOrigin = DEV_FAKE_ORIGIN;
+      this.navigationLabDestination = DEV_FAKE_DESTINATION;
+      this.navigationLabPickMode = 'origin';
+      this.navigationLabSpeedMultiplier = NAV_LAB_DEFAULT_SPEED_MULTIPLIER;
+    });
+  }
+
+  /**
+   * Tap en el mapa con el Lab abierto: fija el Punto A (y avanza a B) o el
+   * Punto B. Ignorado si ya hay nav activa o un destino fijado.
+   */
+  handleNavigationLabMapPress(point: GeoPoint): void {
+    if (!this.isNavigationLabOpen || this.isNavigating || this.hasDestination) {
+      return;
+    }
+    const place = this.createNavigationLabPlace(this.navigationLabPickMode, point);
+    runInAction(() => {
+      if (this.navigationLabPickMode === 'origin') {
+        this.navigationLabOrigin = place;
+        this.navigationLabPickMode = 'destination';
+        return;
+      }
+      this.navigationLabDestination = place;
+    });
+  }
+
+  /** Traza la ruta A→B del Lab y arranca la simulación a la velocidad elegida. */
+  async startNavigationLabSimulation(): Promise<void> {
+    await this.startSimulationRoute(
+      this.navigationLabOrigin,
+      this.navigationLabDestination,
+      this.navigationLabSpeedMultiplier,
+    );
+  }
+
+  private createNavigationLabPlace(mode: NavigationLabPickMode, point: GeoPoint): Place {
+    const label = mode === 'origin' ? 'Punto A' : 'Punto B';
+    return new Place({
+      id: mode === 'origin' ? 'nav-lab-origin' : 'nav-lab-destination',
+      name: `${label} (manual)`,
+      fullName: `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`,
+      latitude: point.latitude,
+      longitude: point.longitude,
+    });
+  }
+
+  /**
+   * Construye la ruta A→B con un origen ARBITRARIO (no el GPS, a diferencia de
+   * `computeRoute`) y arranca la navegación simulada al multiplicador dado.
+   */
+  private async startSimulationRoute(
+    origin: Place,
+    destination: Place,
+    speedMultiplier: NavLabSpeedMultiplier,
+  ): Promise<void> {
+    // `rideType` vive en el `NavigationStore` (getter de solo lectura aquí).
+    this.navStore.setRideType(DEFAULT_RIDE_TYPE);
+    runInAction(() => {
+      this.destination = destination;
+      this.intermediateStops = [];
+      this.isNavigationLabOpen = false;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+      this.isRouteResponse = null;
+      this.isFuelStopResponse = null;
+      this.fuelStops = [];
+    });
+    this.updateLoadingState(true, null, 'route');
+    try {
+      const waypoints: Waypoint[] = [
+        new Waypoint({
+          id: 'origin',
+          name: origin.name,
+          latitude: origin.latitude,
+          longitude: origin.longitude,
+          kind: 'start',
+          order: 0,
+        }),
+        new Waypoint({
+          id: destination.id,
+          name: destination.name,
+          latitude: destination.latitude,
+          longitude: destination.longitude,
+          kind: 'destination',
+          order: 1,
+        }),
+      ];
+      const directions = await this.calculateDirectionsUseCase.run({
+        waypoints,
+        rideType: this.rideType,
+        rideStyle: this.rideStyle,
+      });
+      runInAction(() => {
+        this.isRouteResponse = directions;
+      });
+      this.updateLoadingState(false, null, 'route');
+      void this.computeElevation();
+      void this.computeFuelEstimate();
+      this.navSession.start({
+        route: directions,
+        destination,
+        intermediateStops: [],
+        rideType: this.rideType,
+        rideStyle: this.rideStyle,
+        isSimulated: true,
+        simSpeedMultiplier: speedMultiplier,
+      });
+    } catch (error) {
+      this.handleError(error, 'route');
     }
   }
 
-  /** Alterna los anuncios de voz turn-by-turn. */
+  /** Alterna los anuncios de voz turn-by-turn (delegado al store). */
   toggleMute(): void {
-    runInAction(() => {
-      this.isMuted = !this.isMuted;
-    });
-    if (this.isMuted) Speech.stop();
+    this.navSession.toggleMute();
   }
 
   /** Alterna la barra lateral de elevacion (6b) vs el chip compacto (6a). */
   toggleElevationStrip(): void {
-    this.isElevationStripOpen = !this.isElevationStripOpen;
+    this.navSession.toggleElevationStrip();
   }
 
   /** Termina la navegacion y restaura la pantalla del Home. */
   stopNavigation(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
-    runInAction(() => {
-      this.isNavigating = false;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
-    });
-  }
-
-  /**
-   * Marca el viaje como completado: detiene la simulacion / GPS, fija la
-   * hora de llegada y conserva la ruta para que el panel "8 - Home Llegada"
-   * pueda mostrar el resumen. La navegacion se considera terminada
-   * (`isNavigating = false`) pero la ruta sigue en memoria hasta que el
-   * rider toca "Finalizar".
-   */
-  private markArrived(): void {
-    this.clearNavTimer();
-    runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = true;
-      this.arrivedAt = new Date();
-      this.offRouteTicks = 0;
-    });
+    this.navSession.stop();
   }
 
   /** Cierra el panel de llegada y limpia la ruta (vuelve al Home vacio). */
   dismissArrival(): void {
-    runInAction(() => {
-      this.isArrived = false;
-      this.arrivedAt = null;
-    });
+    this.navSession.dismissArrival();
     this.clearRoute();
-  }
-
-  /** Avanza al conductor simulado un tick sobre la ruta. */
-  private advanceSimulation(): void {
-    const route = this.isRouteResponse;
-    if (!route) {
-      this.stopNavigation();
-      return;
-    }
-    runInAction(() => {
-      this.simulatedDistanceKm = Math.min(
-        route.distanceKm,
-        this.simulatedDistanceKm + SIM_KM_PER_TICK,
-      );
-    });
-    this.maybeSpeak();
-    this.monitorOffRoute();
-    if (this.simulatedDistanceKm >= route.distanceKm) {
-      this.markArrived();
-    }
-  }
-
-  /**
-   * Reproduce los anuncios de voz turn-by-turn de Mapbox cuyo punto de
-   * disparo ya quedo atras del rider. Cada anuncio se identifica por step +
-   * `distanceAlongGeometry` para evitar repetirlo y se omite si el motero
-   * silencio la voz con `toggleMute`.
-   */
-  private maybeSpeak(): void {
-    if (this.isMuted) return;
-    const route = this.isRouteResponse;
-    if (!route) return;
-    const progressKm = this.navProgressKm;
-    for (const step of route.steps) {
-      for (const voice of step.voiceInstructions) {
-        const triggerKm = step.distanceFromStartKm + voice.distanceAlongGeometry / 1000;
-        if (progressKm < triggerKm) continue;
-        const key = `${step.distanceFromStartKm.toFixed(3)}:${voice.distanceAlongGeometry}`;
-        if (this.spokenVoiceIds.has(key)) continue;
-        this.spokenVoiceIds.add(key);
-        Speech.speak(voice.announcement, { language: NAV_VOICE_LANGUAGE });
-      }
-    }
-  }
-
-  /**
-   * Detecta de forma local (geometria, sin costo de API) si el conductor se
-   * salio de la ruta. Solo cuando la desviacion se sostiene varios ticks se
-   * gasta UNA llamada de recalculo. En la simulacion el conductor sigue la
-   * ruta, asi que esta vigilancia queda latente hasta usar GPS real.
-   */
-  private monitorOffRoute(): void {
-    const route = this.isRouteResponse;
-    const rider = this.navRiderPoint;
-    if (!route || !rider) return;
-    const deviationKm = distanceToPolylineKm(route.geometry, rider);
-    if (deviationKm <= OFF_ROUTE_THRESHOLD_KM) {
-      this.offRouteTicks = 0;
-      return;
-    }
-    this.offRouteTicks += 1;
-    if (this.offRouteTicks >= OFF_ROUTE_CONFIRM_TICKS) {
-      this.offRouteTicks = 0;
-      void this.recalculateFrom(rider);
-    }
-  }
-
-  /** Recalcula la ruta desde la posicion actual hacia el mismo destino. */
-  private async recalculateFrom(origin: GeoPoint): Promise<void> {
-    const place = this.destination;
-    if (!place) return;
-    try {
-      const directions = await this.calculateDirectionsUseCase.run({
-        waypoints: [
-          new Waypoint({
-            id: 'origin',
-            name: 'Posicion actual',
-            latitude: origin.latitude,
-            longitude: origin.longitude,
-            kind: 'start',
-            order: 0,
-          }),
-          new Waypoint({
-            id: place.id,
-            name: place.name,
-            latitude: place.latitude,
-            longitude: place.longitude,
-            kind: 'destination',
-            order: 1,
-          }),
-        ],
-        rideType: this.rideType,
-      });
-      runInAction(() => {
-        this.isRouteResponse = directions;
-        this.simulatedDistanceKm = 0;
-      });
-    } catch (error) {
-      this.logger.error(
-        `Error recalculando ruta: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  }
-
-  /**
-   * Hook que corre en cada lectura nueva del GPS durante navegacion real:
-   * dispara la voz turn-by-turn, vigila si se salio de la ruta y detecta
-   * la llegada. Es el equivalente, para GPS real, del tick del simulador.
-   */
-  private handleRealNavTick(): void {
-    const route = this.isRouteResponse;
-    if (!route || !this.isNavigating) return;
-    this.maybeSpeak();
-    this.monitorOffRoute();
-    if (route.distanceKm - this.navProgressKm <= NAV_ARRIVAL_THRESHOLD_KM) {
-      this.markArrived();
-    }
-  }
-
-  private clearNavTimer(): void {
-    this.navReactionDisposer?.();
-    this.navReactionDisposer = null;
-    if (this.navTimer) {
-      clearInterval(this.navTimer);
-      this.navTimer = null;
-    }
   }
 
   /** Limpia el destino, la ruta, el perfil y el buscador. */
   clearRoute(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
+    // El runtime de nav (timer/voz/llegada) vive en el store: lo reseteamos ahí.
+    this.navSession.reset();
     runInAction(() => {
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
       this.destination = null;
       this.intermediateStops = [];
       this.searchMode = 'destination';
@@ -1955,20 +1957,11 @@ export class HomeViewModel {
   }
 
   reset(): void {
-    this.clearNavTimer();
-    Speech.stop();
-    this.spokenVoiceIds.clear();
+    this.navSession.reset();
     runInAction(() => {
       this.currentZoom = DEFAULT_ZOOM;
-      this.isMuted = false;
       this.isPerspective = false;
       this.hasAutoCentered = false;
-      this.isNavigating = false;
-      this.isArrived = false;
-      this.arrivedAt = null;
-      this.simulatedDistanceKm = 0;
-      this.offRouteTicks = 0;
-      this.isElevationStripOpen = true;
       this.searchQuery = '';
       this.isSearchLoading = false;
       this.isSearchError = null;
@@ -2117,6 +2110,7 @@ export class HomeViewModel {
       const directions = await this.calculateDirectionsUseCase.run({
         waypoints,
         rideType: this.rideType,
+        rideStyle: this.rideStyle,
       });
       runInAction(() => {
         this.isRouteResponse = directions;
@@ -2284,33 +2278,6 @@ export class HomeViewModel {
       return `En ${meters} m`;
     }
     return `En ${km.toFixed(1)} km`;
-  }
-
-  /** Texto de respaldo cuando Mapbox no entrega `maneuver.instruction`. */
-  private fallbackInstruction(step: NavigationStep): string {
-    if (step.maneuverType === 'arrive') return 'Llegas al destino';
-    if (step.maneuverType === 'roundabout' || step.maneuverType === 'rotary') {
-      return 'Entra a la rotonda';
-    }
-    switch (step.maneuverModifier) {
-      case 'left':
-        return 'Gira a la izquierda';
-      case 'right':
-        return 'Gira a la derecha';
-      case 'sharp left':
-        return 'Giro cerrado a la izquierda';
-      case 'sharp right':
-        return 'Giro cerrado a la derecha';
-      case 'slight left':
-        return 'Mantente a la izquierda';
-      case 'slight right':
-        return 'Mantente a la derecha';
-      case 'uturn':
-        return 'Da media vuelta';
-      case 'straight':
-      default:
-        return 'Continua de frente';
-    }
   }
 
   private updateLoadingState(isLoading: boolean, error: string | null, type: ICalls) {

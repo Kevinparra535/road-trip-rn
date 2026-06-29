@@ -1,3 +1,4 @@
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { RideType } from '@/domain/entities/Route';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
@@ -12,5 +13,7 @@ export interface DirectionsRepository {
     waypoints: Waypoint[],
     rideType: RideType,
     avoid?: RouteAvoidPreferences,
+    /** Estilo de ruta (F5): fast/curvy/fuel. Se fusiona con `avoid`. */
+    rideStyle?: RideStyle,
   ): Promise<RouteDirections>;
 }

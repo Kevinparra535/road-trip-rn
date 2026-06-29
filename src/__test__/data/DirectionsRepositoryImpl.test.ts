@@ -72,4 +72,29 @@ describe('DirectionsRepositoryImpl.getDirections', () => {
     await repo.getDirections(waypoints, 'highway');
     expect(fetchDirections).toHaveBeenCalledWith(expect.any(Array), 'highway', undefined);
   });
+
+  it('fusiona el estilo de ruta (F5) con el avoid, deduplicando tokens', async () => {
+    const { repo, fetchDirections } = build();
+    // curvy => evita autopistas; sin avoid explícito.
+    await repo.getDirections(waypoints, 'highway', undefined, 'curvy');
+    expect(fetchDirections).toHaveBeenCalledWith(expect.any(Array), 'highway', {
+      exclude: 'motorway',
+    });
+
+    // avoid tolls + curvy (motorway) => 'toll,motorway' sin duplicar.
+    const { repo: repo2, fetchDirections: f2 } = build();
+    await repo2.getDirections(
+      waypoints,
+      'highway',
+      new RouteAvoidPreferences({ tolls: true, highways: true }),
+      'curvy',
+    );
+    expect(f2.mock.calls[0][2].exclude).toBe('toll,motorway');
+  });
+
+  it('fast no agrega exclude', async () => {
+    const { repo, fetchDirections } = build();
+    await repo.getDirections(waypoints, 'highway', undefined, 'fast');
+    expect(fetchDirections).toHaveBeenCalledWith(expect.any(Array), 'highway', undefined);
+  });
 });

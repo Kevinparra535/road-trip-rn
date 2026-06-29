@@ -19,9 +19,7 @@ export type RetrievePlaceInput = {
  * Cierra la sesión de búsqueda en la capa data (cobro por sesión).
  */
 @injectable()
-export class RetrievePlaceUseCase
-  implements UseCase<RetrievePlaceInput, Place | null>
-{
+export class RetrievePlaceUseCase implements UseCase<RetrievePlaceInput, Place | null> {
   constructor(
     @inject(TYPES.PlaceSearchRepository)
     private readonly repository: PlaceSearchRepository,

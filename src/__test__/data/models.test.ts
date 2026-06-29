@@ -317,6 +317,7 @@ describe('RouteModel', () => {
           order: 1,
           notes: 'almuerzo',
           stop_duration_min: 30,
+          is_via: true,
         },
         {
           id: 'c',
@@ -348,6 +349,12 @@ describe('RouteModel', () => {
     expect(route.waypoints[1].notes).toBe('almuerzo');
     expect(route.waypoints[1].stopDurationMin).toBe(30);
     expect(route.totalStopDurationMin()).toBe(30);
+    // via/stop (G13): round-trip del flag + se refleja en isStopPoint().
+    expect(route.waypoints[1].isVia).toBe(true);
+    expect(route.waypoints[1].isStopPoint()).toBe(false);
+    expect(RouteModel.fromDomain(route).toJson().waypoints).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'b', is_via: true })]),
+    );
   });
 
   it('back-compat: doc viejo sin avoid/days/notes carga con defaults', () => {

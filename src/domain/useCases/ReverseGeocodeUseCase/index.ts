@@ -18,9 +18,7 @@ export type ReverseGeocodeInput = GeoPoint & {
  * "usar mi ubicación": toma el GPS del rider y obtiene un nombre legible.
  */
 @injectable()
-export class ReverseGeocodeUseCase
-  implements UseCase<ReverseGeocodeInput, Place | null>
-{
+export class ReverseGeocodeUseCase implements UseCase<ReverseGeocodeInput, Place | null> {
   constructor(
     @inject(TYPES.PlaceSearchRepository)
     private readonly repository: PlaceSearchRepository,

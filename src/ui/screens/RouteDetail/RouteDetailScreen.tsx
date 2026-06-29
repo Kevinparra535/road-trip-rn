@@ -112,6 +112,35 @@ const RouteDetailScreen = observer(() => {
           >
             <Ionicons name="copy-outline" size={22} color={Colors.base.textSecondary} />
           </MotionPressable>
+          {viewModel.canDownloadOffline ? (
+            <MotionPressable
+              onPress={() => void viewModel.downloadOffline()}
+              disabled={viewModel.isOfflineDownloading}
+              hitSlop={8}
+              haptic="selection"
+              testID="route-detail-offline-btn"
+              accessibilityRole="button"
+              accessibilityLabel="Descargar mapa offline"
+            >
+              {viewModel.isOfflineDownloading ? (
+                <ActivityIndicator size="small" color={Colors.base.accent} />
+              ) : (
+                <Ionicons
+                  name={
+                    viewModel.hasOfflineSuccess
+                      ? 'cloud-done-outline'
+                      : 'cloud-download-outline'
+                  }
+                  size={22}
+                  color={
+                    viewModel.hasOfflineSuccess
+                      ? Colors.alerts.check
+                      : Colors.base.textSecondary
+                  }
+                />
+              )}
+            </MotionPressable>
+          ) : null}
           <MotionPressable
             onPress={() => viewModel.deleteRoute()}
             hitSlop={8}

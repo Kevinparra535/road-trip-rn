@@ -23,9 +23,10 @@ export type SuggestPlacesInput = {
  * traen coordenadas; se resuelven con `RetrievePlaceUseCase` al seleccionar.
  */
 @injectable()
-export class SuggestPlacesUseCase
-  implements UseCase<SuggestPlacesInput, PlaceSuggestion[]>
-{
+export class SuggestPlacesUseCase implements UseCase<
+  SuggestPlacesInput,
+  PlaceSuggestion[]
+> {
   constructor(
     @inject(TYPES.PlaceSearchRepository)
     private readonly repository: PlaceSearchRepository,

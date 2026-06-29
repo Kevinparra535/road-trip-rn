@@ -69,6 +69,7 @@ const build = (
   const revokeShareCode = { run: jest.fn() };
   const createTripParty = { run: jest.fn() };
   const partyStore = overrides.partyStore ?? makePartyStore();
+  const downloadOffline = { run: jest.fn().mockResolvedValue(undefined) };
 
   const viewModel = new RouteDetailViewModel(
     getRoute as any,
@@ -81,6 +82,7 @@ const build = (
     revokeShareCode as any,
     createTripParty as any,
     partyStore as any,
+    downloadOffline as any,
   );
 
   return {
@@ -93,6 +95,7 @@ const build = (
     del,
     generateShareCode,
     partyStore,
+    downloadOffline,
   };
 };
 
@@ -409,6 +412,38 @@ describe('RouteDetailViewModel', () => {
   });
 
   // ── reset() ───────────────────────────────────────────────────────────────
+
+  describe('downloadOffline (F5 — G12)', () => {
+    it('descarga el corredor de la ruta y marca éxito', async () => {
+      const route = makeRoute({
+        id: 'route-1',
+        geometry: [
+          { latitude: 4, longitude: -74 },
+          { latitude: 5, longitude: -73 },
+        ],
+      });
+      const { viewModel, downloadOffline } = build({ route });
+      await viewModel.initialize('route-1');
+      expect(viewModel.canDownloadOffline).toBe(true);
+
+      await viewModel.downloadOffline();
+
+      expect(downloadOffline.run).toHaveBeenCalledTimes(1);
+      expect(downloadOffline.run.mock.calls[0][0].name).toBe('route-route-1');
+      expect(viewModel.hasOfflineSuccess).toBe(true);
+      expect(viewModel.isOfflineDownloading).toBe(false);
+    });
+
+    it('no descarga si la ruta no tiene geometría', async () => {
+      const route = makeRoute({ id: 'route-1', geometry: [] });
+      const { viewModel, downloadOffline } = build({ route });
+      await viewModel.initialize('route-1');
+      expect(viewModel.canDownloadOffline).toBe(false);
+
+      await viewModel.downloadOffline();
+      expect(downloadOffline.run).not.toHaveBeenCalled();
+    });
+  });
 
   describe('reset()', () => {
     it('clears all transient state', async () => {

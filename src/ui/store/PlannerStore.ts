@@ -652,10 +652,7 @@ export class PlannerStore {
       if (!this.locationStore.hasLocation) {
         const granted = await this.locationStore.ensurePermission();
         if (!granted) {
-          this.handleError(
-            new Error('Necesitamos permiso de ubicación.'),
-            'search',
-          );
+          this.handleError(new Error('Necesitamos permiso de ubicación.'), 'search');
           return;
         }
         await this.locationStore.loadCurrentLocation();
@@ -760,8 +757,7 @@ export class PlannerStore {
     try {
       // Proximity: en modo edicion sesga hacia el waypoint que se edita; si no,
       // hacia el ultimo waypoint del plan.
-      const anchor =
-        this.editingWaypoint ?? this.waypoints[this.waypoints.length - 1];
+      const anchor = this.editingWaypoint ?? this.waypoints[this.waypoints.length - 1];
       const proximity: GeoPoint | undefined = anchor
         ? { latitude: anchor.latitude, longitude: anchor.longitude }
         : undefined;

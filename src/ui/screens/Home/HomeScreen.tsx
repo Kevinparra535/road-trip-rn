@@ -13,7 +13,6 @@ import { observer } from 'mobx-react-lite';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
-import { DrawerNavigationProp } from '@react-navigation/drawer';
 import {
   CompositeNavigationProp,
   useFocusEffect,
@@ -36,13 +35,15 @@ import ElevationStrip from '@/ui/components/ElevationStrip';
 import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
+import JourneyFuelBar from '@/ui/components/JourneyFuelBar';
 import MotionPressable from '@/ui/components/MotionPressable';
+import NavSuggestionRail from '@/ui/components/NavSuggestionRail';
 import SheetCard from '@/ui/components/SheetCard';
 import StatCell from '@/ui/components/StatCell';
 import TurnBanner from '@/ui/components/TurnBanner';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
-import { AppDrawerParamList, HomeStackParamList } from '@/ui/navigation/types';
+import { AppStackParamList, HomeStackParamList } from '@/ui/navigation/types';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -66,13 +67,14 @@ import { RouteDraftRecoveryModal } from './components/RouteDraftRecoveryModal';
 const HomeScreen = observer(() => {
   const viewModel = useViewModel<HomeViewModel>(TYPES.HomeViewModel);
   // HomeScreen vive dentro del HomeNavigator (Stack) que vive dentro del
-  // AppDrawer. CompositeNavigationProp permite tipear navigate para ambos:
-  // rutas del Stack (DestinationPreview) y del Drawer (ProfileTab, openDrawer).
+  // AppStackNavigator (stack raíz plano). CompositeNavigationProp tipa navigate
+  // para ambos: rutas del HomeStack (DestinationPreview) y del stack raíz
+  // (RoutePlanner, RoutesTab, GarageTab, ProfileTab, RouteDetail…).
   const navigation =
     useNavigation<
       CompositeNavigationProp<
         NativeStackNavigationProp<HomeStackParamList, 'HomeMain'>,
-        DrawerNavigationProp<AppDrawerParamList>
+        NativeStackNavigationProp<AppStackParamList>
       >
     >();
   const cameraRef = useRef<ElementRef<typeof Mapbox.Camera>>(null);
@@ -254,7 +256,7 @@ const HomeScreen = observer(() => {
     navigation.navigate('RoutesTab', {
       screen: 'RouteDetail',
       params: { routeId: selectedSavedRouteId },
-    } as never);
+    });
     viewModel.clearSelectedSavedRoute();
   }, [selectedSavedRouteId, navigation, viewModel]);
 
@@ -269,6 +271,16 @@ const HomeScreen = observer(() => {
       <Mapbox.MapView
         style={styles.map}
         styleURL={MAP_STYLE_URL}
+        onPress={(feature) => {
+          // Navigation Lab: tap en el mapa fija el Punto A/B. El VM ignora el
+          // tap si el Lab está cerrado, así que no hace falta condicionar aquí.
+          const coords = (feature?.geometry as GeoJSON.Point | undefined)?.coordinates;
+          if (!coords) return;
+          viewModel.handleNavigationLabMapPress({
+            latitude: coords[1],
+            longitude: coords[0],
+          });
+        }}
         onCameraChanged={(state) =>
           viewModel.setZoom(state?.properties?.zoom ?? viewModel.defaultZoom)
         }
@@ -439,6 +451,23 @@ const HomeScreen = observer(() => {
             />
           </Mapbox.ShapeSource>
         ) : null}
+
+        {/* Navigation Lab: marcadores A/B (dev) cuando el panel está abierto. */}
+        {viewModel.isNavigationLabOpen
+          ? viewModel.navigationLabMarkers.map((marker) => (
+              <Mapbox.MarkerView
+                key={marker.id}
+                id={`nav-lab-${marker.id}`}
+                coordinate={marker.coordinate}
+              >
+                <View
+                  style={[styles.labMarker, marker.isActive && styles.labMarkerActive]}
+                >
+                  <Text style={styles.labMarkerText}>{marker.label}</Text>
+                </View>
+              </Mapbox.MarkerView>
+            ))
+          : null}
       </Mapbox.MapView>
 
       {DEV_FLAGS.mockDestination && !viewModel.hasDestination && viewModel.hasLocation ? (
@@ -453,6 +482,130 @@ const HomeScreen = observer(() => {
           <Ionicons name="flask" size={15} color={Colors.base.accent} />
           <Text style={styles.testRouteText}>Ruta de prueba</Text>
         </MotionPressable>
+      ) : null}
+
+      {/* Navigation Lab (dev): simulador manual A→B con control de velocidad. */}
+      {DEV_FLAGS.mockDestination && !viewModel.hasDestination && viewModel.hasLocation ? (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[
+            styles.labButton,
+            viewModel.isNavigationLabOpen && styles.labButtonActive,
+          ]}
+          testID="home-nav-lab-fab"
+          accessibilityRole="button"
+          accessibilityLabel="Abrir Navigation Lab"
+          onPress={() => viewModel.toggleNavigationLab()}
+        >
+          <MaterialCommunityIcons
+            name="map-marker-path"
+            size={15}
+            color={Colors.base.accent}
+          />
+          <Text style={styles.testRouteText}>Lab</Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {viewModel.isNavigationLabOpen && !viewModel.hasDestination ? (
+        <View style={styles.labPanel}>
+          <View style={styles.labHeader}>
+            <Text style={styles.labTitle}>Navigation Lab</Text>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar Navigation Lab"
+              onPress={() => viewModel.toggleNavigationLab()}
+            >
+              <Ionicons name="close" size={18} color={Colors.base.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={styles.labHint}>
+            Toca el mapa para fijar {viewModel.navigationLabPickModeLabel}
+          </Text>
+
+          <View style={styles.labRow}>
+            {(['origin', 'destination'] as const).map((mode) => {
+              const isActive = viewModel.navigationLabPickMode === mode;
+              return (
+                <TouchableOpacity
+                  key={mode}
+                  style={[styles.labChip, isActive && styles.labChipActive]}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    mode === 'origin' ? 'Fijar Punto A' : 'Fijar Punto B'
+                  }
+                  onPress={() => viewModel.setNavigationLabPickMode(mode)}
+                >
+                  <Text
+                    style={[styles.labChipText, isActive && styles.labChipTextActive]}
+                  >
+                    {mode === 'origin' ? 'Punto A' : 'Punto B'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.labPoints}>
+            <Text style={styles.labPointName} numberOfLines={1}>
+              A · {viewModel.navigationLabOrigin.name}
+            </Text>
+            <Text style={styles.labPointSub} numberOfLines={1}>
+              {viewModel.navigationLabOrigin.fullName}
+            </Text>
+            <Text style={styles.labPointName} numberOfLines={1}>
+              B · {viewModel.navigationLabDestination.name}
+            </Text>
+            <Text style={styles.labPointSub} numberOfLines={1}>
+              {viewModel.navigationLabDestination.fullName}
+            </Text>
+          </View>
+
+          <View style={styles.labRow}>
+            {viewModel.navigationLabSpeedMultipliers.map((multiplier) => {
+              const isActive = viewModel.navigationLabSpeedMultiplier === multiplier;
+              return (
+                <TouchableOpacity
+                  key={multiplier}
+                  style={[styles.labChip, isActive && styles.labChipActive]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Velocidad ${multiplier}x`}
+                  onPress={() => viewModel.setNavigationLabSpeedMultiplier(multiplier)}
+                >
+                  <Text
+                    style={[styles.labChipText, isActive && styles.labChipTextActive]}
+                  >
+                    {multiplier}×
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <View style={styles.labRow}>
+            <TouchableOpacity
+              style={styles.labResetButton}
+              accessibilityRole="button"
+              accessibilityLabel="Restablecer puntos del lab"
+              onPress={() => viewModel.resetNavigationLabPoints()}
+            >
+              <Text style={styles.labResetText}>Restablecer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.labTraceButton,
+                !viewModel.navigationLabCanTrace && styles.labTraceButtonDisabled,
+              ]}
+              disabled={!viewModel.navigationLabCanTrace}
+              accessibilityRole="button"
+              accessibilityLabel="Trazar y simular ruta del lab"
+              onPress={() => void viewModel.startNavigationLabSimulation()}
+            >
+              <Ionicons name="play" size={14} color={Colors.base.textPrimary} />
+              <Text style={styles.labTraceText}>Trazar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       ) : null}
 
       {!viewModel.hasDestination && viewModel.hasLocation ? (
@@ -472,7 +625,7 @@ const HomeScreen = observer(() => {
         viewModel={viewModel}
         onContinue={() => {
           viewModel.continuePlanningDraft();
-          (navigation as any).navigate('RoutePlanner');
+          navigation.navigate('RoutePlanner');
         }}
         onDismiss={() => void viewModel.dismissPendingDraft()}
       />
@@ -494,6 +647,35 @@ const HomeScreen = observer(() => {
                 maneuverType={viewModel.currentTurn.maneuverType}
                 maneuverModifier={viewModel.currentTurn.maneuverModifier}
               />
+            </SafeAreaView>
+          ) : null}
+
+          {/* F2b: barra de combustible del viaje, glanceable, bajo el TurnBanner.
+              Posición exacta sobre el mapa pendiente de QA visual en device. */}
+          {viewModel.navFuelBar ? (
+            <SafeAreaView
+              edges={['left', 'right']}
+              style={styles.fuelBarWrap}
+              pointerEvents="box-none"
+            >
+              <JourneyFuelBar
+                totalKm={viewModel.navFuelBar.totalKm}
+                progressKm={viewModel.navFuelBar.progressKm}
+                stops={viewModel.navFuelBar.stops}
+                reservePercent={viewModel.navFuelBar.reservePercent}
+              />
+            </SafeAreaView>
+          ) : null}
+
+          {/* Motor de sugerencias: avisos contextuales glanceables (tanqueo,
+              elevación, curva, off-route, llegada) bajo la barra de combustible. */}
+          {viewModel.navSuggestions.length > 0 ? (
+            <SafeAreaView
+              edges={['left', 'right']}
+              style={styles.suggestionRailWrap}
+              pointerEvents="box-none"
+            >
+              <NavSuggestionRail suggestions={viewModel.navSuggestions} />
             </SafeAreaView>
           ) : null}
 
@@ -1503,6 +1685,138 @@ const styles = StyleSheet.create({
     color: Colors.base.accent,
   },
 
+  // ── Navigation Lab (dev): botón, panel, chips y marcadores A/B ─────────────
+  // Posiciones exactas pendientes de QA visual en device, igual que el resto
+  // del overlay del Home.
+  labButton: {
+    position: 'absolute',
+    right: Spacings.lg,
+    top: Spacings.xxl + 128,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  labButtonActive: {
+    backgroundColor: Colors.base.accentDim,
+    borderColor: Colors.base.accent,
+  },
+  labPanel: {
+    position: 'absolute',
+    left: Spacings.lg,
+    right: Spacings.lg,
+    top: Spacings.spacex6,
+    gap: Spacings.sm,
+    padding: Spacings.md,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  labHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  labTitle: {
+    ...Fonts.bodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  labHint: {
+    ...Fonts.smallBodyText,
+    color: Colors.base.textSecondary,
+  },
+  labRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.xs,
+  },
+  labChip: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacings.sm,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  labChipActive: {
+    backgroundColor: Colors.base.accentDim,
+    borderColor: Colors.base.accentDimBorder,
+  },
+  labChipText: {
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
+  },
+  labChipTextActive: {
+    color: Colors.base.accent,
+  },
+  labPoints: {
+    gap: Spacings.xs,
+  },
+  labPointName: {
+    ...Fonts.smallBodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+  labPointSub: {
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  labResetButton: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacings.sm,
+    borderRadius: BorderRadius.sm,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+  },
+  labResetText: {
+    ...Fonts.links,
+    color: Colors.base.textSecondary,
+  },
+  labTraceButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacings.xs,
+    paddingVertical: Spacings.sm,
+    backgroundColor: Colors.base.accent,
+    borderRadius: BorderRadius.sm,
+  },
+  labTraceButtonDisabled: {
+    opacity: 0.4,
+  },
+  labTraceText: {
+    ...Fonts.links,
+    color: Colors.base.textPrimary,
+  },
+  labMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+    backgroundColor: Colors.base.bgGradientEnd,
+    borderRadius: BorderRadius.pill,
+    borderWidth: 2,
+    borderColor: Colors.base.cardBorder,
+    ...Shadows.bankCard,
+  },
+  labMarkerActive: {
+    borderColor: Colors.base.accent,
+  },
+  labMarkerText: {
+    ...Fonts.smallBodyTextBold,
+    color: Colors.base.textPrimary,
+  },
+
   // ── Navegación activa (Pencil 6a / 6b) ────────────────────────────────────
   // Bottom Nav Bar: barra inferior grande con la distancia restante, la hora
   // de llegada y el boton rojo para finalizar el viaje.
@@ -1624,6 +1938,23 @@ const styles = StyleSheet.create({
   turnBannerWrap: {
     position: 'absolute',
     top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacings.lg,
+  },
+  // F2b: bajo el TurnBanner (~140 alto). Offset pendiente de QA visual en device.
+  fuelBarWrap: {
+    position: 'absolute',
+    top: 156,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacings.lg,
+  },
+  // Rail de sugerencias: bajo la barra de combustible. Offset exacto pendiente
+  // de QA visual en device, igual que el resto del overlay de navegación.
+  suggestionRailWrap: {
+    position: 'absolute',
+    top: 230,
     left: 0,
     right: 0,
     paddingHorizontal: Spacings.lg,

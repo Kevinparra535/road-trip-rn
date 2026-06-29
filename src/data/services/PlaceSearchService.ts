@@ -31,11 +31,7 @@ export interface PlaceSuggestContext {
 
 export interface PlaceSearchService {
   /** Geocoding v5 (texto → lugares con coordenadas). */
-  search(
-    query: string,
-    proximity?: LngLat,
-    signal?: AbortSignal,
-  ): Promise<PlaceModel[]>;
+  search(query: string, proximity?: LngLat, signal?: AbortSignal): Promise<PlaceModel[]>;
   /** Search Box `/suggest` (texto → sugerencias sin coordenadas). */
   suggest(
     query: string,
@@ -114,18 +110,15 @@ export class PlaceSearchServiceImpl implements PlaceSearchService {
       params.set('proximity', `${ctx.proximity[0]},${ctx.proximity[1]}`);
     }
 
-    const response = await this.http.get(
-      `${MAPBOX_SEARCHBOX_BASE}/suggest?${params}`,
-      { signal },
-    );
+    const response = await this.http.get(`${MAPBOX_SEARCHBOX_BASE}/suggest?${params}`, {
+      signal,
+    });
     if (!response.ok) {
       throw new Error(`Mapbox Search Box suggest respondio ${response.status}.`);
     }
 
     const json = await response.json();
-    const suggestions: any[] = Array.isArray(json?.suggestions)
-      ? json.suggestions
-      : [];
+    const suggestions: any[] = Array.isArray(json?.suggestions) ? json.suggestions : [];
     return suggestions
       .map((s) => PlaceSuggestionModel.fromSearchBoxSuggestion(s))
       .filter((m): m is PlaceSuggestionModel => m !== null);

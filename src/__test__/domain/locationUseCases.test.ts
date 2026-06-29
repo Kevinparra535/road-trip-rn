@@ -9,9 +9,13 @@ import { makeGeoLocation } from '../factories';
 
 const makeRepo = (): jest.Mocked<LocationRepository> => ({
   requestPermission: jest.fn(),
+  requestBackgroundPermission: jest.fn(),
   getCurrentLocation: jest.fn(),
   watchLocation: jest.fn(),
+  watchBackgroundLocation: jest.fn(),
   watchHeading: jest.fn(),
+  startBackgroundTracking: jest.fn(),
+  stopBackgroundTracking: jest.fn(),
 });
 
 describe('RequestLocationPermissionUseCase', () => {
