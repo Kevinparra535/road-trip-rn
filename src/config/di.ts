@@ -81,6 +81,7 @@ import type { TripPartyRepository } from '@/domain/repositories/TripPartyReposit
 import type { HttpManager } from '@/domain/services/HttpManager';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
+import { BuildNavigationSuggestionsUseCase } from '@/domain/useCases/BuildNavigationSuggestionsUseCase';
 import { BuildRoutePreviewUseCase } from '@/domain/useCases/BuildRoutePreviewUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
@@ -363,6 +364,9 @@ container
 container
   .bind<DetectOffRouteUseCase>(TYPES.DetectOffRouteUseCase)
   .to(DetectOffRouteUseCase);
+container
+  .bind<BuildNavigationSuggestionsUseCase>(TYPES.BuildNavigationSuggestionsUseCase)
+  .to(BuildNavigationSuggestionsUseCase);
 container.bind<RerouteUseCase>(TYPES.RerouteUseCase).to(RerouteUseCase);
 container
   .bind<DownloadOfflineCorridorUseCase>(TYPES.DownloadOfflineCorridorUseCase)

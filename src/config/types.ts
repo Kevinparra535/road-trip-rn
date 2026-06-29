@@ -65,6 +65,7 @@ export const TYPES = {
   SnapToRouteUseCase: Symbol.for('SnapToRouteUseCase'),
   ComputeNextManeuverUseCase: Symbol.for('ComputeNextManeuverUseCase'),
   DetectOffRouteUseCase: Symbol.for('DetectOffRouteUseCase'),
+  BuildNavigationSuggestionsUseCase: Symbol.for('BuildNavigationSuggestionsUseCase'),
   RerouteUseCase: Symbol.for('RerouteUseCase'),
   EstimateAutonomyUseCase: Symbol.for('EstimateAutonomyUseCase'),
   FindFuelStationsUseCase: Symbol.for('FindFuelStationsUseCase'),
