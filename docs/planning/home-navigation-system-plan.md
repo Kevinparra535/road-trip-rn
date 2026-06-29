@@ -13,7 +13,10 @@
 ## Estado de implementación (rama `feat/home-navigation-system`)
 
 Verificado verde en cada commit: `typecheck` 0 · `lint` 0 errores · `format:check` ok ·
-suite completa + cobertura ≥ umbrales.
+suite completa (838 tests) + cobertura ≥ umbrales. **Revisado** con el `pr-reviewer` del
+repo contra el checklist de Clean Architecture (arquitectura limpia, 0 bugs bloqueantes); los
+3 hallazgos —cruce de capa `data→ui` en el repo offline, `rideStyle` no preservado en el
+reroute, y tests de integración del store faltantes— fueron aplicados (commit `2eaff10`).
 
 | Fase    | Estado    | Notas                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
