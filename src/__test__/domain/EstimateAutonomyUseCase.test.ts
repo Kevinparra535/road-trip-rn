@@ -46,6 +46,29 @@ describe('EstimateAutonomyUseCase', () => {
     expect(loaded.effectiveRangeKm).toBeLessThan(base.effectiveRangeKm);
   });
 
+  it('un copiloto mas pesado reduce mas el rango (peso real, no castigo plano)', async () => {
+    // F0/F1: acompañante/maletas dejaron de ser un factor fijo 0.92/0.93 — ahora
+    // el peso real en kg mueve el rango. Un copiloto de 110 kg pesa más que uno
+    // de 50 kg, así que el rango efectivo debe ser menor.
+    const conditions = new RidingConditions({
+      hasPassenger: true,
+      hasLuggage: false,
+      aggressiveRiding: false,
+    });
+    const light = await useCase.run({
+      motorcycle: makeMotorcycle({ passengerWeightKg: 50 }),
+      route: makeRoute(),
+      conditions,
+    });
+    const heavy = await useCase.run({
+      motorcycle: makeMotorcycle({ passengerWeightKg: 110 }),
+      route: makeRoute(),
+      conditions,
+    });
+
+    expect(heavy.effectiveRangeKm).toBeLessThan(light.effectiveRangeKm);
+  });
+
   it('throws when the motorcycle has no usable range', async () => {
     await expect(
       useCase.run({

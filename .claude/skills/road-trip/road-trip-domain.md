@@ -56,9 +56,11 @@ las copias sincronizadas y la realidad del código no se contradigan.
 
 ### Particularidad del proyecto
 
-- `src/data/services/MotoStatsService.ts` mantiene `MOTO_STATS_API_URL = ''`: la búsqueda web
-  está deshabilitada hasta que exista la Cloud Function, así que degrada al dataset local
-  (`src/data/datasets/motoStatsDataset.ts`). Inyecta `HttpManager` igual, listo para activarse.
+- `src/data/services/MotoStatsService.ts` lee la URL de la búsqueda web de `ENV.motoStatsApiUrl`
+  (config validada por Zod en `src/config/env.ts`, default `''`). Vacía = búsqueda web
+  deshabilitada → degrada al dataset local (`src/data/datasets/motoStatsDataset.ts`). Inyecta
+  `HttpManager` igual; activar la Cloud Function = setear `MOTO_STATS_API_URL` por entorno
+  (vía `app.config.js`), sin tocar código.
 
 ### Entidades de dominio (MVP)
 
