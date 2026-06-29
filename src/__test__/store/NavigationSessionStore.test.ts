@@ -121,4 +121,73 @@ describe('NavigationSessionStore', () => {
     store.toggleElevationStrip();
     expect(store.isElevationStripOpen).toBe(false);
   });
+
+  it('start conserva el rideStyle en la sesión (F5: el reroute lo preserva)', () => {
+    const { store } = make();
+    store.start(startParams({ rideStyle: 'curvy' }));
+    expect(store.rideStyle).toBe('curvy');
+  });
+
+  it('el simulador avanza hasta el destino y marca la llegada', () => {
+    const { store } = make();
+    // Geometría densa (~10 m entre vértices) para que el rider simulado quede
+    // siempre cerca de un vértice y NO gatille un off-route espurio.
+    store.start(
+      startParams({
+        isSimulated: true,
+        route: makeRouteDirections({
+          distanceKm: 0.2,
+          geometry: Array.from({ length: 21 }, (_, i) => ({
+            latitude: 4 + i * 0.00009,
+            longitude: -74,
+          })),
+        }),
+      }),
+    );
+
+    jest.advanceTimersByTime(600); // 1 tick del simulador (500 ms)
+
+    expect(store.isArrived).toBe(true);
+    expect(store.isNavigating).toBe(false);
+    expect(store.arrivalSummary?.destinationName).toBe('Destino');
+  });
+
+  it('off-route sostenido (GPS real) gatilla el reroute conservando paradas + estilo', async () => {
+    const reroute = makeReroute();
+    const { store } = make({
+      // Rider ~1.1 km al norte del inicio de la ruta: nearest vertex = el primero
+      // (progress 0, sin arribo) pero fuera del umbral -> off-route en cada tick.
+      location: makeLocationStore({
+        isLocationResponse: makeGeoLocation({ latitude: 0.01, longitude: 0 }),
+      }),
+      reroute,
+    });
+    store.start(
+      startParams({
+        isSimulated: false,
+        rideStyle: 'fuel',
+        intermediateStops: [makePlace({ name: 'Parada' })],
+        route: makeRouteDirections({
+          distanceKm: 5,
+          geometry: [
+            { latitude: 0, longitude: 0 },
+            { latitude: 0, longitude: 0.001 },
+            { latitude: 0, longitude: 0.002 },
+          ],
+        }),
+      }),
+    );
+
+    // OFF_ROUTE_CONFIRM_TICKS = 4: la reaction GPS llamó 1 vez (fireImmediately);
+    // completamos los 3 ticks restantes manualmente.
+    (store as any).monitorOffRoute();
+    (store as any).monitorOffRoute();
+    (store as any).monitorOffRoute();
+    await Promise.resolve();
+
+    expect(reroute.run).toHaveBeenCalled();
+    const input = reroute.run.mock.calls[0][0];
+    expect(input.rideStyle).toBe('fuel');
+    expect(input.intermediateStops).toHaveLength(1);
+  });
 });

@@ -1597,6 +1597,7 @@ export class HomeViewModel {
       destination,
       intermediateStops: this.intermediateStops,
       rideType: this.rideType,
+      rideStyle: this.rideStyle,
       isSimulated: this.isSimulatedNavigation,
     });
   }

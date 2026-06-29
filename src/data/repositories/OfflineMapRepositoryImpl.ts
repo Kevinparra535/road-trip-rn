@@ -6,8 +6,6 @@ import {
   OfflineMapRepository,
 } from '@/domain/repositories/OfflineMapRepository';
 
-import Logger from '@/ui/utils/Logger';
-
 // Rango de zoom del corredor offline: lo suficiente para navegar (calles) sin
 // inflar el tamaño del pack con zooms de ciudad completos.
 const OFFLINE_MIN_ZOOM = 8;
@@ -18,14 +16,16 @@ const OFFLINE_MAX_ZOOM = 16;
  * RNMapbox v10 (F5 — G12). Importa el SDK de mapa directamente (como
  * `ui/map/mapbox.ts`); es el único punto de la capa data que lo toca.
  *
+ * No usa el `Logger` de `ui/` (rompería la dirección de capas — data no importa
+ * ui): el progreso/errores de la descarga los reporta Mapbox en los logs
+ * nativos del device. La validación real es en development build.
+ *
  * PENDIENTE DE DEVICE: la descarga real de tiles requiere red + render de Mapbox
  * (no corre en Expo Go ni headless). La lógica de bounds/zoom se prueba en el
  * `DownloadOfflineCorridorUseCase`; este wrapper se valida en development build.
  */
 @injectable()
 export class OfflineMapRepositoryImpl implements OfflineMapRepository {
-  private logger = new Logger('OfflineMapRepository');
-
   async downloadCorridor(
     name: string,
     bounds: OfflineBounds,
@@ -33,6 +33,8 @@ export class OfflineMapRepositoryImpl implements OfflineMapRepository {
   ): Promise<void> {
     // Si ya existe un pack con ese nombre, lo reemplazamos (idempotente).
     await this.deletePack(name);
+    // Los listeners de progreso/error son requeridos por la firma; van no-op
+    // (el device reporta el avance/errores de la descarga en sus logs nativos).
     await Mapbox.offlineManager.createPack(
       {
         name,
@@ -41,14 +43,8 @@ export class OfflineMapRepositoryImpl implements OfflineMapRepository {
         maxZoom: OFFLINE_MAX_ZOOM,
         bounds: [bounds.ne, bounds.sw],
       },
-      (_region, status) => {
-        if (status.percentage >= 100) {
-          this.logger.info(`Pack offline "${name}" descargado.`);
-        }
-      },
-      (_region, error) => {
-        this.logger.error(`Error descargando pack offline "${name}": ${String(error)}`);
-      },
+      () => undefined,
+      () => undefined,
     );
   }
 

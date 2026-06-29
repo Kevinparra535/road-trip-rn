@@ -15,6 +15,7 @@ import { TYPES } from '@/config/types';
 
 import { ManeuverModifier, ManeuverType } from '@/domain/entities/NavigationStep';
 import { Place } from '@/domain/entities/Place';
+import { DEFAULT_RIDE_STYLE, RideStyle } from '@/domain/entities/RideStyle';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 
@@ -46,6 +47,8 @@ export type NavSessionParams = {
   destination: Place;
   intermediateStops: Place[];
   rideType: RideType;
+  /** Estilo de ruta (F5): se conserva para el reroute. */
+  rideStyle?: RideStyle;
   /** La ruta proviene del botón DEV "Ruta de prueba" (avance simulado). */
   isSimulated: boolean;
 };
@@ -69,6 +72,7 @@ export class NavigationSessionStore {
   destination: Place | null = null;
   intermediateStops: Place[] = [];
   rideType: RideType = 'highway';
+  rideStyle: RideStyle = DEFAULT_RIDE_STYLE;
   isSimulated: boolean = false;
 
   // ── Runtime ──
@@ -255,6 +259,7 @@ export class NavigationSessionStore {
       this.destination = params.destination;
       this.intermediateStops = params.intermediateStops;
       this.rideType = params.rideType;
+      this.rideStyle = params.rideStyle ?? DEFAULT_RIDE_STYLE;
       this.isSimulated = params.isSimulated;
       this.isNavigating = true;
       this.isArrived = false;
@@ -342,6 +347,7 @@ export class NavigationSessionStore {
       this.route = null;
       this.destination = null;
       this.intermediateStops = [];
+      this.rideStyle = DEFAULT_RIDE_STYLE;
       this.isSimulated = false;
       this.isNavigating = false;
       this.isArrived = false;
@@ -445,6 +451,7 @@ export class NavigationSessionStore {
           longitude: stop.longitude,
         })),
         rideType: this.rideType,
+        rideStyle: this.rideStyle,
       });
       runInAction(() => {
         this.route = directions;

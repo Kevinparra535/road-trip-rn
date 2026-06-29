@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
 
+import { RideStyle } from '@/domain/entities/RideStyle';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { StopKind } from '@/domain/entities/StopKind';
@@ -30,6 +31,8 @@ export type RerouteInput = {
    */
   intermediateStops: RerouteStop[];
   rideType: RideType;
+  /** Estilo de ruta (F5): se conserva en el recálculo. */
+  rideStyle?: RideStyle;
 };
 
 // Reintentos con backoff: en carretera la señal va y viene, así que un único
@@ -65,6 +68,7 @@ export class RerouteUseCase implements UseCase<RerouteInput, RouteDirections> {
         return await this.calculateDirectionsUseCase.run({
           waypoints,
           rideType: input.rideType,
+          rideStyle: input.rideStyle,
         });
       } catch (error) {
         lastError = error;
