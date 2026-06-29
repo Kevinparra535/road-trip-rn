@@ -3,13 +3,13 @@ import {
   StyleProp,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import GradientView from '@/ui/components/GradientView';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -37,9 +37,11 @@ const PrimaryButton = ({
   const isInteractive = !loading && !disabled;
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <MotionPressable
+      accessibilityRole="button"
+      accessibilityState={{ busy: loading }}
       disabled={!isInteractive}
+      haptic="impactMedium"
       onPress={onPress}
       style={[styles.wrapper, !isInteractive && styles.disabled, style]}
     >
@@ -55,7 +57,7 @@ const PrimaryButton = ({
           </View>
         )}
       </GradientView>
-    </TouchableOpacity>
+    </MotionPressable>
   );
 };
 

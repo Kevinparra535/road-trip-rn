@@ -221,6 +221,19 @@ export class PlannerStore {
   private insightsDisposer: IReactionDisposer | null = null;
   /** Disposer de la resincronización de la segmentación multi-día. */
   private multiDayResyncDisposer: IReactionDisposer | null = null;
+  /**
+   * `true` mientras las reacciones MobX están montadas. El store es singleton:
+   * `dispose()` (desmontar el screen) las apaga y `initialize()` las re-monta
+   * en la siguiente sesión — sin esta guarda quedarían muertas para siempre tras
+   * el primer desmontaje.
+   */
+  private reactionsActive: boolean = false;
+  /**
+   * Señal "retomar draft": cuando el Home hidrata el store con un draft antes de
+   * navegar (`continuePlanningDraft`), `initialize()` NO debe resetear la sesión
+   * (perdería el draft recién cargado). Se consume en el primer `initialize`.
+   */
+  private resumingDraft: boolean = false;
 
   constructor(
     @inject(TYPES.GetCurrentRiderUseCase)
@@ -259,6 +272,17 @@ export class PlannerStore {
     public readonly templates: PlannerTemplateController,
   ) {
     makeAutoObservable(this);
+    this.ensureReactions();
+  }
+
+  /**
+   * Monta las reacciones MobX del store si aún no lo están (idempotente). Se
+   * llama desde el constructor y desde `initialize()`: como el store es
+   * singleton, `dispose()` las apaga al desmontar el Planner y hay que
+   * re-montarlas en la siguiente sesión.
+   */
+  private ensureReactions(): void {
+    if (this.reactionsActive) return;
     // Debounce de search: dispara la consulta 400ms tras la ultima tecla.
     // Mismo patron que `HomeViewModel` para mantener UX consistente.
     this.searchDisposer = reaction(
@@ -336,9 +360,14 @@ export class PlannerStore {
         });
       },
     );
+    this.reactionsActive = true;
   }
 
-  /** Limpia las reacciones MobX. Llamar al desmontar el screen. */
+  /**
+   * Apaga las reacciones MobX. Llamar al desmontar el screen. `initialize()`
+   * las vuelve a montar vía `ensureReactions()` en la próxima sesión, así que
+   * el store singleton no queda con reacciones muertas.
+   */
   dispose(): void {
     this.searchDisposer?.();
     this.searchDisposer = null;
@@ -350,6 +379,7 @@ export class PlannerStore {
     this.insightsDisposer = null;
     this.multiDayResyncDisposer?.();
     this.multiDayResyncDisposer = null;
+    this.reactionsActive = false;
     // El store de insights es singleton: invalida cualquier recompute en vuelo
     // para que su resolución no mute el store tras desmontar el Planner.
     this.insights.cancelInFlight();
@@ -1450,6 +1480,15 @@ export class PlannerStore {
   // ── Entrypoints ─────────────────────────────────────────────────────────
 
   async initialize(routeId?: string): Promise<void> {
+    // El store es singleton: re-montar reacciones (dispose las apagó al salir
+    // de la sesión previa) y limpiar el estado para no arrastrar la ruta de la
+    // sesión anterior (p. ej. abrir "crear" tras haber editado). En el flujo
+    // "retomar draft" el Home ya hidrató el store, así que ahí NO reseteamos.
+    this.ensureReactions();
+    if (!this.resumingDraft) {
+      this.resetSession();
+    }
+    this.resumingDraft = false;
     this.updateLoadingState(true, null, 'load');
     try {
       const rider = await this.getCurrentRiderUseCase.run();
@@ -1577,6 +1616,11 @@ export class PlannerStore {
   continuePlanningDraft(): void {
     const draft = this.pendingDraft;
     if (!draft) return;
+    // Reacciones vivas antes de hidratar para que el auto-recalc dispare sobre
+    // los waypoints del draft; y avisar a `initialize()` que NO resetee (el
+    // Planner monta justo después y llamaría initialize sin routeId).
+    this.ensureReactions();
+    this.resumingDraft = true;
     this.initializeFromDraft(draft);
     runInAction(() => {
       this.pendingDraft = null;
@@ -1875,7 +1919,13 @@ export class PlannerStore {
     });
   }
 
-  reset(): void {
+  /**
+   * Limpia la sesión del Planner (form + estado async + modo) preservando el
+   * `pendingDraft` — ese vive a nivel app (lo carga el Home) y lo consume
+   * `continuePlanningDraft`, no una sesión concreta. La usa `initialize()` para
+   * arrancar limpio cada vez que se abre el Planner.
+   */
+  private resetSession(): void {
     runInAction(() => {
       this.name = '';
       this.notes = '';
@@ -1912,10 +1962,17 @@ export class PlannerStore {
       this.motorcycles = null;
       this.days = null;
       this.dayBoundaries = [];
-      this.pendingDraft = null;
     });
     this.insights.reset();
     this.templates.reset();
+  }
+
+  /** Reset total: limpia la sesión y además el draft pendiente en memoria. */
+  reset(): void {
+    this.resetSession();
+    runInAction(() => {
+      this.pendingDraft = null;
+    });
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────

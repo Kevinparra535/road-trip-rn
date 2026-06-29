@@ -1,7 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ChevronLeft, LockKeyhole, Map as MapIcon, X } from 'lucide-react-native';
 import { observer } from 'mobx-react-lite';
+
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -49,16 +52,16 @@ export const PlannerMapCanvas = observer(
       )}
 
       {/* ── Navbar flotante (sobre el mapa) ──────────────────────────────── */}
-      <View style={styles.navbar}>
+      <AnimatedListItem style={styles.navbar}>
         {/* Botón back */}
-        <TouchableOpacity
+        <MotionPressable
           style={styles.navBtn}
           onPress={onBack}
-          activeOpacity={0.75}
+          haptic="selection"
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <ChevronLeft size={22} color={Colors.base.textPrimary} />
-        </TouchableOpacity>
+        </MotionPressable>
 
         {/* Pill central con título (hug-content, centrado) */}
         <View style={styles.titleWrap}>
@@ -73,10 +76,10 @@ export const PlannerMapCanvas = observer(
         {partyChip != null && partyChip}
 
         {/* Botón close / lock */}
-        <TouchableOpacity
+        <MotionPressable
           style={styles.navBtn}
           onPress={onClose}
-          activeOpacity={0.75}
+          haptic={readOnly ? 'selection' : 'impactLight'}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           {readOnly ? (
@@ -84,8 +87,8 @@ export const PlannerMapCanvas = observer(
           ) : (
             <X size={20} color={Colors.base.iconMuted} />
           )}
-        </TouchableOpacity>
-      </View>
+        </MotionPressable>
+      </AnimatedListItem>
     </View>
   ),
 );

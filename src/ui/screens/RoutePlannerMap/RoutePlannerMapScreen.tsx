@@ -33,7 +33,9 @@ import { TYPES } from '@/config/types';
 
 import { StopKind } from '@/domain/entities/StopKind';
 
+import AnimatedListItem from '@/ui/components/AnimatedListItem';
 import GradientView from '@/ui/components/GradientView';
+import MotionPressable from '@/ui/components/MotionPressable';
 import Switch from '@/ui/components/Switch';
 
 import { AppStackParamList } from '@/ui/navigation/types';
@@ -174,7 +176,11 @@ const RoutePlannerMapScreen = observer(() => {
     const action = pendingActionRef.current;
     pendingActionRef.current = null;
     if (action) {
-      navigation.dispatch(action);
+      // Diferir el dispatch: en este tick `usePreventRemove` todavía ve
+      // `hasUnsavedChanges=true` y volvería a interceptar la navegación
+      // (tragándose el back). El setTimeout deja re-renderizar con el guard ya
+      // en false antes de despachar — mismo patrón que `exitAfterStateClear`.
+      setTimeout(() => navigation.dispatch(action), 0);
     } else {
       exitAfterStateClear(() => navigation.goBack());
     }
@@ -279,19 +285,20 @@ const RoutePlannerMapScreen = observer(() => {
 
       {mapPickMode ? (
         <View style={styles.mapPickBanner} pointerEvents="box-none">
-          <View style={styles.mapPickBannerCard}>
+          <AnimatedListItem style={styles.mapPickBannerCard}>
             <MapPin size={18} color={Colors.base.accent} />
             <Text style={styles.mapPickBannerText}>
               Toca el mapa para fijar tu arranque
             </Text>
-            <TouchableOpacity
+            <MotionPressable
               onPress={() => setMapPickMode(false)}
+              haptic="selection"
               hitSlop={8}
               testID="route-planner-map-pick-cancel-btn"
             >
               <X size={18} color={Colors.base.iconMuted} />
-            </TouchableOpacity>
-          </View>
+            </MotionPressable>
+          </AnimatedListItem>
         </View>
       ) : null}
 
@@ -364,28 +371,30 @@ const RoutePlannerMapScreen = observer(() => {
                 </View>
               ) : null}
 
-              {viewModel.timelineItems.map((item) => (
-                <PlannerTimelineRow
-                  key={item.id}
-                  item={item}
-                  readOnly={viewModel.isReadOnly}
-                  onEditKind={setEditingKindFor}
-                  onEditDetail={setEditingDetailFor}
-                  onEditPlace={(id) => {
-                    viewModel.startEditingWaypoint(id);
-                    navigation.navigate('AddStop');
-                  }}
-                  onMoveUp={(id) => viewModel.moveStop(id, 'up')}
-                  onMoveDown={(id) => viewModel.moveStop(id, 'down')}
-                  onRemove={(id) => viewModel.removeStop(id)}
-                />
+              {viewModel.timelineItems.map((item, index) => (
+                <AnimatedListItem key={item.id} index={index}>
+                  <PlannerTimelineRow
+                    key={item.id}
+                    item={item}
+                    readOnly={viewModel.isReadOnly}
+                    onEditKind={setEditingKindFor}
+                    onEditDetail={setEditingDetailFor}
+                    onEditPlace={(id) => {
+                      viewModel.startEditingWaypoint(id);
+                      navigation.navigate('AddStop');
+                    }}
+                    onMoveUp={(id) => viewModel.moveStop(id, 'up')}
+                    onMoveDown={(id) => viewModel.moveStop(id, 'down')}
+                    onRemove={(id) => viewModel.removeStop(id)}
+                  />
+                </AnimatedListItem>
               ))}
 
               {!isEmpty ? (
-                <TouchableOpacity
+                <MotionPressable
                   style={styles.addStopCard}
                   onPress={() => navigation.navigate('AddStop')}
-                  activeOpacity={0.85}
+                  haptic="selection"
                   testID="route-planner-add-stop-btn"
                 >
                   <View style={styles.addStopCircle}>
@@ -396,7 +405,7 @@ const RoutePlannerMapScreen = observer(() => {
                     <Text style={styles.addStopSub}>gasolina · comida · turismo…</Text>
                   </View>
                   <ChevronRight size={20} color={Colors.base.iconMuted} />
-                </TouchableOpacity>
+                </MotionPressable>
               ) : null}
 
               {viewModel.waypoints.length >= 2 && !viewModel.isReadOnly ? (
@@ -431,7 +440,7 @@ const RoutePlannerMapScreen = observer(() => {
               ) : null}
 
               {!isEmpty ? (
-                <View style={styles.resumenCard}>
+                <AnimatedListItem style={styles.resumenCard}>
                   <View style={styles.resumenHeader}>
                     <View style={styles.resumenStatusLeft}>
                       {viewModel.directions ? (
@@ -448,18 +457,18 @@ const RoutePlannerMapScreen = observer(() => {
                         <Text style={styles.resumenEta}>· llega {arrival}</Text>
                       ) : null}
                     </View>
-                    <TouchableOpacity
+                    <MotionPressable
                       style={styles.resumenVerDetalles}
                       onPress={() => {
                         setOpenSection((s) => s ?? 'options');
                         detailsSheetRef.current?.open();
                       }}
-                      activeOpacity={0.85}
+                      haptic="selection"
                       testID="route-planner-details-btn"
                     >
                       <Text style={styles.resumenVerDetallesTxt}>Ver detalles</Text>
                       <ChevronRight size={16} color={Colors.base.accent} />
-                    </TouchableOpacity>
+                    </MotionPressable>
                   </View>
 
                   <View style={styles.resumenDivider} />
@@ -480,7 +489,7 @@ const RoutePlannerMapScreen = observer(() => {
                       <Text style={styles.resumenStatLab}>PARADAS</Text>
                     </View>
                   </View>
-                </View>
+                </AnimatedListItem>
               ) : null}
 
               <DirectionsErrorCard
@@ -504,24 +513,24 @@ const RoutePlannerMapScreen = observer(() => {
             {!isEmpty ? (
               <View style={styles.footerRow}>
                 {viewModel.canCalculate ? (
-                  <TouchableOpacity
+                  <MotionPressable
                     style={[styles.guardarBtn, ctaDisabled && styles.ctaDisabled]}
                     onPress={handleSavePress}
                     disabled={ctaDisabled}
-                    activeOpacity={0.85}
+                    haptic="impactLight"
                     testID="route-planner-save-btn"
                   >
                     <Save size={18} color={Colors.base.textSecondary} />
                     <Text style={styles.guardarBtnText}>
                       {viewModel.isSubmitting ? 'Guardando...' : 'Guardar'}
                     </Text>
-                  </TouchableOpacity>
+                  </MotionPressable>
                 ) : null}
-                <TouchableOpacity
+                <MotionPressable
                   style={[styles.iniciarBtn, ctaDisabled && styles.ctaDisabled]}
                   onPress={handleStartPress}
                   disabled={ctaDisabled}
-                  activeOpacity={0.9}
+                  haptic="impactMedium"
                   testID="route-planner-start-btn"
                 >
                   <GradientView
@@ -538,7 +547,7 @@ const RoutePlannerMapScreen = observer(() => {
                       </>
                     )}
                   </GradientView>
-                </TouchableOpacity>
+                </MotionPressable>
               </View>
             ) : null}
           </>

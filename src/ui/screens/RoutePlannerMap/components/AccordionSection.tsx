@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,12 +7,16 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
+import MotionPressable from '@/ui/components/MotionPressable';
+
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Motion from '@/ui/styles/Motion';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useReduceMotionPreference } from '@/ui/hooks/useReduceMotionPreference';
 
 type Props = {
   iconName: keyof typeof Ionicons.glyphMap;
@@ -24,17 +28,6 @@ type Props = {
   children?: React.ReactNode;
 };
 
-/**
- * Sección colapsable genérica para el Planner V2.
- * Componente puro (no observer) — el estado `expanded` lo gestiona el caller.
- *
- * Anatomía:
- *  - Card con borde `cardBorder` y radio `BorderRadius.lg`.
- *  - Header `TouchableOpacity` (onToggle): icono + título + resumen (si cerrado)
- *    + chevron animado.
- *  - `children` se mantiene montado para medir altura con onLayout; la altura y
- *    opacidad se animan con withTiming según `expanded`.
- */
 export const AccordionSection = ({
   iconName,
   iconColor,
@@ -45,12 +38,11 @@ export const AccordionSection = ({
   children,
 }: Props) => {
   const resolvedIconColor = iconColor ?? Colors.base.accent;
+  const reduceMotion = useReduceMotionPreference();
 
-  // Altura medida del contenido (0 hasta que onLayout dispare)
   const measuredHeight = useRef(0);
   const hasMeasured = useRef(false);
 
-  // Shared values para la animación
   const animatedHeight = useSharedValue(0);
   const animatedOpacity = useSharedValue(0);
   const chevronRotation = useSharedValue(0);
@@ -60,85 +52,90 @@ export const AccordionSection = ({
     easing: Motion.easings.standard,
   };
 
-  // Sincroniza la animación cuando cambia `expanded` y ya tenemos la altura medida
-  const runAnimation = useCallback(
-    (open: boolean) => {
-      if (!hasMeasured.current) return;
-      animatedHeight.value = withTiming(open ? measuredHeight.current : 0, timingConfig);
-      animatedOpacity.value = withTiming(open ? 1 : 0, timingConfig);
-      chevronRotation.value = withTiming(open ? 180 : 0, timingConfig);
+  const setBodyState = useCallback(
+    (open: boolean, height = measuredHeight.current) => {
+      const nextHeight = open ? height : 0;
+      const nextOpacity = open ? 1 : 0;
+      const nextRotation = open ? 180 : 0;
+
+      if (reduceMotion) {
+        animatedHeight.value = nextHeight;
+        animatedOpacity.value = nextOpacity;
+        chevronRotation.value = nextRotation;
+        return;
+      }
+
+      animatedHeight.value = withTiming(nextHeight, timingConfig);
+      animatedOpacity.value = withTiming(nextOpacity, timingConfig);
+      chevronRotation.value = withTiming(nextRotation, timingConfig);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [reduceMotion],
   );
 
   useEffect(() => {
-    runAnimation(expanded);
-  }, [expanded, runAnimation]);
+    if (hasMeasured.current) setBodyState(expanded);
+  }, [expanded, setBodyState]);
 
   const onContentLayout = useCallback(
     (event: { nativeEvent: { layout: { height: number } } }) => {
-      const h = event.nativeEvent.layout.height;
-      if (h === 0) return;
-      measuredHeight.current = h;
+      const height = event.nativeEvent.layout.height;
+      if (height === 0) return;
+
+      measuredHeight.current = height;
 
       if (!hasMeasured.current) {
         hasMeasured.current = true;
-        // Primera medida: sincroniza sin animación para evitar flash
-        animatedHeight.value = expanded ? h : 0;
+        animatedHeight.value = expanded ? height : 0;
         animatedOpacity.value = expanded ? 1 : 0;
         chevronRotation.value = expanded ? 180 : 0;
-      } else {
-        // Re-medida (p.ej. children cambiaron): ajusta si está abierto
-        if (expanded) {
-          animatedHeight.value = withTiming(h, timingConfig);
-        }
+        return;
       }
+
+      if (expanded) setBodyState(true, height);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [expanded],
+    [expanded, setBodyState],
   );
 
-  // Estilo animado del contenedor de altura
   const animatedBodyStyle = useAnimatedStyle(() => ({
     height: animatedHeight.value,
     opacity: animatedOpacity.value,
     overflow: 'hidden',
   }));
 
-  // Estilo animado del chevron
   const animatedChevronStyle = useAnimatedStyle(() => ({
     transform: [{ rotateZ: `${chevronRotation.value}deg` }],
   }));
 
   return (
     <View style={styles.card}>
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <TouchableOpacity style={styles.header} onPress={onToggle} activeOpacity={0.75}>
-        {/* Icono principal */}
+      <MotionPressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        activeScale={0.98}
+        haptic="selection"
+        onPress={onToggle}
+        style={styles.header}
+      >
         <Ionicons name={iconName} size={20} color={resolvedIconColor} />
 
-        {/* Título */}
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>
 
-        {/* Resumen (solo cuando está cerrado y hay valor) */}
         {!expanded && summary ? (
           <Text style={styles.summary} numberOfLines={1}>
             {summary}
           </Text>
         ) : null}
 
-        {/* Chevron animado */}
         <Animated.View style={animatedChevronStyle}>
           <Ionicons name="chevron-down" size={16} color={Colors.base.iconMuted} />
         </Animated.View>
-      </TouchableOpacity>
+      </MotionPressable>
 
-      {/* ── Contenido animado ───────────────────────────────────────────────── */}
       <Animated.View style={animatedBodyStyle}>
-        {/* View interior siempre montado para medir; paddingTop separa del header */}
         <View style={styles.body} onLayout={onContentLayout}>
           {children}
         </View>
@@ -146,8 +143,6 @@ export const AccordionSection = ({
     </View>
   );
 };
-
-// ── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   card: {
@@ -158,8 +153,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.base.cardBorder,
     ...Shadows.bankCard,
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -174,8 +167,6 @@ const styles = StyleSheet.create({
     ...Fonts.smallBodyText,
     color: Colors.base.textSecondary,
   },
-
-  // Cuerpo expandido
   body: {
     paddingTop: Spacings.md,
   },

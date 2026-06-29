@@ -1,5 +1,6 @@
 import { ComponentProps } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ManeuverModifier, ManeuverType } from '@/domain/entities/NavigationStep';
@@ -9,8 +10,11 @@ import GradientView from '@/ui/components/GradientView';
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
+import Motion from '@/ui/styles/Motion';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
+
+import { useReduceMotionPreference } from '@/ui/hooks/useReduceMotionPreference';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -71,30 +75,42 @@ const TurnBanner = ({
   streetName,
   maneuverType,
   maneuverModifier,
-}: Props) => (
-  <View style={styles.banner}>
-    <GradientView preset="accent" direction="horizontal" style={styles.iconWrap}>
-      <MaterialCommunityIcons
-        name={iconForManeuver(maneuverType, maneuverModifier)}
-        size={56}
-        color={Colors.semantic.text.primaryDark}
-      />
-    </GradientView>
-    <View style={styles.textCol}>
-      <Text style={styles.distance} numberOfLines={1}>
-        {distanceText}
-      </Text>
-      <Text style={styles.instruction} numberOfLines={1}>
-        {instruction}
-      </Text>
-      {streetName ? (
-        <Text style={styles.street} numberOfLines={1}>
-          {streetName}
+}: Props) => {
+  const reduceMotion = useReduceMotionPreference();
+
+  return (
+    <Animated.View
+      entering={
+        reduceMotion
+          ? undefined
+          : FadeInDown.duration(Motion.durations.enter).easing(Motion.easings.decelerate)
+      }
+      exiting={reduceMotion ? undefined : FadeOutUp.duration(Motion.durations.exit)}
+      style={styles.banner}
+    >
+      <GradientView preset="accent" direction="horizontal" style={styles.iconWrap}>
+        <MaterialCommunityIcons
+          name={iconForManeuver(maneuverType, maneuverModifier)}
+          size={56}
+          color={Colors.semantic.text.primaryDark}
+        />
+      </GradientView>
+      <View style={styles.textCol}>
+        <Text style={styles.distance} numberOfLines={1}>
+          {distanceText}
         </Text>
-      ) : null}
-    </View>
-  </View>
-);
+        <Text style={styles.instruction} numberOfLines={1}>
+          {instruction}
+        </Text>
+        {streetName ? (
+          <Text style={styles.street} numberOfLines={1}>
+            {streetName}
+          </Text>
+        ) : null}
+      </View>
+    </Animated.View>
+  );
+};
 
 const styles = StyleSheet.create({
   banner: {

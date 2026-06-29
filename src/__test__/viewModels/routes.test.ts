@@ -2166,6 +2166,96 @@ describe('PlannerStore', () => {
       expect(vm.days![0].overnightName).toBeUndefined();
     });
   });
+
+  // ── Ciclo de vida del singleton: reset de sesión + reacciones ───────────
+  describe('singleton lifecycle (reset de sesión + reacciones)', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
+
+    it('initialize sin routeId limpia la sesión de edición previa', async () => {
+      const { vm, getRoute } = build();
+      getRoute.run.mockResolvedValue(makeRoute());
+      await vm.initialize('route-1');
+      expect(vm.isEditMode).toBe(true);
+      expect(vm.waypoints.length).toBeGreaterThan(0);
+
+      // Reabrir en modo crear (sin routeId) NO debe arrastrar la ruta editada:
+      // el store es singleton y antes filtraba "Editar ruta" + contenido viejo.
+      await vm.initialize();
+      expect(vm.isEditMode).toBe(false);
+      expect(vm.title).toBe('Planear ruta');
+      expect(vm.waypoints).toHaveLength(0);
+      expect(vm.name).toBe('');
+      vm.dispose();
+    });
+
+    it('dispose apaga las reacciones e initialize las vuelve a montar', async () => {
+      const place = new Place({
+        id: 'p1',
+        name: 'Villa de Leyva',
+        fullName: 'Villa de Leyva',
+        latitude: 5.6,
+        longitude: -73.5,
+        placeType: 'place',
+      });
+      const { vm, searchPlaces } = build({ searchResults: [place] });
+      await vm.initialize();
+      vm.dispose(); // desmontar el Planner mata las reacciones del singleton
+
+      // 2ª sesión: si initialize no re-montara las reacciones, el debounce de
+      // búsqueda quedaría muerto y el use case nunca se llamaría.
+      await vm.initialize();
+      vm.setSearchQuery('Villa');
+      jest.advanceTimersByTime(450);
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(searchPlaces.run).toHaveBeenCalled();
+      vm.dispose();
+    });
+
+    it('continuePlanningDraft + initialize preserva el draft retomado', async () => {
+      const { vm } = build();
+      await vm.initialize();
+      // El Home carga el draft pendiente; lo simulamos directamente.
+      (vm as any).pendingDraft = {
+        id: 'rider-1',
+        riderId: 'rider-1',
+        name: 'Retomada',
+        notes: '',
+        rideType: 'highway',
+        avoid: new RouteAvoidPreferences(),
+        roundTrip: false,
+        waypoints: [
+          {
+            id: 'wp-1',
+            name: 'A',
+            latitude: 4.6,
+            longitude: -74.08,
+            kind: 'start',
+            order: 0,
+          },
+          {
+            id: 'wp-2',
+            name: 'B',
+            latitude: 4.8,
+            longitude: -74.2,
+            kind: 'destination',
+            order: 1,
+          },
+        ],
+        updatedAt: new Date(),
+      };
+      // Flujo Home: hidratar + marcar resume ANTES de que el Planner monte.
+      vm.continuePlanningDraft();
+      expect(vm.waypoints).toHaveLength(2);
+
+      // El Planner monta y llama initialize sin routeId: NO debe resetear.
+      await vm.initialize();
+      expect(vm.waypoints).toHaveLength(2);
+      expect(vm.name).toBe('Retomada');
+      vm.dispose();
+    });
+  });
 });
 
 describe('RouteDetailViewModel', () => {

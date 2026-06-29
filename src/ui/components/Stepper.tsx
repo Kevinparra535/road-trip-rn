@@ -1,15 +1,11 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
+import MotionPressable from '@/ui/components/MotionPressable';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
-import Motion from '@/ui/styles/Motion';
 import Spacings from '@/ui/styles/Spacings';
 import { hexToRgba } from '@/ui/utils/colorUtils';
 
@@ -27,9 +23,6 @@ const BUTTON_SIZE = 36;
 const ICON_SIZE = 20;
 const DISABLED_OPACITY = 0.4;
 const SCALE_PRESSED = 0.88;
-const SCALE_REST = 1;
-
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type StepButtonProps = {
   iconName: 'remove-circle' | 'add-circle';
@@ -38,41 +31,24 @@ type StepButtonProps = {
   testID?: string;
 };
 
-const StepButton = ({ iconName, disabled, onPress, testID }: StepButtonProps) => {
-  const scale = useSharedValue(SCALE_REST);
-
-  const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: disabled ? DISABLED_OPACITY : 1,
-  }));
-
-  const handlePressIn = () => {
-    if (disabled) return;
-    scale.value = withSpring(SCALE_PRESSED, Motion.springs.snappy);
-  };
-
-  const handlePressOut = () => {
-    scale.value = withSpring(SCALE_REST, Motion.springs.snappy);
-  };
-
-  return (
-    <AnimatedPressable
-      disabled={disabled}
-      hitSlop={Spacings.sm}
-      onPress={onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      style={[styles.button, animStyle]}
-      testID={testID}
-    >
-      <Ionicons
-        color={disabled ? Colors.base.textMuted : Colors.base.accent}
-        name={iconName}
-        size={ICON_SIZE}
-      />
-    </AnimatedPressable>
-  );
-};
+const StepButton = ({ iconName, disabled, onPress, testID }: StepButtonProps) => (
+  <MotionPressable
+    accessibilityRole="button"
+    activeScale={SCALE_PRESSED}
+    disabled={disabled}
+    haptic="selection"
+    hitSlop={Spacings.sm}
+    onPress={onPress}
+    style={[styles.button, disabled && styles.buttonDisabled]}
+    testID={testID}
+  >
+    <Ionicons
+      color={disabled ? Colors.base.textMuted : Colors.base.accent}
+      name={iconName}
+      size={ICON_SIZE}
+    />
+  </MotionPressable>
+);
 
 const Stepper = ({
   value,
@@ -138,6 +114,9 @@ const styles = StyleSheet.create({
     height: BUTTON_SIZE,
     justifyContent: 'center',
     width: BUTTON_SIZE,
+  },
+  buttonDisabled: {
+    opacity: DISABLED_OPACITY,
   },
   valueWrapper: {
     alignItems: 'center',
