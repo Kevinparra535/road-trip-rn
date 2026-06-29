@@ -190,4 +190,44 @@ describe('NavigationSessionStore', () => {
     expect(input.rideStyle).toBe('fuel');
     expect(input.intermediateStops).toHaveLength(1);
   });
+
+  it('respeta el multiplicador de velocidad del simulador (Navigation Lab)', () => {
+    // Geometría densa (~50 m entre vértices) sobre una ruta de 1 km para que el
+    // rider simulado quede siempre sobre la línea y NO gatille off-route.
+    const denseRoute = () =>
+      makeRouteDirections({
+        distanceKm: 1,
+        geometry: Array.from({ length: 21 }, (_, i) => ({
+          latitude: 4 + i * 0.00045,
+          longitude: -74,
+        })),
+      });
+
+    const slow = make();
+    slow.store.start(
+      startParams({
+        isSimulated: true,
+        simSpeedMultiplier: 1,
+        route: denseRoute(),
+      }),
+    );
+    jest.advanceTimersByTime(600); // 1 tick
+
+    const fast = make();
+    fast.store.start(
+      startParams({
+        isSimulated: true,
+        simSpeedMultiplier: 60,
+        route: denseRoute(),
+      }),
+    );
+    jest.advanceTimersByTime(600);
+
+    // A 60× el rider avanza mucho más por tick que a 1×.
+    expect(fast.store.simulatedDistanceKm).toBeGreaterThan(
+      slow.store.simulatedDistanceKm,
+    );
+    // A 1× un tick avanza ~14 m: ni cerca de llegar a una ruta de 1 km.
+    expect(slow.store.isNavigating).toBe(true);
+  });
 });

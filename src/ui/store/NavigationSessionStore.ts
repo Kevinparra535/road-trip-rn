@@ -9,7 +9,8 @@ import {
   NAV_TICK_MS,
   NAV_VOICE_LANGUAGE,
   PERSPECTIVE_PITCH,
-  SIM_KM_PER_TICK,
+  SIM_KM_PER_TICK_REALTIME,
+  SIM_TIME_MULTIPLIER,
 } from '@/config/navigation';
 import { TYPES } from '@/config/types';
 
@@ -51,6 +52,12 @@ export type NavSessionParams = {
   rideStyle?: RideStyle;
   /** La ruta proviene del botón DEV "Ruta de prueba" (avance simulado). */
   isSimulated: boolean;
+  /**
+   * Multiplicador de velocidad del simulador (Navigation Lab): 1×–60×. Solo
+   * aplica cuando `isSimulated`; comprime el tiempo de pared (el rider avanza
+   * más km por tick). El velocímetro sigue mostrando la velocidad media base.
+   */
+  simSpeedMultiplier?: number;
 };
 
 /**
@@ -80,6 +87,11 @@ export class NavigationSessionStore {
   isArrived: boolean = false;
   private arrivedAt: Date | null = null;
   simulatedDistanceKm: number = 0;
+  /**
+   * Factor de compresión temporal del simulador. Por defecto `SIM_TIME_MULTIPLIER`
+   * (botón "Ruta de prueba"); el Navigation Lab lo sobreescribe (1×–60×).
+   */
+  private simSpeedMultiplier: number = SIM_TIME_MULTIPLIER;
   offRouteTicks: number = 0;
   isMuted: boolean = false;
   isElevationStripOpen: boolean = true;
@@ -261,6 +273,7 @@ export class NavigationSessionStore {
       this.rideType = params.rideType;
       this.rideStyle = params.rideStyle ?? DEFAULT_RIDE_STYLE;
       this.isSimulated = params.isSimulated;
+      this.simSpeedMultiplier = params.simSpeedMultiplier ?? SIM_TIME_MULTIPLIER;
       this.isNavigating = true;
       this.isArrived = false;
       this.arrivedAt = null;
@@ -349,6 +362,7 @@ export class NavigationSessionStore {
       this.intermediateStops = [];
       this.rideStyle = DEFAULT_RIDE_STYLE;
       this.isSimulated = false;
+      this.simSpeedMultiplier = SIM_TIME_MULTIPLIER;
       this.isNavigating = false;
       this.isArrived = false;
       this.arrivedAt = null;
@@ -379,7 +393,7 @@ export class NavigationSessionStore {
     runInAction(() => {
       this.simulatedDistanceKm = Math.min(
         route.distanceKm,
-        this.simulatedDistanceKm + SIM_KM_PER_TICK,
+        this.simulatedDistanceKm + SIM_KM_PER_TICK_REALTIME * this.simSpeedMultiplier,
       );
     });
     this.maybeSpeak();

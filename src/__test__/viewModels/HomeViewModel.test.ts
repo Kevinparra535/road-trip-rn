@@ -1177,6 +1177,142 @@ describe('HomeViewModel — barra de combustible del viaje (navFuelBar)', () => 
   });
 });
 
+describe('HomeViewModel — sugerencias de navegación (motor de guidance)', () => {
+  const startNav = (vm: ReturnType<typeof makeVM>, distanceKm = 200) =>
+    vm.startNavigationFromPlanner({
+      waypoints: [
+        {
+          id: 'w1',
+          kind: 'start',
+          latitude: 4.6,
+          longitude: -74.08,
+          name: 'A',
+          order: 0,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+        {
+          id: 'w2',
+          kind: 'destination',
+          latitude: 4.8,
+          longitude: -74.2,
+          name: 'B',
+          order: 1,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+      ],
+      directions: makeRouteDirections({ distanceKm }),
+      rideType: 'highway',
+    } as any);
+
+  it('el rail está vacío sin sesión de navegación', () => {
+    expect(makeVM().navSuggestions).toEqual([]);
+  });
+
+  it('avisa "autonomía justa" en marcha cuando el combustible no alcanza', () => {
+    const vm = makeVM();
+    startNav(vm);
+    // Sin paradas de tanqueo y con autonomía < distancia: salta el aviso de
+    // combustible. El cambio del observable dispara la reaction de sugerencias.
+    vm.isFuelEstimateResponse = makeRouteFuelEstimate({
+      distanceKm: 200,
+      effectiveRangeKm: 50,
+    });
+
+    const warning = vm.navSuggestions.find((s) => s.kind === 'fuel-warning');
+    expect(warning?.title).toBe('Autonomia justa');
+    vm.dispose();
+  });
+});
+
+describe('HomeViewModel — Navigation Lab (dev)', () => {
+  it('toggle abre y cierra el panel del Lab', () => {
+    const vm = makeVM();
+    expect(vm.isNavigationLabOpen).toBe(false);
+    vm.toggleNavigationLab();
+    expect(vm.isNavigationLabOpen).toBe(true);
+    vm.toggleNavigationLab();
+    expect(vm.isNavigationLabOpen).toBe(false);
+  });
+
+  it('el tap en el mapa fija Punto A y luego avanza a Punto B', () => {
+    const vm = makeVM();
+    vm.toggleNavigationLab();
+    expect(vm.navigationLabPickMode).toBe('origin');
+
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 });
+    expect(vm.navigationLabOrigin.latitude).toBeCloseTo(4.6);
+    expect(vm.navigationLabPickMode).toBe('destination');
+
+    vm.handleNavigationLabMapPress({ latitude: 4.8, longitude: -74.2 });
+    expect(vm.navigationLabDestination.latitude).toBeCloseTo(4.8);
+  });
+
+  it('ignora el tap en el mapa si el Lab está cerrado', () => {
+    const vm = makeVM();
+    const originId = vm.navigationLabOrigin.id;
+    vm.handleNavigationLabMapPress({ latitude: 1, longitude: 1 });
+    expect(vm.navigationLabOrigin.id).toBe(originId);
+  });
+
+  it('canTrace exige A y B distintos y suficientemente separados', () => {
+    const vm = makeVM();
+    expect(vm.navigationLabCanTrace).toBe(true); // A/B por defecto, lejanos
+    vm.toggleNavigationLab();
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 }); // A
+    vm.handleNavigationLabMapPress({ latitude: 4.6001, longitude: -74.08 }); // B pegado
+    expect(vm.navigationLabCanTrace).toBe(false);
+  });
+
+  it('markers expone A/B con el punto activo resaltado', () => {
+    const vm = makeVM();
+    const markers = vm.navigationLabMarkers;
+    expect(markers.map((m) => m.label)).toEqual(['A', 'B']);
+    expect(markers[0].isActive).toBe(true); // pickMode 'origin' por defecto
+    expect(markers[1].isActive).toBe(false);
+  });
+
+  it('setSpeedMultiplier ignora valores fuera del set permitido', () => {
+    const vm = makeVM();
+    vm.setNavigationLabSpeedMultiplier(10);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+    vm.setNavigationLabSpeedMultiplier(999 as never);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+  });
+
+  it('reset restablece A/B, el modo y la velocidad', () => {
+    const vm = makeVM();
+    vm.toggleNavigationLab();
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 });
+    vm.setNavigationLabSpeedMultiplier(3);
+    vm.resetNavigationLabPoints();
+    expect(vm.navigationLabPickMode).toBe('origin');
+    expect(vm.navigationLabSpeedMultiplier).toBe(60);
+    expect(vm.navigationLabOrigin.name).toBe('Punto A (simulado)');
+  });
+
+  it('startNavigationLabSimulation traza A→B y propaga el multiplicador a la sesión', async () => {
+    const directions = {
+      run: jest.fn().mockResolvedValue(makeRouteDirections({ distanceKm: 30 })),
+    };
+    const vm = makeVM(makeLocationStore(), makeSearchUseCase(), directions);
+    vm.setNavigationLabSpeedMultiplier(1);
+    const startSpy = jest.spyOn((vm as any).navSession, 'start');
+
+    await vm.startNavigationLabSimulation();
+
+    expect(directions.run).toHaveBeenCalled();
+    // El Lab arranca una sesión simulada a la velocidad elegida (contrato clave).
+    expect(startSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ isSimulated: true, simSpeedMultiplier: 1 }),
+    );
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.isSimulatedNavigation).toBe(true);
+    vm.dispose();
+  });
+});
+
 describe('HomeViewModel — persistencia del mute', () => {
   it('carga el mute persistido al inicializar', async () => {
     const getNavPreferences = { run: jest.fn().mockResolvedValue({ muted: true }) };

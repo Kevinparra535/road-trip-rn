@@ -1,8 +1,16 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, reaction, runInAction } from 'mobx';
 
-import { DEV_FAKE_DESTINATION } from '@/config/devFlags';
-import { DEFAULT_RIDE_TYPE, ROUTE_STATION_SAMPLES } from '@/config/navigation';
+import { DEV_FAKE_DESTINATION, DEV_FAKE_ORIGIN } from '@/config/devFlags';
+import {
+  DEFAULT_RIDE_TYPE,
+  NAV_ARRIVAL_THRESHOLD_KM,
+  NAV_LAB_DEFAULT_SPEED_MULTIPLIER,
+  NAV_LAB_MIN_TRACE_KM,
+  NAV_LAB_SPEED_MULTIPLIERS,
+  NavLabSpeedMultiplier,
+  ROUTE_STATION_SAMPLES,
+} from '@/config/navigation';
 import {
   ROUTE_ALT_WIDTH,
   ROUTE_CORE_WIDTH_NAV,
@@ -25,6 +33,14 @@ import { StopKind } from '@/domain/entities/StopKind';
 import { Waypoint } from '@/domain/entities/Waypoint';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
+import {
+  buildNavigationSuggestions,
+  createNavigationSuggestionLifecycleState,
+  NavigationGuidanceInput,
+  NavigationSuggestionLifecycleState,
+  NavSuggestion,
+  resolveNavigationSuggestionLifecycle,
+} from '@/domain/useCases/BuildNavigationSuggestionsUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
@@ -188,6 +204,17 @@ export type HomeFeedItem =
 // sin volverse infinito. El "Ver todo" lleva a la lista completa cuando se haga.
 const HOME_FEED_MAX = 8;
 
+/** Modo de selección de punto en el Navigation Lab (dev): qué punto fija el tap. */
+export type NavigationLabPickMode = 'origin' | 'destination';
+
+/** Marcador A/B del Navigation Lab para pintar en el mapa. */
+export type NavigationLabMarker = {
+  id: string;
+  label: string;
+  coordinate: [number, number];
+  isActive: boolean;
+};
+
 /**
  * ViewModel de la pantalla principal. Posee el estado y las decisiones de
  * presentacion del mapa (zoom, perspectiva, marcador de rumbo), el buscador
@@ -258,6 +285,20 @@ export class HomeViewModel {
   isFuelStopError: string | null = null;
   isFuelStopResponse: FuelStation[] | null = null;
 
+  // ── State: sugerencias contextuales en marcha (motor de guidance) ──
+  // Lifecycle anti-parpadeo (tiempo mínimo visible + cooldown) y los avisos ya
+  // resueltos que pinta el `NavSuggestionRail`.
+  private navSuggestionLifecycle: NavigationSuggestionLifecycleState =
+    createNavigationSuggestionLifecycleState();
+  private navSuggestionsState: NavSuggestion[] = [];
+
+  // ── State: Navigation Lab (simulador manual A→B con control de velocidad, dev) ──
+  isNavigationLabOpen: boolean = false;
+  navigationLabPickMode: NavigationLabPickMode = 'origin';
+  navigationLabOrigin: Place = DEV_FAKE_ORIGIN;
+  navigationLabDestination: Place = DEV_FAKE_DESTINATION;
+  navigationLabSpeedMultiplier: NavLabSpeedMultiplier = NAV_LAB_DEFAULT_SPEED_MULTIPLIER;
+
   // ── State: feed del Home idle (destinos recientes + rutas guardadas) ──
   isRecentsLoading: boolean = false;
   isRecentsError: string | null = null;
@@ -278,6 +319,8 @@ export class HomeViewModel {
   private confirmReactionDisposer: (() => void) | null = null;
   /** Disposer de la reaccion que arranca la nav desde el handoff del Planner. */
   private plannerNavReactionDisposer: (() => void) | null = null;
+  /** Disposer de la reaccion que recalcula las sugerencias de navegación. */
+  private navSuggestionDisposer: (() => void) | null = null;
   private logger = new Logger('HomeViewModel');
 
   constructor(
@@ -344,6 +387,16 @@ export class HomeViewModel {
         this.startNavigationFromPlanner(payload);
         this.navStore.consumePlannerNav();
       },
+    );
+    // Motor de sugerencias contextuales (estilo Waze): recalcula los avisos
+    // glanceables —tanqueo, elevación, curva, off-route, llegada— cada vez que
+    // cambia el progreso/estado de la sesión o los datos de combustible/
+    // elevación, y resuelve el lifecycle anti-parpadeo. `fireImmediately` deja
+    // el rail vacío mientras no hay sesión activa.
+    this.navSuggestionDisposer = reaction(
+      () => this.navSuggestionSignal,
+      () => this.recomputeNavSuggestions(),
+      { fireImmediately: true },
     );
   }
 
@@ -1010,7 +1063,12 @@ export class HomeViewModel {
 
   /** La ruta actual proviene del boton DEV "Ruta de prueba". */
   get isSimulatedNavigation(): boolean {
-    return this.destination?.id === DEV_FAKE_DESTINATION.id;
+    // Durante una sesión activa, la verdad es del store (cubre las rutas del
+    // Navigation Lab, cuyo destino no es DEV_FAKE_DESTINATION). Antes de
+    // arrancar, el botón "Ruta de prueba" se reconoce por su destino.
+    return (
+      this.navSession.isSimulated || this.destination?.id === DEV_FAKE_DESTINATION.id
+    );
   }
 
   get isNavigating(): boolean {
@@ -1047,6 +1105,73 @@ export class HomeViewModel {
 
   get currentTurn() {
     return this.navSession.currentTurn;
+  }
+
+  /**
+   * Avisos contextuales glanceables que el `NavSuggestionRail` pinta durante la
+   * navegación (tanqueo, elevación, curva, off-route, llegada). Ya pasaron por
+   * el lifecycle anti-parpadeo; el screen sólo los renderiza.
+   */
+  get navSuggestions(): NavSuggestion[] {
+    return this.navSuggestionsState;
+  }
+
+  /**
+   * Señal observable que dispara el recálculo de sugerencias: cualquier cambio
+   * en el progreso/estado de la sesión o en los datos de combustible/elevación.
+   * Devuelve un array nuevo a propósito para que la `reaction` corra en cada
+   * cambio de sus dependencias.
+   */
+  private get navSuggestionSignal(): unknown[] {
+    return [
+      this.navSession.isNavigating,
+      this.navSession.navProgressKm,
+      this.navSession.offRouteTicks,
+      this.navSession.currentTurn,
+      this.isFuelEstimateResponse,
+      this.isElevationResponse,
+      this.isFuelStopResponse,
+      this.fuelStops,
+    ];
+  }
+
+  /**
+   * Arma los candidatos con el motor de dominio y los pasa por el lifecycle
+   * anti-parpadeo, persistiendo el estado entre ticks. Usa las funciones puras
+   * (igual que el store usa `computeNextManeuver`), no el UseCase async.
+   */
+  private recomputeNavSuggestions(): void {
+    const route = this.navSession.route;
+    const candidates =
+      route && this.navSession.isNavigating
+        ? buildNavigationSuggestions(this.composeGuidanceInput(route))
+        : [];
+    const { suggestions, lifecycle } = resolveNavigationSuggestionLifecycle({
+      candidates,
+      previous: this.navSuggestionLifecycle,
+      nowMs: Date.now(),
+    });
+    runInAction(() => {
+      this.navSuggestionLifecycle = lifecycle;
+      this.navSuggestionsState = suggestions;
+    });
+  }
+
+  private composeGuidanceInput(route: RouteDirections): NavigationGuidanceInput {
+    return {
+      route,
+      isNavigating: this.navSession.isNavigating,
+      progressKm: this.navSession.navProgressKm,
+      riderPoint: this.navSession.navRiderPoint,
+      fuelStops: this.fuelStops,
+      fuelEstimate: this.isFuelEstimateResponse,
+      fuelStations: this.isFuelStopResponse ?? [],
+      elevationProfile: this.isElevationResponse,
+      currentTurn: this.navSession.currentTurn,
+      destinationName: this.navSession.destination?.name ?? '',
+      arrivalThresholdKm: NAV_ARRIVAL_THRESHOLD_KM,
+      isOffRoute: this.navSession.offRouteTicks > 0,
+    };
   }
 
   /**
@@ -1233,6 +1358,8 @@ export class HomeViewModel {
     this.confirmReactionDisposer = null;
     this.plannerNavReactionDisposer?.();
     this.plannerNavReactionDisposer = null;
+    this.navSuggestionDisposer?.();
+    this.navSuggestionDisposer = null;
     this.navSession.dispose();
     this.locationStore.dispose();
   }
@@ -1600,6 +1727,184 @@ export class HomeViewModel {
       rideStyle: this.rideStyle,
       isSimulated: this.isSimulatedNavigation,
     });
+  }
+
+  // ── Navigation Lab (dev): simulador manual A→B con control de velocidad ──────
+
+  /** Multiplicadores de velocidad disponibles en el Lab (1×–60×). */
+  get navigationLabSpeedMultipliers(): readonly NavLabSpeedMultiplier[] {
+    return NAV_LAB_SPEED_MULTIPLIERS;
+  }
+
+  /** Etiqueta del punto que el próximo tap fijará (Punto A / Punto B). */
+  get navigationLabPickModeLabel(): string {
+    return this.navigationLabPickMode === 'origin' ? 'Punto A' : 'Punto B';
+  }
+
+  /** Habilita "Trazar" solo si A y B son distintos y están separados. */
+  get navigationLabCanTrace(): boolean {
+    return (
+      this.navigationLabOrigin.id !== this.navigationLabDestination.id &&
+      haversineKm(this.navigationLabOrigin, this.navigationLabDestination) >
+        NAV_LAB_MIN_TRACE_KM
+    );
+  }
+
+  /** Marcadores A/B para el mapa, con el punto activo resaltado. */
+  get navigationLabMarkers(): NavigationLabMarker[] {
+    return [
+      {
+        id: this.navigationLabOrigin.id,
+        label: 'A',
+        coordinate: this.navigationLabOrigin.toLngLat(),
+        isActive: this.navigationLabPickMode === 'origin',
+      },
+      {
+        id: this.navigationLabDestination.id,
+        label: 'B',
+        coordinate: this.navigationLabDestination.toLngLat(),
+        isActive: this.navigationLabPickMode === 'destination',
+      },
+    ];
+  }
+
+  /** Abre/cierra el panel del Lab; al alternarlo limpia el buscador. */
+  toggleNavigationLab(): void {
+    runInAction(() => {
+      this.isNavigationLabOpen = !this.isNavigationLabOpen;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+    });
+  }
+
+  setNavigationLabPickMode(mode: NavigationLabPickMode): void {
+    runInAction(() => {
+      this.navigationLabPickMode = mode;
+    });
+  }
+
+  setNavigationLabSpeedMultiplier(multiplier: NavLabSpeedMultiplier): void {
+    if (!NAV_LAB_SPEED_MULTIPLIERS.includes(multiplier)) return;
+    runInAction(() => {
+      this.navigationLabSpeedMultiplier = multiplier;
+    });
+  }
+
+  /** Restablece A/B a los puntos por defecto y el modo a "Punto A". */
+  resetNavigationLabPoints(): void {
+    runInAction(() => {
+      this.navigationLabOrigin = DEV_FAKE_ORIGIN;
+      this.navigationLabDestination = DEV_FAKE_DESTINATION;
+      this.navigationLabPickMode = 'origin';
+      this.navigationLabSpeedMultiplier = NAV_LAB_DEFAULT_SPEED_MULTIPLIER;
+    });
+  }
+
+  /**
+   * Tap en el mapa con el Lab abierto: fija el Punto A (y avanza a B) o el
+   * Punto B. Ignorado si ya hay nav activa o un destino fijado.
+   */
+  handleNavigationLabMapPress(point: GeoPoint): void {
+    if (!this.isNavigationLabOpen || this.isNavigating || this.hasDestination) {
+      return;
+    }
+    const place = this.createNavigationLabPlace(this.navigationLabPickMode, point);
+    runInAction(() => {
+      if (this.navigationLabPickMode === 'origin') {
+        this.navigationLabOrigin = place;
+        this.navigationLabPickMode = 'destination';
+        return;
+      }
+      this.navigationLabDestination = place;
+    });
+  }
+
+  /** Traza la ruta A→B del Lab y arranca la simulación a la velocidad elegida. */
+  async startNavigationLabSimulation(): Promise<void> {
+    await this.startSimulationRoute(
+      this.navigationLabOrigin,
+      this.navigationLabDestination,
+      this.navigationLabSpeedMultiplier,
+    );
+  }
+
+  private createNavigationLabPlace(mode: NavigationLabPickMode, point: GeoPoint): Place {
+    const label = mode === 'origin' ? 'Punto A' : 'Punto B';
+    return new Place({
+      id: mode === 'origin' ? 'nav-lab-origin' : 'nav-lab-destination',
+      name: `${label} (manual)`,
+      fullName: `${point.latitude.toFixed(4)}, ${point.longitude.toFixed(4)}`,
+      latitude: point.latitude,
+      longitude: point.longitude,
+    });
+  }
+
+  /**
+   * Construye la ruta A→B con un origen ARBITRARIO (no el GPS, a diferencia de
+   * `computeRoute`) y arranca la navegación simulada al multiplicador dado.
+   */
+  private async startSimulationRoute(
+    origin: Place,
+    destination: Place,
+    speedMultiplier: NavLabSpeedMultiplier,
+  ): Promise<void> {
+    // `rideType` vive en el `NavigationStore` (getter de solo lectura aquí).
+    this.navStore.setRideType(DEFAULT_RIDE_TYPE);
+    runInAction(() => {
+      this.destination = destination;
+      this.intermediateStops = [];
+      this.isNavigationLabOpen = false;
+      this.searchQuery = '';
+      this.isSearchResponse = null;
+      this.searchMode = 'destination';
+      this.isRouteResponse = null;
+      this.isFuelStopResponse = null;
+      this.fuelStops = [];
+    });
+    this.updateLoadingState(true, null, 'route');
+    try {
+      const waypoints: Waypoint[] = [
+        new Waypoint({
+          id: 'origin',
+          name: origin.name,
+          latitude: origin.latitude,
+          longitude: origin.longitude,
+          kind: 'start',
+          order: 0,
+        }),
+        new Waypoint({
+          id: destination.id,
+          name: destination.name,
+          latitude: destination.latitude,
+          longitude: destination.longitude,
+          kind: 'destination',
+          order: 1,
+        }),
+      ];
+      const directions = await this.calculateDirectionsUseCase.run({
+        waypoints,
+        rideType: this.rideType,
+        rideStyle: this.rideStyle,
+      });
+      runInAction(() => {
+        this.isRouteResponse = directions;
+      });
+      this.updateLoadingState(false, null, 'route');
+      void this.computeElevation();
+      void this.computeFuelEstimate();
+      this.navSession.start({
+        route: directions,
+        destination,
+        intermediateStops: [],
+        rideType: this.rideType,
+        rideStyle: this.rideStyle,
+        isSimulated: true,
+        simSpeedMultiplier: speedMultiplier,
+      });
+    } catch (error) {
+      this.handleError(error, 'route');
+    }
   }
 
   /** Alterna los anuncios de voz turn-by-turn (delegado al store). */

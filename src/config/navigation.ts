@@ -33,9 +33,24 @@ export const NAV_TICK_MS = 500;
  * ~50 km se recorre en ~30 s; suficiente para seguirla visualmente.
  */
 export const SIM_TIME_MULTIPLIER = 60;
-/** Distancia que avanza el conductor simulado en cada tick. */
-export const SIM_KM_PER_TICK =
-  (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000) * SIM_TIME_MULTIPLIER;
+/** Distancia que avanza el conductor a velocidad real (1×, sin compresión). */
+export const SIM_KM_PER_TICK_REALTIME = (NAV_AVG_SPEED_KMH / 3600) * (NAV_TICK_MS / 1000);
+/** Distancia por tick con la compresión por defecto (botón "Ruta de prueba"). */
+export const SIM_KM_PER_TICK = SIM_KM_PER_TICK_REALTIME * SIM_TIME_MULTIPLIER;
+
+// ── Navigation Lab (simulador manual A→B con control de velocidad) ───────────
+/**
+ * Multiplicadores de compresión temporal del Navigation Lab. `1` = tiempo real
+ * (~100 km/h, para observar de cerca el turn-by-turn + las sugerencias); `60` =
+ * preview rápido (una ruta de ~50 km en ~30 s). Reemplazan —no multiplican— al
+ * `SIM_TIME_MULTIPLIER` por defecto cuando el Lab arranca la simulación.
+ */
+export const NAV_LAB_SPEED_MULTIPLIERS = [1, 3, 10, 60] as const;
+export type NavLabSpeedMultiplier = (typeof NAV_LAB_SPEED_MULTIPLIERS)[number];
+/** Multiplicador por defecto del Lab (preview rápido). */
+export const NAV_LAB_DEFAULT_SPEED_MULTIPLIER: NavLabSpeedMultiplier = 60;
+/** Distancia mínima A→B (km) para habilitar el trazado del Lab. */
+export const NAV_LAB_MIN_TRACE_KM = 0.5;
 
 // ── Off-route + llegada ─────────────────────────────────────────────────────
 /** Desviación (km) a partir de la cual se considera que se salió de la ruta. */
