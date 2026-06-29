@@ -1,0 +1,51 @@
+appId: com.kevcoders.roadtrip
+name: Autonomy preview verdict + trip conditions
+tags:
+  - autonomy
+  - preview
+  - network
+---
+# Diferenciador del MVP (F1/F3): buscar un destino abre el sheet de preview con
+# el veredicto de autonomía (% de tanque) y las condiciones del viaje. Tocar una
+# condición re-dispara el cálculo del veredicto.
+#
+# REQUIERE conectividad + Mapbox token: usa el geocoding del buscador y la ruta
+# real. Por eso lleva el tag `network` (corre en un dev build conectado, no
+# offline como 03/04). Con `mockGarage` hay moto activa, así que el veredicto
+# aparece (sin moto saldría el CTA "Registrá tu moto").
+
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: 'screen-home'
+
+# Buscar un destino conocido y tocar el primer resultado del geocoding.
+- tapOn:
+    id: 'home-search-input'
+- inputText: 'Villa de Leyva'
+- assertVisible:
+    id: 'home-search-result-0'
+- tapOn:
+    id: 'home-search-result-0'
+
+# Sheet de preview con el veredicto de autonomía (F2a/F3).
+- assertVisible:
+    id: 'screen-destination-preview'
+
+# El veredicto: % de tanque / tanqueos en ruta, o "Calculando" mientras resuelve.
+- assertVisible: 'usarás|tanqueo|Calculando'
+
+# Condiciones del viaje (F1): el bloque de chips es visible (scroll si hace falta).
+- scrollUntilVisible:
+    element:
+      text: 'Condiciones del viaje'
+
+# Tocar "Copiloto" re-dispara el cálculo; el bloque sigue presente tras recalcular.
+- tapOn: 'Copiloto'
+- assertVisible: 'Condiciones del viaje'
+
+# Cerrar el sheet (swipe-down / back de Android) y volver al Home.
+- back
+- assertVisible:
+    id: 'screen-home'

@@ -916,6 +916,7 @@ const HomeScreen = observer(() => {
                 <AnimatedListItem key={place.id} index={index}>
                   {index > 0 ? <View style={styles.resultDivider} /> : null}
                   <MotionPressable
+                    testID={`home-search-result-${index}`}
                     style={[styles.resultRow, index === 0 && styles.resultRowPrimary]}
                     haptic="selection"
                     onPress={() => handleSelectPlace(place)}

@@ -111,7 +111,11 @@ const DestinationPreviewScreen = observer(() => {
   const isSummaryLoading = viewModel.isPlaceSummaryLoading;
 
   return (
-    <SafeAreaView edges={['bottom']} style={styles.container}>
+    <SafeAreaView
+      edges={['bottom']}
+      style={styles.container}
+      testID="screen-destination-preview"
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

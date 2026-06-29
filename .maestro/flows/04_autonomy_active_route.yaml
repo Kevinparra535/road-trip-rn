@@ -1,0 +1,39 @@
+appId: com.kevcoders.roadtrip
+name: Autonomy verdict on active route
+tags:
+  - autonomy
+  - routes
+---
+# Diferenciador del MVP (F0/F1): con la moto mock (`mockGarage`) y el destino de
+# prueba (`mockDestination`), la ruta activa del Home muestra el veredicto de
+# autonomía + las estadísticas (Alcance/Consumo) de la moto activa.
+#
+# Requiere el Mapbox token del dev build: la ruta real (Directions) alimenta el
+# cálculo de autonomía. Igual de determinista que 03_route_planning.
+
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    id: 'screen-home'
+
+# FAB "Ruta de prueba" (solo con DEV_FLAGS.mockDestination).
+- assertVisible:
+    id: 'home-test-route-fab'
+- tapOn:
+    id: 'home-test-route-fab'
+
+# Tarjeta de ruta con el CTA "Iniciar ruta".
+- assertVisible:
+    id: 'home-start-route-btn'
+
+# Autonomy card (F0/F1): el chip de estado (alcanza/recarga) y el stat de alcance
+# de la moto activa renderizan el veredicto sobre la ruta real.
+- assertVisible: 'Alcanzas|Recarga en ruta'
+- assertVisible: 'Alcance'
+
+# Limpiamos la ruta para dejar el Home en idle al terminar.
+- tapOn:
+    id: 'home-close-route-btn'
+- assertVisible:
+    id: 'home-chip-plan-trip'
