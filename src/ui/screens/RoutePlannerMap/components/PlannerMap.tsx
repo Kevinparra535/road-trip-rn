@@ -5,6 +5,8 @@ import { observer } from 'mobx-react-lite';
 
 import { GeoPoint } from '@/domain/entities/Route';
 
+import MapPin from '@/ui/components/MapPin';
+
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
 
 import BorderRadius from '@/ui/styles/BorderRadius';
@@ -12,7 +14,6 @@ import Colors from '@/ui/styles/Colors';
 import Shadows from '@/ui/styles/Shadows';
 import Spacings from '@/ui/styles/Spacings';
 
-import { stopKindMeta } from '../../stopKindMeta';
 import { RoutePlannerMapViewModel } from '../RoutePlannerMapViewModel';
 
 type Props = {
@@ -186,51 +187,21 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
         {viewModel.timelineItems.map((item) => {
           const wp = viewModel.waypoints.find((w) => w.id === item.id);
           if (!wp) return null;
-          const coordinate: [number, number] = [wp.longitude, wp.latitude];
-          if (item.isFirst) {
-            return (
-              <Mapbox.MarkerView
-                key={`planner-pin-${item.id}`}
-                id={`planner-pin-${item.id}`}
-                coordinate={coordinate}
-                anchor={{ x: 0.5, y: 0.5 }}
-                allowOverlap
-              >
-                <View style={styles.startHalo}>
-                  <View style={styles.startDot} />
-                </View>
-              </Mapbox.MarkerView>
-            );
-          }
-          if (item.isLast) {
-            return (
-              <Mapbox.MarkerView
-                key={`planner-pin-${item.id}`}
-                id={`planner-pin-${item.id}`}
-                coordinate={coordinate}
-                anchor={{ x: 0.5, y: 0.5 }}
-                allowOverlap
-              >
-                <View style={styles.destinationDot}>
-                  <Ionicons name="flag" size={12} color={Colors.base.textPrimary} />
-                </View>
-              </Mapbox.MarkerView>
-            );
-          }
+          // Arranque y destino son posicionales; el resto usa su StopKind.
+          const pinKind = item.isFirst
+            ? 'start'
+            : item.isLast
+              ? 'destination'
+              : item.kind;
           return (
             <Mapbox.MarkerView
               key={`planner-pin-${item.id}`}
               id={`planner-pin-${item.id}`}
-              coordinate={coordinate}
+              coordinate={[wp.longitude, wp.latitude]}
               anchor={{ x: 0.5, y: 0.5 }}
               allowOverlap
             >
-              <View
-                style={[
-                  styles.intermediateDot,
-                  { backgroundColor: stopKindMeta(item.kind).color },
-                ]}
-              />
+              <MapPin kind={pinKind} label={wp.name} />
             </Mapbox.MarkerView>
           );
         })}
@@ -255,42 +226,6 @@ const PlannerMap = observer(({ viewModel, onMapPress, bottomInset }: Props) => {
 // ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // Pin de arranque: dot verde con halo (mismo lenguaje que destinationHalo).
-  startHalo: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.pill,
-  },
-  startDot: {
-    width: 16,
-    height: 16,
-    backgroundColor: Colors.stopKind.start,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
-  // Pin de destino: círculo rojo con bandera.
-  destinationDot: {
-    width: 26,
-    height: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.stopKind.destination,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
-  // Paradas intermedias: dots pequeños coloreados por StopKind.
-  intermediateDot: {
-    width: 14,
-    height: 14,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
   // FAB recentrar (abajo-derecha, respeta el peek del sheet vía bottomInset).
   fab: {
     position: 'absolute',

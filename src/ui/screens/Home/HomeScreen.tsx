@@ -36,6 +36,7 @@ import EmptyState from '@/ui/components/EmptyState';
 import GradientView from '@/ui/components/GradientView';
 import JourneyBar from '@/ui/components/JourneyBar';
 import JourneyFuelBar from '@/ui/components/JourneyFuelBar';
+import MapPin from '@/ui/components/MapPin';
 import MotionPressable from '@/ui/components/MotionPressable';
 import NavSuggestionRail from '@/ui/components/NavSuggestionRail';
 import SheetCard from '@/ui/components/SheetCard';
@@ -363,13 +364,9 @@ const HomeScreen = observer(() => {
             anchor={{ x: 0.5, y: 0.5 }}
             allowOverlap
           >
-            <View
-              style={[
-                pin.isFirst || pin.isLast
-                  ? styles.plannerPinExtreme
-                  : styles.plannerPinDot,
-                { backgroundColor: pin.color, borderColor: pin.color },
-              ]}
+            <MapPin
+              kind={pin.isFirst ? 'start' : pin.isLast ? 'destination' : pin.kind}
+              label={pin.name}
             />
           </Mapbox.MarkerView>
         ))}
@@ -381,18 +378,20 @@ const HomeScreen = observer(() => {
             anchor={{ x: 0.5, y: 0.5 }}
             allowOverlap
           >
-            <View style={styles.destinationHalo}>
-              <View style={styles.destinationDot} />
-            </View>
+            <MapPin kind="destination" label={viewModel.destination?.name ?? 'Destino'} />
           </Mapbox.MarkerView>
         ) : null}
 
+        {/* Rider en navegación: MarkerView (vista RN sobre el mapa) para que la
+            flecha quede SIEMPRE encima del trazado, no debajo. */}
         {viewModel.navRiderCoordinate ? (
-          <Mapbox.PointAnnotation
+          <Mapbox.MarkerView
             id="nav-rider"
             coordinate={viewModel.navRiderCoordinate}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
           >
-            <View collapsable={false} style={styles.navRiderHalo}>
+            <View style={styles.navRiderHalo}>
               <View style={styles.navRiderDot}>
                 <MaterialCommunityIcons
                   name="navigation"
@@ -401,23 +400,21 @@ const HomeScreen = observer(() => {
                 />
               </View>
             </View>
-          </Mapbox.PointAnnotation>
+          </Mapbox.MarkerView>
         ) : null}
 
+        {/* Estaciones de servicio: pin "Tanqueo" del diseño, en MarkerView para
+            quedar por encima de la línea de ruta. */}
         {viewModel.fuelStationMarkers.map((station, index) => (
-          <Mapbox.PointAnnotation
+          <Mapbox.MarkerView
             key={station.id}
             id={`fuel-stop-${index}`}
             coordinate={station.coordinate}
+            anchor={{ x: 0.5, y: 0.5 }}
+            allowOverlap
           >
-            <View collapsable={false} style={styles.fuelMarker}>
-              <MaterialCommunityIcons
-                name="gas-station"
-                size={13}
-                color={Colors.base.accent}
-              />
-            </View>
-          </Mapbox.PointAnnotation>
+            <MapPin kind="fuel" compact />
+          </Mapbox.MarkerView>
         ))}
 
         {viewModel.isUserDotVisible && viewModel.userCoordinates ? (
@@ -2412,34 +2409,6 @@ const styles = StyleSheet.create({
   },
 
   // ── Marcadores del mapa ───────────────────────────────────────────────────
-  destinationHalo: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accentDim,
-    borderRadius: BorderRadius.pill,
-  },
-  // Gasolinera a lo largo de la ruta (POI ambiente del mapa).
-  fuelMarker: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.bgGradientEnd,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.accent,
-    ...Shadows.bankCard,
-  },
-  destinationDot: {
-    width: 16,
-    height: 16,
-    backgroundColor: Colors.elevation.low,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
   userHalo: {
     width: 24,
     height: 24,
@@ -2453,23 +2422,6 @@ const styles = StyleSheet.create({
     height: 8,
     backgroundColor: Colors.base.bgPrimary,
     borderRadius: BorderRadius.pill,
-  },
-  // Pins de preview del Planner. Los intermedios son dots pequenos para no
-  // contaminar el mapa; start/destino son circulos mas grandes para resaltar
-  // los extremos del trazado.
-  plannerPinDot: {
-    width: 14,
-    height: 14,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.textPrimary,
-  },
-  plannerPinExtreme: {
-    width: 18,
-    height: 18,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 3,
-    borderColor: Colors.base.textPrimary,
   },
 });
 

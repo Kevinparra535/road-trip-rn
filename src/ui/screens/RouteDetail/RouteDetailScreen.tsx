@@ -16,6 +16,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { TYPES } from '@/config/types';
 
 import AnimatedListItem from '@/ui/components/AnimatedListItem';
+import MapPin from '@/ui/components/MapPin';
 import MotionPressable from '@/ui/components/MotionPressable';
 
 import Mapbox, { MAP_STYLE_URL } from '@/ui/map/mapbox';
@@ -192,25 +193,28 @@ const RouteDetailScreen = observer(() => {
                 />
               </Mapbox.ShapeSource>
             ) : null}
+            {/* Pines de parada del diseño (MarkerView ⇒ por encima del trazado). */}
             {route.waypoints.map((w) => (
-              <Mapbox.PointAnnotation
+              <Mapbox.MarkerView
                 key={w.id}
-                id={w.id}
+                id={`rd-wp-${w.id}`}
                 coordinate={[w.longitude, w.latitude]}
+                anchor={{ x: 0.5, y: 0.5 }}
+                allowOverlap
               >
-                <View style={styles.waypointMarker} />
-              </Mapbox.PointAnnotation>
+                <MapPin kind={w.kind} label={w.name} />
+              </Mapbox.MarkerView>
             ))}
             {(estimate?.fuelStops ?? []).map((stop) => (
-              <Mapbox.PointAnnotation
+              <Mapbox.MarkerView
                 key={stop.id}
-                id={stop.id}
+                id={`rd-fuel-${stop.id}`}
                 coordinate={[stop.location.longitude, stop.location.latitude]}
+                anchor={{ x: 0.5, y: 0.5 }}
+                allowOverlap
               >
-                <View collapsable={false} style={styles.fuelMarker}>
-                  <Ionicons name="water" size={12} color={Colors.base.textPrimary} />
-                </View>
-              </Mapbox.PointAnnotation>
+                <MapPin kind="fuel" compact />
+              </Mapbox.MarkerView>
             ))}
           </Mapbox.MapView>
         </View>
@@ -447,22 +451,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  waypointMarker: {
-    width: 14,
-    height: 14,
-    backgroundColor: Colors.base.textPrimary,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 2,
-    borderColor: Colors.base.accent,
-  },
-  fuelMarker: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.base.accent,
-    borderRadius: BorderRadius.pill,
   },
   summaryRow: {
     marginTop: Spacings.lg,
