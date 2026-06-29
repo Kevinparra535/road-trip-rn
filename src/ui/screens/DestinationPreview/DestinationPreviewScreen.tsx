@@ -99,6 +99,12 @@ const DestinationPreviewScreen = observer(() => {
     navigation.navigate('RoutePlanner', { destinationPlace });
   };
 
+  // CTA sin moto (F3): cierra el preview y lleva al garaje a registrar la moto.
+  const handleRegisterMoto = () => {
+    viewModel.cancel();
+    navigation.navigate('GarageTab', { screen: 'GarageList' });
+  };
+
   const typeLabel = viewModel.typeLabel;
   const contextLine = viewModel.contextLine;
   const summary = viewModel.isPlaceSummaryResponse;
@@ -161,34 +167,53 @@ const DestinationPreviewScreen = observer(() => {
           </View>
         ) : null}
 
-        {/* Veredicto de autonomía (F2a): ¿llegas con el tanque? / N tanqueos. */}
+        {/* Veredicto de autonomía (F2a/F3): % de tanque + caveat de estimado. */}
         {viewModel.autonomyVerdict ? (
-          <View
-            style={[
-              styles.verdictCard,
-              viewModel.autonomyVerdict.reaches
-                ? styles.verdictReaches
-                : styles.verdictRefuel,
-            ]}
-          >
-            <Ionicons
-              name={
-                viewModel.autonomyVerdict.reaches ? 'checkmark-circle' : 'alert-circle'
-              }
-              size={16}
-              color={
+          <>
+            <View
+              style={[
+                styles.verdictCard,
                 viewModel.autonomyVerdict.reaches
-                  ? Colors.alerts.check
-                  : Colors.base.accent
-              }
-            />
-            <Text style={styles.verdictText}>{viewModel.autonomyVerdict.label}</Text>
-          </View>
+                  ? styles.verdictReaches
+                  : styles.verdictRefuel,
+              ]}
+            >
+              <Ionicons
+                name={
+                  viewModel.autonomyVerdict.reaches ? 'checkmark-circle' : 'alert-circle'
+                }
+                size={16}
+                color={
+                  viewModel.autonomyVerdict.reaches
+                    ? Colors.alerts.check
+                    : Colors.base.accent
+                }
+              />
+              <Text style={styles.verdictText}>{viewModel.autonomyVerdict.label}</Text>
+            </View>
+            <Text style={styles.verdictCaveat}>
+              Estimado · se afina al confirmar la ruta
+            </Text>
+          </>
         ) : viewModel.isRoutePreviewLoading ? (
           <View style={styles.verdictCard}>
             <ActivityIndicator size="small" color={Colors.base.textMuted} />
             <Text style={styles.verdictText}>Calculando autonomía…</Text>
           </View>
+        ) : null}
+
+        {/* Sin moto registrada: CTA al garaje (F3) para enganchar al motero. */}
+        {viewModel.showRegisterMotoCta ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Registrar tu moto"
+            onPress={handleRegisterMoto}
+            style={({ pressed }) => [styles.motoCta, pressed && styles.planButtonPressed]}
+          >
+            <Ionicons name="add-circle-outline" size={18} color={Colors.base.accent} />
+            <Text style={styles.motoCtaText}>Registrá tu moto para saber si llegás</Text>
+            <Ionicons name="chevron-forward" size={18} color={Colors.base.accent} />
+          </Pressable>
         ) : null}
 
         {isSummaryLoading ? (
@@ -400,6 +425,29 @@ const styles = StyleSheet.create({
   verdictText: {
     flex: 1,
     ...Fonts.smallBodyText,
+    color: Colors.base.textPrimary,
+  },
+  verdictCaveat: {
+    marginTop: Spacings.xs,
+    ...Fonts.links,
+    color: Colors.base.textMuted,
+  },
+  motoCta: {
+    marginTop: Spacings.sm,
+    paddingVertical: Spacings.md,
+    paddingHorizontal: Spacings.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    backgroundColor: Colors.base.accentDim,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.accentDimBorder,
+    ...iOSCornerStyle,
+  },
+  motoCtaText: {
+    flex: 1,
+    ...Fonts.smallBodyTextBold,
     color: Colors.base.textPrimary,
   },
 

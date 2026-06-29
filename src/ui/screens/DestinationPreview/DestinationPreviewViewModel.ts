@@ -190,20 +190,35 @@ export class DestinationPreviewViewModel {
     reaches: boolean;
     refuelCount: number;
     reservePercent: number;
+    tankUsedPercent: number;
     label: string;
   } | null {
     const fuel = this.fuelPreview;
     if (!fuel) return null;
     const refuelCount = fuel.refuelPointsKm().length;
     const reservePercent = Math.max(0, Math.round((1 - fuel.rangeUsedFraction) * 100));
+    // % del tanque que gastará el viaje (F3): el dato más glanceable para decidir.
+    const tankUsedPercent = Math.round(fuel.rangeUsedFraction * 100);
     return {
       reaches: fuel.reachesWithoutRefuel,
       refuelCount,
       reservePercent,
+      tankUsedPercent,
       label: fuel.reachesWithoutRefuel
-        ? `Llegas con tu tanque · reserva ${reservePercent}%`
+        ? `Llegas con tu tanque · usarás ~${Math.min(100, tankUsedPercent)}%`
         : `${refuelCount} ${refuelCount === 1 ? 'tanqueo' : 'tanqueos'} en ruta`,
     };
+  }
+
+  /**
+   * El preview tiene ruta pero no hay veredicto de moto (sin moto registrada):
+   * la UI ofrece un CTA al garaje para enganchar al motero con el diferenciador
+   * desde el primer destino (F3).
+   */
+  get showRegisterMotoCta(): boolean {
+    return (
+      this.hasRoutePreview && !this.hasMotorcycleVerdict && !this.isRoutePreviewLoading
+    );
   }
 
   /** Distancia formateada para el chip de stats (`<1km` -> metros, etc.). */

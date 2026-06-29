@@ -344,6 +344,29 @@ describe('DestinationPreviewViewModel', () => {
     expect(vm.hasRoutePreview).toBe(true);
     expect(vm.hasMotorcycleVerdict).toBe(false);
     expect(vm.autonomyVerdict).toBeNull();
+    // F3: sin moto, el preview ofrece el CTA al garaje.
+    expect(vm.showRegisterMotoCta).toBe(true);
+  });
+
+  it('autonomyVerdict expone el % de tanque a gastar (F3)', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview({
+      route: makeRouteDirections({ distanceKm: 210 }),
+      // 210 / 420 = 50% del tanque.
+      fuel: makeRouteFuelEstimate({ distanceKm: 210, effectiveRangeKm: 420 }),
+    });
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    await vm.loadRoutePreview();
+
+    expect(vm.autonomyVerdict?.tankUsedPercent).toBe(50);
+    expect(vm.autonomyVerdict?.label).toContain('usarás');
+    expect(vm.showRegisterMotoCta).toBe(false);
   });
 
   it('setRideStyle se refleja y se pasa al BuildRoutePreviewUseCase (F5)', async () => {
