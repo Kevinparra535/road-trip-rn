@@ -1,4 +1,5 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
+import { FuelStation } from '@/domain/entities/FuelStation';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
 import Colors from '@/ui/styles/Colors';
@@ -408,6 +409,47 @@ describe('RouteDetailViewModel', () => {
     it('returns "0" for undefined value', () => {
       const { viewModel } = build();
       expect(viewModel.priceLabel(undefined)).toBe('0');
+    });
+  });
+
+  // ── fuelStationRows(): cruce con la gasolina de la moto (F2) ────────────────
+
+  describe('fuelStationRows (F2)', () => {
+    const stationWith = (id: string) =>
+      new FuelStation({
+        id,
+        name: 'EDS Test',
+        brand: 'Terpel',
+        latitude: 4.7,
+        longitude: -74.05,
+        fuelTypes: ['corriente', 'extra'],
+        referencePriceCorriente: 16200,
+        referencePriceExtra: 18100,
+      });
+
+    it('muestra el precio de la gasolina que usa la moto activa', () => {
+      const { viewModel } = build();
+      viewModel.motorcycles = [makeMotorcycle({ id: 'moto-1', fuelType: 'extra' })];
+      viewModel.selectedMotorcycleId = 'moto-1';
+      viewModel.fuelStations = [stationWith('s1')];
+
+      const rows = viewModel.fuelStationRows;
+      expect(rows).toHaveLength(1);
+      expect(rows[0].fuelLabel).toBe('Extra');
+      expect(rows[0].fuelPriceLabel).toBe(`$${viewModel.priceLabel(18100)}`);
+      expect(rows[0].latitude).toBe(4.7);
+      expect(rows[0].longitude).toBe(-74.05);
+    });
+
+    it('cae a corriente cuando no hay moto activa', () => {
+      const { viewModel } = build();
+      viewModel.motorcycles = [];
+      viewModel.selectedMotorcycleId = null;
+      viewModel.fuelStations = [stationWith('s2')];
+
+      const rows = viewModel.fuelStationRows;
+      expect(rows[0].fuelLabel).toBe('Corriente');
+      expect(rows[0].fuelPriceLabel).toBe(`$${viewModel.priceLabel(16200)}`);
     });
   });
 

@@ -199,6 +199,33 @@ export class RouteDetailViewModel {
   }
 
   /**
+   * Estaciones cerca de las paradas, cruzadas con la gasolina de la moto activa
+   * (F2): muestra el precio del combustible que USA la moto (corriente o extra),
+   * no ambos crudos, y expone la coordenada para abrir la estación en Maps.
+   */
+  get fuelStationRows(): {
+    id: string;
+    name: string;
+    brand: string | null;
+    fuelLabel: string;
+    fuelPriceLabel: string;
+    latitude: number;
+    longitude: number;
+  }[] {
+    const fuelType = this.selectedMotorcycle?.fuelType ?? 'corriente';
+    const fuelLabel = fuelType === 'extra' ? 'Extra' : 'Corriente';
+    return this.fuelStations.map((station) => ({
+      id: station.id,
+      name: station.name,
+      brand: station.brand,
+      fuelLabel,
+      fuelPriceLabel: `$${this.priceLabel(station.priceFor(fuelType))}`,
+      latitude: station.latitude,
+      longitude: station.longitude,
+    }));
+  }
+
+  /**
    * Arma el payload serializable para duplicar esta ruta en el Planner. `null`
    * si la ruta aún no cargó. La navegación es del screen; este método solo
    * produce el DTO plano (los waypoints viajan sin métodos).

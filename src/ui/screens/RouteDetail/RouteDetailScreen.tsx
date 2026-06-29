@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +25,7 @@ import BorderRadius from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
 import Fonts from '@/ui/styles/Fonts';
 import Spacings from '@/ui/styles/Spacings';
+import { mapsSearchUrl } from '@/ui/utils/externalMaps';
 
 import { useViewModel } from '@/ui/hooks/useViewModel';
 
@@ -347,28 +355,43 @@ const RouteDetailScreen = observer(() => {
           <ActivityIndicator color={Colors.base.accent} style={styles.stationsLoading} />
         ) : null}
 
-        {viewModel.fuelStations.length > 0 ? (
+        {viewModel.fuelStationRows.length > 0 ? (
           <>
             <Text style={styles.sectionTitle}>Estaciones cerca de tus paradas</Text>
-            {viewModel.fuelStations.map((station, i) => (
+            {viewModel.fuelStationRows.map((station, i) => (
               <AnimatedListItem key={station.id} index={i}>
-                <View style={styles.stationCard}>
-                  <Ionicons name="business" size={20} color={Colors.base.accent} />
-                  <View style={styles.stationBody}>
-                    <Text style={styles.stationName}>{station.name}</Text>
-                    {station.brand ? (
-                      <Text style={styles.stationBrand}>{station.brand}</Text>
-                    ) : null}
-                    <Text style={styles.stationPrice}>
-                      Corriente ~${viewModel.priceLabel(station.referencePriceCorriente)}{' '}
-                      · Extra ~$
-                      {viewModel.priceLabel(station.referencePriceExtra)}
-                    </Text>
-                    <Text style={styles.stationNote}>
-                      Precio de referencia, no por estacion.
-                    </Text>
+                <MotionPressable
+                  haptic="selection"
+                  accessibilityRole="button"
+                  accessibilityLabel={`Abrir ${station.name} en Maps`}
+                  onPress={() =>
+                    void Linking.openURL(
+                      mapsSearchUrl(station.latitude, station.longitude),
+                    )
+                  }
+                >
+                  <View style={styles.stationCard}>
+                    <Ionicons name="business" size={20} color={Colors.base.accent} />
+                    <View style={styles.stationBody}>
+                      <Text style={styles.stationName}>{station.name}</Text>
+                      {station.brand ? (
+                        <Text style={styles.stationBrand}>{station.brand}</Text>
+                      ) : null}
+                      {/* Precio de la gasolina que USA la moto, no ambos crudos. */}
+                      <Text style={styles.stationPrice}>
+                        {station.fuelLabel} ~{station.fuelPriceLabel}
+                      </Text>
+                      <Text style={styles.stationNote}>
+                        Precio de referencia · toca para abrir en Maps
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name="navigate-circle-outline"
+                      size={22}
+                      color={Colors.base.textMuted}
+                    />
                   </View>
-                </View>
+                </MotionPressable>
               </AnimatedListItem>
             ))}
           </>
