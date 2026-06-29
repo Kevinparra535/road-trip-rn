@@ -127,6 +127,19 @@ al motero sin moto hacia el diferenciador desde el primer destino.
 
 ---
 
+## Estado de implementación
+
+- **F0 ✅** — modelo unificado (`rangeFactor.ts`), peso real en kg.
+- **F1 ✅** — condiciones del viaje en preview + Home (`NavigationStore` + plumbing).
+- **F2 ✅** — estaciones tappables (abrir en Maps) + precio cruzado con la gasolina de la moto.
+- **F3 ✅** — % de tanque + caveat de estimado + CTA sin-moto en el preview.
+- **F4 🟡** — en-código hecho (URL de specs por env, lista para activar); **bloqueado**:
+  desplegar la Cloud Function + fuente real de precios por estación (backend/producto).
+- **F5 ✅ (parcial)** — tests de orquestación de `RouteDetailViewModel` + calibración
+  documentada en `rangeFactor.ts`. **Diferido**: unificar los 2 caminos de paradas
+  (RouteDetail `estimate.fuelStops` vs Home `estimate.refuelPointsKm()`) — severidad baja,
+  tocaría el comportamiento del Home; se deja para un refactor dedicado.
+
 ## Orden recomendado
 
 **F0 → F1 → F2 → F3** (en-código, alto valor, secuencial por dependencia), con **F5**

@@ -1,5 +1,6 @@
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
 import { FuelStation } from '@/domain/entities/FuelStation';
+import { FuelStop } from '@/domain/entities/FuelStop';
 import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
 import Colors from '@/ui/styles/Colors';
@@ -450,6 +451,84 @@ describe('RouteDetailViewModel', () => {
       const rows = viewModel.fuelStationRows;
       expect(rows[0].fuelLabel).toBe('Corriente');
       expect(rows[0].fuelPriceLabel).toBe(`$${viewModel.priceLabel(16200)}`);
+    });
+  });
+
+  // ── estimateAutonomy() → loadFuelStations() (orquestación, F5) ──────────────
+
+  describe('estimateAutonomy → loadFuelStations (F5)', () => {
+    const estimateWithStops = () =>
+      new AutonomyEstimate({
+        totalDistanceKm: 700,
+        fullTankRangeKm: 360,
+        effectiveRangeKm: 300,
+        safetyReserveKm: 40,
+        totalFuelLiters: 20,
+        reachesWithoutRefuel: false,
+        fuelStops: [
+          new FuelStop({
+            id: 'fs1',
+            order: 1,
+            distanceFromStartKm: 300,
+            location: { latitude: 5, longitude: -74 },
+            label: 'Tanqueo 1',
+          }),
+        ],
+        conditionsSummary: 'solo',
+      });
+
+    it('estima y encadena la búsqueda de estaciones sobre las paradas', async () => {
+      const moto = makeMotorcycle({ id: 'moto-1' });
+      const { viewModel, estimateAutonomy, findFuelStations } = build({
+        motorcycles: [moto],
+      });
+      await viewModel.initialize('route-1');
+      estimateAutonomy.run.mockResolvedValue(estimateWithStops());
+      findFuelStations.run.mockResolvedValue([
+        new FuelStation({
+          id: 's1',
+          name: 'Terpel',
+          brand: 'Terpel',
+          latitude: 5,
+          longitude: -74,
+          fuelTypes: ['corriente', 'extra'],
+          referencePriceCorriente: 16200,
+          referencePriceExtra: 18100,
+        }),
+      ]);
+
+      await viewModel.estimateAutonomy();
+
+      expect(estimateAutonomy.run).toHaveBeenCalledTimes(1);
+      expect(viewModel.estimate).not.toBeNull();
+      // Encadena: busca estaciones con las MISMAS paradas del estimate.
+      expect(findFuelStations.run).toHaveBeenCalledWith(viewModel.estimate?.fuelStops);
+      expect(viewModel.fuelStations).toHaveLength(1);
+    });
+
+    it('sin moto seleccionada no estima y reporta error', async () => {
+      const { viewModel, estimateAutonomy } = build({ motorcycles: [] });
+      await viewModel.initialize('route-1');
+
+      await viewModel.estimateAutonomy();
+
+      expect(estimateAutonomy.run).not.toHaveBeenCalled();
+      expect(viewModel.isEstimateError).toContain('moto');
+    });
+
+    it('propaga el error de la búsqueda de estaciones sin perder el estimate', async () => {
+      const moto = makeMotorcycle({ id: 'moto-1' });
+      const { viewModel, estimateAutonomy, findFuelStations } = build({
+        motorcycles: [moto],
+      });
+      await viewModel.initialize('route-1');
+      estimateAutonomy.run.mockResolvedValue(estimateWithStops());
+      findFuelStations.run.mockRejectedValue(new Error('boom'));
+
+      await viewModel.estimateAutonomy();
+
+      expect(viewModel.estimate).not.toBeNull();
+      expect(viewModel.isStationsError).toContain('boom');
     });
   });
 
