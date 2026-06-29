@@ -1,6 +1,7 @@
 import Colors from '@/ui/styles/Colors';
 
 import { HomeViewModel } from '@/ui/screens/Home/HomeViewModel';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 
 import {
@@ -18,6 +19,7 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
   coordinates: null as [number, number] | null,
   isLocationResponse: null as ReturnType<typeof makeGeoLocation> | null,
   heading: null as number | null,
+  speed: null as number | null,
   initialize: jest.fn().mockResolvedValue(undefined),
   dispose: jest.fn(),
   ...overrides,
@@ -25,6 +27,9 @@ const makeLocationStore = (overrides: Record<string, unknown> = {}) => ({
 
 const makeSearchUseCase = () => ({ run: jest.fn().mockResolvedValue([]) });
 const makeDirectionsUseCase = () => ({ run: jest.fn() });
+const makeRerouteUseCase = () => ({
+  run: jest.fn().mockResolvedValue(makeRouteDirections()),
+});
 const makeElevationUseCase = () => ({
   run: jest.fn().mockResolvedValue(makeElevationProfile()),
 });
@@ -47,6 +52,12 @@ const makeGetAllRoutesUseCase = () => ({
 });
 const makeInferStopKindUseCase = () => ({
   run: jest.fn().mockResolvedValue(null),
+});
+const makeGetNavPreferencesUseCase = () => ({
+  run: jest.fn().mockResolvedValue({ muted: false }),
+});
+const makeSetMutePreferenceUseCase = () => ({
+  run: jest.fn().mockResolvedValue(undefined),
 });
 
 /**
@@ -79,10 +90,15 @@ const makeVM = (
   addRecent: { run: jest.Mock } = makeAddRecentUseCase(),
   getAllRoutes: { run: jest.Mock } = makeGetAllRoutesUseCase(),
   inferStopKind: { run: jest.Mock } = makeInferStopKindUseCase(),
+  getNavPreferences: { run: jest.Mock } = makeGetNavPreferencesUseCase(),
+  setMute: { run: jest.Mock } = makeSetMutePreferenceUseCase(),
   plannerStore: ReturnType<typeof makePlannerStore> = makePlannerStore(),
   // NavigationStore real: sin deps, y la reaction de `confirmedPlace` necesita
   // observables reales para disparar selectDestination + recordRecent.
   navStore: NavigationStore = new NavigationStore(),
+  // `reroute` va al final de la firma (para no desalinear los call sites
+  // posicionales) pero se inyecta en su posición real del constructor (4ª).
+  reroute: { run: jest.Mock } = makeRerouteUseCase(),
 ) =>
   new HomeViewModel(
     store as any,
@@ -97,6 +113,14 @@ const makeVM = (
     addRecent as any,
     getAllRoutes as any,
     inferStopKind as any,
+    // El motor de nav vive en NavigationSessionStore (F1b): se construye con los
+    // mocks de reroute/prefs y comparte el mismo locationStore mock que el VM.
+    new NavigationSessionStore(
+      store as any,
+      reroute as any,
+      getNavPreferences as any,
+      setMute as any,
+    ),
     plannerStore as any,
     navStore,
   );
@@ -839,6 +863,8 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
       makeAddRecentUseCase(),
       makeGetAllRoutesUseCase(),
       makeInferStopKindUseCase(),
+      makeGetNavPreferencesUseCase(),
+      makeSetMutePreferenceUseCase(),
       planner,
     );
 
@@ -890,6 +916,8 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
       makeAddRecentUseCase(),
       makeGetAllRoutesUseCase(),
       makeInferStopKindUseCase(),
+      makeGetNavPreferencesUseCase(),
+      makeSetMutePreferenceUseCase(),
       planner,
     );
 
@@ -919,6 +947,8 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
       makeAddRecentUseCase(),
       makeGetAllRoutesUseCase(),
       makeInferStopKindUseCase(),
+      makeGetNavPreferencesUseCase(),
+      makeSetMutePreferenceUseCase(),
       planner,
     );
 
@@ -948,6 +978,8 @@ describe('HomeViewModel — preview de Planner en mapa', () => {
       makeAddRecentUseCase(),
       makeGetAllRoutesUseCase(),
       makeInferStopKindUseCase(),
+      makeGetNavPreferencesUseCase(),
+      makeSetMutePreferenceUseCase(),
       planner,
     );
     expect(vm.plannerBounds).toBeNull();
@@ -1020,5 +1052,312 @@ describe('HomeViewModel — startNavigationFromPlanner (FEAT.11)', () => {
     expect(vm.rideType).toBe('offroad');
     // Reusa las directions del planner sin recomputar.
     expect(vm.isRouteResponse).not.toBeNull();
+  });
+});
+
+describe('HomeViewModel — velocímetro real (navSpeedKmh)', () => {
+  const buildRealNav = (vm: ReturnType<typeof makeVM>) => {
+    // Arranca una nav GPS-real (destino no-DEV) reusando el handoff del planner.
+    const planner = {
+      waypoints: [
+        {
+          id: 'w1',
+          kind: 'start',
+          latitude: 4.6,
+          longitude: -74.08,
+          name: 'Bogota',
+          order: 0,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+        {
+          id: 'w2',
+          kind: 'destination',
+          latitude: 4.8,
+          longitude: -74.2,
+          name: 'Destino',
+          order: 1,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+      ],
+      directions: makeRouteDirections(),
+      rideType: 'highway',
+    };
+    vm.startNavigationFromPlanner(planner as any);
+  };
+
+  it('es null cuando no se está navegando', () => {
+    expect(makeVM().navSpeedLabel).toBeNull();
+  });
+
+  it('convierte la velocidad del GPS (m/s) a km/h en una ruta real', () => {
+    const vm = makeVM(makeLocationStore({ speed: 10 }));
+    buildRealNav(vm);
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.navSpeedLabel).toBe(36); // 10 m/s * 3.6, redondeado
+  });
+
+  it('es null mientras el GPS no reporta velocidad (parado/sin Doppler)', () => {
+    const vm = makeVM(makeLocationStore({ speed: null }));
+    buildRealNav(vm);
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.navSpeedLabel).toBeNull();
+  });
+});
+
+describe('HomeViewModel — barra de combustible del viaje (navFuelBar)', () => {
+  const buildRealNav = (vm: ReturnType<typeof makeVM>) => {
+    vm.startNavigationFromPlanner({
+      waypoints: [
+        {
+          id: 'w1',
+          kind: 'start',
+          latitude: 4.6,
+          longitude: -74.08,
+          name: 'A',
+          order: 0,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+        {
+          id: 'w2',
+          kind: 'destination',
+          latitude: 4.8,
+          longitude: -74.2,
+          name: 'B',
+          order: 1,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+      ],
+      directions: makeRouteDirections({ distanceKm: 200 }),
+      rideType: 'highway',
+    } as any);
+  };
+
+  it('es null cuando no se está navegando', () => {
+    expect(makeVM().navFuelBar).toBeNull();
+  });
+
+  it('expone total, avance y paradas durante la navegación', () => {
+    const vm = makeVM();
+    buildRealNav(vm);
+    vm.isFuelEstimateResponse = makeRouteFuelEstimate({
+      distanceKm: 200,
+      effectiveRangeKm: 500,
+    });
+    vm.fuelStops = [
+      {
+        id: 'fuel-1',
+        label: 'Tanqueo 1',
+        distanceFromStartKm: 123.4,
+        order: 1,
+        location: makeGeoLocation(),
+      },
+      {
+        id: 'fuel-2',
+        label: 'Tanqueo 2',
+        distanceFromStartKm: 167.8,
+        order: 2,
+        location: makeGeoLocation(),
+      },
+    ];
+    const bar = vm.navFuelBar;
+    expect(bar).not.toBeNull();
+    expect(bar).toMatchObject({
+      totalKm: 200,
+      progressKm: expect.any(Number),
+      reservePercent: 60,
+      stops: [
+        { id: 'fuel-1', km: 123, suggested: true },
+        { id: 'fuel-2', km: 168, suggested: false },
+      ],
+    });
+  });
+});
+
+describe('HomeViewModel — sugerencias de navegación (motor de guidance)', () => {
+  const startNav = (vm: ReturnType<typeof makeVM>, distanceKm = 200) =>
+    vm.startNavigationFromPlanner({
+      waypoints: [
+        {
+          id: 'w1',
+          kind: 'start',
+          latitude: 4.6,
+          longitude: -74.08,
+          name: 'A',
+          order: 0,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+        {
+          id: 'w2',
+          kind: 'destination',
+          latitude: 4.8,
+          longitude: -74.2,
+          name: 'B',
+          order: 1,
+          mapboxCategory: undefined,
+          userOverrideKind: false,
+        },
+      ],
+      directions: makeRouteDirections({ distanceKm }),
+      rideType: 'highway',
+    } as any);
+
+  it('el rail está vacío sin sesión de navegación', () => {
+    expect(makeVM().navSuggestions).toEqual([]);
+  });
+
+  it('avisa "autonomía justa" en marcha cuando el combustible no alcanza', () => {
+    const vm = makeVM();
+    startNav(vm);
+    // Sin paradas de tanqueo y con autonomía < distancia: salta el aviso de
+    // combustible. El cambio del observable dispara la reaction de sugerencias.
+    vm.isFuelEstimateResponse = makeRouteFuelEstimate({
+      distanceKm: 200,
+      effectiveRangeKm: 50,
+    });
+
+    const warning = vm.navSuggestions.find((s) => s.kind === 'fuel-warning');
+    expect(warning?.title).toBe('Autonomia justa');
+    vm.dispose();
+  });
+});
+
+describe('HomeViewModel — Navigation Lab (dev)', () => {
+  it('toggle abre y cierra el panel del Lab', () => {
+    const vm = makeVM();
+    expect(vm.isNavigationLabOpen).toBe(false);
+    vm.toggleNavigationLab();
+    expect(vm.isNavigationLabOpen).toBe(true);
+    vm.toggleNavigationLab();
+    expect(vm.isNavigationLabOpen).toBe(false);
+  });
+
+  it('el tap en el mapa fija Punto A y luego avanza a Punto B', () => {
+    const vm = makeVM();
+    vm.toggleNavigationLab();
+    expect(vm.navigationLabPickMode).toBe('origin');
+
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 });
+    expect(vm.navigationLabOrigin.latitude).toBeCloseTo(4.6);
+    expect(vm.navigationLabPickMode).toBe('destination');
+
+    vm.handleNavigationLabMapPress({ latitude: 4.8, longitude: -74.2 });
+    expect(vm.navigationLabDestination.latitude).toBeCloseTo(4.8);
+  });
+
+  it('ignora el tap en el mapa si el Lab está cerrado', () => {
+    const vm = makeVM();
+    const originId = vm.navigationLabOrigin.id;
+    vm.handleNavigationLabMapPress({ latitude: 1, longitude: 1 });
+    expect(vm.navigationLabOrigin.id).toBe(originId);
+  });
+
+  it('canTrace exige A y B distintos y suficientemente separados', () => {
+    const vm = makeVM();
+    expect(vm.navigationLabCanTrace).toBe(true); // A/B por defecto, lejanos
+    vm.toggleNavigationLab();
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 }); // A
+    vm.handleNavigationLabMapPress({ latitude: 4.6001, longitude: -74.08 }); // B pegado
+    expect(vm.navigationLabCanTrace).toBe(false);
+  });
+
+  it('markers expone A/B con el punto activo resaltado', () => {
+    const vm = makeVM();
+    const markers = vm.navigationLabMarkers;
+    expect(markers.map((m) => m.label)).toEqual(['A', 'B']);
+    expect(markers[0].isActive).toBe(true); // pickMode 'origin' por defecto
+    expect(markers[1].isActive).toBe(false);
+  });
+
+  it('setSpeedMultiplier ignora valores fuera del set permitido', () => {
+    const vm = makeVM();
+    vm.setNavigationLabSpeedMultiplier(10);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+    vm.setNavigationLabSpeedMultiplier(999 as never);
+    expect(vm.navigationLabSpeedMultiplier).toBe(10);
+  });
+
+  it('reset restablece A/B, el modo y la velocidad', () => {
+    const vm = makeVM();
+    vm.toggleNavigationLab();
+    vm.handleNavigationLabMapPress({ latitude: 4.6, longitude: -74.08 });
+    vm.setNavigationLabSpeedMultiplier(3);
+    vm.resetNavigationLabPoints();
+    expect(vm.navigationLabPickMode).toBe('origin');
+    expect(vm.navigationLabSpeedMultiplier).toBe(60);
+    expect(vm.navigationLabOrigin.name).toBe('Punto A (simulado)');
+  });
+
+  it('startNavigationLabSimulation traza A→B y propaga el multiplicador a la sesión', async () => {
+    const directions = {
+      run: jest.fn().mockResolvedValue(makeRouteDirections({ distanceKm: 30 })),
+    };
+    const vm = makeVM(makeLocationStore(), makeSearchUseCase(), directions);
+    vm.setNavigationLabSpeedMultiplier(1);
+    const startSpy = jest.spyOn((vm as any).navSession, 'start');
+
+    await vm.startNavigationLabSimulation();
+
+    expect(directions.run).toHaveBeenCalled();
+    // El Lab arranca una sesión simulada a la velocidad elegida (contrato clave).
+    expect(startSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ isSimulated: true, simSpeedMultiplier: 1 }),
+    );
+    expect(vm.isNavigating).toBe(true);
+    expect(vm.isSimulatedNavigation).toBe(true);
+    vm.dispose();
+  });
+});
+
+describe('HomeViewModel — persistencia del mute', () => {
+  it('carga el mute persistido al inicializar', async () => {
+    const getNavPreferences = { run: jest.fn().mockResolvedValue({ muted: true }) };
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      getNavPreferences,
+    );
+    await vm.initialize();
+    await flush();
+    expect(getNavPreferences.run).toHaveBeenCalledTimes(1);
+    expect(vm.isMuted).toBe(true);
+  });
+
+  it('toggleMute persiste el nuevo valor', () => {
+    const setMute = { run: jest.fn().mockResolvedValue(undefined) };
+    const vm = makeVM(
+      makeLocationStore(),
+      makeSearchUseCase(),
+      makeDirectionsUseCase(),
+      makeElevationUseCase(),
+      makeRiderUseCase(),
+      makeMotosUseCase(),
+      makeFuelUseCase(),
+      makeFuelStationsUseCase(),
+      makeGetRecentsUseCase(),
+      makeAddRecentUseCase(),
+      makeGetAllRoutesUseCase(),
+      makeInferStopKindUseCase(),
+      makeGetNavPreferencesUseCase(),
+      setMute,
+    );
+    expect(vm.isMuted).toBe(false);
+    vm.toggleMute();
+    expect(vm.isMuted).toBe(true);
+    expect(setMute.run).toHaveBeenCalledWith(true);
   });
 });

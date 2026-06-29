@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { makeAutoObservable, runInAction } from 'mobx';
 
+import { ENV } from '@/config/env';
 import { TYPES } from '@/config/types';
 
 import { AutonomyEstimate } from '@/domain/entities/AutonomyEstimate';
@@ -12,6 +13,7 @@ import { RouteShareCode } from '@/domain/entities/RouteShareCode';
 
 import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
+import { DownloadOfflineCorridorUseCase } from '@/domain/useCases/DownloadOfflineCorridorUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { FindFuelStationsUseCase } from '@/domain/useCases/FindFuelStationsUseCase';
 import { GenerateRouteShareCodeUseCase } from '@/domain/useCases/GenerateRouteShareCodeUseCase';
@@ -57,6 +59,11 @@ export class RouteDetailViewModel {
   isDeleteError: string | null = null;
   hasDeleteSuccess: boolean = false;
 
+  // ── Descarga offline del corredor (F5 — G12) ────────────────────────────
+  isOfflineDownloading: boolean = false;
+  isOfflineError: string | null = null;
+  hasOfflineSuccess: boolean = false;
+
   // ── Share code state (C.4) ─────────────────────────────────────────────
   /** Codigo activo de compartir; `null` si no se ha generado o fue revocado. */
   shareCode: RouteShareCode | null = null;
@@ -92,6 +99,8 @@ export class RouteDetailViewModel {
     private readonly createTripPartyUseCase: CreateTripPartyUseCase,
     @inject(TYPES.TripPartyStore)
     public readonly partyStore: TripPartyStore,
+    @inject(TYPES.DownloadOfflineCorridorUseCase)
+    private readonly downloadOfflineCorridorUseCase: DownloadOfflineCorridorUseCase,
   ) {
     makeAutoObservable(this);
   }
@@ -312,6 +321,46 @@ export class RouteDetailViewModel {
       await this.loadFuelStations();
     } catch (error) {
       this.handleError(error, 'estimate');
+    }
+  }
+
+  /** La ruta tiene geometría suficiente para descargar su corredor offline. */
+  get canDownloadOffline(): boolean {
+    return (this.isRouteResponse?.geometry.length ?? 0) >= 2;
+  }
+
+  /**
+   * Descarga el corredor de tiles offline de esta ruta (F5 — G12), para
+   * navegarla sin señal. La descarga real corre en device (Mapbox).
+   */
+  async downloadOffline(): Promise<void> {
+    const route = this.isRouteResponse;
+    if (!route || route.geometry.length < 2) return;
+    runInAction(() => {
+      this.isOfflineDownloading = true;
+      this.isOfflineError = null;
+      this.hasOfflineSuccess = false;
+    });
+    try {
+      await this.downloadOfflineCorridorUseCase.run({
+        name: `route-${route.id}`,
+        geometry: route.geometry,
+        styleUrl: ENV.MAP_STYLE_URL,
+      });
+      runInAction(() => {
+        this.isOfflineDownloading = false;
+        this.hasOfflineSuccess = true;
+      });
+    } catch (error) {
+      this.logger.error(
+        `Error descargando offline: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      runInAction(() => {
+        this.isOfflineDownloading = false;
+        this.isOfflineError = 'No se pudo descargar el mapa offline.';
+      });
     }
   }
 

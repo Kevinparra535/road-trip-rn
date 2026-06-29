@@ -44,7 +44,9 @@ import { FuelStationRepositoryImpl } from '@/data/repositories/FuelStationReposi
 import { LocationRepositoryImpl } from '@/data/repositories/LocationRepositoryImpl';
 import { MotorcycleRepositoryImpl } from '@/data/repositories/MotorcycleRepositoryImpl';
 import { MotoStatsRepositoryImpl } from '@/data/repositories/MotoStatsRepositoryImpl';
+import { NavPreferencesRepositoryImpl } from '@/data/repositories/NavPreferencesRepositoryImpl';
 import { NetworkRepositoryImpl } from '@/data/repositories/NetworkRepositoryImpl';
+import { OfflineMapRepositoryImpl } from '@/data/repositories/OfflineMapRepositoryImpl';
 import { OptimizationRepositoryImpl } from '@/data/repositories/OptimizationRepositoryImpl';
 import { PlaceCategorySearchRepositoryImpl } from '@/data/repositories/PlaceCategorySearchRepositoryImpl';
 import { PlaceSearchRepositoryImpl } from '@/data/repositories/PlaceSearchRepositoryImpl';
@@ -63,7 +65,9 @@ import type { FuelStationRepository } from '@/domain/repositories/FuelStationRep
 import type { LocationRepository } from '@/domain/repositories/LocationRepository';
 import type { MotorcycleRepository } from '@/domain/repositories/MotorcycleRepository';
 import type { MotoStatsRepository } from '@/domain/repositories/MotoStatsRepository';
+import type { NavPreferencesRepository } from '@/domain/repositories/NavPreferencesRepository';
 import type { NetworkRepository } from '@/domain/repositories/NetworkRepository';
+import type { OfflineMapRepository } from '@/domain/repositories/OfflineMapRepository';
 import type { OptimizationRepository } from '@/domain/repositories/OptimizationRepository';
 import type { PlaceCategorySearchRepository } from '@/domain/repositories/PlaceCategorySearchRepository';
 import type { PlaceSearchRepository } from '@/domain/repositories/PlaceSearchRepository';
@@ -77,14 +81,19 @@ import type { TripPartyRepository } from '@/domain/repositories/TripPartyReposit
 import type { HttpManager } from '@/domain/services/HttpManager';
 
 import { AddRecentDestinationUseCase } from '@/domain/useCases/AddRecentDestinationUseCase';
+import { BuildNavigationSuggestionsUseCase } from '@/domain/useCases/BuildNavigationSuggestionsUseCase';
+import { BuildRoutePreviewUseCase } from '@/domain/useCases/BuildRoutePreviewUseCase';
 import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirectionsUseCase';
 import { ClearRecentDestinationsUseCase } from '@/domain/useCases/ClearRecentDestinationsUseCase';
 import { ClearRouteDraftUseCase } from '@/domain/useCases/ClearRouteDraftUseCase';
+import { ComputeNextManeuverUseCase } from '@/domain/useCases/ComputeNextManeuverUseCase';
 import { CreateMotorcycleUseCase } from '@/domain/useCases/CreateMotorcycleUseCase';
 import { CreateRouteUseCase } from '@/domain/useCases/CreateRouteUseCase';
 import { CreateTripPartyUseCase } from '@/domain/useCases/CreateTripPartyUseCase';
 import { DeleteMotorcycleUseCase } from '@/domain/useCases/DeleteMotorcycleUseCase';
 import { DeleteRouteUseCase } from '@/domain/useCases/DeleteRouteUseCase';
+import { DetectOffRouteUseCase } from '@/domain/useCases/DetectOffRouteUseCase';
+import { DownloadOfflineCorridorUseCase } from '@/domain/useCases/DownloadOfflineCorridorUseCase';
 import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCase';
 import { EstimatePartyFuelPlanUseCase } from '@/domain/useCases/EstimatePartyFuelPlanUseCase';
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
@@ -97,6 +106,7 @@ import { GetAllRoutesUseCase } from '@/domain/useCases/GetAllRoutesUseCase';
 import { GetCurrentLocationUseCase } from '@/domain/useCases/GetCurrentLocationUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
 import { GetMotorcycleUseCase } from '@/domain/useCases/GetMotorcycleUseCase';
+import { GetNavPreferencesUseCase } from '@/domain/useCases/GetNavPreferencesUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 import { GetRecentDestinationsUseCase } from '@/domain/useCases/GetRecentDestinationsUseCase';
 import { GetRouteDraftUseCase } from '@/domain/useCases/GetRouteDraftUseCase';
@@ -110,17 +120,22 @@ import { ObserveAuthStateUseCase } from '@/domain/useCases/ObserveAuthStateUseCa
 import { ObserveNetworkStatusUseCase } from '@/domain/useCases/ObserveNetworkStatusUseCase';
 import { ObserveTripPartyUseCase } from '@/domain/useCases/ObserveTripPartyUseCase';
 import { OptimizeRouteOrderUseCase } from '@/domain/useCases/OptimizeRouteOrderUseCase';
+import { RequestBackgroundLocationUseCase } from '@/domain/useCases/RequestBackgroundLocationUseCase';
 import { RequestLocationPermissionUseCase } from '@/domain/useCases/RequestLocationPermissionUseCase';
+import { RerouteUseCase } from '@/domain/useCases/RerouteUseCase';
 import { ResolveRouteShareCodeUseCase } from '@/domain/useCases/ResolveRouteShareCodeUseCase';
 import { RevokeRouteShareCodeUseCase } from '@/domain/useCases/RevokeRouteShareCodeUseCase';
 import { SaveRouteDraftUseCase } from '@/domain/useCases/SaveRouteDraftUseCase';
 import { SearchPlacesByCategoryUseCase } from '@/domain/useCases/SearchPlacesByCategoryUseCase';
 import { SearchPlacesUseCase } from '@/domain/useCases/SearchPlacesUseCase';
+import { SetMutePreferenceUseCase } from '@/domain/useCases/SetMutePreferenceUseCase';
 import { SignInUseCase } from '@/domain/useCases/SignInUseCase';
 import { SignOutUseCase } from '@/domain/useCases/SignOutUseCase';
 import { SignUpUseCase } from '@/domain/useCases/SignUpUseCase';
+import { SnapToRouteUseCase } from '@/domain/useCases/SnapToRouteUseCase';
 import { UpdateMotorcycleUseCase } from '@/domain/useCases/UpdateMotorcycleUseCase';
 import { UpdateRouteUseCase } from '@/domain/useCases/UpdateRouteUseCase';
+import { WatchBackgroundLocationUseCase } from '@/domain/useCases/WatchBackgroundLocationUseCase';
 import { WatchHeadingUseCase } from '@/domain/useCases/WatchHeadingUseCase';
 import { WatchLocationUseCase } from '@/domain/useCases/WatchLocationUseCase';
 
@@ -141,8 +156,10 @@ import { RoutesViewModel } from '@/ui/screens/Routes/RoutesViewModel';
 
 import { FetchHttpManager } from '@/data/network/FetchHttpManager';
 import { LocationStore } from '@/ui/store/LocationStore';
+import { NavigationSessionStore } from '@/ui/store/NavigationSessionStore';
 import { NavigationStore } from '@/ui/store/NavigationStore';
 import { NetworkStore } from '@/ui/store/NetworkStore';
+import { PendingDeepLinkStore } from '@/ui/store/PendingDeepLinkStore';
 import { PlannerInsightsStore } from '@/ui/store/PlannerInsightsStore';
 import { PlannerStore } from '@/ui/store/PlannerStore';
 import { PlannerTemplateController } from '@/ui/store/PlannerTemplateController';
@@ -279,12 +296,20 @@ container
   .to(RecentDestinationRepositoryImpl)
   .inSingletonScope();
 container
+  .bind<NavPreferencesRepository>(TYPES.NavPreferencesRepository)
+  .to(NavPreferencesRepositoryImpl)
+  .inSingletonScope();
+container
   .bind<RouteDraftRepository>(TYPES.RouteDraftRepository)
   .to(RouteDraftRepositoryImpl)
   .inSingletonScope();
 container
   .bind<ElevationRepository>(TYPES.ElevationRepository)
   .to(ElevationRepositoryImpl)
+  .inSingletonScope();
+container
+  .bind<OfflineMapRepository>(TYPES.OfflineMapRepository)
+  .to(OfflineMapRepositoryImpl)
   .inSingletonScope();
 container
   .bind<OptimizationRepository>(TYPES.OptimizationRepository)
@@ -330,6 +355,23 @@ container
   .bind<CalculateDirectionsUseCase>(TYPES.CalculateDirectionsUseCase)
   .to(CalculateDirectionsUseCase);
 container
+  .bind<BuildRoutePreviewUseCase>(TYPES.BuildRoutePreviewUseCase)
+  .to(BuildRoutePreviewUseCase);
+container.bind<SnapToRouteUseCase>(TYPES.SnapToRouteUseCase).to(SnapToRouteUseCase);
+container
+  .bind<ComputeNextManeuverUseCase>(TYPES.ComputeNextManeuverUseCase)
+  .to(ComputeNextManeuverUseCase);
+container
+  .bind<DetectOffRouteUseCase>(TYPES.DetectOffRouteUseCase)
+  .to(DetectOffRouteUseCase);
+container
+  .bind<BuildNavigationSuggestionsUseCase>(TYPES.BuildNavigationSuggestionsUseCase)
+  .to(BuildNavigationSuggestionsUseCase);
+container.bind<RerouteUseCase>(TYPES.RerouteUseCase).to(RerouteUseCase);
+container
+  .bind<DownloadOfflineCorridorUseCase>(TYPES.DownloadOfflineCorridorUseCase)
+  .to(DownloadOfflineCorridorUseCase);
+container
   .bind<EstimateAutonomyUseCase>(TYPES.EstimateAutonomyUseCase)
   .to(EstimateAutonomyUseCase);
 container
@@ -339,9 +381,15 @@ container
   .bind<RequestLocationPermissionUseCase>(TYPES.RequestLocationPermissionUseCase)
   .to(RequestLocationPermissionUseCase);
 container
+  .bind<RequestBackgroundLocationUseCase>(TYPES.RequestBackgroundLocationUseCase)
+  .to(RequestBackgroundLocationUseCase);
+container
   .bind<GetCurrentLocationUseCase>(TYPES.GetCurrentLocationUseCase)
   .to(GetCurrentLocationUseCase);
 container.bind<WatchLocationUseCase>(TYPES.WatchLocationUseCase).to(WatchLocationUseCase);
+container
+  .bind<WatchBackgroundLocationUseCase>(TYPES.WatchBackgroundLocationUseCase)
+  .to(WatchBackgroundLocationUseCase);
 container.bind<WatchHeadingUseCase>(TYPES.WatchHeadingUseCase).to(WatchHeadingUseCase);
 container.bind<SearchPlacesUseCase>(TYPES.SearchPlacesUseCase).to(SearchPlacesUseCase);
 container
@@ -387,6 +435,12 @@ container
 container
   .bind<ClearRecentDestinationsUseCase>(TYPES.ClearRecentDestinationsUseCase)
   .to(ClearRecentDestinationsUseCase);
+container
+  .bind<GetNavPreferencesUseCase>(TYPES.GetNavPreferencesUseCase)
+  .to(GetNavPreferencesUseCase);
+container
+  .bind<SetMutePreferenceUseCase>(TYPES.SetMutePreferenceUseCase)
+  .to(SetMutePreferenceUseCase);
 container.bind<GetRouteDraftUseCase>(TYPES.GetRouteDraftUseCase).to(GetRouteDraftUseCase);
 container
   .bind<SaveRouteDraftUseCase>(TYPES.SaveRouteDraftUseCase)
@@ -419,6 +473,14 @@ container.bind<PlannerStore>(TYPES.PlannerStore).to(PlannerStore).inSingletonSco
 container
   .bind<NavigationStore>(TYPES.NavigationStore)
   .to(NavigationStore)
+  .inSingletonScope();
+container
+  .bind<NavigationSessionStore>(TYPES.NavigationSessionStore)
+  .to(NavigationSessionStore)
+  .inSingletonScope();
+container
+  .bind<PendingDeepLinkStore>(TYPES.PendingDeepLinkStore)
+  .to(PendingDeepLinkStore)
   .inSingletonScope();
 container
   .bind<PlannerInsightsStore>(TYPES.PlannerInsightsStore)

@@ -18,7 +18,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.kevcoders.roadtrip",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": ["location"]
       }
     },
     "android": {
@@ -40,7 +41,9 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Road Trip usa tu ubicacion para mostrar tu posicion en el mapa y planear tus rutas en moto."
+          "locationAlwaysAndWhenInUsePermission": "Road Trip usa tu ubicacion para mostrar tu posicion en el mapa y planear tus rutas en moto.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
         }
       ]
     ],

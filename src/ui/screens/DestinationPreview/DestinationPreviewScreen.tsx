@@ -13,11 +13,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { observer } from 'mobx-react-lite';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
 import PrimaryButton from '@/ui/components/PrimaryButton';
+import RideStyleSelector from '@/ui/components/RideStyleSelector';
 import RideTypeSelector from '@/ui/components/RideTypeSelector';
+
+import { AppStackParamList } from '@/ui/navigation/types';
 
 import BorderRadius, { iOSCornerStyle } from '@/ui/styles/BorderRadius';
 import Colors from '@/ui/styles/Colors';
@@ -41,7 +45,7 @@ import { DestinationPreviewViewModel } from './DestinationPreviewViewModel';
  * Es 100% presentacional: todo el estado vive en `DestinationPreviewViewModel`.
  */
 const DestinationPreviewScreen = observer(() => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const { width } = useWindowDimensions();
   const viewModel = useViewModel<DestinationPreviewViewModel>(
     TYPES.DestinationPreviewViewModel,
@@ -85,20 +89,13 @@ const DestinationPreviewScreen = observer(() => {
    * Acción A2 del flow brief: en vez de trazar la ruta directo en el Home,
    * abrir el RoutePlanner con este destino preseteado. El Planner mostrará
    * el bloque "Falta arranque" con los 3 botones para elegir el inicio.
-   *
-   * Cast `as never` porque `RoutePlanner` vive en RoutesStackParamList y
-   * estamos navegando desde el Home stack — el AppDrawer es flat asi que
-   * resuelve en runtime aunque TS no lo sepa.
+   * `RoutePlanner` vive flat en el stack raíz (`AppStackParamList`).
    */
   const handleOpenInPlanner = () => {
-    if (!place) return;
+    const destinationPlace = viewModel.plannerDestinationParam;
+    if (!destinationPlace) return;
     viewModel.cancel(); // limpia el preview state del Home
-    // Cast `as any` porque el RoutePlanner vive en RoutesStackParamList
-    // pero estamos navegando desde el Home stack — el AppDrawer flat lo
-    // resuelve en runtime.
-    (navigation as any).navigate('RoutePlanner', {
-      destinationPlace: viewModel.plannerDestinationParam,
-    });
+    navigation.navigate('RoutePlanner', { destinationPlace });
   };
 
   const typeLabel = viewModel.typeLabel;
@@ -145,15 +142,51 @@ const DestinationPreviewScreen = observer(() => {
           <View style={styles.stats}>
             <View style={styles.statItem}>
               <Ionicons name="navigate-outline" size={14} color={Colors.base.accent} />
-              <Text style={styles.statValue}>{viewModel.distanceLabel}</Text>
-              <Text style={styles.statLabel}>aprox.</Text>
+              <Text style={styles.statValue}>
+                {viewModel.realDistanceLabel ?? viewModel.distanceLabel}
+              </Text>
+              <Text style={styles.statLabel}>
+                {viewModel.hasRoutePreview ? 'ruta' : 'aprox.'}
+              </Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Ionicons name="time-outline" size={14} color={Colors.base.accent} />
-              <Text style={styles.statValue}>{viewModel.etaLabel}</Text>
+              <Text style={styles.statValue}>
+                {viewModel.realEtaLabel ?? viewModel.etaLabel}
+              </Text>
               <Text style={styles.statLabel}>en moto</Text>
             </View>
+          </View>
+        ) : null}
+
+        {/* Veredicto de autonomía (F2a): ¿llegas con el tanque? / N tanqueos. */}
+        {viewModel.autonomyVerdict ? (
+          <View
+            style={[
+              styles.verdictCard,
+              viewModel.autonomyVerdict.reaches
+                ? styles.verdictReaches
+                : styles.verdictRefuel,
+            ]}
+          >
+            <Ionicons
+              name={
+                viewModel.autonomyVerdict.reaches ? 'checkmark-circle' : 'alert-circle'
+              }
+              size={16}
+              color={
+                viewModel.autonomyVerdict.reaches
+                  ? Colors.alerts.check
+                  : Colors.base.accent
+              }
+            />
+            <Text style={styles.verdictText}>{viewModel.autonomyVerdict.label}</Text>
+          </View>
+        ) : viewModel.isRoutePreviewLoading ? (
+          <View style={styles.verdictCard}>
+            <ActivityIndicator size="small" color={Colors.base.textMuted} />
+            <Text style={styles.verdictText}>Calculando autonomía…</Text>
           </View>
         ) : null}
 
@@ -184,6 +217,14 @@ const DestinationPreviewScreen = observer(() => {
             value={viewModel.rideType}
             onChange={(rideType) => viewModel.setRideType(rideType)}
             variant="compact"
+          />
+        </View>
+
+        <View style={styles.rideTypeSection}>
+          <Text style={styles.rideTypeLabel}>Estilo de ruta</Text>
+          <RideStyleSelector
+            value={viewModel.rideStyle}
+            onChange={(rideStyle) => viewModel.setRideStyle(rideStyle)}
           />
         </View>
 
@@ -305,6 +346,32 @@ const styles = StyleSheet.create({
     width: 1,
     alignSelf: 'stretch',
     backgroundColor: Colors.base.cardBorder,
+  },
+
+  // ── Veredicto de autonomía (F2a) ──────────────────────────────────────────
+  verdictCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacings.sm,
+    marginTop: Spacings.sm,
+    paddingVertical: Spacings.sm,
+    paddingHorizontal: Spacings.md,
+    backgroundColor: Colors.base.bgCard,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.base.cardBorder,
+    ...iOSCornerStyle,
+  },
+  verdictReaches: {
+    borderColor: Colors.alerts.check,
+  },
+  verdictRefuel: {
+    borderColor: Colors.base.accent,
+  },
+  verdictText: {
+    flex: 1,
+    ...Fonts.smallBodyText,
+    color: Colors.base.textPrimary,
   },
 
   // ── Wikipedia summary ─────────────────────────────────────────────────────

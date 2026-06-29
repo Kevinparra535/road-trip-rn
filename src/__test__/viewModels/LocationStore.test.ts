@@ -5,8 +5,9 @@ import { makeDeviceHeading, makeGeoLocation } from '../factories';
 const makeUseCases = () => ({
   requestPermission: { run: jest.fn() },
   getCurrentLocation: { run: jest.fn() },
-  watchLocation: { run: jest.fn() },
+  watchLocation: { run: jest.fn().mockResolvedValue(jest.fn()) },
   watchHeading: { run: jest.fn() },
+  watchBackgroundLocation: { run: jest.fn().mockResolvedValue(jest.fn()) },
 });
 
 const makeStore = (uc = makeUseCases()) =>
@@ -15,6 +16,7 @@ const makeStore = (uc = makeUseCases()) =>
     uc.getCurrentLocation as any,
     uc.watchLocation as any,
     uc.watchHeading as any,
+    uc.watchBackgroundLocation as any,
   );
 
 describe('LocationStore', () => {
@@ -212,5 +214,39 @@ describe('LocationStore', () => {
     const store = makeStore(uc);
     await store.initialize();
     expect(store.isHeadingError).toContain('compass fail');
+  });
+
+  it('has no speed before any location fix', () => {
+    expect(makeStore().speed).toBeNull();
+  });
+
+  it('exposes the GPS speed in m/s from the location fix', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation({ speed: 12.5 }));
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.speed).toBe(12.5);
+  });
+
+  it('normalizes the -1 / negative speed sentinel to null', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation({ speed: -1 }));
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.speed).toBeNull();
+  });
+
+  it('normalizes a null speed to null', async () => {
+    const uc = makeUseCases();
+    uc.requestPermission.run.mockResolvedValue('granted');
+    uc.getCurrentLocation.run.mockResolvedValue(makeGeoLocation({ speed: null }));
+    uc.watchLocation.run.mockResolvedValue(jest.fn());
+    const store = makeStore(uc);
+    await store.initialize();
+    expect(store.speed).toBeNull();
   });
 });

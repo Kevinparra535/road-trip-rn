@@ -22,6 +22,7 @@ type WaypointJson = {
   user_override_kind?: boolean;
   notes?: string;
   stop_duration_min?: number;
+  is_via?: boolean;
   is_return_clone?: boolean;
 };
 
@@ -209,6 +210,7 @@ export class RouteModel {
             notes: typeof w.notes === 'string' ? w.notes : undefined,
             stop_duration_min:
               typeof w.stop_duration_min === 'number' ? w.stop_duration_min : undefined,
+            is_via: typeof w.is_via === 'boolean' ? w.is_via : undefined,
             is_return_clone:
               typeof w.is_return_clone === 'boolean' ? w.is_return_clone : undefined,
           }))
@@ -247,6 +249,7 @@ export class RouteModel {
         notes: w.hasNotes() ? w.notes : undefined,
         stop_duration_min:
           w.stopDurationMin && w.stopDurationMin > 0 ? w.stopDurationMin : undefined,
+        is_via: w.isVia ? true : undefined,
         is_return_clone: w.isReturnClone ? true : undefined,
       })),
       geometry: encodePolyline(route.geometry),
@@ -318,6 +321,7 @@ RouteModel.prototype.toDomain = function toDomain(): Route {
         userOverrideKind: migrated ? false : w.user_override_kind,
         notes: w.notes,
         stopDurationMin: w.stop_duration_min,
+        isVia: w.is_via,
         isReturnClone: w.is_return_clone,
       });
     })

@@ -131,6 +131,17 @@ describe('Waypoint', () => {
     expect(makeWaypoint({ stopDurationMin: 60 }).stopDurationLabel()).toBe('1 h');
     expect(makeWaypoint({ stopDurationMin: 75 }).stopDurationLabel()).toBe('1 h 15 min');
   });
+
+  it('distingue via (paso silencioso) de stop (parada real) — G13', () => {
+    // start/destination nunca son "stop points".
+    expect(makeWaypoint({ kind: 'start' }).isStopPoint()).toBe(false);
+    expect(makeWaypoint({ kind: 'destination' }).isStopPoint()).toBe(false);
+    // Intermedio sin marca => parada real (la nav anuncia el arribo).
+    expect(makeWaypoint({ kind: 'food' }).isStopPoint()).toBe(true);
+    // Intermedio marcado como via => paso silencioso.
+    expect(makeWaypoint({ kind: 'food', isVia: true }).isStopPoint()).toBe(false);
+    expect(makeWaypoint({ kind: 'food', isVia: true }).isIntermediate()).toBe(true);
+  });
 });
 
 describe('RouteAvoidPreferences', () => {

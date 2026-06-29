@@ -29,6 +29,13 @@ export type WaypointConstructorParams = {
   notes?: string;
   /** Duracion planeada de la parada, en minutos. Alimenta el ETA con paradas. */
   stopDurationMin?: number;
+  /**
+   * `true` = punto "via" (paso obligado por el que se pasa SIN detenerse, p. ej.
+   * para forzar una carretera escénica); `false`/ausente = "stop" (parada real
+   * donde el rider se detiene → la nav puede anunciar el arribo). Estilo Scenic
+   * (G13 del plan). Solo aplica a waypoints intermedios.
+   */
+  isVia?: boolean;
   [key: string]: any;
 };
 
@@ -46,6 +53,7 @@ export class Waypoint {
   userOverrideKind?: boolean;
   notes?: string;
   stopDurationMin?: number;
+  isVia?: boolean;
 
   constructor(params: WaypointConstructorParams) {
     this.id = params.id;
@@ -58,6 +66,7 @@ export class Waypoint {
     this.userOverrideKind = params.userOverrideKind;
     this.notes = params.notes;
     this.stopDurationMin = params.stopDurationMin;
+    this.isVia = params.isVia;
 
     Object.assign(this, params);
   }
@@ -70,6 +79,15 @@ export class Waypoint {
   /** `true` si es una parada intermedia (no start ni destination). */
   isIntermediate(): boolean {
     return this.kind !== 'start' && this.kind !== 'destination';
+  }
+
+  /**
+   * `true` si es una parada REAL donde el rider se detiene (intermedia y no
+   * marcada como "via"). La navegación anuncia el arribo a estos puntos; los
+   * "via" se pasan en silencio (G13).
+   */
+  isStopPoint(): boolean {
+    return this.isIntermediate() && this.isVia !== true;
   }
 
   /** `true` si el rider dejo una nota con contenido para esta parada. */

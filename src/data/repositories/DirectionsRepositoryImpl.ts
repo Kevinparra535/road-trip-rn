@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 
 import { TYPES } from '@/config/types';
 
+import { RideStyle, rideStyleExcludeTokens } from '@/domain/entities/RideStyle';
 import { RideType } from '@/domain/entities/Route';
 import { RouteAvoidPreferences } from '@/domain/entities/RouteAvoidPreferences';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
@@ -38,10 +39,18 @@ export class DirectionsRepositoryImpl implements DirectionsRepository {
     waypoints: Waypoint[],
     rideType: RideType,
     avoid?: RouteAvoidPreferences,
+    rideStyle?: RideStyle,
   ): Promise<RouteDirections> {
     const ordered = [...waypoints].sort((a, b) => a.order - b.order);
     const coordinates = ordered.map((w) => w.toLngLat());
-    const exclude = avoidToExclude(avoid);
+    // Fusiona el `exclude` de las preferencias avoid con la heurística del
+    // estilo de ruta (F5), deduplicando tokens.
+    const avoidExclude = avoidToExclude(avoid);
+    const tokens = new Set<string>([
+      ...(avoidExclude ? avoidExclude.split(',') : []),
+      ...rideStyleExcludeTokens(rideStyle),
+    ]);
+    const exclude = tokens.size > 0 ? Array.from(tokens).join(',') : undefined;
     const model = await this.service.fetchDirections(
       coordinates,
       rideType,
