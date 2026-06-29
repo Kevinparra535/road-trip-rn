@@ -53,6 +53,7 @@ import {
   inferStopKindFromInput,
   InferStopKindUseCase,
 } from '@/domain/useCases/InferStopKindUseCase';
+import { tripLoadKg } from '@/domain/useCases/rangeFactor';
 import {
   MIN_PLACE_QUERY_LENGTH,
   SearchPlacesUseCase,
@@ -2173,12 +2174,17 @@ export class HomeViewModel {
 
     this.updateLoadingState(true, null, 'fuel');
     try {
+      // Condiciones del VIAJE (F1): carga real de hoy + ritmo + tipo de rodada,
+      // mismas señales que el preview, para que el veredicto sea consistente.
+      const conditions = this.navStore.ridingConditions;
       const estimate = await this.estimateRouteFuelUseCase.run({
         motorcycle,
         distanceKm: route.distanceKm,
         durationMin: route.durationMin,
         ascentM: this.isElevationResponse?.ascentM ?? 0,
-        loadKg: motorcycle.totalLoadKg(),
+        loadKg: tripLoadKg(motorcycle, conditions),
+        aggressiveRiding: conditions.aggressiveRiding,
+        rideType: this.navStore.rideType,
       });
       runInAction(() => {
         this.isFuelEstimateResponse = estimate;

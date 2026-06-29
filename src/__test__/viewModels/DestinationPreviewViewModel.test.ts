@@ -363,4 +363,28 @@ describe('DestinationPreviewViewModel', () => {
     await vm.loadRoutePreview();
     expect(build.run.mock.calls[0][0].rideStyle).toBe('curvy');
   });
+
+  it('las condiciones del viaje se reflejan y se pasan al preview (F1)', async () => {
+    const { navStore, location } = makeLocatedNav();
+    const build = makeBuildRoutePreview();
+    const vm = new DestinationPreviewViewModel(
+      navStore as any,
+      location as any,
+      makeUseCase() as any,
+      build as any,
+    );
+
+    expect(vm.hasPassenger).toBe(false);
+    vm.togglePassenger();
+    vm.toggleAggressiveRiding();
+    expect(vm.hasPassenger).toBe(true);
+    expect(vm.aggressiveRiding).toBe(true);
+
+    await vm.loadRoutePreview();
+
+    const arg = build.run.mock.calls.at(-1)?.[0];
+    expect(arg.conditions.hasPassenger).toBe(true);
+    expect(arg.conditions.aggressiveRiding).toBe(true);
+    expect(arg.conditions.hasLuggage).toBe(false);
+  });
 });

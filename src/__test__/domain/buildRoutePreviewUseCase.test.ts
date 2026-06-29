@@ -1,3 +1,5 @@
+import { RidingConditions } from '@/domain/entities/RidingConditions';
+
 import { BuildRoutePreviewUseCase } from '@/domain/useCases/BuildRoutePreviewUseCase';
 
 import { makeMotorcycle, makeRider, makeRouteDirections } from '../factories';
@@ -59,5 +61,35 @@ describe('BuildRoutePreviewUseCase', () => {
     const { uc } = make({ rider: jest.fn().mockResolvedValue(null) });
     const result = await uc.run(input);
     expect(result.fuel).toBeNull();
+  });
+
+  it('pasa la carga del VIAJE + ritmo + rideType al estimador (F1)', async () => {
+    const fuelRun = jest.fn().mockResolvedValue({ reachesWithoutRefuel: true });
+    const { uc } = make({ fuel: fuelRun });
+
+    await uc.run({
+      ...input,
+      conditions: new RidingConditions({
+        hasPassenger: true,
+        hasLuggage: false,
+        aggressiveRiding: true,
+      }),
+    });
+
+    const arg = fuelRun.mock.calls[0][0];
+    // moto default: piloto 78 + copiloto 65 = 143 kg de carga del viaje.
+    expect(arg.loadKg).toBe(143);
+    expect(arg.aggressiveRiding).toBe(true);
+    expect(arg.rideType).toBe('highway');
+  });
+
+  it('sin condiciones cae a la carga estática de la moto (F1)', async () => {
+    const fuelRun = jest.fn().mockResolvedValue({ reachesWithoutRefuel: true });
+    const { uc } = make({ fuel: fuelRun });
+
+    await uc.run(input);
+
+    // totalLoadKg de la moto default = solo piloto (78 kg), sin copiloto/maletas.
+    expect(fuelRun.mock.calls[0][0].loadKg).toBe(78);
   });
 });

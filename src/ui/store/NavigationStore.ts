@@ -3,6 +3,7 @@ import { makeAutoObservable, runInAction } from 'mobx';
 
 import { Place } from '@/domain/entities/Place';
 import { DEFAULT_RIDE_STYLE, RideStyle } from '@/domain/entities/RideStyle';
+import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { Waypoint } from '@/domain/entities/Waypoint';
@@ -54,6 +55,16 @@ export class NavigationStore {
   /** Estilo de ruta (F5: fast/curvy/fuel) elegido en el preview. */
   rideStyle: RideStyle = DEFAULT_RIDE_STYLE;
   /**
+   * Condiciones del VIAJE (no la config estática de la moto): si HOY va con
+   * copiloto, con maletas y a qué ritmo. Las elige el rider en el preview y las
+   * lee tanto el preview como la ruta activa del Home para que el veredicto de
+   * autonomía sea "según la moto Y el viaje". El Planner tiene su propia copia
+   * (`PlannerInsightsStore`).
+   */
+  hasPassenger: boolean = false;
+  hasLuggage: boolean = false;
+  aggressiveRiding: boolean = false;
+  /**
    * Señal one-shot de confirmación: al confirmar el preview, el lugar pasa aquí
    * y la `reaction` del Home lo consume (selectDestination + recordRecent) y
    * llama `consumeConfirmed()` para limpiarla.
@@ -80,6 +91,15 @@ export class NavigationStore {
 
   get hasPreview(): boolean {
     return this.previewPlace !== null;
+  }
+
+  /** Condiciones del viaje como value object de dominio para el estimador. */
+  get ridingConditions(): RidingConditions {
+    return new RidingConditions({
+      hasPassenger: this.hasPassenger,
+      hasLuggage: this.hasLuggage,
+      aggressiveRiding: this.aggressiveRiding,
+    });
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -131,6 +151,27 @@ export class NavigationStore {
     });
   }
 
+  /** Alterna si el viaje va con copiloto. */
+  togglePassenger(): void {
+    runInAction(() => {
+      this.hasPassenger = !this.hasPassenger;
+    });
+  }
+
+  /** Alterna si el viaje lleva maletas. */
+  toggleLuggage(): void {
+    runInAction(() => {
+      this.hasLuggage = !this.hasLuggage;
+    });
+  }
+
+  /** Alterna el ritmo exigente del viaje. */
+  toggleAggressiveRiding(): void {
+    runInAction(() => {
+      this.aggressiveRiding = !this.aggressiveRiding;
+    });
+  }
+
   /**
    * Emite la señal de handoff Planner -> navegación. La `reaction` del
    * `HomeViewModel` reacciona a `pendingPlannerNav` para arrancar la nav.
@@ -155,6 +196,9 @@ export class NavigationStore {
       this.pendingPlannerNav = null;
       this.rideType = DEFAULT_RIDE_TYPE;
       this.rideStyle = DEFAULT_RIDE_STYLE;
+      this.hasPassenger = false;
+      this.hasLuggage = false;
+      this.aggressiveRiding = false;
     });
   }
 }

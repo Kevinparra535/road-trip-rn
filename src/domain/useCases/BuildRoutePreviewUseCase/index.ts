@@ -3,6 +3,7 @@ import { inject, injectable } from 'inversify';
 import { TYPES } from '@/config/types';
 
 import { RideStyle } from '@/domain/entities/RideStyle';
+import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { GeoPoint, RideType } from '@/domain/entities/Route';
 import { RouteDirections } from '@/domain/entities/RouteDirections';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
@@ -12,6 +13,7 @@ import { CalculateDirectionsUseCase } from '@/domain/useCases/CalculateDirection
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { GetAllMotorcyclesUseCase } from '@/domain/useCases/GetAllMotorcyclesUseCase';
 import { GetCurrentRiderUseCase } from '@/domain/useCases/GetCurrentRiderUseCase';
+import { tripLoadKg } from '@/domain/useCases/rangeFactor';
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type BuildRoutePreviewInput = {
@@ -22,6 +24,12 @@ export type BuildRoutePreviewInput = {
   rideType: RideType;
   /** Estilo de ruta (F5): fast/curvy/fuel. */
   rideStyle?: RideStyle;
+  /**
+   * Condiciones del viaje (F1): copiloto/maletas/ritmo. Si se entregan, el
+   * veredicto refleja "el viaje de hoy"; si no, cae a la carga estática de la
+   * moto.
+   */
+  conditions?: RidingConditions;
 };
 
 export type RoutePreview = {
@@ -67,6 +75,7 @@ export class BuildRoutePreviewUseCase implements UseCase<
     const motorcycle = await this.resolveActiveMotorcycle();
     if (!motorcycle) return { route, fuel: null };
 
+    const conditions = input.conditions;
     const fuel = await this.estimateRouteFuelUseCase.run({
       motorcycle,
       distanceKm: route.distanceKm,
@@ -74,7 +83,11 @@ export class BuildRoutePreviewUseCase implements UseCase<
       // El preview no resuelve el perfil de elevación (lo hace el Home al
       // confirmar): el veredicto usa desnivel 0 como aproximación conservadora.
       ascentM: 0,
-      loadKg: motorcycle.totalLoadKg(),
+      // Carga del viaje (copiloto/maletas de HOY) si se entregan condiciones;
+      // si no, la carga estática configurada en la moto.
+      loadKg: conditions ? tripLoadKg(motorcycle, conditions) : motorcycle.totalLoadKg(),
+      aggressiveRiding: conditions?.aggressiveRiding,
+      rideType: input.rideType,
     });
     return { route, fuel };
   }

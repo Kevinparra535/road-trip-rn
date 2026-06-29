@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { TYPES } from '@/config/types';
 
+import Chip from '@/ui/components/Chip';
 import PrimaryButton from '@/ui/components/PrimaryButton';
 import RideStyleSelector from '@/ui/components/RideStyleSelector';
 import RideTypeSelector from '@/ui/components/RideTypeSelector';
@@ -228,6 +229,34 @@ const DestinationPreviewScreen = observer(() => {
           />
         </View>
 
+        {/* Condiciones del viaje (F1): ajustan el veredicto de autonomía a HOY. */}
+        <View style={styles.rideTypeSection}>
+          <Text style={styles.rideTypeLabel}>Condiciones del viaje</Text>
+          <View style={styles.conditionsRow}>
+            <Chip
+              label="Copiloto"
+              iconName="person-add-outline"
+              active={viewModel.hasPassenger}
+              onPress={() => viewModel.togglePassenger()}
+              tone={viewModel.hasPassenger ? 'accent' : 'neutral'}
+            />
+            <Chip
+              label="Maletas"
+              iconName="briefcase-outline"
+              active={viewModel.hasLuggage}
+              onPress={() => viewModel.toggleLuggage()}
+              tone={viewModel.hasLuggage ? 'accent' : 'neutral'}
+            />
+            <Chip
+              label="Ritmo"
+              iconName="flash-outline"
+              active={viewModel.aggressiveRiding}
+              onPress={() => viewModel.toggleAggressiveRiding()}
+              tone={viewModel.aggressiveRiding ? 'accent' : 'neutral'}
+            />
+          </View>
+        </View>
+
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Planear con paradas"
@@ -405,6 +434,11 @@ const styles = StyleSheet.create({
 
   // ── Tipo de rodada ────────────────────────────────────────────────────────
   rideTypeSection: {
+    gap: Spacings.sm,
+  },
+  conditionsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacings.sm,
   },
   rideTypeLabel: {

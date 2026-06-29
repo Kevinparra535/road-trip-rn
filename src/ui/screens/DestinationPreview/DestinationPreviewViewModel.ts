@@ -99,7 +99,8 @@ export class DestinationPreviewViewModel {
     // re-dispara si cambia el `rideType` o el `rideStyle` en el sheet, ya que
     // afectan la ruta).
     this.routeReactionDisposer = reaction(
-      () => `${this.previewPlace?.id ?? ''}:${this.rideType}:${this.rideStyle}`,
+      () =>
+        `${this.previewPlace?.id ?? ''}:${this.rideType}:${this.rideStyle}:${this.conditionsKey}`,
       (key) => {
         if (key.startsWith(':')) this.resetRoutePreview();
         else void this.loadRoutePreview();
@@ -304,6 +305,7 @@ export class DestinationPreviewViewModel {
       return;
     }
     const rideTypeAtCall = this.rideType;
+    const conditionsKeyAtCall = this.conditionsKey;
     this.updateLoadingState(true, null, 'routePreview');
     try {
       const preview = await this.buildRoutePreviewUseCase.run({
@@ -316,8 +318,14 @@ export class DestinationPreviewViewModel {
         },
         rideType: rideTypeAtCall,
         rideStyle: this.rideStyle,
+        conditions: this.navStore.ridingConditions,
       });
-      if (this.previewPlace?.id !== place.id || this.rideType !== rideTypeAtCall) return;
+      if (
+        this.previewPlace?.id !== place.id ||
+        this.rideType !== rideTypeAtCall ||
+        this.conditionsKey !== conditionsKeyAtCall
+      )
+        return;
       runInAction(() => {
         this.routePreview = preview.route;
         this.fuelPreview = preview.fuel;
@@ -353,6 +361,41 @@ export class DestinationPreviewViewModel {
   /** Cambia el estilo de ruta antes de confirmar (re-traza el preview). */
   setRideStyle(rideStyle: RideStyle): void {
     this.navStore.setRideStyle(rideStyle);
+  }
+
+  // ── Condiciones del viaje (F1): copiloto/maletas/ritmo ──────────────────────
+  // Fuente de verdad en NavigationStore (compartido con el Home). Cambiarlas
+  // re-dispara el veredicto del preview vía la routeReaction.
+
+  get hasPassenger(): boolean {
+    return this.navStore.hasPassenger;
+  }
+
+  get hasLuggage(): boolean {
+    return this.navStore.hasLuggage;
+  }
+
+  get aggressiveRiding(): boolean {
+    return this.navStore.aggressiveRiding;
+  }
+
+  /** Firma de las condiciones para re-disparar el preview al cambiarlas. */
+  private get conditionsKey(): string {
+    return `${this.hasPassenger ? 'p' : ''}${this.hasLuggage ? 'l' : ''}${
+      this.aggressiveRiding ? 'a' : ''
+    }`;
+  }
+
+  togglePassenger(): void {
+    this.navStore.togglePassenger();
+  }
+
+  toggleLuggage(): void {
+    this.navStore.toggleLuggage();
+  }
+
+  toggleAggressiveRiding(): void {
+    this.navStore.toggleAggressiveRiding();
   }
 
   /** Confirma el preview (delegado al `NavigationStore`). */
