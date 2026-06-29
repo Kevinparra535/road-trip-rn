@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 
+import { ENV } from '@/config/env';
 import { TYPES } from '@/config/types';
 
 import { MotoStatsQuery } from '@/domain/repositories/MotoStatsRepository';
@@ -8,13 +9,6 @@ import { HttpManager } from '@/domain/services/HttpManager';
 import { MotorcycleSpecsModel } from '@/data/models/motorcycleSpecsModel';
 
 import { MOTO_STATS_DATASET, MotoStatsEntry } from '@/data/datasets/motoStatsDataset';
-
-/**
- * Endpoint de busqueda de fichas tecnicas. Vacio por defecto: el backend de
- * scraping/busqueda debe vivir en una Cloud Function (evita CORS y mantiene
- * el scraping fuera del cliente). Mientras no exista, se usa el dataset local.
- */
-const MOTO_STATS_API_URL = '';
 
 export interface MotoStatsService {
   findSpecs(query: MotoStatsQuery): Promise<MotorcycleSpecsModel | null>;
@@ -41,14 +35,16 @@ export class MotoStatsServiceImpl implements MotoStatsService {
   private async fetchFromWeb(
     query: MotoStatsQuery,
   ): Promise<MotorcycleSpecsModel | null> {
-    if (!MOTO_STATS_API_URL) return null;
+    // Configurable por env (`MOTO_STATS_API_URL`): vacío ⇒ degrada al dataset.
+    const apiUrl = ENV.motoStatsApiUrl;
+    if (!apiUrl) return null;
     try {
       const params = new URLSearchParams({
         brand: query.brand,
         model: query.model,
         year: String(query.year),
       });
-      const response = await this.http.get(`${MOTO_STATS_API_URL}?${params}`);
+      const response = await this.http.get(`${apiUrl}?${params}`);
       if (!response.ok) return null;
       const json = await response.json();
       return MotorcycleSpecsModel.fromJson({

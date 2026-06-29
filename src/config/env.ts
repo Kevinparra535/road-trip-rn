@@ -49,6 +49,14 @@ const envSchema = z.object({
    * Se conmuta sin recompilar vía `SEARCH_PROVIDER` en el entorno.
    */
   searchProvider: z.enum(['geocoding_v5', 'searchbox']).default('geocoding_v5'),
+
+  // ── Fichas técnicas de moto (specs) ───────────────────────────────────────
+  /**
+   * URL de la Cloud Function de búsqueda de fichas técnicas. Vacío por defecto:
+   * mientras no exista el backend de scraping, `MotoStatsService` degrada al
+   * dataset curado local. Se activa por `MOTO_STATS_API_URL` sin recompilar.
+   */
+  motoStatsApiUrl: z.string().default(''),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;
