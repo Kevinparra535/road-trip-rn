@@ -1,12 +1,10 @@
 import { injectable } from 'inversify';
 
-import {
-  BASE_LOAD_KG,
-  loadConsumptionFactor,
-  Motorcycle,
-} from '@/domain/entities/Motorcycle';
+import { BASE_LOAD_KG, Motorcycle } from '@/domain/entities/Motorcycle';
+import { RideType } from '@/domain/entities/Route';
 import { RouteFuelEstimate } from '@/domain/entities/RouteFuelEstimate';
 
+import { computeRangeFactor } from '@/domain/useCases/rangeFactor';
 import { UseCase } from '@/domain/useCases/UseCase';
 
 export type EstimateRouteFuelInput = {
@@ -17,24 +15,17 @@ export type EstimateRouteFuelInput = {
   ascentM: number;
   /** Peso total a bordo (piloto + copiloto + maleteros), en kilogramos. */
   loadKg?: number;
+  /** Ritmo exigente del piloto (opcional; lo cablea el flujo del viaje). */
+  aggressiveRiding?: boolean;
+  /** Tipo de rodada de la ruta (opcional; ajusta el consumo por terreno/uso). */
+  rideType?: RideType;
 };
-
-// ── Heuristicas del modelo de consumo (ajustables) ──────────────────────────
-// El modelo de peso (BASE_LOAD_KG + loadConsumptionFactor) vive en la entidad
-// Motorcycle: unica fuente, compartida con el formulario del garaje.
-// Velocidad de mejor rendimiento; alejarse penaliza el consumo.
-const OPTIMAL_SPEED_KMH = 70;
-const SPEED_PENALTY_PER_KMH = 0.004;
-// Penalizacion por desnivel de subida acumulado por kilometro.
-const CLIMB_PENALTY_PER_M_PER_KM = 0.006;
-// Limites del factor combinado.
-const MIN_FACTOR = 0.55;
-const MAX_FACTOR = 1.1;
 
 /**
  * Estima cuanto le dura la gasolina a una moto en una ruta, ajustando el
- * rendimiento de catalogo por velocidad media, desnivel y peso a bordo.
- * Logica de negocio pura, sin dependencias de infraestructura.
+ * rendimiento de catalogo por velocidad media, desnivel, peso a bordo, ritmo y
+ * tipo de rodada. El multiplicador combinado vive en `computeRangeFactor`
+ * (fuente unica compartida con EstimateAutonomyUseCase). Logica de negocio pura.
  */
 @injectable()
 export class EstimateRouteFuelUseCase implements UseCase<
@@ -50,11 +41,14 @@ export class EstimateRouteFuelUseCase implements UseCase<
       throw new Error('La moto no tiene tanque o rendimiento valido.');
     }
 
-    const factor = this.clampFactor(
-      this.speedFactor(distanceKm, durationMin) *
-        this.altitudeFactor(distanceKm, ascentM) *
-        loadConsumptionFactor(loadKg),
-    );
+    const factor = computeRangeFactor({
+      distanceKm,
+      durationMin,
+      ascentM,
+      loadKg,
+      aggressiveRiding: input.aggressiveRiding,
+      rideType: input.rideType,
+    });
     const effectiveConsumption = baseConsumption * factor;
 
     return new RouteFuelEstimate({
@@ -65,23 +59,5 @@ export class EstimateRouteFuelUseCase implements UseCase<
       fullTankRangeKm: motorcycle.fullTankRangeKm(),
       loadKg,
     });
-  }
-
-  /** Penaliza alejarse de la velocidad de mejor rendimiento. */
-  private speedFactor(distanceKm: number, durationMin: number): number {
-    if (durationMin <= 0) return 1;
-    const avgSpeedKmh = distanceKm / (durationMin / 60);
-    return 1 - Math.abs(avgSpeedKmh - OPTIMAL_SPEED_KMH) * SPEED_PENALTY_PER_KMH;
-  }
-
-  /** Penaliza el desnivel de subida acumulado por kilometro. */
-  private altitudeFactor(distanceKm: number, ascentM: number): number {
-    if (distanceKm <= 0) return 1;
-    const ascentPerKm = ascentM / distanceKm;
-    return 1 - ascentPerKm * CLIMB_PENALTY_PER_M_PER_KM;
-  }
-
-  private clampFactor(factor: number): number {
-    return Math.min(MAX_FACTOR, Math.max(MIN_FACTOR, factor));
   }
 }

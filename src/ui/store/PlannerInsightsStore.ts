@@ -15,6 +15,7 @@ import { EstimateAutonomyUseCase } from '@/domain/useCases/EstimateAutonomyUseCa
 import { EstimateRouteFuelUseCase } from '@/domain/useCases/EstimateRouteFuelUseCase';
 import { GetPlaceSummaryUseCase } from '@/domain/useCases/GetPlaceSummaryUseCase';
 import { GetRouteElevationUseCase } from '@/domain/useCases/GetRouteElevationUseCase';
+import { tripLoadKg } from '@/domain/useCases/rangeFactor';
 
 import Logger from '@/ui/utils/Logger';
 
@@ -239,12 +240,7 @@ export class PlannerInsightsStore {
    * los mismos toggles que ajustan la autonomía también ajustan el combustible.
    */
   private loadKgFor(motorcycle: Motorcycle): number {
-    const luggageKg = motorcycle.luggage.reduce((sum, item) => sum + item.weightKg, 0);
-    return (
-      motorcycle.driverWeightKg +
-      (this.hasPassenger ? motorcycle.passengerWeightKg : 0) +
-      (this.hasLuggage ? luggageKg : 0)
-    );
+    return tripLoadKg(motorcycle, this.conditions);
   }
 
   /**

@@ -6,6 +6,7 @@ import { Motorcycle } from '@/domain/entities/Motorcycle';
 import { RidingConditions } from '@/domain/entities/RidingConditions';
 import { GeoPoint, Route } from '@/domain/entities/Route';
 
+import { computeRangeFactor, tripLoadKg } from '@/domain/useCases/rangeFactor';
 import { UseCase } from '@/domain/useCases/UseCase';
 
 import { pointAtDistanceAlong } from '@/domain/geo/geoMath';
@@ -14,18 +15,16 @@ export type EstimateAutonomyInput = {
   motorcycle: Motorcycle;
   route: Route;
   conditions: RidingConditions;
+  /** Duración estimada (Mapbox) para la velocidad media. Opcional. */
+  durationMin?: number;
+  /** Desnivel de subida acumulado (m). Opcional. */
+  ascentM?: number;
 };
 
 // Fraccion del tanque que se reserva como margen de seguridad. Exportada para
 // que el plan grupal (EstimatePartyFuelPlanUseCase) use EXACTAMENTE la misma
 // reserva y ambos estimadores coincidan.
 export const SAFETY_RESERVE_FRACTION = 0.12;
-
-// Limites del factor de condiciones. Acotan combinaciones extremas para que el
-// rango efectivo nunca supere el tanque fisico (lo que volveria negativa la
-// reserva de seguridad). Mismo criterio que EstimateRouteFuelUseCase.
-const MIN_CONDITION_FACTOR = 0.55;
-const MAX_CONDITION_FACTOR = 1.1;
 
 // Tope defensivo de paradas. Una ruta larga con un rango efectivo minusculo
 // (moto pequena + offroad + carga + ritmo) podria generar decenas de paradas
@@ -49,7 +48,17 @@ export class EstimateAutonomyUseCase implements UseCase<
       throw new Error('La moto no tiene tanque o rendimiento valido.');
     }
 
-    const factor = this.conditionFactor(conditions, route);
+    // Factor unificado (mismo modelo que EstimateRouteFuelUseCase): peso real
+    // en kg (acompañante/maletas dejan de ser castigos planos), ritmo, tipo de
+    // rodada y —si el caller los entrega— velocidad y desnivel.
+    const factor = computeRangeFactor({
+      distanceKm: route.distanceKm,
+      durationMin: input.durationMin,
+      ascentM: input.ascentM,
+      loadKg: tripLoadKg(motorcycle, conditions),
+      aggressiveRiding: conditions.aggressiveRiding,
+      rideType: route.rideType,
+    });
     const usableFraction = 1 - SAFETY_RESERVE_FRACTION;
 
     const effectiveRangeKm = fullTankRangeKm * factor * usableFraction;
@@ -77,35 +86,6 @@ export class EstimateAutonomyUseCase implements UseCase<
       fuelStops,
       conditionsSummary: this.conditionsSummary(conditions, route),
     });
-  }
-
-  /**
-   * Factor combinado que ajusta el rendimiento segun el viaje, acotado a
-   * [MIN_CONDITION_FACTOR, MAX_CONDITION_FACTOR] para que ninguna combinacion
-   * de penalizaciones/bonus deje el rango efectivo por encima del tanque fisico
-   * (lo que erosionaria la reserva de seguridad por debajo de cero).
-   */
-  private conditionFactor(conditions: RidingConditions, route: Route): number {
-    let factor = 1;
-    if (conditions.hasPassenger) factor *= 0.92;
-    if (conditions.hasLuggage) factor *= 0.93;
-    if (conditions.aggressiveRiding) factor *= 0.88;
-
-    switch (route.rideType) {
-      case 'offroad':
-        factor *= 0.8;
-        break;
-      case 'highway':
-        factor *= 1.03;
-        break;
-      case 'group':
-        factor *= 0.95;
-        break;
-      case 'longtrip':
-      default:
-        break;
-    }
-    return Math.min(MAX_CONDITION_FACTOR, Math.max(MIN_CONDITION_FACTOR, factor));
   }
 
   private buildFuelStops(
